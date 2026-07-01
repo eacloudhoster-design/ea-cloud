@@ -1,0 +1,1894 @@
+openapi: 3.1.0
+info:
+  # Do not change the title, if the title changes, the import paths will be broken
+  title: Api
+  version: 0.1.0
+  description: EA Cloud API specification
+servers:
+  - url: /api
+    description: Base API path
+tags:
+  - name: health
+    description: Health operations
+  - name: auth
+    description: Authentication operations
+  - name: mentors
+    description: Mentor management
+  - name: licenses
+    description: License management
+  - name: clients
+    description: Client management
+  - name: superadmin
+    description: Super admin operations
+  - name: appaccess
+    description: App access management
+  - name: eas
+    description: EA management
+  - name: clientapp
+    description: Client app operations
+  - name: dashboard
+    description: Dashboard analytics
+  - name: profile
+    description: Profile management
+  - name: Storage
+    description: Object storage upload and serving endpoints.
+  - name: brokers
+    description: Broker server whitelist management
+  - name: signals
+    description: Trade signal operations
+  - name: tradingcontrols
+    description: Client trading control settings
+paths:
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      summary: Health check
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+
+  /auth/login:
+    post:
+      operationId: login
+      tags: [auth]
+      summary: Login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginInput"
+      responses:
+        "200":
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "401":
+          description: Invalid credentials
+
+  /auth/register:
+    post:
+      operationId: register
+      tags: [auth]
+      summary: Register mentor account
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterInput"
+      responses:
+        "201":
+          description: Registration successful
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+
+  /auth/logout:
+    post:
+      operationId: logout
+      tags: [auth]
+      summary: Logout
+      responses:
+        "200":
+          description: Logged out
+
+  /auth/me:
+    get:
+      operationId: getMe
+      tags: [auth]
+      summary: Get current user
+      responses:
+        "200":
+          description: Current user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+
+  /profile:
+    get:
+      operationId: getProfile
+      tags: [profile]
+      summary: Get mentor profile
+      responses:
+        "200":
+          description: Profile data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MentorProfile"
+    patch:
+      operationId: updateProfile
+      tags: [profile]
+      summary: Update mentor profile
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MentorProfileUpdate"
+      responses:
+        "200":
+          description: Updated profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MentorProfile"
+
+  /dashboard:
+    get:
+      operationId: getDashboard
+      tags: [dashboard]
+      summary: Get mentor dashboard stats
+      responses:
+        "200":
+          description: Dashboard statistics
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardStats"
+
+  /dashboard/activity:
+    get:
+      operationId: getDashboardActivity
+      tags: [dashboard]
+      summary: Get recent activity feed
+      responses:
+        "200":
+          description: Activity feed
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ActivityItem"
+
+  /licenses:
+    get:
+      operationId: getLicenses
+      tags: [licenses]
+      summary: Get mentor licenses
+      responses:
+        "200":
+          description: License list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/License"
+    post:
+      operationId: createLicense
+      tags: [licenses]
+      summary: Generate a new license key
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LicenseInput"
+      responses:
+        "201":
+          description: License created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/License"
+
+  /licenses/{id}:
+    get:
+      operationId: getLicense
+      tags: [licenses]
+      summary: Get a license by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: License details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/License"
+    patch:
+      operationId: updateLicense
+      tags: [licenses]
+      summary: Update license status
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LicenseUpdate"
+      responses:
+        "200":
+          description: Updated license
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/License"
+    delete:
+      operationId: deleteLicense
+      tags: [licenses]
+      summary: Delete a license
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /clients:
+    get:
+      operationId: getClients
+      tags: [clients]
+      summary: Get mentor clients
+      responses:
+        "200":
+          description: Client list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Client"
+
+  /clients/{id}:
+    get:
+      operationId: getClient
+      tags: [clients]
+      summary: Get client by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Client details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Client"
+
+  /superadmin/dashboard:
+    get:
+      operationId: getSuperAdminDashboard
+      tags: [superadmin]
+      summary: Get super admin dashboard stats
+      responses:
+        "200":
+          description: Super admin dashboard
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuperAdminDashboard"
+
+  /superadmin/signal-queue:
+    get:
+      operationId: getSignalQueue
+      tags: [superadmin]
+      summary: Get durable signal execution queue status and recent signals
+      responses:
+        "200":
+          description: Signal queue status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SignalQueue"
+
+  /superadmin/mentors:
+    get:
+      operationId: getSuperAdminMentors
+      tags: [superadmin]
+      summary: Get all mentors
+      responses:
+        "200":
+          description: All mentors
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/MentorWithStats"
+
+  /superadmin/mentors/{id}/approve:
+    post:
+      operationId: approveMentor
+      tags: [superadmin]
+      summary: Approve a mentor
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Mentor approved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MentorWithStats"
+
+  /superadmin/mentors/{id}/reject:
+    post:
+      operationId: rejectMentor
+      tags: [superadmin]
+      summary: Reject a mentor
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RejectMentorInput"
+      responses:
+        "200":
+          description: Mentor rejected
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MentorWithStats"
+
+  /superadmin/mentors/{id}/suspend:
+    post:
+      operationId: suspendMentor
+      tags: [superadmin]
+      summary: Suspend a mentor
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Mentor suspended
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MentorWithStats"
+
+  /superadmin/mentors/{id}/strike:
+    post:
+      operationId: issueMentorStrike
+      tags: [superadmin]
+      summary: Issue a strike to a mentor
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StrikeInput"
+      responses:
+        "200":
+          description: Strike issued
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MentorWithStats"
+
+  /superadmin/mentors/{id}/remove:
+    delete:
+      operationId: removeMentor
+      tags: [superadmin]
+      summary: Permanently remove a mentor
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Mentor removed
+
+  /superadmin/mentors/{id}/license-limit:
+    patch:
+      operationId: updateMentorLicenseLimit
+      tags: [superadmin]
+      summary: Update mentor license limit
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LicenseLimitInput"
+      responses:
+        "200":
+          description: License limit updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MentorWithStats"
+
+  /superadmin/app-access:
+    get:
+      operationId: getAppAccessRequests
+      tags: [appaccess]
+      summary: Get all app access requests
+      responses:
+        "200":
+          description: App access requests
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AppAccessRequest"
+
+  /superadmin/app-access/{id}/approve:
+    post:
+      operationId: approveAppAccess
+      tags: [appaccess]
+      summary: Approve app access
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: App access approved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AppAccessRequest"
+
+  /superadmin/app-access/{id}/reject:
+    post:
+      operationId: rejectAppAccess
+      tags: [appaccess]
+      summary: Reject app access
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: App access rejected
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AppAccessRequest"
+
+  /eas:
+    get:
+      operationId: getEas
+      tags: [eas]
+      summary: Get mentor's EAs
+      responses:
+        "200":
+          description: EA list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Ea"
+    post:
+      operationId: createEa
+      tags: [eas]
+      summary: Create a new EA
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EaInput"
+      responses:
+        "201":
+          description: EA created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Ea"
+
+  /eas/{id}:
+    patch:
+      operationId: updateEa
+      tags: [eas]
+      summary: Update an EA
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EaUpdate"
+      responses:
+        "200":
+          description: Updated EA
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Ea"
+    delete:
+      operationId: deleteEa
+      tags: [eas]
+      summary: Delete an EA
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /symbol-pairs:
+    get:
+      operationId: getSymbolPairs
+      tags: [symbolpairs]
+      summary: Get mentor's trading pairs and broker symbol variations
+      responses:
+        "200":
+          description: Symbol pair list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SymbolPair"
+    post:
+      operationId: createSymbolPair
+      tags: [symbolpairs]
+      summary: Create a trading pair with broker symbol variations
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SymbolPairInput"
+      responses:
+        "201":
+          description: Symbol pair created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SymbolPair"
+
+  /symbol-pairs/{id}:
+    patch:
+      operationId: updateSymbolPair
+      tags: [symbolpairs]
+      summary: Update a trading pair
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SymbolPairUpdate"
+      responses:
+        "200":
+          description: Updated symbol pair
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SymbolPair"
+    delete:
+      operationId: deleteSymbolPair
+      tags: [symbolpairs]
+      summary: Delete a trading pair
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /app-access/register:
+    post:
+      operationId: requestAppAccess
+      tags: [appaccess]
+      summary: Request app access (mobile user registration)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AppAccessInput"
+      responses:
+        "201":
+          description: Request submitted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AppAccessRequest"
+
+  /app/register:
+    post:
+      operationId: appRegister
+      tags: [clientapp]
+      summary: Client app registration with subscription
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AppRegisterInput"
+      responses:
+        "201":
+          description: Registered
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AppAuthResponse"
+
+  /app/login:
+    post:
+      operationId: appLogin
+      tags: [clientapp]
+      summary: Client app login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AppLoginInput"
+      responses:
+        "200":
+          description: Logged in
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AppAuthResponse"
+
+  /app/me:
+    get:
+      operationId: appGetMe
+      tags: [clientapp]
+      summary: Get current app client
+      responses:
+        "200":
+          description: Current client
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AppClient"
+
+  /app/activate:
+    post:
+      operationId: appActivateLicense
+      tags: [clientapp]
+      summary: Activate license key
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AppActivateInput"
+      responses:
+        "200":
+          description: License activated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AppClient"
+
+  /app/dashboard:
+    get:
+      operationId: appGetDashboard
+      tags: [clientapp]
+      summary: Get client app dashboard (mentor EAs)
+      responses:
+        "200":
+          description: Dashboard data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AppDashboard"
+
+  /app/broker-servers:
+    get:
+      operationId: getPublicBrokerServers
+      tags: [brokers]
+      summary: List all active whitelisted broker servers (public)
+      responses:
+        "200":
+          description: List of active broker servers
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/BrokerServer"
+
+  /superadmin/broker-servers:
+    get:
+      operationId: superAdminListBrokerServers
+      tags: [brokers, superadmin]
+      summary: List all broker servers including inactive (superadmin)
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Full list of broker servers
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/BrokerServer"
+    post:
+      operationId: superAdminAddBrokerServer
+      tags: [brokers, superadmin]
+      summary: Add a broker server to the whitelist
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BrokerServerInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BrokerServer"
+
+  /superadmin/broker-servers/{id}:
+    patch:
+      operationId: superAdminUpdateBrokerServer
+      tags: [brokers, superadmin]
+      summary: Update a broker server
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BrokerServerUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BrokerServer"
+    delete:
+      operationId: superAdminDeleteBrokerServer
+      tags: [brokers, superadmin]
+      summary: Remove a broker server from the whitelist
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /app/trading-controls:
+    get:
+      operationId: getTradingControls
+      tags: [tradingcontrols]
+      summary: Get client trading control settings
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Trading controls
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TradingControls"
+    patch:
+      operationId: updateTradingControls
+      tags: [tradingcontrols]
+      summary: Update client trading control settings
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TradingControlsUpdate"
+      responses:
+        "200":
+          description: Updated controls
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TradingControls"
+
+  /app/mt5-connect:
+    post:
+      operationId: mt5Connect
+      tags: [tradingcontrols]
+      summary: Connect MT5 account (validates server against whitelist)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Mt5ConnectInput"
+      responses:
+        "200":
+          description: Connected
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Mt5ConnectResult"
+        "403":
+          description: Server not on approved whitelist
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+
+  /app/symbol-configs:
+    get:
+      operationId: getSymbolConfigs
+      tags: [tradingcontrols]
+      summary: Get available trading pairs and the client's broker symbol selections
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Symbol configs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ClientSymbolConfig"
+    patch:
+      operationId: updateSymbolConfigs
+      tags: [tradingcontrols]
+      summary: Save the client's broker symbol selections and custom lot sizes
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SymbolConfigsUpdate"
+      responses:
+        "200":
+          description: Updated symbol configs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ClientSymbolConfig"
+
+  /app/mt5-disconnect:
+    post:
+      operationId: mt5Disconnect
+      tags: [tradingcontrols]
+      summary: Disconnect MT5 account
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Disconnected
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  connected:
+                    type: boolean
+
+  /signals/webhook:
+    post:
+      operationId: tradeSignalWebhook
+      tags: [signals]
+      summary: Receive trade signal from mentor MT5 EA (authenticated via x-api-key header)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TradeSignalWebhookInput"
+      responses:
+        "201":
+          description: Signal received
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  received:
+                    type: boolean
+                  id:
+                    type: integer
+
+  /signals/recent:
+    get:
+      operationId: getRecentSignals
+      tags: [signals]
+      summary: Get recent trade signals for authenticated mentor
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Recent signals
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/TradeSignal"
+
+  /app/signals:
+    get:
+      operationId: appGetSignals
+      tags: [signals, clientapp]
+      summary: Get recent signals for a mentor (client app)
+      parameters:
+        - name: mentorId
+          in: query
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Recent signals
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/TradeSignal"
+
+components:
+  schemas:
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+      required:
+        - status
+
+    LoginInput:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+        role:
+          type: string
+          enum: [mentor, superadmin]
+
+    RegisterInput:
+      type: object
+      required: [firstName, lastName, email, password, mentorName]
+      properties:
+        firstName:
+          type: string
+        lastName:
+          type: string
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+        mentorName:
+          type: string
+        phone:
+          type: string
+
+    AuthResponse:
+      type: object
+      required: [user, token]
+      properties:
+        user:
+          $ref: "#/components/schemas/User"
+        token:
+          type: string
+
+    User:
+      type: object
+      required: [id, email, role, status]
+      properties:
+        id:
+          type: integer
+        email:
+          type: string
+        firstName:
+          type: string
+        lastName:
+          type: string
+        role:
+          type: string
+          enum: [mentor, superadmin, client]
+        status:
+          type: string
+          enum: [pending, approved, rejected, suspended]
+        createdAt:
+          type: string
+          format: date-time
+
+    MentorProfile:
+      type: object
+      required: [id, email]
+      properties:
+        id:
+          type: integer
+        firstName:
+          type: string
+        lastName:
+          type: string
+        email:
+          type: string
+        phone:
+          type: string
+        mentorName:
+          type: string
+        robotName:
+          type: string
+        robotTagline:
+          type: string
+        backgroundImageUrl:
+          type: ["string", "null"]
+        webhookUrl:
+          type: ["string", "null"]
+        apiKey:
+          type: ["string", "null"]
+        status:
+          type: string
+        licenseLimit:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+
+    MentorProfileUpdate:
+      type: object
+      properties:
+        firstName:
+          type: string
+        lastName:
+          type: string
+        phone:
+          type: string
+        mentorName:
+          type: string
+        robotName:
+          type: string
+        robotTagline:
+          type: string
+        backgroundImageUrl:
+          type: string
+        webhookUrl:
+          type: string
+        apiKey:
+          type: string
+
+    DashboardStats:
+      type: object
+      required: [totalClients, activeClients, totalLicenses, activeLicenses, connectedAccounts, recentActivityCount]
+      properties:
+        totalClients:
+          type: integer
+        activeClients:
+          type: integer
+        totalLicenses:
+          type: integer
+        activeLicenses:
+          type: integer
+        connectedAccounts:
+          type: integer
+        recentActivityCount:
+          type: integer
+        maxLicenses:
+          type: integer
+        licenseUsagePercent:
+          type: number
+
+    ActivityItem:
+      type: object
+      required: [id, type, description, createdAt]
+      properties:
+        id:
+          type: integer
+        type:
+          type: string
+        description:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+
+    License:
+      type: object
+      required: [id, key, clientName, clientEmail, status, duration, createdAt]
+      properties:
+        id:
+          type: integer
+        key:
+          type: string
+        clientName:
+          type: string
+        clientEmail:
+          type: string
+        status:
+          type: string
+          enum: [active, inactive, expired]
+        duration:
+          type: string
+        expiresAt:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+          format: date-time
+
+    LicenseInput:
+      type: object
+      required: [clientName, clientEmail, duration]
+      properties:
+        clientName:
+          type: string
+        clientEmail:
+          type: string
+        duration:
+          type: string
+          enum: ["1month", "3months", "6months", "1year", "3years"]
+
+    LicenseUpdate:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [active, inactive, expired]
+
+    Client:
+      type: object
+      required: [id, email, status, createdAt]
+      properties:
+        id:
+          type: integer
+        email:
+          type: string
+        firstName:
+          type: string
+        lastName:
+          type: string
+        licenseKey:
+          type: ["string", "null"]
+        status:
+          type: string
+          enum: [active, inactive]
+        connectedBroker:
+          type: ["string", "null"]
+        lastActive:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+          format: date-time
+        copyingEnabled:
+          type: ["boolean", "null"]
+
+    MentorWithStats:
+      type: object
+      required: [id, email, status, strikes, licenseLimit, createdAt]
+      properties:
+        id:
+          type: integer
+        email:
+          type: string
+        firstName:
+          type: string
+        lastName:
+          type: string
+        mentorName:
+          type: string
+        robotName:
+          type: string
+        status:
+          type: string
+          enum: [pending, approved, rejected, suspended, disabled]
+        strikes:
+          type: integer
+        licenseLimit:
+          type: integer
+        totalLicenses:
+          type: integer
+        activeClients:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+
+    RejectMentorInput:
+      type: object
+      properties:
+        reason:
+          type: string
+
+    StrikeInput:
+      type: object
+      required: [reason]
+      properties:
+        reason:
+          type: string
+
+    LicenseLimitInput:
+      type: object
+      required: [limit]
+      properties:
+        limit:
+          type: integer
+
+    SuperAdminDashboard:
+      type: object
+      required: [totalMentors, pendingMentors, approvedMentors, rejectedMentors, totalClients, totalLicenses, activeLicenses, appUsers, pendingAppUsers]
+      properties:
+        totalMentors:
+          type: integer
+        pendingMentors:
+          type: integer
+        approvedMentors:
+          type: integer
+        rejectedMentors:
+          type: integer
+        totalClients:
+          type: integer
+        totalLicenses:
+          type: integer
+        activeLicenses:
+          type: integer
+        appUsers:
+          type: integer
+        pendingAppUsers:
+          type: integer
+
+    SignalQueueItem:
+      type: object
+      required: [id, mentorId, signal, symbol, orderType, status, attempts, createdAt]
+      properties:
+        id:
+          type: integer
+        mentorId:
+          type: integer
+        signal:
+          type: string
+        symbol:
+          type: string
+        orderType:
+          type: string
+        lots:
+          type: string
+          nullable: true
+        ticket:
+          type: string
+          nullable: true
+        status:
+          type: string
+          enum: [pending, executing, success, failed]
+        attempts:
+          type: integer
+        lastError:
+          type: string
+          nullable: true
+        nextAttemptAt:
+          type: string
+          format: date-time
+          nullable: true
+        processedAt:
+          type: string
+          format: date-time
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+          nullable: true
+
+    SignalQueue:
+      type: object
+      required: [counts, recent]
+      properties:
+        counts:
+          type: object
+          required: [pending, executing, success, failed]
+          properties:
+            pending:
+              type: integer
+            executing:
+              type: integer
+            success:
+              type: integer
+            failed:
+              type: integer
+        recent:
+          type: array
+          items:
+            $ref: "#/components/schemas/SignalQueueItem"
+
+    AppAccessRequest:
+      type: object
+      required: [id, firstName, lastName, email, status, createdAt]
+      properties:
+        id:
+          type: integer
+        firstName:
+          type: string
+        lastName:
+          type: string
+        email:
+          type: string
+        status:
+          type: string
+          enum: [pending, approved, rejected]
+        createdAt:
+          type: string
+          format: date-time
+        copyingEnabled:
+          type: ["boolean", "null"]
+
+    AppAccessInput:
+      type: object
+      required: [firstName, lastName, email]
+      properties:
+        firstName:
+          type: string
+        lastName:
+          type: string
+        email:
+          type: string
+          format: email
+
+    AppRegisterInput:
+      type: object
+      required: [firstName, lastName, email, password, plan]
+      properties:
+        firstName:
+          type: string
+        lastName:
+          type: string
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+        plan:
+          type: string
+          enum: [monthly, yearly, lifetime]
+
+    AppLoginInput:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+
+    AppActivateInput:
+      type: object
+      required: [licenseKey]
+      properties:
+        licenseKey:
+          type: string
+
+    AppClient:
+      type: object
+      required: [id, firstName, lastName, email, status, plan]
+      properties:
+        id:
+          type: integer
+        firstName:
+          type: string
+        lastName:
+          type: string
+        email:
+          type: string
+        status:
+          type: string
+          enum: [pending, approved, rejected]
+        plan:
+          type: string
+        licenseKey:
+          type: ["string", "null"]
+        mentorId:
+          type: ["integer", "null"]
+        createdAt:
+          type: string
+          format: date-time
+
+    AppAuthResponse:
+      type: object
+      required: [client, token]
+      properties:
+        client:
+          $ref: "#/components/schemas/AppClient"
+        token:
+          type: string
+
+    AppDashboard:
+      type: object
+      required: [client, mentor, eas]
+      properties:
+        client:
+          $ref: "#/components/schemas/AppClient"
+        mentor:
+          type: object
+          required: [id, mentorName, robotName]
+          properties:
+            id:
+              type: integer
+            mentorName:
+              type: ["string", "null"]
+            robotName:
+              type: ["string", "null"]
+            robotTagline:
+              type: ["string", "null"]
+            backgroundImageUrl:
+              type: ["string", "null"]
+        eas:
+          type: array
+          items:
+            $ref: "#/components/schemas/Ea"
+
+    Ea:
+      type: object
+      required: [id, mentorId, name, symbol, lotSize, riskLevel, isActive, createdAt]
+      properties:
+        id:
+          type: integer
+        mentorId:
+          type: integer
+        name:
+          type: string
+        description:
+          type: ["string", "null"]
+        symbol:
+          type: string
+        lotSize:
+          type: string
+        riskLevel:
+          type: string
+          enum: [low, medium, high]
+        isActive:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    EaInput:
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        symbol:
+          type: string
+        lotSize:
+          type: string
+        riskLevel:
+          type: string
+          enum: [low, medium, high]
+        isActive:
+          type: boolean
+
+    EaUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        symbol:
+          type: string
+        lotSize:
+          type: string
+        riskLevel:
+          type: string
+          enum: [low, medium, high]
+        isActive:
+          type: boolean
+
+    SymbolPair:
+      type: object
+      required: [id, mentorId, pairName, variations, isActive, createdAt]
+      properties:
+        id:
+          type: integer
+        mentorId:
+          type: integer
+        pairName:
+          type: string
+        variations:
+          type: string
+        isActive:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    SymbolPairInput:
+      type: object
+      required: [pairName]
+      properties:
+        pairName:
+          type: string
+        variations:
+          type: string
+        isActive:
+          type: boolean
+
+    SymbolPairUpdate:
+      type: object
+      properties:
+        pairName:
+          type: string
+        variations:
+          type: string
+        isActive:
+          type: boolean
+
+    ClientSymbolConfig:
+      type: object
+      required: [pairName, variations]
+      properties:
+        pairName:
+          type: string
+        variations:
+          type: array
+          items:
+            type: string
+        selectedSymbol:
+          type: ["string", "null"]
+        customLotSize:
+          type: ["string", "null"]
+
+    SymbolConfigsUpdate:
+      type: object
+      required: [configs]
+      properties:
+        configs:
+          type: array
+          items:
+            type: object
+            required: [pairName]
+            properties:
+              pairName:
+                type: string
+              selectedSymbol:
+                type: ["string", "null"]
+              customLotSize:
+                type: ["string", "null"]
+
+    BrokerServer:
+      type: object
+      required: [id, brokerName, serverName, serverType, isActive, createdAt]
+      properties:
+        id:
+          type: integer
+        brokerName:
+          type: string
+        serverName:
+          type: string
+        serverType:
+          type: string
+          enum: [demo, live]
+        isActive:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    BrokerServerInput:
+      type: object
+      required: [brokerName, serverName, serverType]
+      properties:
+        brokerName:
+          type: string
+        serverName:
+          type: string
+        serverType:
+          type: string
+          enum: [demo, live]
+        isActive:
+          type: boolean
+
+    BrokerServerUpdate:
+      type: object
+      properties:
+        brokerName:
+          type: string
+        serverName:
+          type: string
+        serverType:
+          type: string
+          enum: [demo, live]
+        isActive:
+          type: boolean
+
+    TradingControls:
+      type: object
+      required: [id, clientId, lotMode, copyingEnabled]
+      properties:
+        id:
+          type: integer
+        clientId:
+          type: integer
+        mt5Login:
+          type: ["string", "null"]
+        mt5Server:
+          type: ["string", "null"]
+        mt5Broker:
+          type: ["string", "null"]
+        mt5Connected:
+          type: boolean
+        lotMode:
+          type: string
+          enum: [fixed, risk_percent, multiplier]
+        fixedLotSize:
+          type: ["string", "null"]
+        riskPercent:
+          type: ["string", "null"]
+        lotMultiplier:
+          type: ["string", "null"]
+        maxDailyDrawdown:
+          type: ["string", "null"]
+        maxOpenTrades:
+          type: ["integer", "null"]
+        maxLotSize:
+          type: ["string", "null"]
+        symbolFilters:
+          type: ["string", "null"]
+        copyingEnabled:
+          type: boolean
+        updatedAt:
+          type: string
+          format: date-time
+
+    TradingControlsUpdate:
+      type: object
+      properties:
+        lotMode:
+          type: string
+          enum: [fixed, risk_percent, multiplier]
+        fixedLotSize:
+          type: string
+        riskPercent:
+          type: string
+        lotMultiplier:
+          type: string
+        maxDailyDrawdown:
+          type: string
+        maxOpenTrades:
+          type: integer
+        maxLotSize:
+          type: string
+        symbolFilters:
+          type: string
+        copyingEnabled:
+          type: boolean
+
+    Mt5ConnectInput:
+      type: object
+      required: [mt5Login, mt5Server, mt5Broker]
+      properties:
+        mt5Login:
+          type: string
+        mt5Server:
+          type: string
+        mt5Broker:
+          type: string
+
+    Mt5ConnectResult:
+      type: object
+      required: [connected, broker, server, login]
+      properties:
+        connected:
+          type: boolean
+        broker:
+          type: string
+        server:
+          type: string
+        login:
+          type: string
+
+    TradeSignal:
+      type: object
+      required: [id, mentorId, signal, symbol, orderType, createdAt]
+      properties:
+        id:
+          type: integer
+        mentorId:
+          type: integer
+        eaId:
+          type: ["integer", "null"]
+        signal:
+          type: string
+          enum: [OPEN, CLOSE, MODIFY]
+        symbol:
+          type: string
+        orderType:
+          type: string
+        lots:
+          type: ["string", "null"]
+        openPrice:
+          type: ["string", "null"]
+        stopLoss:
+          type: ["string", "null"]
+        takeProfit:
+          type: ["string", "null"]
+        ticket:
+          type: ["string", "null"]
+        comment:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+          format: date-time
+
+    TradeSignalWebhookInput:
+      type: object
+      required: [signal, symbol, orderType]
+      properties:
+        signal:
+          type: string
+          enum: [OPEN, CLOSE, MODIFY]
+        symbol:
+          type: string
+        orderType:
+          type: string
+        lots:
+          type: string
+        openPrice:
+          type: string
+        stopLoss:
+          type: string
+        takeProfit:
+          type: string
+        ticket:
+          type: string
+        comment:
+          type: string
+        eaId:
+          type: integer
+
+    UploadUrlRequest:
+      type: object
+      required: [name, size, contentType]
+      properties:
+        name:
+          type: string
+          minLength: 1
+          description: Original file name.
+        size:
+          type: integer
+          minimum: 1
+          description: File size in bytes.
+        contentType:
+          type: string
+          minLength: 1
+          description: MIME type of the file (e.g. image/jpeg).
+    UploadUrlResponse:
+      type: object
+      required: [uploadURL, objectPath]
+      properties:
+        uploadURL:
+          type: string
+          format: uri
+          description: Presigned GCS URL for PUT upload.
+        objectPath:
+          type: string
+          description: Normalized object path (e.g. /objects/uploads/uuid). Store this in your database.
+        metadata:
+          $ref: '#/components/schemas/UploadUrlRequest'
+    ErrorEnvelope:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: string

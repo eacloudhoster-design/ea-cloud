@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/ea-app/"
+title = "EA Cloud App"
+version = "1.0.0"
+id = "artifacts/ea-app"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/ea-app/" ]
+localPort = 25225
+
+[services.development]
+run = "pnpm --filter @workspace/ea-app run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/ea-app", "run", "build" ]
+publicDir = "artifacts/ea-app/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "25225"
+BASE_PATH = "/ea-app/"

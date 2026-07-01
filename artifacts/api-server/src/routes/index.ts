@@ -1,0 +1,46 @@
+import { Router, type IRouter } from "express";
+import healthRouter from "./health";
+import authRouter from "./auth";
+import profileRouter from "./profile";
+import dashboardRouter from "./dashboard";
+import licensesRouter from "./licenses";
+import clientsRouter from "./clients";
+import superadminRouter from "./superadmin";
+import appAccessRouter from "./app-access";
+import easRouter from "./eas";
+import symbolPairsRouter from "./symbol-pairs";
+import clientAppRouter from "./client-app";
+import storageRouter from "./storage";
+import brokerServersRouter from "./broker-servers";
+import clientSettingsRouter from "./client-settings";
+import tradeSignalsRouter from "./trade-signals";
+import copierRouter from "./copier";
+import mt5ValidationRouter from "./mt5-validation";
+import mt5ConnectRouter from "./mt5-connect";
+import clientMt5Router from "./client-mt5";
+import testEmailRouter from "./test-email";
+
+const router: IRouter = Router();
+
+router.use(healthRouter);
+router.use(authRouter);
+router.use(profileRouter);
+router.use(dashboardRouter);
+router.use(licensesRouter);
+router.use(clientsRouter);
+router.use(superadminRouter);
+router.use(appAccessRouter);
+router.use(easRouter);
+router.use(symbolPairsRouter);
+router.use(clientAppRouter);
+router.use(storageRouter);
+router.use(brokerServersRouter);
+router.use(clientSettingsRouter);
+router.use(tradeSignalsRouter);
+router.use(copierRouter);
+router.use(mt5ValidationRouter);
+router.use(mt5ConnectRouter);
+router.use(clientMt5Router);
+router.use(testEmailRouter);
+
+export default router;
