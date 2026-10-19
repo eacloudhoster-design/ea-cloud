@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Link, useLocation } from "wouter";
 import { useClientAuth, appFetch, type AppClient } from "@/contexts/ClientAuthContext";
 import { Check, ChevronRight, CreditCard, Lock, Zap, Star, Crown, Eye, EyeOff, ArrowLeft } from "lucide-react";
-import logo from "@assets/ea_cloud_1778700558655.jpg";
+import { logo } from "@/lib/branding";
 import defaultRobot from "/default-robot.jpg";
 
 const PLANS = [

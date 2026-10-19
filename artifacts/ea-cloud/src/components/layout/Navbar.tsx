@@ -1,5 +1,5 @@
 import { Link } from "wouter";
-import logo from "@assets/ea_cloud_1778700558655.jpg";
+import { logo } from "@/lib/branding";
 import { Button } from "@/components/ui/button";
 
 export function Navbar() {
