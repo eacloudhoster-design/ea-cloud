@@ -172,6 +172,10 @@ then run once from repository root:
 pnpm --filter @workspace/scripts bootstrap-admin
 ```
 
+If Render's bootstrap step fails, follow [the safe bootstrap diagnostic and
+retry guide](render-bootstrap.md). It explains the error codes and how to retry
+without reapplying an already-installed schema.
+
 It creates an approved superadmin only if the email is absent, uses the current
 password format, never logs passwords and never updates an existing account's
 credentials/role. Remove bootstrap variables afterwards. Recover existing
