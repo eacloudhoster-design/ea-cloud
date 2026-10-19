@@ -1,6 +1,6 @@
 import { Link, useLocation } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
-import logo from "@assets/ea_cloud_1778700558655.jpg";
+import { logo } from "@/lib/branding";
 import { LayoutDashboard, Users, Smartphone, KeyRound, Settings, LogOut, Menu, X, ShieldCheck, Server, ListChecks } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";

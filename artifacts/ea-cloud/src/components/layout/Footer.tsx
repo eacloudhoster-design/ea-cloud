@@ -1,5 +1,5 @@
 import { Link } from "wouter";
-import logo from "@assets/ea_cloud_1778700558655.jpg";
+import { logo } from "@/lib/branding";
 import { SiX, SiInstagram, SiTelegram, SiDiscord } from "react-icons/si";
 
 export function Footer() {

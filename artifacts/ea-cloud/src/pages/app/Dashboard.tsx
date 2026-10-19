@@ -7,7 +7,7 @@ import {
   Wifi, WifiOff, BarChart2, Shield, Clock, Cable, Eye, EyeOff,
   CheckCircle2, XCircle, Loader2, Server, Hash,
 } from "lucide-react";
-import logo from "@assets/ea_cloud_1778700558655.jpg";
+import { logo } from "@/lib/branding";
 
 interface Ea {
   id: number;

@@ -1,7 +1,7 @@
 import { useRef } from "react";
 import { Link } from "wouter";
 import { motion } from "framer-motion";
-import logo from "@assets/ea_cloud_1778700558655.jpg";
+import { logo } from "@/lib/branding";
 import { Button } from "@/components/ui/button";
 import { ChevronDown, Shield, TrendingUp, BarChart3, Bot, Copy, Brain, Users, Zap, MessageCircle, Download } from "lucide-react";
 import {

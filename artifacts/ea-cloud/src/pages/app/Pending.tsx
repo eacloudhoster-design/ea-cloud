@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import { useLocation } from "wouter";
 import { useClientAuth, appFetch, type AppClient } from "@/contexts/ClientAuthContext";
 import { Clock, CheckCircle2, XCircle, RefreshCw, LogOut, Mail } from "lucide-react";
-import logo from "@assets/ea_cloud_1778700558655.jpg";
+import { logo } from "@/lib/branding";
 
 export default function AppPending() {
   const { client, updateClient, logout } = useClientAuth();
