@@ -1,8 +1,11 @@
 import { test, afterEach } from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { cpSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { onRequest } from "../../functions/api/[[path]].js";
 import { loginErrorMessage } from "../../artifacts/ea-cloud/src/lib/login-error.ts";
+import { verifyPagesBuild } from "../verify-pages-build.mjs";
 
 const originalFetch = globalThis.fetch;
 afterEach(() => { globalThis.fetch = originalFetch; });
@@ -77,4 +80,35 @@ test("Pages output contains distinct site and client bundles with API-only Funct
   assert.match(app, /src="\/ea-app\/assets\//);
   assert.notEqual(site, app);
   assert.deepEqual(JSON.parse(readFileSync(new URL("_routes.json", output), "utf8")).include, ["/api/*"]);
+  const info = JSON.parse(readFileSync(new URL("build-info.json", output), "utf8"));
+  assert.equal(info.applications.tradingApp.entry, "/ea-app/index.html");
+  assert.deepEqual(verifyPagesBuild(output.pathname), info.applications);
+});
+
+test("build verification rejects the website-only output that caused the production router 404", () => {
+  const directory = mkdtempSync(join(tmpdir(), "ea-cloud-build-"));
+  try {
+    cpSync(new URL("../../artifacts/ea-cloud/dist/", import.meta.url), directory, { recursive: true });
+    rmSync(join(directory, "ea-app"), { recursive: true });
+    assert.throws(() => verifyPagesBuild(directory), /missing \/ea-app\/index.html/);
+  } finally {
+    rmSync(directory, { recursive: true, force: true });
+  }
+});
+
+test("build verification rejects a missing or incorrectly based client bundle", () => {
+  const directory = mkdtempSync(join(tmpdir(), "ea-cloud-build-"));
+  try {
+    cpSync(new URL("../../artifacts/ea-cloud/dist/", import.meta.url), directory, { recursive: true });
+    const entry = join(directory, "ea-app/index.html");
+    const html = readFileSync(entry, "utf8");
+    writeFileSync(entry, html.replaceAll("/ea-app/assets/", "/assets/"));
+    assert.throws(() => verifyPagesBuild(directory), /incorrectly based production asset/);
+    writeFileSync(entry, html);
+    const { tradingApp } = verifyPagesBuild(directory);
+    rmSync(join(directory, tradingApp.scripts[0]));
+    assert.throws(() => verifyPagesBuild(directory), /Missing or incorrectly based production asset/);
+  } finally {
+    rmSync(directory, { recursive: true, force: true });
+  }
 });

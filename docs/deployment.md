@@ -12,10 +12,19 @@
 | `lib/api-client-react`, `lib/api-zod`, `lib/api-spec` | Generated API hooks, validation and contracts | Built with consumers |
 | `artifacts/mockup-sandbox` | Design sandbox | Excluded from production Pages build |
 
-The previous Pages build emitted only `ea-cloud`. Its router does not own
-`/ea-app/`, so the website fallback displayed the React router's 404. The new
-build emits a distinct client HTML entry and assets there. Get App navigates
-to that application, rather than redirecting to the older `/app` portal.
+The failure at production commit `3974376` was a mismatch between the saved
+Cloudflare command and the repository's build scripts. The saved command,
+`pnpm --filter @workspace/ea-cloud build`, ran only Vite for the website.
+Vite's `emptyOutDir` deleted any prior nested app output, and that command did
+not rebuild/copy the client. Pages then served the website's SPA fallback at
+`/ea-app/`; its router has no such route and displayed its 404.
+
+The earlier fix added a separate combined command but did not change the
+package's default build. The default package build now invokes the combined
+builder too. It runs the internal `build:site` Vite step, builds the actual
+`ea-app` with `/ea-app/` as its base, copies its HTML and assets into
+`dist/ea-app/`, and verifies both applications before reporting success.
+No new React route or redirect substitutes for the client application.
 
 ## Cloudflare Pages settings
 
@@ -25,11 +34,17 @@ A separate Pages project is **not required**. Use the existing
 | Setting | Exact value |
 | --- | --- |
 | Root directory | Repository root (leave blank) |
-| Build command | `pnpm build:pages` |
+| Build command | `pnpm --filter @workspace/ea-cloud build` |
 | Build output directory | `artifacts/ea-cloud/dist` |
 | Build variable `NODE_VERSION` | `24` |
 | Build variable `PNPM_VERSION` | `10.32.1` |
 | Runtime variable `BACKEND_ORIGIN` | Actual HTTPS backend origin, e.g. `https://your-api.example.com`; no `/api`, credentials, query or fragment |
+
+Existing production settings (root blank, branch `main`, the command and output
+above) do not need to change. `pnpm build:pages` remains an equivalent alias.
+Do not deploy via `build:site` or a bare `vite build` command: those intentionally
+omit the separate app. The root all-package build excludes a direct second app
+build because the website build now owns that step, avoiding concurrent writes.
 
 Install with `pnpm install --frozen-lockfile`. pnpm 10 supports the workspace's
 `onlyBuiltDependencies` setting. Leave `PORT` and `BASE_PATH` unset: the build
@@ -192,7 +207,7 @@ the licence state returned by login.
 Using Node 24 and pnpm 10.32.1 from repository root:
 
 ```sh
-env -u PORT -u BASE_PATH pnpm build:pages
+env -u PORT -u BASE_PATH pnpm --filter @workspace/ea-cloud build
 pnpm run typecheck
 pnpm --filter @workspace/api-server build
 node --test scripts/tests/pages.test.mjs
@@ -220,3 +235,26 @@ they are offline or their databases are empty. Deployed login is **unverified**.
 After deploying, verify the Pages-origin health and database-backed endpoints,
 then sign in with an authorized account and verify `/api/auth/me` and the
 correct portal. Do not claim deployed login works before those checks pass.
+
+
+## Confirming the uploaded artifact
+
+A successful combined build logs `Verified Pages output: website at / and
+EA Cloud trading app at /ea-app/`. It also emits `/build-info.json` containing
+the build commit (Cloudflare's `CF_PAGES_COMMIT_SHA` when provided), both HTML
+entry paths, production bundle paths and HTML hashes. This is public build
+metadata, without configuration values or credentials.
+
+After deploying the new commit, check `/build-info.json` and confirm
+`applications.tradingApp.entry` is `/ea-app/index.html`. Then open `/ea-app/`
+and inspect the document: it must have title `EA Cloud App`, load its JavaScript
+from `/ea-app/assets/`, and show the actual client access screen. The landing
+HTML title is `EA Cloud`; seeing that title or its `/assets/` entry bundle at
+`/ea-app/` means the wrong document was deployed or served.
+
+The build now fails if either entry or its JS/CSS is missing, or if the client
+asset URLs point to the website's `/assets/` instead of `/ea-app/assets/`.
+Tests also exercise these failure cases. Local production-preview and Pages
+runtime checks reproduce the original router 404 with the old command and
+verify the client application after the default-build fix. Live production
+verification still requires access to the newly published deployment.
