@@ -4,6 +4,7 @@ import { Link, useLocation } from "wouter";
 import { useClientAuth, appFetch, type AppClient } from "@/contexts/ClientAuthContext";
 import { Eye, EyeOff, Zap } from "lucide-react";
 import { logo } from "@/lib/branding";
+import { loginErrorMessage } from "@/lib/login-error";
 import defaultRobot from "/default-robot.jpg";
 
 export default function AppLogin() {
@@ -32,7 +33,7 @@ export default function AppLogin() {
       else if (c.status === "approved" && !c.licenseKey) setLocation("/app/activate");
       else setLocation("/app/dashboard");
     } catch (err: any) {
-      setError(err?.data?.error ?? "Invalid credentials");
+      setError(loginErrorMessage(err));
     } finally {
       setLoading(false);
     }

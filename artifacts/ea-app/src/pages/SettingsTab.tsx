@@ -4,7 +4,7 @@ import {
   ChevronDown, ChevronUp, ChevronRight, BellOff, Check
 } from "lucide-react";
 import { useApp, InterfaceStyle, ShapeStyle } from "@/context/AppContext";
-import eaLogo from "@assets/ea_cloud_offical_logo_1778762761166.jpeg";
+import { eaLogo } from "@/lib/branding";
 
 interface SettingsTabProps {
   onOpenChartScanner?: () => void;

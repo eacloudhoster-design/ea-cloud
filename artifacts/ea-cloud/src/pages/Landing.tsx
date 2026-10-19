@@ -120,7 +120,7 @@ export default function Landing() {
               <Download className="w-10 h-10 text-primary mx-auto mb-4" />
               <h2 className="text-3xl font-bold mb-3">Download the EA Cloud App Now</h2>
               <p className="text-white/60 mb-6">Trade on the go. The EA Cloud mobile app puts your trading terminal in your pocket.</p>
-              <Button onClick={scrollToDownload} size="lg" className="bg-primary hover:bg-primary/80 px-10 py-4 h-auto text-base font-semibold shadow-[0_0_20px_rgba(227,30,36,0.4)] transition-all duration-300">
+              <Button onClick={() => window.location.assign("/ea-app/")} size="lg" className="bg-primary hover:bg-primary/80 px-10 py-4 h-auto text-base font-semibold shadow-[0_0_20px_rgba(227,30,36,0.4)] transition-all duration-300">
                 Get App
               </Button>
             </div>

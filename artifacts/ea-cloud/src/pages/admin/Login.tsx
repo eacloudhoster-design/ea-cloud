@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useLocation, useSearch } from "wouter";
 import { motion } from "framer-motion";
+import { loginErrorMessage } from "@/lib/login-error";
 import { logo } from "@/lib/branding";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -26,10 +27,9 @@ export default function AdminLogin() {
     try {
       const result = await loginMutation.mutateAsync({ data: { ...form, role: "mentor" } });
       login(result.user, result.token);
-      setLocation("/admin/dashboard");
+      setLocation(result.user.role === "superadmin" ? "/superadmin/dashboard" : "/admin/dashboard");
     } catch (err: unknown) {
-      const apiErr = err as { data?: { error?: string } | null };
-      const msg = apiErr?.data?.error || "Invalid credentials";
+      const msg = loginErrorMessage(err);
       if (msg === "pending_approval") {
         setIsPending(true);
       } else {

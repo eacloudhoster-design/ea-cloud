@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Loader2 } from "lucide-react";
 import { motion } from "framer-motion";
-import eaLogo from "@assets/ea_cloud_offical_logo_1778762761166.jpeg";
+import { eaLogo } from "@/lib/branding";
 
 interface AccessScreenProps {
   onAuthenticated: (token: string, status: string, licenseKey: string | null) => void;
@@ -40,17 +40,17 @@ export default function AccessScreen({ onAuthenticated }: AccessScreenProps) {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const reset = () => { setError(""); setFirstName(""); setLastName(""); setEmail(""); };
+  const reset = () => { setError(""); setFirstName(""); setLastName(""); setEmail(""); setPassword(""); };
 
   const handleRegister = async () => {
-    if (!firstName.trim() || !lastName.trim() || !email.trim()) {
+    if (!firstName.trim() || !lastName.trim() || !email.trim() || !password) {
       setError("All fields are required"); return;
     }
     setError(""); setLoading(true);
-    const autoPassword = btoa(email.trim().toLowerCase() + "_eacloud_" + Date.now()).slice(0, 24);
     try {
       const res = await fetch("/api/app/register", {
         method: "POST",
@@ -59,22 +59,14 @@ export default function AccessScreen({ onAuthenticated }: AccessScreenProps) {
           firstName: firstName.trim(),
           lastName: lastName.trim(),
           email: email.trim().toLowerCase(),
-          password: autoPassword,
+          password,
           plan: "monthly",
         }),
       });
       const data = await res.json();
       if (res.status === 409) {
-        // Email already registered — fetch their token by email and route them
-        const loginRes = await fetch("/api/app/login-by-email", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email: email.trim().toLowerCase() }),
-        });
-        const loginData = await loginRes.json();
-        if (!loginRes.ok) { setError(loginData.error || "Account lookup failed"); return; }
-        localStorage.setItem("appClientToken", loginData.token);
-        onAuthenticated(loginData.token, loginData.client.status, null);
+        setError("Email already registered. Sign in with your password.");
+        setMode("login");
         return;
       }
       if (!res.ok) { setError(data.error || "Registration failed"); return; }
@@ -86,19 +78,18 @@ export default function AccessScreen({ onAuthenticated }: AccessScreenProps) {
   };
 
   const handleLogin = async () => {
-    if (!email.trim()) { setError("Email is required"); return; }
+    if (!email.trim() || !password) { setError("Email and password are required"); return; }
     setError(""); setLoading(true);
     try {
-      // Login via token lookup by email
-      const res = await fetch("/api/app/login-by-email", {
+      const res = await fetch("/api/app/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: email.trim().toLowerCase() }),
+        body: JSON.stringify({ email: email.trim().toLowerCase(), password }),
       });
       const data = await res.json();
       if (!res.ok) { setError(data.error || "Account not found"); return; }
       localStorage.setItem("appClientToken", data.token);
-      onAuthenticated(data.token, data.client.status, null);
+      onAuthenticated(data.token, data.client.status, data.client.licenseKey);
     } catch {
       setError("Connection error. Please try again.");
     } finally { setLoading(false); }
@@ -171,6 +162,8 @@ export default function AccessScreen({ onAuthenticated }: AccessScreenProps) {
             </>
           )}
 
+          <Field label="PASSWORD" type="password" value={password} onChange={setPassword} placeholder="Your password" onEnter={handle} />
+
           {error && (
             <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-red-400 text-xs text-center">
               {error}
@@ -190,6 +183,14 @@ export default function AccessScreen({ onAuthenticated }: AccessScreenProps) {
             }}
           >
             {loading ? <Loader2 size={16} className="animate-spin" /> : "Access EA Cloud"}
+          </button>
+          <button
+            type="button"
+            disabled={loading}
+            onClick={() => { reset(); setMode(mode === "register" ? "login" : "register"); }}
+            className="w-full text-center text-sm text-white/50 hover:text-white transition-colors"
+          >
+            {mode === "register" ? "Already have an account? Sign in" : "New to EA Cloud? Create an account"}
           </button>
         </div>
       </motion.div>

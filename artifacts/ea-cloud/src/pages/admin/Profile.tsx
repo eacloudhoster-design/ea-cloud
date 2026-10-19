@@ -10,7 +10,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { getGetProfileQueryKey } from "@workspace/api-client-react";
 
 // Fixed EA Cloud server endpoint — identical for every mentor, shown read-only.
-const WEBHOOK_URL = "https://ai-copywriter-eacloudhoster.replit.app/api";
+const WEBHOOK_URL = `${window.location.origin}/api`;
 
 export default function AdminProfile() {
   usePortalRedirect();

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
 import { motion } from "framer-motion";
+import { loginErrorMessage } from "@/lib/login-error";
 import { logo } from "@/lib/branding";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -28,8 +29,7 @@ export default function SuperAdminLogin() {
       login(result.user, result.token);
       setLocation("/superadmin/dashboard");
     } catch (err: unknown) {
-      const apiErr = err as { data?: { error?: string } | null };
-      setError(apiErr?.data?.error || "Invalid credentials");
+      setError(loginErrorMessage(err));
     }
   };
 

@@ -47,3 +47,8 @@ Thumbs.db
 # Replit
 .cache/
 .local/
+
+# Cloudflare local state and host-only runtime settings
+.wrangler/
+.dev.vars
+.dev.vars.*
