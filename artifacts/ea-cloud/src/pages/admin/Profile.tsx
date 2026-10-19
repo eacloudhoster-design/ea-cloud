@@ -94,6 +94,8 @@ export default function AdminProfile() {
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    if (!["image/jpeg", "image/png", "image/webp", "image/gif"].includes(file.type)) { setUploadError("Please select a JPEG, PNG, WebP or GIF image"); return; }
+    if (file.size > 5 * 1024 * 1024) { setUploadError("Image must be 5MB or smaller"); return; }
     setUploadError("");
     setUploading(true);
     try {
@@ -113,10 +115,13 @@ export default function AdminProfile() {
       const { uploadURL, objectPath } = await metaRes.json();
       const uploadRes = await fetch(uploadURL, {
         method: "PUT",
-        headers: { "Content-Type": file.type },
+        headers: { "Content-Type": file.type, ...(token && new URL(uploadURL, window.location.href).origin === window.location.origin ? { Authorization: `Bearer ${token}` } : {}) },
         body: file,
       });
-      if (!uploadRes.ok) throw new Error("Upload to storage failed");
+      if (!uploadRes.ok) {
+        const error = await uploadRes.json().catch(() => ({}));
+        throw new Error(error.error || "Upload to storage failed");
+      }
       setForm(f => ({ ...f, backgroundImageUrl: `/api/storage${objectPath}` }));
     } catch (err: unknown) {
       setUploadError((err as Error).message || "Failed to upload image");

@@ -262,3 +262,8 @@ Tests also exercise these failure cases. Local production-preview and Pages
 runtime checks reproduce the original router 404 with the old command and
 verify the client application after the default-build fix. Live production
 verification still requires access to the newly published deployment.
+
+For the Cloudflare-native background upload implementation and exact R2
+binding instructions, see [Background storage](background-storage.md). New
+background uploads use that integration instead of the Replit storage sidecar;
+legacy storage URLs retain their original behavior.
