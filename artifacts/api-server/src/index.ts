@@ -2,31 +2,10 @@ import http from "http";
 import app from "./app";
 import { createWsServer } from "./ws";
 import { logger } from "./lib/logger";
-import { db, usersTable, brokerServersTable } from "@workspace/db";
-import { eq, or } from "drizzle-orm";
-import { createHash } from "crypto";
+import { db, brokerServersTable } from "@workspace/db";
 import { backfillApiKeys, backfillEncryptedKeys } from "./lib/api-key";
 import { expireStaleAccounts } from "./routes/mt5-validation";
 import { reconcileOnStartup, startWorker } from "./lib/signal-worker";
-
-function hashPw(pw: string) {
-  return createHash("sha256").update(pw + "ea_cloud_salt_2024").digest("hex");
-}
-
-async function migrateSuperAdmin() {
-  try {
-    await db.update(usersTable)
-      .set({ email: "eacloudhoster@gmail.com", password: hashPw("Tapiwanashe@13") })
-      .where(or(
-        eq(usersTable.email, "superadmin@eacloud.com"),
-        eq(usersTable.email, "superadmin@eacloud.pro"),
-        eq(usersTable.email, "eacloudhoster@gmail.com"),
-      ));
-    logger.info("Superadmin credentials migrated");
-  } catch (err) {
-    logger.warn({ err }, "Superadmin migration skipped");
-  }
-}
 
 async function seedBrokerServers() {
   try {
@@ -98,7 +77,6 @@ async function runStartupTasks() {
     // Best-effort maintenance tasks. Failures are logged but must never block the
     // server (already listening) or each other.
     const maintenance: Array<{ name: string; run: Promise<unknown> }> = [
-      { name: "migrateSuperAdmin", run: migrateSuperAdmin() },
       { name: "seedBrokerServers", run: seedBrokerServers() },
       { name: "backfillApiKeys", run: backfillApiKeys(logger) },
       { name: "backfillEncryptedKeys", run: backfillEncryptedKeys(logger) },

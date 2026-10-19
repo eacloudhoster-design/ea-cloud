@@ -100,7 +100,8 @@ router.post("/app/register", async (req, res) => {
 });
 
 // Login
-router.post("/app/login", async (req, res) => {
+// Retain the legacy URL, but require the same password verification on both paths.
+router.post(["/app/login", "/app/login-by-email"], async (req, res) => {
   try {
     const { email, password } = req.body as { email: string; password: string };
     if (!email || !password) { res.status(400).json({ error: "Email and password required" }); return; }
@@ -113,22 +114,6 @@ router.post("/app/login", async (req, res) => {
     res.json({ client: toClientDto(client), token });
   } catch (err) {
     req.log.error({ err }, "AppLogin error");
-    res.status(500).json({ error: "Internal server error" });
-  }
-});
-
-// Login by email only — used when user has no password (auto-generated at signup)
-router.post("/app/login-by-email", async (req, res) => {
-  try {
-    const { email } = req.body as { email: string };
-    if (!email) { res.status(400).json({ error: "Email is required" }); return; }
-    const [client] = await db.select().from(appAccessTable)
-      .where(eq(appAccessTable.email, email.toLowerCase())).limit(1);
-    if (!client) { res.status(404).json({ error: "No account found for this email" }); return; }
-    const token = makeToken(client.id);
-    res.json({ client: toClientDto(client), token });
-  } catch (err) {
-    req.log.error({ err }, "AppLoginByEmail error");
     res.status(500).json({ error: "Internal server error" });
   }
 });

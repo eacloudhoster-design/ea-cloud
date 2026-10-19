@@ -9,7 +9,7 @@ import AccessScreen from "@/pages/AccessScreen";
 import PendingScreen from "@/pages/PendingScreen";
 import ActivateScreen from "@/pages/ActivateScreen";
 import type { Tab } from "@/context/AppContext";
-import robotBg from "@assets/pil_1778766621858.jpeg";
+import { robotBg } from "@/lib/branding";
 
 type AuthStage = "loading" | "access" | "pending" | "rejected" | "activate" | "app";
 

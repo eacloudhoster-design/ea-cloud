@@ -1,7 +1,7 @@
 import { CheckCircle, Loader2, X, ShieldAlert, Eye, EyeOff, Wifi, Clock } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useApp } from "@/context/AppContext";
-import eaLogo from "@assets/ea_cloud_offical_logo_1778762761166.jpeg";
+import { eaLogo } from "@/lib/branding";
 
 type ConnectState = "idle" | "connecting" | "connected" | "error";
 

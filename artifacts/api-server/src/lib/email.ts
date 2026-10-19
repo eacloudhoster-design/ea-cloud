@@ -8,6 +8,10 @@ import { logger } from "./logger";
 //   EMAIL_PASSWORD — a Gmail App Password (NOT the normal account password)
 // NEVER log the credentials.
 
+function websiteUrl(path: string): string {
+  return new URL(path, process.env.PUBLIC_WEBSITE_ORIGIN || "https://ea-cloud-website.pages.dev").href;
+}
+
 const SMTP_HOST = "smtp.gmail.com";
 const SMTP_PORT = 465; // implicit TLS
 
@@ -187,7 +191,7 @@ export async function sendMentorApprovedEmail(opts: {
       body: message,
       ctaLabel: "LOGIN TO MENTOR PORTAL",
       ctaHref:
-        "https://ai-copywriter--eacloudhoster.replit.app/admin/login",
+        websiteUrl("/admin/login"),
     }),
   });
 }
@@ -219,7 +223,7 @@ export async function sendMentorApprovedEmailPersonalized(opts: {
       body: message,
       ctaLabel: "LOGIN TO MENTOR PORTAL",
       ctaHref:
-        "https://ai-copywriter--eacloudhoster.replit.app/admin/login",
+        websiteUrl("/admin/login"),
     }),
   });
 }
@@ -259,7 +263,7 @@ export async function sendMobileAppLaunchEmail(opts: {
   mentorName: string;
 }): Promise<void> {
   const name = opts.mentorName.trim() || "there";
-  const appUrl = "https://ai-copywriter--eacloudhoster.replit.app/ea-app/";
+  const appUrl = websiteUrl("/ea-app/");
   const text =
     `Hello ${name},\n\n` +
     "Congratulations! \u{1F389}\n\n" +

@@ -2,7 +2,7 @@ import { Bell, Trash2, DollarSign, Play, X, TrendingUp, Settings2, Check, Menu, 
 import { useState, useEffect, useRef } from "react";
 import { useApp } from "@/context/AppContext";
 import { useTradeExecutions, type TradeExecution } from "@/hooks/use-trade-executions";
-import eaLogo from "@assets/ea_cloud_offical_logo_1778762761166.jpeg";
+import { eaLogo } from "@/lib/branding";
 
 /* Custom chip icon — no inner square */
 function ChipIcon({ size = 24, color = "currentColor", style }: { size?: number; color?: string; style?: React.CSSProperties }) {

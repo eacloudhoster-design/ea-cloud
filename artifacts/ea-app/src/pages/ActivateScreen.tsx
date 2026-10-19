@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Key, Loader2, LogOut, ShieldCheck } from "lucide-react";
-import eaLogo from "@assets/ea_cloud_offical_logo_1778762761166.jpeg";
-import robotBg from "@assets/pil_1778766621858.jpeg";
+import { eaLogo } from "@/lib/branding";
+import { robotBg } from "@/lib/branding";
 
 interface ActivateScreenProps {
   token: string;
