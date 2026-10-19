@@ -29,9 +29,10 @@ export default function AdminSettings() {
   const currentBg = bgPreview ?? profile?.backgroundImageUrl ?? null;
 
   const handleFile = useCallback((file: File) => {
-    if (!file.type.startsWith("image/")) { setBgError("Please select an image file"); return; }
+    if (!["image/jpeg", "image/png", "image/webp", "image/gif"].includes(file.type)) { setBgError("Please select a JPEG, PNG, WebP or GIF image"); return; }
     if (file.size > 5 * 1024 * 1024) { setBgError("Image must be under 5MB"); return; }
     setBgError("");
+    setBgSaved(false);
     selectedFileRef.current = file;
     const reader = new FileReader();
     reader.onload = (e) => setBgPreview(e.target?.result as string);
@@ -51,7 +52,7 @@ export default function AdminSettings() {
     setBgSaving(true);
     setBgError("");
     try {
-      // Step 1: get a presigned GCS upload URL from the server
+      // Step 1: request an authenticated background upload endpoint
       const metaRes = await fetch("/api/storage/uploads/request-url", {
         method: "POST",
         headers: {
@@ -66,20 +67,24 @@ export default function AdminSettings() {
       }
       const { uploadURL, objectPath } = await metaRes.json() as { uploadURL: string; objectPath: string };
 
-      // Step 2: upload the file directly to GCS
+      // Step 2: upload the file through the Pages R2 handler
       const putRes = await fetch(uploadURL, {
         method: "PUT",
-        headers: { "Content-Type": file.type },
+        headers: { "Content-Type": file.type, ...(token && new URL(uploadURL, window.location.href).origin === window.location.origin ? { Authorization: `Bearer ${token}` } : {}) },
         body: file,
       });
-      if (!putRes.ok) throw new Error("Upload to storage failed");
+      if (!putRes.ok) {
+        const error = await putRes.json().catch(() => ({}));
+        throw new Error(error.error || "Upload to storage failed");
+      }
 
       const backgroundImageUrl = `/api/storage${objectPath}`;
 
       // Step 3: save the persistent URL to the mentor profile
       await updateProfile.mutateAsync({ data: { backgroundImageUrl } });
-      queryClient.invalidateQueries({ queryKey: getGetProfileQueryKey() });
+      await queryClient.invalidateQueries({ queryKey: getGetProfileQueryKey() });
       selectedFileRef.current = null;
+      setBgPreview(null);
       setBgSaved(true);
       setTimeout(() => setBgSaved(false), 3000);
     } catch (err) {
@@ -90,12 +95,14 @@ export default function AdminSettings() {
   };
 
   const handleRemoveBg = async () => {
-    setBgPreview(null);
+    setBgError("");
     setBgSaving(true);
     try {
       await updateProfile.mutateAsync({ data: { backgroundImageUrl: "" } });
-      queryClient.invalidateQueries({ queryKey: getGetProfileQueryKey() });
-    } catch { } finally {
+      await queryClient.invalidateQueries({ queryKey: getGetProfileQueryKey() });
+      selectedFileRef.current = null;
+      setBgPreview(null);
+    } catch (err) { setBgError((err as Error).message || "Failed to remove background image"); } finally {
       setBgSaving(false);
     }
   };
@@ -155,7 +162,7 @@ export default function AdminSettings() {
             </div>
           )}
 
-          <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={e => e.target.files?.[0] && handleFile(e.target.files[0])} />
+          <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/webp,image/gif" className="hidden" onChange={e => e.target.files?.[0] && handleFile(e.target.files[0])} />
 
           {bgError && <p className="text-red-400 text-xs mb-3">{bgError}</p>}
 
