@@ -54,6 +54,7 @@ export default function AccessScreen({ onAuthenticated }: AccessScreenProps) {
     try {
       const res = await fetch("/api/app/register", {
         method: "POST",
+        signal: AbortSignal.timeout(20000),
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           firstName: firstName.trim(),
@@ -83,6 +84,7 @@ export default function AccessScreen({ onAuthenticated }: AccessScreenProps) {
     try {
       const res = await fetch("/api/app/login", {
         method: "POST",
+        signal: AbortSignal.timeout(20000),
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: email.trim().toLowerCase(), password }),
       });

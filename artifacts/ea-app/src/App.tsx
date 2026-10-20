@@ -9,12 +9,16 @@ import AccessScreen from "@/pages/AccessScreen";
 import PendingScreen from "@/pages/PendingScreen";
 import ActivateScreen from "@/pages/ActivateScreen";
 import type { Tab } from "@/context/AppContext";
+import { requestJson } from "@/lib/request";
 import { robotBg } from "@/lib/branding";
 
-type AuthStage = "loading" | "access" | "pending" | "rejected" | "activate" | "app";
+type AuthStage = "loading" | "error" | "access" | "pending" | "rejected" | "activate" | "app";
 
 export default function App() {
   const [authStage, setAuthStage] = useState<AuthStage>("loading");
+  const [loadError, setLoadError] = useState("");
+  const [brandingReady, setBrandingReady] = useState(false);
+  const [brandingAttempt, setBrandingAttempt] = useState(0);
   const [clientToken, setClientToken] = useState<string | null>(null);
   const [clientStatus, setClientStatus] = useState<"pending" | "rejected" | "approved">("pending");
 
@@ -34,42 +38,29 @@ export default function App() {
 
   // On mount: validate stored token or show auth
   useEffect(() => {
-    const stored = localStorage.getItem("appClientToken");
+    let stored;
+    try { stored = localStorage.getItem("appClientToken"); }
+    catch { setLoadError("Browser storage is unavailable. Enable site storage and retry."); setAuthStage("error"); return; }
     if (!stored) { setAuthStage("access"); return; }
     validateToken(stored);
-  }, []);
-
-  // Fetch public mentor config ONLY when there is no stored token (login screen).
-  // When a token exists the dashboard fetch provides the correct mentor-specific data,
-  // so running this would flash a wrong mentor's image before the real one arrives.
-  useEffect(() => {
-    const stored = localStorage.getItem("appClientToken");
-    if (stored) return; // authenticated users get config from /api/app/dashboard instead
-    fetch("/api/app/mentor-config")
-      .then(r => r.ok ? r.json() : null)
-      .then(data => {
-        if (!data) return;
-        if (data.robotName) setEaName(data.robotName);
-        if (data.robotTagline) setEaTagline(data.robotTagline);
-        if (data.symbols && data.symbols.length > 0) setEaSymbols(data.symbols);
-        if (data.backgroundImageUrl) setBgImageUrl(data.backgroundImageUrl);
-      })
-      .catch(() => {});
   }, []);
 
   // Once the user is on the dashboard with a token, fetch mentor-specific config
   useEffect(() => {
     if (authStage !== "app" || !clientToken) return;
-    fetch("/api/app/dashboard", { headers: { Authorization: `Bearer ${clientToken}` } })
-      .then(r => r.ok ? r.json() : null)
+    let cancelled = false;
+    setBrandingReady(false);
+    setLoadError("");
+    requestJson("/api/app/dashboard", { headers: { Authorization: `Bearer ${clientToken}` } })
       .then(data => {
-        if (!data) return;
+        if (cancelled) return;
+        if (!data.mentor) throw new Error("Your mentor is not linked. Please contact support.");
         const mentor = data.mentor;
         const eas: { name: string; symbol: string }[] = data.eas ?? [];
         // Background image from mentor profile
-        if (mentor?.backgroundImageUrl) setBgImageUrl(mentor.backgroundImageUrl);
-        // EA name: prefer first active EA's name from EA Manager, fall back to mentor robot name
-        const primaryName = eas[0]?.name || mentor?.robotName;
+        setBgImageUrl(mentor?.backgroundImageUrl || null);
+        // The mentor profile is the source of truth for client branding.
+        const primaryName = mentor?.robotName?.trim() || eas[0]?.name;
         if (primaryName) setEaName(primaryName);
         if (mentor?.robotTagline) setEaTagline(mentor.robotTagline);
         // Symbols: all unique symbols across active EAs
@@ -81,9 +72,11 @@ export default function App() {
           )];
           if (allSymbols.length > 0) setEaSymbols(allSymbols);
         }
+        setBrandingReady(true);
       })
-      .catch(() => {});
-  }, [authStage, clientToken]);
+      .catch((err) => { if (!cancelled) setLoadError(err.message || "Unable to load your mentor. Please retry."); });
+    return () => { cancelled = true; };
+  }, [authStage, clientToken, brandingAttempt]);
 
   // Load persisted copy-trading on/off state so the START/STOP control reflects
   // the database (survives logout, app restart, server restart, VPS restart).
@@ -112,13 +105,15 @@ export default function App() {
 
   const validateToken = async (token: string) => {
     try {
-      const res = await fetch("/api/app/me", { headers: { Authorization: `Bearer ${token}` } });
-      if (!res.ok) { clearAuth(); return; }
-      const client = await res.json();
+      setAuthStage("loading");
+      setLoadError("");
+      const client = await requestJson("/api/app/me", { headers: { Authorization: `Bearer ${token}` } });
       setClientToken(token);
       routeByStatus(client.status, client.licenseKey ?? null);
-    } catch {
-      clearAuth();
+    } catch (err) {
+      if ((err as { status?: number }).status === 401) { clearAuth(); return; }
+      setLoadError((err as Error).message || "Unable to connect. Please retry.");
+      setAuthStage("error");
     }
   };
 
@@ -133,6 +128,8 @@ export default function App() {
   const clearAuth = () => {
     localStorage.removeItem("appClientToken");
     setClientToken(null);
+    setBrandingReady(false);
+    setBgImageUrl(null);
     setAuthStage("access");
   };
 
@@ -163,10 +160,16 @@ export default function App() {
   const backgroundSrc = bgImageUrl || robotBg;
 
   // Loading splash
-  if (authStage === "loading") {
+  if (authStage === "loading" || authStage === "error" || (authStage === "app" && !brandingReady)) {
     return (
       <div className="flex items-center justify-center bg-black" style={{ height: "100dvh", maxWidth: 430, margin: "0 auto" }}>
-        <div className="w-8 h-8 rounded-full border-2 border-red-500/30 border-t-red-500 animate-spin" />
+        {loadError ? <div className="text-white text-center p-6" role="alert">
+          <p>{loadError}</p>
+          <button className="mt-4 rounded-xl bg-red-500 px-5 py-3" onClick={() => {
+            if (authStage === "app") setBrandingAttempt(v => v + 1);
+            else { try { const token = localStorage.getItem("appClientToken"); if (token) void validateToken(token); else setAuthStage("access"); } catch { window.location.reload(); } }
+          }}>Retry</button>
+        </div> : <div role="status" aria-label="Loading" className="w-8 h-8 rounded-full border-2 border-red-500/30 border-t-red-500 animate-spin" />}
       </div>
     );
   }
