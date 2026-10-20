@@ -1,314 +1,177 @@
-import { CheckCircle, Loader2, X, ShieldAlert, Eye, EyeOff, Wifi, Clock } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
+import { ArrowRight, ChevronRight, Eye, EyeOff, Fingerprint, Info, Layers3, LockKeyhole, Radio, RotateCcw, Server, Shield, ShieldAlert, X } from "lucide-react";
 import { useApp } from "@/context/AppContext";
-import { eaLogo } from "@/lib/branding";
+import { detectBroker, validateMt5Preview } from "@/lib/brokers";
+import { previewMt5Connection } from "@/lib/mt5-preview";
+import { requestJson } from "@/lib/request";
+import BrokerLogo from "@/components/mt5/BrokerLogo";
+import "./MetaTraderTab.css";
 
-type ConnectState = "idle" | "connecting" | "connected" | "error";
-
-interface ConnectResult {
-  login: string;
-  server: string;
-  balance: string | null;
-  connectedAt: string | null;
-}
-
-const BASE = "/api";
-
-function formatBalance(bal: string | null): string {
-  if (bal === null || bal === "") return "—";
-  const n = Number(bal);
-  if (isNaN(n)) return bal;
-  return n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-}
-
-function formatTime(iso: string | null): string {
-  if (!iso) return "—";
-  const d = new Date(iso);
-  if (isNaN(d.getTime())) return "—";
-  const diff = Math.floor((Date.now() - d.getTime()) / 1000);
-  if (diff < 60) return "Just now";
-  if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
-  if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
-  return d.toLocaleString();
-}
+type PreviewState = "idle" | "connecting" | "unverified";
+interface SavedAccount { login: string; server: string }
 
 export default function MetaTraderTab() {
-  const { accentColor, mtConnected, setMtConnected, clientToken } = useApp();
+  const { bgImageUrl, eaName, clientToken, activeTab } = useApp();
   const [login, setLogin] = useState("");
   const [password, setPassword] = useState("");
   const [server, setServer] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [connectState, setConnectState] = useState<ConnectState>(mtConnected ? "connected" : "idle");
-  const [errorMsg, setErrorMsg] = useState("");
-  const [result, setResult] = useState<ConnectResult | null>(null);
+  const [state, setState] = useState<PreviewState>("idle");
+  const [error, setError] = useState("");
+  const [saved, setSaved] = useState<SavedAccount | null>(null);
+  const [savedError, setSavedError] = useState(false);
+  const [restoreAttempt, setRestoreAttempt] = useState(0);
+  const [backgroundFailed, setBackgroundFailed] = useState(false);
+  const controller = useRef<AbortController | null>(null);
+  const connectButton = useRef<HTMLButtonElement>(null);
+  const closeButton = useRef<HTMLButtonElement>(null);
+  const restoreFocus = useRef(false);
+  const broker = detectBroker(server);
+  const brokerName = broker?.name ?? "your broker";
+  const modalOpen = state !== "idle";
 
-  // Restore saved MT5 connection from the client's profile
+  useEffect(() => { setBackgroundFailed(false); }, [bgImageUrl]);
+
+  // Read-only restoration. Historical saved flags are not proof of a live session.
   useEffect(() => {
-    if (!clientToken || connectState === "connected") return;
-    fetch(`${BASE}/app/trading-controls`, { headers: { Authorization: `Bearer ${clientToken}` } })
-      .then(r => r.ok ? r.json() : null)
+    let cancelled = false;
+    setSaved(null);
+    setSavedError(false);
+    if (clientToken) requestJson("/api/app/trading-controls", { headers: { Authorization: `Bearer ${clientToken}` } })
       .then(data => {
-        if (data?.mt5Connected && data.mt5Login && data.mt5Server) {
-          setLogin(data.mt5Login);
-          setServer(data.mt5Server);
-          setResult({
-            login: data.mt5Login,
-            server: data.mt5Server,
-            balance: null,
-            connectedAt: data.updatedAt ?? null,
-          });
-          setConnectState("connected");
-          setMtConnected(true);
-        }
+        if (!cancelled && data.mt5Login && data.mt5Server) setSaved({ login: String(data.mt5Login), server: data.mt5Server });
       })
-      .catch(() => {});
-  }, [clientToken]);
+      .catch(() => { if (!cancelled) setSavedError(true); });
+    return () => { cancelled = true; };
+  }, [clientToken, restoreAttempt]);
 
-  const handleDisconnect = async () => {
-    if (clientToken) {
-      await fetch(`${BASE}/app/mt5-disconnect`, {
-        method: "POST",
-        headers: { Authorization: `Bearer ${clientToken}` },
-      }).catch(() => {});
-    }
-    setConnectState("idle");
-    setMtConnected(false);
-    setResult(null);
-    setLogin("");
+  const closePreview = () => {
+    controller.current?.abort();
+    setState("idle");
     setPassword("");
-    setServer("");
-    setErrorMsg("");
+    setShowPassword(false);
+    restoreFocus.current = true;
   };
 
-  const handleConnect = async () => {
-    setErrorMsg("");
-
-    if (!login.trim() || !password.trim() || !server.trim()) {
-      setConnectState("error");
-      setErrorMsg("All fields are required.");
-      return;
-    }
-    if (isNaN(Number(login)) || Number(login) <= 0) {
-      setConnectState("error");
-      setErrorMsg("Login must be a valid MT5 account number.");
-      return;
-    }
-    if (!clientToken) {
-      setConnectState("error");
-      setErrorMsg("You must be signed in to connect an MT5 account.");
-      return;
-    }
-
-    setConnectState("connecting");
-    try {
-      const res = await fetch(`${BASE}/app/mt5-connect`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${clientToken}` },
-        body: JSON.stringify({ login: login.trim(), password, server: server.trim() }),
-      });
-
-      const data = await res.json().catch(() => ({} as Record<string, unknown>));
-
-      if (!res.ok) {
-        setConnectState("error");
-        setErrorMsg((data.error as string) || (data.message as string) || "Connection failed");
-        return;
-      }
-
-      setResult({
-        login: (data.login as string) ?? login.trim(),
-        server: (data.server as string) ?? server.trim(),
-        balance: data.balance != null ? String(data.balance) : null,
-        connectedAt: (data.connectedAt as string) ?? new Date().toISOString(),
-      });
+  useEffect(() => () => { controller.current?.abort(); }, []);
+  // Tabs remain mounted in this app; leaving the screen must cancel its preview.
+  useEffect(() => {
+    if (activeTab !== "metatrader") {
+      controller.current?.abort();
+      setState("idle");
       setPassword("");
-      setConnectState("connected");
-      setMtConnected(true);
+      setShowPassword(false);
+    }
+  }, [activeTab, clientToken]);
+  useEffect(() => {
+    if (modalOpen) closeButton.current?.focus({ preventScroll: true });
+    else if (restoreFocus.current) {
+      if (activeTab === "metatrader") connectButton.current?.focus({ preventScroll: true });
+      restoreFocus.current = false;
+    }
+  }, [modalOpen, activeTab]);
+
+  const connect = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (controller.current && !controller.current.signal.aborted && state === "connecting") return;
+    const message = validateMt5Preview(login, password, server);
+    if (message || !clientToken) {
+      setError(message || "Sign in to preview your MT5 connection.");
+      return;
+    }
+    setError("");
+    setPassword("");
+    setShowPassword(false);
+    const attempt = new AbortController();
+    controller.current = attempt;
+    setState("connecting");
+    try {
+      // No credentials are submitted. This is the future verification boundary.
+      await previewMt5Connection({ login: login.trim(), server: server.trim() }, attempt.signal);
+      if (!attempt.signal.aborted) setState("unverified");
     } catch {
-      setConnectState("error");
-      setErrorMsg("Network error. Please try again.");
+      if (!attempt.signal.aborted) setState("unverified");
     }
   };
 
-  const isReady = login.trim() && password.trim() && server.trim();
-  const connecting = connectState === "connecting";
-
   return (
-    <div className="absolute inset-0 flex flex-col overflow-hidden" style={{ paddingBottom: 75, background: "#060606" }}>
-      {/* Red border glow frame */}
-      <div className="absolute inset-2 rounded-3xl pointer-events-none" style={{ border: `1.5px solid ${accentColor}99`, boxShadow: `0 0 30px ${accentColor}55, inset 0 0 30px ${accentColor}11` }} />
-      <div className="absolute inset-0 pointer-events-none" style={{ background: `radial-gradient(ellipse 80% 30% at 50% 0%, ${accentColor}44 0%, transparent 60%), radial-gradient(ellipse 80% 20% at 50% 100%, ${accentColor}22 0%, transparent 60%)` }} />
+    <section className="mt5-screen" aria-label="MT5 Connections">
+      {bgImageUrl && !backgroundFailed && <img className="mt5-mentor-background" src={bgImageUrl} alt="" onError={() => setBackgroundFailed(true)} />}
+      <div className="mt5-background-shade" />
+      <div className="mt5-content" inert={modalOpen}>
+        <header className="mt5-topline">
+          <div><span className="mt5-eyebrow">EA CLOUD / TERMINAL</span><p className="mt5-mentor-name">{eaName}</p></div>
+          <span className="mt5-terminal-icon"><Layers3 size={20} strokeWidth={1.3} /></span>
+        </header>
 
-      {/* Drag handle */}
-      <div className="flex justify-center pt-3 pb-1 relative z-10">
-        <div className="w-8 h-1.5 rounded-full bg-white/20" />
-      </div>
+        <div className="mt5-account-heading"><span className="mt5-heading-dot" />MT5 ACCOUNT<span className="mt5-version">05</span></div>
+        <div className="mt5-status"><span /> NOT VERIFIED <span className="mt5-status-divider">/</span><span className="mt5-preview-label">VISUAL PREVIEW</span></div>
 
-      {/* MT5 icon */}
-      <div className="flex justify-center relative z-10 mt-2">
-        <div className="w-14 h-14 rounded-2xl overflow-hidden" style={{ background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.1)" }}>
-          <div className="w-full h-full flex items-center justify-center">
-            <svg viewBox="0 0 56 56" width="56" height="56">
-              <circle cx="18" cy="22" r="9" fill="#4ade80" />
-              <circle cx="34" cy="22" r="9" fill="#3b82f6" />
-              <circle cx="26" cy="35" r="9" fill="#facc15" />
-              <text x="26" y="40" textAnchor="middle" fontSize="11" fill="white" fontWeight="bold">5</text>
-            </svg>
-          </div>
+        <div className="mt5-intro">
+          <div className="mt5-platform-mark" aria-hidden="true"><Layers3 size={28} strokeWidth={1.4} /><span>5</span></div>
+          <span className="mt5-eyebrow">YOUR NEXT CONNECTION</span>
+          <h2>Your trading world.</h2>
+          <p>One account. Every opportunity.</p>
         </div>
-      </div>
 
-      {/* Header */}
-      <div className="text-center relative z-10 mt-2 px-5">
-        <h2 className="font-black text-xl tracking-widest" style={{ color: accentColor }}>MT5 CONNECTIONS</h2>
-        <p className="text-white/40 text-xs mt-1">Connect your MetaTrader 5 account and view live balance</p>
-      </div>
+        <form className="mt5-form" onSubmit={connect}>
+          <div className="mt5-form-heading"><span>MT5 LOGIN DETAILS</span><LockKeyhole size={13} /></div>
+          <label htmlFor="mt5-login">LOGIN / ACCOUNT NUMBER</label>
+          <div className="mt5-input-wrap"><Fingerprint size={19} /><input id="mt5-login" inputMode="numeric" type="text" autoComplete="off" maxLength={32}
+            value={login} onChange={e => setLogin(e.target.value)} placeholder="Your MT5 account number" required /></div>
 
-      <div className="relative z-10 flex-1 overflow-y-auto px-5 mt-4 space-y-4 pb-2">
-        {/* Error banner */}
-        {connectState === "error" && (
-          <div className="p-4 rounded-2xl flex items-center gap-3" style={{ background: "rgba(60,10,10,0.7)", border: "1px solid rgba(239,68,68,0.4)" }}>
-            <ShieldAlert size={22} className="text-red-400 flex-shrink-0" />
-            <div className="flex-1">
-              <p className="text-red-400 font-bold text-sm">Connection Failed</p>
-              <p className="text-white/50 text-xs mt-0.5">{errorMsg}</p>
-            </div>
-            <button onClick={() => setConnectState("idle")} className="text-white/40"><X size={16} /></button>
-          </div>
-        )}
-
-        {connectState === "connected" && result ? (
-          /* ── Connected detail card ──────────────────────────────────────── */
-          <div className="rounded-2xl p-5" style={{ background: "rgba(20,60,20,0.4)", border: "1px solid rgba(34,197,94,0.4)" }}>
-            <div className="flex items-center gap-2 mb-4">
-              <CheckCircle size={20} className="text-green-400" />
-              <span className="font-bold text-green-400 text-sm tracking-wide uppercase">Connected</span>
-              <span className="ml-auto relative flex w-2.5 h-2.5">
-                <span className="absolute inline-flex h-full w-full rounded-full bg-green-500 opacity-60 animate-ping" />
-                <span className="relative inline-flex rounded-full w-2.5 h-2.5 bg-green-500" />
-              </span>
-            </div>
-
-            <div className="grid grid-cols-2 gap-3">
-              <Stat label="Account Number" value={`#${result.login}`} mono />
-              <Stat label="Current Balance" value={formatBalance(result.balance)} mono accent="#4ade80" />
-              <div className="col-span-2">
-                <Stat label="Server" value={result.server} mono />
-              </div>
-              <Stat label="Status" value="Connected" accent="#4ade80" />
-              <Stat label="Last Connected" value={formatTime(result.connectedAt)} icon={<Clock size={11} className="text-white/35" />} />
-            </div>
-
-            <button
-              onClick={handleDisconnect}
-              className="w-full mt-5 py-3 rounded-full font-bold text-white text-sm flex items-center justify-center gap-2 active:scale-95 transition-transform"
-              style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.12)" }}
-            >
-              <X size={16} /> Disconnect
+          <label htmlFor="mt5-password">PASSWORD</label>
+          <div className="mt5-input-wrap"><LockKeyhole size={18} /><input id="mt5-password" type={showPassword ? "text" : "password"} autoComplete="off"
+            value={password} onChange={e => setPassword(e.target.value)} placeholder="Use a demo password for this preview" required />
+            <button type="button" className="mt5-eye" aria-label={showPassword ? "Hide password" : "Show password"} aria-pressed={showPassword} onClick={() => setShowPassword(v => !v)}>
+              {showPassword ? <EyeOff size={19} /> : <Eye size={19} />}
             </button>
           </div>
-        ) : (
-          /* ── Connect form ───────────────────────────────────────────────── */
-          <div className="rounded-2xl p-5 space-y-4" style={{ background: "rgba(18,18,24,0.6)", border: "1px solid rgba(255,255,255,0.08)" }}>
-            <div className="flex items-center gap-2">
-              <Wifi size={15} style={{ color: accentColor }} />
-              <span className="text-sm font-semibold text-white">Connect MT5 Account</span>
-            </div>
 
-            {/* Login */}
-            <FormField label="Login (Account Number)">
-              <input
-                type="number"
-                inputMode="numeric"
-                value={login}
-                onChange={e => setLogin(e.target.value)}
-                placeholder="e.g. 12345678"
-                className="w-full rounded-xl px-4 py-3 text-white text-sm placeholder:text-white/30 font-mono [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                style={{ background: "rgba(18,18,24,0.9)", border: "1px solid rgba(255,255,255,0.12)" }}
-              />
-            </FormField>
+          <label htmlFor="mt5-server">BROKER SERVER</label>
+          <div className="mt5-input-wrap"><Server size={18} /><input id="mt5-server" type="text" autoCapitalize="none" autoCorrect="off" spellCheck={false} autoComplete="off" maxLength={128}
+            value={server} onChange={e => setServer(e.target.value)} placeholder="e.g. Exness-MT5Real1" required list="mt5-broker-hints" /></div>
+          <datalist id="mt5-broker-hints">
+            {["Exness-MT5Real1", "Deriv-Demo", "ICMarketsSC-MT5", "Pepperstone-MT5-Live01", "XMGlobal-MT5", "HFMarketsSV-Live", "FBS-Real", "Tickmill-Live", "ForexTimeFXTM-Live"].map(value => <option key={value} value={value} />)}
+          </datalist>
+          <div className="mt5-broker-hint"><Radio size={12} /><span>{broker ? `${broker.name} detected` : "Enter the server from your broker"}</span><span>NAME HINT ONLY</span></div>
 
-            {/* Password with show/hide */}
-            <FormField label="Password">
-              <div className="relative">
-                <input
-                  type={showPassword ? "text" : "password"}
-                  value={password}
-                  onChange={e => setPassword(e.target.value)}
-                  placeholder="MT5 account password"
-                  autoComplete="off"
-                  className="w-full rounded-xl px-4 py-3 pr-11 text-white text-sm placeholder:text-white/30"
-                  style={{ background: "rgba(18,18,24,0.9)", border: "1px solid rgba(255,255,255,0.12)" }}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(p => !p)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-white/35 active:text-white"
-                >
-                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                </button>
-              </div>
-            </FormField>
+          {error && <p className="mt5-form-error" role="alert"><ShieldAlert size={15} />{error}</p>}
+          <button ref={connectButton} type="submit" className="mt5-connect-button"><Shield size={18} /><span>Connect MT5</span><ArrowRight size={18} /></button>
+          <p className="mt5-prototype-note"><Info size={13} /><span>Animation preview only. No broker login is performed.<br />Your password is never sent or saved.</span></p>
+        </form>
 
-            {/* Server */}
-            <FormField label="Server">
-              <input
-                type="text"
-                value={server}
-                onChange={e => setServer(e.target.value)}
-                placeholder="e.g. Exness-MT5Real"
-                autoCapitalize="none"
-                autoCorrect="off"
-                className="w-full rounded-xl px-4 py-3 text-white text-sm placeholder:text-white/30 font-mono"
-                style={{ background: "rgba(18,18,24,0.9)", border: "1px solid rgba(255,255,255,0.12)" }}
-              />
-            </FormField>
-
-            <button
-              onClick={handleConnect}
-              disabled={connecting || !isReady}
-              className="w-full py-4 rounded-full font-bold text-white text-base tracking-wide mt-1 flex items-center justify-center gap-2 active:scale-95 transition-transform disabled:opacity-50"
-              style={{
-                background: `linear-gradient(135deg, ${accentColor} 0%, ${accentColor}bb 100%)`,
-                boxShadow: `0 4px 20px ${accentColor}66`,
-              }}
-            >
-              {connecting ? <><Loader2 size={18} className="animate-spin" /> Connecting…</> : <><Wifi size={18} /> Connect MT5</>}
-            </button>
-          </div>
-        )}
+        {(saved || savedError) && <aside className="mt5-saved-account">
+          {saved ? <><span className="mt5-eyebrow">EXISTING ACCOUNT · UNVERIFIED</span><p>#{saved.login} <ChevronRight size={13} /> {saved.server}</p><small>Your saved connection is unchanged.</small></> : <><p>Saved account details are unavailable.</p><button type="button" onClick={() => setRestoreAttempt(v => v + 1)}>Retry loading details</button></>}
+        </aside>}
+        <footer className="mt5-footer"><span className="mt5-footer-line" /><span>METATRADER 5</span><span className="mt5-footer-line" /></footer>
       </div>
 
-      {/* Floating bot avatar */}
-      <div className="absolute z-20" style={{ bottom: 88, right: 14 }}>
-        <div className="relative">
-          <div className="w-[42px] h-[42px] rounded-full overflow-hidden" style={{ border: `2px solid ${accentColor}cc`, boxShadow: `0 0 12px ${accentColor}66` }}>
-            <img src={eaLogo} alt="Bot" className="w-full h-full object-cover" />
+      {modalOpen && <div className="mt5-modal-backdrop" onKeyDown={event => {
+        if (event.key === "Escape") { event.preventDefault(); closePreview(); }
+        if (event.key === "Tab") {
+          const buttons = Array.from(event.currentTarget.querySelectorAll<HTMLButtonElement>("button"));
+          const first = buttons[0]; const last = buttons[buttons.length - 1];
+          if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
+          else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
+        }
+      }}>
+        <div className="mt5-connection-modal" role="dialog" aria-modal="true" aria-labelledby="mt5-dialog-title" aria-describedby="mt5-dialog-description">
+          <button ref={closeButton} className="mt5-modal-close" type="button" aria-label={state === "connecting" ? "Cancel preview" : "Close preview"} onClick={closePreview}><X size={20} /></button>
+          <span className="mt5-modal-chip">VISUAL PREVIEW / MT5</span>
+          <div className={`mt5-broker-stage ${state === "connecting" ? "is-connecting" : ""}`}>
+            <div className="mt5-orbit mt5-orbit--outer" /><div className="mt5-orbit mt5-orbit--inner" />
+            <BrokerLogo key={broker?.id ?? "unknown"} broker={broker} />
+            <span className="mt5-stage-status">{state === "connecting" ? <Radio size={16} /> : <ShieldAlert size={16} />}</span>
           </div>
-          <div className="absolute top-0 right-0 w-3 h-3 rounded-full" style={{ background: connectState === "connected" ? "#4ade80" : accentColor, border: "1.5px solid #000" }} />
+          <div aria-live="polite" aria-atomic="true">
+            <h3 id="mt5-dialog-title">{state === "connecting" ? `Connecting to ${brokerName}` : "Connection not verified"}</h3>
+            <p className="mt5-dialog-server">{server.trim()}</p>
+            <p id="mt5-dialog-description">{state === "connecting" ? "Playing the connection animation. No broker authentication is taking place." : "Live MT5 verification is not available yet. This preview has not connected your account or changed your trading settings."}</p>
+          </div>
+          {state === "connecting" ? <><div className="mt5-progress-track"><span /></div><span className="mt5-progress-caption">DEMO ANIMATION · NO LIVE CONNECTION</span></> : <button className="mt5-modal-return" type="button" onClick={closePreview}><RotateCcw size={16} /> Back to account details</button>}
         </div>
-      </div>
-    </div>
-  );
-}
-
-function FormField({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <div className="space-y-1.5">
-      <label className="text-white/50 text-xs font-medium block uppercase tracking-wider">{label}</label>
-      {children}
-    </div>
-  );
-}
-
-function Stat({ label, value, mono, accent, icon }: { label: string; value: string; mono?: boolean; accent?: string; icon?: React.ReactNode }) {
-  return (
-    <div className="rounded-xl p-3" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.06)" }}>
-      <div className="text-[10px] text-white/35 uppercase tracking-wider mb-1">{label}</div>
-      <div className={`flex items-center gap-1 font-bold text-sm ${mono ? "font-mono" : ""}`} style={{ color: accent ?? "#fff" }}>
-        {icon}
-        <span className="truncate">{value}</span>
-      </div>
-    </div>
+      </div>}
+    </section>
   );
 }

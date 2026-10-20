@@ -147,6 +147,7 @@ export default function App() {
   };
 
   const settings: AppSettings = {
+    activeTab,
     botRunning, setBotRunning: persistBotRunning,
     interfaceStyle, setInterfaceStyle,
     accentColor, setAccentColor,
@@ -212,7 +213,7 @@ export default function App() {
   return (
     <AppContext.Provider value={settings}>
       <div
-        className="relative overflow-hidden bg-black"
+        className="relative overflow-clip bg-black"
         style={{ height: "100dvh", maxWidth: 430, margin: "0 auto" }}
       >
         {/* Background image — hidden when showBg is false */}
@@ -229,6 +230,7 @@ export default function App() {
 
         <div
           className="absolute inset-0 z-20 transition-transform duration-300 ease-out"
+          inert={activeTab !== "metatrader"}
           style={{ transform: activeTab === "metatrader" ? "translateX(0)" : "translateX(100%)" }}
         >
           <MetaTraderTab />
@@ -236,6 +238,7 @@ export default function App() {
 
         <div
           className="absolute top-0 right-0 h-full z-30 transition-transform duration-300 ease-out"
+          inert={activeTab !== "settings"}
           style={{ width: "88%", transform: activeTab === "settings" ? "translateX(0)" : "translateX(100%)" }}
         >
           <SettingsTab onOpenChartScanner={() => setShowChartScanner(true)} />
