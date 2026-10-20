@@ -23,6 +23,7 @@ export default function ActivateScreen({ token, onActivated, onLogout }: Activat
     try {
       const res = await fetch("/api/app/activate", {
         method: "POST",
+        signal: AbortSignal.timeout(20000),
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,

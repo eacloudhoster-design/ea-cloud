@@ -21,7 +21,7 @@ const requireClientAuth = async (req: any, res: any, next: any) => {
     if (!client) { res.status(401).json({ error: "Unauthorized" }); return; }
     req.clientId = id;
     next();
-  } catch { res.status(401).json({ error: "Unauthorized" }); }
+  } catch { res.status(503).json({ error: "Unable to verify your session. Please retry." }); }
 };
 
 const toClientDto = (c: typeof appAccessTable.$inferSelect) => ({
@@ -58,7 +58,7 @@ router.get("/app/mentor-config", async (req, res) => {
     )];
 
     res.json({
-      robotName: eas[0]?.name || mentor.robotName || "EA Cloud Pro",
+      robotName: mentor.robotName?.trim() || eas[0]?.name || "EA Cloud Pro",
       robotTagline: mentor.robotTagline || "@ea_cloud",
       backgroundImageUrl: mentor.backgroundImageUrl || null,
       symbols: allSymbols,
