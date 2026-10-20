@@ -1,0 +1,22 @@
+# Bundled broker logos
+
+These are real broker marks/site icons used for identification only. Brand rights remain with the respective owners; no endorsement is implied. They are bundled into the client build, not fetched from a broker or logo service at runtime. Source PNGs are preserved byte for byte; SVG geometry and colours are preserved. No generated lettermarks or generic approximations are used.
+
+`manifest.json` records each file's SHA-256 and its pinned download source. The tests verify those bytes, decode every asset in the production browser build, and block all third-party requests. The registry uses static `new URL(..., import.meta.url)` references so Vite bundles/embeds the assets and handles `/ea-app/` correctly. The building fallback is only rendered for unknown brokers. A damaged/missing known logo produces an explicit retry message, never an unrelated broker icon.
+
+## Sources (retrieved 21 October 2026)
+
+- **Exness, XM, IC Markets, HFM, FBS, OANDA, Pepperstone, Tickmill:** unmodified PNG files from [this pinned public broker-mark archive](https://github.com/ParsaZa79/trading-signal-copier/tree/bb1efbd3ea6c4d3e73bb44f7c6a78c2004fb9159/dashboard/public/brokers). Its [provenance note](https://github.com/ParsaZa79/trading-signal-copier/blob/bb1efbd3ea6c4d3e73bb44f7c6a78c2004fb9159/dashboard/public/brokers/README.md) identifies them as favicons/public brand assets obtained from the respective official broker websites. The [registry](https://github.com/ParsaZa79/trading-signal-copier/blob/bb1efbd3ea6c4d3e73bb44f7c6a78c2004fb9159/dashboard/src/lib/broker-brands.ts) records the corresponding broker websites. These files were visually inspected; Exness is the black Exo mark on yellow, not an invented E or a text placeholder. Light-colour wordmarks have a dark backing in the existing logo tile for contrast; their artwork is not recoloured.
+- **Deriv:** official `@deriv/quill-icons` npm package **2.14.9**, `dist/react/Logo/BrandDerivLogoCoralIcon.js`, published by Deriv. `deriv.svg` serializes its original `0 0 72 72` viewBox and both original path/fill values without changing geometry. The package identifies its author as Deriv and its licence as ISC. No npm runtime dependency was added. [Pinned package tarball](https://registry.npmjs.org/@deriv/quill-icons/-/quill-icons-2.14.9.tgz).
+- **FXTM:** original SVG from [this pinned broker-logo documentation asset](https://github.com/peter-pan-tse/hoctrade.github.io/blob/15a0282a3328263c76b29fb3a6c53000e72cd295/img/ht-broker_fxtm.svg), used in its [FXTM broker listing](https://github.com/peter-pan-tse/hoctrade.github.io/blob/15a0282a3328263c76b29fb3a6c53000e72cd295/dr-fee-forex.html). Official brand: [FXTM](https://www.fxtm.com/).
+- **AvaTrade:** original PNG from [this pinned documentation asset](https://github.com/AXErunners/docs/blob/d8d8532b89d00cf9cee74e4bb4be5d1691625f1a/introduction/exchanges/avatrade.png), attributed in the [source documentation](https://github.com/AXErunners/docs/blob/d8d8532b89d00cf9cee74e4bb4be5d1691625f1a/introduction/how-to-buy.rst) to [AvaTrade](https://www.avatrade.com/).
+
+Some originals are compact favicons rather than large wordmarks. Their original dimensions and proportions are retained; no upscaling or AI reconstruction is baked into the source files. SVGs contain no external images, fonts, scripts or stylesheets. Research/archive URLs are documentation only and are never used as image sources by the app.
+
+## Deriv ISC attribution
+
+Copyright (c) Deriv
+
+Permission to use, copy, modify, and/or distribute this software for any purpose with or without fee is hereby granted, provided that the above copyright notice and this permission notice appear in all copies.
+
+THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.

@@ -1,6 +1,6 @@
 /** Display hints only: a server name never proves a broker's identity.
- * Assets come from broker-owned websites or the attributed Commons originals.
- * See docs/mt5-connection-preview.md for provenance and availability limitations.
+ * Authentic logo files are bundled with the app; no remote logo requests.
+ * See assets/brokers/README.md for pinned sources and asset checksums.
  */
 export interface Broker {
   id: string;
@@ -8,21 +8,21 @@ export interface Broker {
   aliases: string[];
   logo: string;
   source: string;
+  logoBackground?: string;
 }
 
-const commons = (file: string) => `https://commons.wikimedia.org/wiki/Special:FilePath/${encodeURIComponent(file)}`;
 export const brokers: Broker[] = [
-  { id: "oanda", name: "OANDA", aliases: ["oanda"], logo: "https://www.oanda.com/favicon.ico", source: "https://www.oanda.com/" },
-  { id: "avatrade", name: "AvaTrade", aliases: ["avatrade", "ava"], logo: "https://www.avatrade.com/favicon.ico", source: "https://www.avatrade.com/" },
-  { id: "exness", name: "Exness", aliases: ["exness"], logo: "https://www.exness.com/static/apple-icon.png", source: "https://www.exness.com/" },
-  { id: "deriv", name: "Deriv", aliases: ["deriv", "binary"], logo: "https://deriv.com/favicon.ico", source: "https://deriv.com/" },
-  { id: "ic-markets", name: "IC Markets", aliases: ["icmarkets", "internationalcapitalmarkets"], logo: commons("IC Markets logo main.gif"), source: "https://commons.wikimedia.org/wiki/File:IC_Markets_logo_main.gif" },
-  { id: "pepperstone", name: "Pepperstone", aliases: ["pepperstone"], logo: commons("Pepperstone.svg"), source: "https://commons.wikimedia.org/wiki/File:Pepperstone.svg" },
-  { id: "xm", name: "XM", aliases: ["xmglobal", "xmtrading", "tradingpoint", "xm"], logo: commons("XM-logo-2024.jpg"), source: "https://commons.wikimedia.org/wiki/File:XM-logo-2024.jpg" },
-  { id: "hfm", name: "HFM", aliases: ["hfmarkets", "hotforex", "hfm"], logo: "https://static.grouphfm.com/assets/hfappnew/websites/affiliates/images/brand-guidelines/hfm-aff-logo-black-version.svg", source: "https://affiliates.grouphfm.com/en/brand-guidelines" },
-  { id: "fbs", name: "FBS", aliases: ["fbs"], logo: "https://fbs.com/favicon.ico", source: "https://fbs.com/" },
-  { id: "tickmill", name: "Tickmill", aliases: ["tickmill"], logo: "https://www.tickmill.com/favicon.ico", source: "https://www.tickmill.com/" },
-  { id: "fxtm", name: "FXTM", aliases: ["forextimefxtm", "forextime", "fxtm"], logo: commons("FXTM logo.svg"), source: "https://commons.wikimedia.org/wiki/File:FXTM_logo.svg" },
+  { id: "oanda", name: "OANDA", aliases: ["oanda"], logo: new URL("../assets/brokers/oanda.png", import.meta.url).href, source: "https://www.oanda.com/" },
+  { id: "avatrade", name: "AvaTrade", aliases: ["avatrade", "ava"], logo: new URL("../assets/brokers/avatrade.png", import.meta.url).href, source: "https://www.avatrade.com/" },
+  { id: "exness", name: "Exness", aliases: ["exness"], logo: new URL("../assets/brokers/exness.png", import.meta.url).href, source: "https://www.exness.com/" },
+  { id: "deriv", name: "Deriv", aliases: ["deriv", "binary"], logo: new URL("../assets/brokers/deriv.svg", import.meta.url).href, source: "https://deriv.com/" },
+  { id: "ic-markets", name: "IC Markets", aliases: ["icmarkets", "internationalcapitalmarkets"], logo: new URL("../assets/brokers/ic-markets.png", import.meta.url).href, logoBackground: "#08131f", source: "https://www.icmarkets.com/" },
+  { id: "pepperstone", name: "Pepperstone", aliases: ["pepperstone"], logo: new URL("../assets/brokers/pepperstone.png", import.meta.url).href, source: "https://pepperstone.com/" },
+  { id: "xm", name: "XM", aliases: ["xmglobal", "xmtrading", "tradingpoint", "xm"], logo: new URL("../assets/brokers/xm.png", import.meta.url).href, logoBackground: "#08131f", source: "https://www.xm.com/" },
+  { id: "hfm", name: "HFM", aliases: ["hfmarkets", "hotforex", "hfm"], logo: new URL("../assets/brokers/hfm.png", import.meta.url).href, logoBackground: "#08131f", source: "https://affiliates.grouphfm.com/en/brand-guidelines" },
+  { id: "fbs", name: "FBS", aliases: ["fbs"], logo: new URL("../assets/brokers/fbs.png", import.meta.url).href, source: "https://fbs.com/" },
+  { id: "tickmill", name: "Tickmill", aliases: ["tickmill"], logo: new URL("../assets/brokers/tickmill.png", import.meta.url).href, source: "https://www.tickmill.com/" },
+  { id: "fxtm", name: "FXTM", aliases: ["forextimefxtm", "forextime", "fxtm"], logo: new URL("../assets/brokers/fxtm.svg", import.meta.url).href, source: "https://www.fxtm.com/" },
 ];
 
 // Require a broker prefix and a recognised server suffix, rather than arbitrary

@@ -12,13 +12,17 @@ const browser = await chromium.launch({ executablePath: process.env.CHROMIUM_PAT
 const page = await browser.newPage({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 1 });
 const writes = [];
 const errors = [];
+const thirdPartyImages = [];
 const fixtureImage = readFileSync(fileURLToPath(new URL('../../artifacts/ea-cloud/public/default-robot.jpg', import.meta.url)));
 page.on('pageerror', error => errors.push(error.message));
 page.on('request', request => { if (request.method() !== 'GET' && request.method() !== 'HEAD') writes.push(request.url()); });
 await page.addInitScript(() => localStorage.setItem('appClientToken', 'isolated-browser-fixture'));
 await page.route('**/*', async route => {
   const url = new URL(route.request().url());
-  if (url.origin !== origin) return route.abort(); // Exercise real logo error fallback.
+  if (url.origin !== origin) {
+    if (route.request().resourceType() === 'image') thirdPartyImages.push(url.href);
+    return route.abort(); // All broker images must work without third-party access.
+  }
   if (url.pathname.startsWith('/_fixture/')) return route.fulfill({ contentType: 'image/jpeg', body: fixtureImage });
   if (!url.pathname.startsWith('/api/')) return route.continue();
   let data = {};
@@ -51,7 +55,11 @@ try {
   const dialog = page.getByRole('dialog');
   await dialog.getByRole('heading', { name: 'Connecting to Exness' }).waitFor();
   assert.equal(await screen.getByLabel('PASSWORD', { exact: true }).inputValue(), '');
-  await dialog.getByLabel('Exness logo unavailable').waitFor();
+  const exnessLogo = dialog.getByRole('img', { name: 'Exness logo', exact: true });
+  await exnessLogo.waitFor();
+  await exnessLogo.evaluate(async img => { await img.decode(); });
+  assert.ok(await exnessLogo.evaluate(img => img.naturalWidth >= 200));
+  assert.equal(await dialog.getByLabel('Unknown broker', { exact: true }).count(), 0);
   assert.ok((await dialog.boundingBox()).x >= 0, 'Dialog must not be clipped by horizontal focus scrolling');
   await page.screenshot({ path: screenshots + '/02-connecting-mobile.png' });
   await dialog.getByRole('heading', { name: 'Connection not verified' }).waitFor();
@@ -70,19 +78,27 @@ try {
   await page.waitForTimeout(3400);
   assert.equal(await dialog.count(), 0);
 
-  // A failed broker image must not poison the next broker's successful image.
-  await page.evaluate(async () => {
-    // Only replace the asset URL in the isolated test module, not source files.
-    // This image-decode fixture is never included in a broker screenshot.
-    const module = await import('/ea-app/src/lib/brokers.ts');
-    module.brokers.find(b => b.id === 'deriv').logo = '/_fixture/broker-decode.jpg';
-  });
-  await screen.getByLabel('BROKER SERVER', { exact: true }).fill('Deriv-Demo');
-  await screen.getByLabel('PASSWORD', { exact: true }).fill('demo');
-  await screen.getByRole('button', { name: 'Connect MT5', exact: true }).click();
-  await dialog.getByRole('img', { name: 'Deriv logo', exact: true }).waitFor({ timeout: 5000 });
-  assert.equal(await dialog.locator('.mt5-broker-logo--image').count(), 1);
-  await dialog.getByRole('button', { name: 'Cancel preview' }).click();
+  // Render every real bundled broker asset, without substituting test images.
+  const supported = [
+    ['Deriv-Demo', 'Deriv'], ['XMGlobal-MT5', 'XM'], ['ICMarketsSC-MT5', 'IC Markets'],
+    ['Pepperstone-MT5-Live01', 'Pepperstone'], ['HFM-Demo', 'HFM'], ['FBS-Real', 'FBS'],
+    ['Tickmill-Live', 'Tickmill'], ['ForexTimeFXTM-Live01', 'FXTM'], ['OANDA-Live', 'OANDA'], ['AvaTrade-Demo', 'AvaTrade'],
+  ];
+  for (const [server, name] of supported) {
+    await screen.getByLabel('BROKER SERVER', { exact: true }).fill(server);
+    await screen.getByLabel('PASSWORD', { exact: true }).fill('demo');
+    await screen.getByRole('button', { name: 'Connect MT5', exact: true }).click();
+    const logo = dialog.getByRole('img', { name: name + ' logo', exact: true });
+    await logo.waitFor();
+    await logo.evaluate(async img => { await img.decode(); });
+    assert.ok(await logo.evaluate(img => img.naturalWidth > 0 && img.naturalHeight > 0), name);
+    const src = await logo.getAttribute('src');
+    assert.ok(src.startsWith('data:') || new URL(src, origin).origin === origin, name + ' must not use a remote logo');
+    assert.equal(await dialog.getByLabel('Unknown broker', { exact: true }).count(), 0);
+    assert.equal(await dialog.getByRole('alert').count(), 0);
+    if (['Deriv', 'XM', 'IC Markets'].includes(name)) await page.screenshot({ path: screenshots + '/broker-' + name.toLowerCase().replaceAll(' ', '-') + '.png' });
+    await dialog.getByRole('button', { name: 'Cancel preview' }).click();
+  }
   await screen.getByLabel('BROKER SERVER', { exact: true }).fill('UnknownBroker-Live');
 
   // Reduced motion, small phone, tab navigation cleanup and keyboard focus trap.
@@ -109,8 +125,9 @@ try {
   assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
   assert.deepEqual(writes, [], 'Preview must not submit credentials, connect/disconnect, or alter settings');
   assert.deepEqual(errors, []);
+  assert.deepEqual(thirdPartyImages, [], 'Recognised brokers must never request a third-party image');
   const storage = await page.evaluate(() => JSON.stringify(localStorage));
   assert.equal(storage.includes('demo-only-password'), false);
   assert.equal(storage.includes('0012345678'), false);
-  console.log('PASS: mobile, small phone, desktop, branding, password toggle, validation, honest completion, cancellation, reduced motion, focus, logo fallback, no writes or runtime errors');
+  console.log('PASS: mobile, small phone, desktop, branding, password toggle, validation, honest completion, cancellation, reduced motion, focus, all 11 real bundled logos with third-party access blocked, unknown-only fallback, no writes or runtime errors');
 } finally { await browser.close(); }

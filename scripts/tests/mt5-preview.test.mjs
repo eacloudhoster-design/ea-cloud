@@ -1,5 +1,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { createHash } from 'node:crypto';
+import { fileURLToPath } from 'node:url';
 import { detectBroker, validateMt5Preview, brokers } from '../../artifacts/ea-app/src/lib/brokers.ts';
 import { previewMt5Connection } from '../../artifacts/ea-app/src/lib/mt5-preview.ts';
 
@@ -20,10 +23,28 @@ test('unknown, ambiguous or spoofed server strings use the neutral fallback', ()
   }
 });
 
-test('every registered logo has explicit HTTPS asset and provenance URLs', () => {
+test('all supported brokers have authentic pinned local assets with no external dependencies', () => {
+  const manifest = JSON.parse(readFileSync(new URL('../../artifacts/ea-app/src/assets/brokers/manifest.json', import.meta.url), 'utf8'));
   assert.equal(new Set(brokers.map(b => b.id)).size, brokers.length);
+  assert.equal(Object.keys(manifest.assets).length, brokers.length);
   for (const broker of brokers) {
-    assert.equal(new URL(broker.logo).protocol, 'https:');
+    const url = new URL(broker.logo);
+    assert.equal(url.protocol, 'file:', broker.name + ' must be bundled locally');
+    const bytes = readFileSync(fileURLToPath(url));
+    const asset = manifest.assets[broker.id];
+    assert.ok(asset, broker.name);
+    assert.equal(url.pathname.endsWith('/' + asset.file), true);
+    assert.equal(createHash('sha256').update(bytes).digest('hex'), asset.sha256, broker.name + ' artwork changed');
+    assert.ok(bytes.length > 200, broker.name + ' must not be a blank image');
+    if (asset.file.endsWith('.png')) {
+      assert.equal(bytes.subarray(0, 8).toString('hex'), '89504e470d0a1a0a');
+      assert.ok(bytes.readUInt32BE(16) >= 24 && bytes.readUInt32BE(20) >= 24);
+    } else {
+      const svg = bytes.toString('utf8');
+      assert.match(svg, /<svg/);
+      assert.match(svg, /<path/);
+      assert.doesNotMatch(svg, /<script|<foreignObject|<text|onload=|onerror=|(?:href|src)=["']https?:/i);
+    }
     assert.equal(new URL(broker.source).protocol, 'https:');
   }
 });

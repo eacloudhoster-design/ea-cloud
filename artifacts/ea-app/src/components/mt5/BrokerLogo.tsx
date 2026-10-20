@@ -1,21 +1,20 @@
 import { Building2 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import type { Broker } from "@/lib/brokers";
 
 export default function BrokerLogo({ broker }: { broker: Broker | null }) {
-  // Keyed by broker in the caller so one failed logo never hides another broker.
+  // The caller keys this component by broker. Missing local assets fail the
+  // build/tests; a runtime error is explicit, never a substitute broker icon.
   const [failed, setFailed] = useState(false);
-  const [loaded, setLoaded] = useState(false);
-  useEffect(() => {
-    if (!broker || loaded) return;
-    const timer = setTimeout(() => setFailed(true), 4000);
-    return () => clearTimeout(timer);
-  }, [broker, loaded]);
   return (
-    <div className={`mt5-broker-logo ${broker && loaded && !failed ? "mt5-broker-logo--image" : ""}`}>
-      {(!loaded || failed) && <Building2 aria-label={broker ? `${broker.name} logo unavailable` : "Unknown broker"} size={54} strokeWidth={1.2} />}
-      {broker && !failed && <img src={broker.logo} alt={`${broker.name} logo`} referrerPolicy="no-referrer"
-        style={{ display: loaded ? "block" : "none" }} onLoad={() => setLoaded(true)} onError={() => setFailed(true)} />}
+    <div className={`mt5-broker-logo ${broker ? "mt5-broker-logo--image" : ""}`}
+      style={broker ? { background: broker.logoBackground ?? "#fff" } : undefined}>
+      {!broker ? <Building2 aria-label="Unknown broker" size={54} strokeWidth={1.2} /> : failed ? (
+        <span role="alert" style={{ color: "#627b84", fontSize: 11, textAlign: "center" }}>
+          {broker.name}<br />Logo unavailable<br />
+          <button type="button" onClick={() => setFailed(false)}>Retry logo</button>
+        </span>
+      ) : <img src={broker.logo} alt={`${broker.name} logo`} onError={() => setFailed(true)} />}
     </div>
   );
 }

@@ -8,35 +8,21 @@ Existing saved account details are read from the unchanged `/api/app/trading-con
 
 ## Visual review before deployment
 
-These screenshots show the actual React app in Chromium at 390 × 844. The local browser test supplies isolated authentication/mentor fixtures and uses the repository's existing robot image as the fixture mentor upload. They do not show a production user's account. The broker requests are deliberately blocked in this test to exercise the neutral logo fallback.
+These screenshots show the actual React app in Chromium at 390 × 844. The local browser test supplies isolated authentication/mentor fixtures and uses the repository's existing robot image as the fixture mentor upload. They do not show a production user's account. All third-party requests are deliberately blocked. Recognised brokers still render their real bundled logos; only unknown brokers use the neutral icon.
 
-| Account screen | Connection animation / fallback | Honest outcome |
+| Account screen | Connection animation / real Exness logo | Honest outcome |
 | --- | --- | --- |
-| ![MT5 account screen](previews/mt5/account-mobile.png) | ![Connecting to Exness with fallback icon](previews/mt5/connecting-fallback-mobile.png) | ![Connection not verified](previews/mt5/unverified-mobile.png) |
+| ![MT5 account screen](previews/mt5/account-mobile.png) | ![Connecting to Exness with its authentic local logo](previews/mt5/connecting-exness-mobile.png) | ![Connection not verified](previews/mt5/unverified-mobile.png) |
 
 Nothing has been deployed or merged. Approve the visual design before deploying the existing Pages project. No database migration, seed, schema push, new service or runtime secret is required.
 
 ## Broker identities and logo provenance
 
-`src/lib/brokers.ts` uses an explicit allowlist of HTTPS image assets. Only recognised broker prefixes and common server suffixes match; arbitrary substring matches and URLs remain unknown. Server recognition is a visual hint, never broker identity verification. Datalist values are examples, not a live server directory.
+`src/lib/brokers.ts` uses static references to 11 authentic logo files in `src/assets/brokers/`. Vite bundles/embeds them under the app's configured base path. No broker image requests go to external websites, favicons, Commons redirects, logo APIs or paid services. Broker detection remains a name hint, never identity verification; the recognised prefixes and server examples are unchanged.
 
-The logo images are authentic brand assets/site icons, not generated artwork. They are loaded as images, never as scripts, without a referrer, and without including account numbers, passwords or server text in asset requests. Unknown brokers, image errors and slow image loads use the neutral building icon. No paid logo API or new service is used.
+Exness, Deriv, XM, IC Markets, Pepperstone, HFM, FBS, Tickmill, FXTM, OANDA and AvaTrade each have their own real local logo. Only unknown brokers display the building fallback. An unexpected local asset error is explicitly labelled with the recognised broker name and a retry option rather than substituting a generic icon. The app does not recolour or redraw broker marks. Light-colour marks receive a dark backing inside the same logo tile so they remain readable.
 
-| Broker | Asset source | Provenance |
-| --- | --- | --- |
-| Exness | `https://www.exness.com/static/apple-icon.png` | Official site icon; [official media resources](https://www.exness.com/exness-in-the-media/) |
-| Deriv | `https://deriv.com/favicon.ico` | [Official broker website](https://deriv.com/) |
-| IC Markets | Commons original: `IC Markets logo main.gif` | [Asset description and attribution](https://commons.wikimedia.org/wiki/File:IC_Markets_logo_main.gif) |
-| Pepperstone | Commons original: `Pepperstone.svg` | [Official website source credited by Commons](https://commons.wikimedia.org/wiki/File:Pepperstone.svg) |
-| XM | Commons original: `XM-logo-2024.jpg` | [Asset description and attribution](https://commons.wikimedia.org/wiki/File:XM-logo-2024.jpg) |
-| HFM | Official `static.grouphfm.com` black-version SVG | [Official brand guidelines and original logo](https://affiliates.grouphfm.com/en/brand-guidelines) |
-| FBS | `https://fbs.com/favicon.ico` | [Official broker website](https://fbs.com/) |
-| Tickmill | `https://www.tickmill.com/favicon.ico` | [Official broker website](https://www.tickmill.com/) |
-| FXTM | Commons original: `FXTM logo.svg` | [Official ForexTime source credited by Commons](https://commons.wikimedia.org/wiki/File:FXTM_logo.svg) |
-| OANDA | `https://www.oanda.com/favicon.ico` | [Official broker website](https://www.oanda.com/) |
-| AvaTrade | `https://www.avatrade.com/favicon.ico` | [Official broker website](https://www.avatrade.com/) |
-
-Sources were researched on 21 October 2026. Broker-hosted favicons and Commons redirects can change or be blocked by CSP/hotlink policies; the fallback is intentional. Official Exness image and HFM logo links were resolved using web research. Several ICO/SVG responses cannot be rendered by the research tool; these assets need a staging browser availability check before deployment. The isolated browser suite verifies loaded-image behavior separately from network-failure fallback and does not certify third-party asset uptime. Logos are used only to identify brokers; no affiliation or endorsement is implied. The application does not recolor, redraw or generate broker marks.
+See [pinned asset provenance, attribution and licence notes](../artifacts/ea-app/src/assets/brokers/README.md) and the [SHA-256 manifest](../artifacts/ea-app/src/assets/brokers/manifest.json). The real files, not test substitutes, are decoded in Chromium with third-party access blocked, including an Exness animation screenshot and separate Deriv/XM/IC Markets captures. Broker images are no longer a deployment-time third-party availability dependency.
 
 ## Future backend integration boundary
 
@@ -49,7 +35,7 @@ A future separately reviewed verification adapter must authenticate the client a
 - TypeScript project/library build plus ea-app, ea-cloud and api-server checks.
 - Mobile and website Vite production builds and combined Pages routing verification.
 - Node tests for detection (including legacy/regional aliases, unknowns and spoofed strings), account validation, finite unverified completion and cancellation; existing loading, Pages, storage and bootstrap unit suites.
-- Browser checks at 390 × 844, 320 × 568 and 1280 × 900: linked mentor background, saved account preservation, password toggle/clearing, invalid account numbers, known/unknown brokers, image fallback, honest completion, cancellation, tab cleanup, reduced motion, focus trapping/restoration, no horizontal overflow, no write requests and no runtime errors.
+- Browser checks at 390 × 844, 320 × 568 and 1280 × 900: linked mentor background, saved account preservation, password toggle/clearing, invalid account numbers, known/unknown brokers, real local logo rendering and unknown-only fallback, honest completion, cancellation, tab cleanup, reduced motion, focus trapping/restoration, no horizontal overflow, no write requests and no runtime errors.
 
 Run from repository root:
 
@@ -67,4 +53,4 @@ BASE_PATH=/ea-app/ pnpm --filter @workspace/ea-app dev
 node scripts/tests/mt5-preview.browser.mjs
 ```
 
-After design approval, use the existing Pages `pnpm run build:pages` pipeline/output (`artifacts/ea-cloud/dist`). Preserve current API/R2 settings and data. Smoke-test with a licensed staging client and its mentor background, then verify third-party logos under the deployment's actual CSP. No backend deployment is needed for this frontend-only change.
+After design approval, use the existing Pages `pnpm run build:pages` pipeline/output (`artifacts/ea-cloud/dist`). Preserve current API/R2 settings and data. Smoke-test with a licensed staging client and its mentor background, and verify the bundled logo assets are served with the app. No backend deployment is needed for this frontend-only change.

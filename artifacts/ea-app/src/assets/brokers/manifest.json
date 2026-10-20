@@ -1,0 +1,60 @@
+{
+  "assets": {
+    "avatrade": {
+      "file": "avatrade.png",
+      "sha256": "1ab462e93f9f9a60a6ffa5233cd0259628a7e6f9394d84b5e1b712a99ea76667",
+      "retrievedFrom": "https://github.com/AXErunners/docs/blob/d8d8532b89d00cf9cee74e4bb4be5d1691625f1a/introduction/exchanges/avatrade.png"
+    },
+    "deriv": {
+      "file": "deriv.svg",
+      "sha256": "b2cbb620dc98498355181ad24f7df2c9c35369dd1402c37882a9e538c7852551",
+      "retrievedFrom": "https://registry.npmjs.org/@deriv/quill-icons/-/quill-icons-2.14.9.tgz",
+      "sourceFile": "package/dist/react/Logo/BrandDerivLogoCoralIcon.js"
+    },
+    "exness": {
+      "file": "exness.png",
+      "sha256": "1a1b88b31397f84e80e34195d4fb50bcba6b3829ee42ee4e90d5ac7c9c826431",
+      "retrievedFrom": "https://github.com/ParsaZa79/trading-signal-copier/blob/bb1efbd3ea6c4d3e73bb44f7c6a78c2004fb9159/dashboard/public/brokers/exness.png"
+    },
+    "fbs": {
+      "file": "fbs.png",
+      "sha256": "4cdc9b2f187ae033c8a184858e631b15cbe74bae443c7a20f43b0d0b89b568aa",
+      "retrievedFrom": "https://github.com/ParsaZa79/trading-signal-copier/blob/bb1efbd3ea6c4d3e73bb44f7c6a78c2004fb9159/dashboard/public/brokers/fbs.png"
+    },
+    "fxtm": {
+      "file": "fxtm.svg",
+      "sha256": "f045184a831d55f886f5e396878cd6c3063892ae4b5cfe93459114d871f66546",
+      "retrievedFrom": "https://github.com/peter-pan-tse/hoctrade.github.io/blob/15a0282a3328263c76b29fb3a6c53000e72cd295/img/ht-broker_fxtm.svg"
+    },
+    "hfm": {
+      "file": "hfm.png",
+      "sha256": "0de7850a11ad19c3f2aa1787969332cd6c5fb701d51a610f8471dae9142e4ab8",
+      "retrievedFrom": "https://github.com/ParsaZa79/trading-signal-copier/blob/bb1efbd3ea6c4d3e73bb44f7c6a78c2004fb9159/dashboard/public/brokers/hfm.png"
+    },
+    "ic-markets": {
+      "file": "ic-markets.png",
+      "sha256": "a1b1d36a28064c3e7a8b7a88aa7d5f69f4ce65067efbec7d2dfed7c21f2d7df0",
+      "retrievedFrom": "https://github.com/ParsaZa79/trading-signal-copier/blob/bb1efbd3ea6c4d3e73bb44f7c6a78c2004fb9159/dashboard/public/brokers/ic-markets.png"
+    },
+    "oanda": {
+      "file": "oanda.png",
+      "sha256": "e7bbd607dd40b7772a44b051f4054499254d83db7dcd836d74c6ae3aa7979be7",
+      "retrievedFrom": "https://github.com/ParsaZa79/trading-signal-copier/blob/bb1efbd3ea6c4d3e73bb44f7c6a78c2004fb9159/dashboard/public/brokers/oanda.png"
+    },
+    "pepperstone": {
+      "file": "pepperstone.png",
+      "sha256": "fcf87a985c05b39d608cae4cdfbbc82d6299dcf63a7eb8ecc6990237cdffaec2",
+      "retrievedFrom": "https://github.com/ParsaZa79/trading-signal-copier/blob/bb1efbd3ea6c4d3e73bb44f7c6a78c2004fb9159/dashboard/public/brokers/pepperstone.png"
+    },
+    "tickmill": {
+      "file": "tickmill.png",
+      "sha256": "4fbb5b0f5c9501ca2bef0ad60c73d62fa81d3d0f36867282ce267eb49def4e4b",
+      "retrievedFrom": "https://github.com/ParsaZa79/trading-signal-copier/blob/bb1efbd3ea6c4d3e73bb44f7c6a78c2004fb9159/dashboard/public/brokers/tickmill.png"
+    },
+    "xm": {
+      "file": "xm.png",
+      "sha256": "6c1a6af8a5f6dc219338ff9e8b0d217ea932fa06ba9558b29d243d4bd18b80d3",
+      "retrievedFrom": "https://github.com/ParsaZa79/trading-signal-copier/blob/bb1efbd3ea6c4d3e73bb44f7c6a78c2004fb9159/dashboard/public/brokers/xm.png"
+    }
+  }
+}
