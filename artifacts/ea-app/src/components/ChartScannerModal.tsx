@@ -6,7 +6,7 @@ import BottomNav from "@/components/BottomNav";
 import ScannerTradeSettings from "@/components/ScannerTradeSettings";
 import ScannerChartReport from "@/components/ScannerChartReport";
 import { formatLots, type ScannerTradeSettings as TradeSettings } from "@/lib/scanner-trade-settings";
-import { prepareChart, scannerRequest, strategies, type Strategy, type ScannerRecord, type ChartReport, type FundamentalReport, type FundamentalRequest } from "@/lib/scanner";
+import { prepareChart, ScannerRequestError, scannerErrorTitle, scannerRequest, strategies, type Strategy, type ScannerRecord, type ChartReport, type FundamentalReport, type FundamentalRequest } from "@/lib/scanner";
 import "./ChartScannerModal.css";
 
 interface ChartScannerModalProps { onClose: () => void; onNavigate: (tab: Tab) => void }
@@ -23,10 +23,10 @@ export default function ChartScannerModal({ onClose, onNavigate }: ChartScannerM
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState("");
   const [phase, setPhase] = useState<Phase>("idle");
-  const [error, setError] = useState("");
+  const [error, setError] = useState<Error | null>(null);
   const [configured, setConfigured] = useState<boolean | null>(null);
   const [records, setRecords] = useState<ScannerRecord[]>([]);
-  const [historyError, setHistoryError] = useState("");
+  const [historyError, setHistoryError] = useState<Error | null>(null);
   const [historyLoading, setHistoryLoading] = useState(false);
   const [historyPage, setHistoryPage] = useState(1);
   const [hasMore, setHasMore] = useState(false);
@@ -58,20 +58,20 @@ export default function ChartScannerModal({ onClose, onNavigate }: ChartScannerM
     historyAttempt.current?.abort();
     const controller = new AbortController(); historyAttempt.current = controller;
     if (!clientToken) return;
-    setHistoryLoading(true); setHistoryError("");
+    setHistoryLoading(true); setHistoryError(null);
     try {
       const data = await scannerRequest<{ records: ScannerRecord[]; hasMore: boolean }>(`history?page=${page}`, clientToken, controller.signal);
       if (!controller.signal.aborted) { setRecords(old => page === 1 ? data.records : [...old, ...data.records.filter(row => !old.some(item => item.id === row.id))]); setHasMore(data.hasMore); setHistoryPage(page); }
-    } catch (e) { if (!controller.signal.aborted) setHistoryError((e as Error).message); }
+    } catch (e) { if (!controller.signal.aborted) setHistoryError(e as Error); }
     finally { if (!controller.signal.aborted) setHistoryLoading(false); }
   }, [clientToken]);
   useEffect(() => {
     const controller = new AbortController();
-    setConfigured(null); setRecords([]); setResult(null); setFile(null);
+    setConfigured(null); setError(null); setRecords([]); setResult(null); setFile(null);
     setSettingsOpen(false); setSettingsSaved(false); setTradeSettings({ lotUnits: 1, positions: 1 });
     attempt.current?.abort(); selection.current++; setPhase("idle"); pending.current = false;
     if (clientToken) {
-      void scannerRequest<{ configured: boolean }>("status", clientToken, controller.signal).then(data => { if (!controller.signal.aborted) setConfigured(data.configured); }).catch(() => { /* Request errors are surfaced on Analyse; do not invent readiness. */ });
+      void scannerRequest<{ configured: boolean }>("status", clientToken, controller.signal).then(data => { if (!controller.signal.aborted) setConfigured(data.configured); }).catch(e => { if (!controller.signal.aborted) setError(e as Error); });
       void loadHistory();
     }
     return () => controller.abort();
@@ -80,16 +80,16 @@ export default function ChartScannerModal({ onClose, onNavigate }: ChartScannerM
   const choose = async (event: ChangeEvent<HTMLInputElement>) => {
     const chosen = event.target.files?.[0]; event.target.value = "";
     if (!chosen) return;
-    cancel(); lastKind.current = null; const current = ++selection.current; setPhase("preparing"); setError(""); setResult(null); setFile(null);
+    cancel(); lastKind.current = null; const current = ++selection.current; setPhase("preparing"); setError(null); setResult(null); setFile(null);
     try { const prepared = await prepareChart(chosen); if (alive.current && current === selection.current) setFile(prepared); }
-    catch (e) { if (alive.current && current === selection.current) setError((e as Error).message); }
+    catch (e) { if (alive.current && current === selection.current) setError(e as Error); }
     finally { if (alive.current && current === selection.current) setPhase("idle"); }
   };
   const analyse = async (kind: "chart" | "fundamental") => {
     if (!clientToken || busy || pending.current || (kind === "chart" && !file)) return;
     pending.current = true; lastKind.current = kind;
     attempt.current?.abort(); const controller = new AbortController(); attempt.current = controller;
-    setPhase(kind); setError(""); setResult(null);
+    setPhase(kind); setError(null); setResult(null);
     requestAnimationFrame(() => (kind === "chart" ? chartArea.current : scanArea.current)?.scrollIntoView({ block: kind === "chart" ? "start" : "center", behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth" }));
     try {
       let init: RequestInit;
@@ -97,7 +97,7 @@ export default function ChartScannerModal({ onClose, onNavigate }: ChartScannerM
       else init = { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(context) };
       const saved = await scannerRequest<ScannerRecord>(kind === "chart" ? "chart" : "fundamentals", clientToken, controller.signal, init);
       if (!controller.signal.aborted) { setResult(saved); void loadHistory(); requestAnimationFrame(() => results.current?.scrollIntoView({ behavior: "smooth", block: "start" })); }
-    } catch (e) { if (!controller.signal.aborted) setError((e as Error).message); }
+    } catch (e) { if (!controller.signal.aborted) setError(e as Error); }
     finally { if (!controller.signal.aborted) { pending.current = false; setPhase("idle"); } }
   };
   const navigate = (tab: Tab) => { cancel(); onNavigate(tab); };
@@ -125,7 +125,7 @@ export default function ChartScannerModal({ onClose, onNavigate }: ChartScannerM
     </header>
     <div className="scanner-scroll">
       <section ref={chartArea} className={`scanner-ready ${preview ? "scanner-ready--chart" : ""}`} aria-label="Chart upload" aria-busy={busy} hidden={phase === "fundamental"}>
-        {preview ? <div className="scanner-chart-preview"><img src={preview} alt="Selected chart to analyse" />{!scanning && <button className="scanner-icon-button" type="button" aria-label="Remove chart" disabled={busy} onClick={() => { setFile(null); setResult(null); setError(""); }}><Trash2 size={18} /></button>}{phase === "chart" && <><div className="scanner-image-scan" aria-hidden="true"><div className="scanner-image-scan-beam" /><div className="scanner-image-scan-label"><ScanLine size={30} /><span>Analyzing...</span></div></div><button className="scanner-preview-cancel" type="button" aria-label="Cancel chart scan" onClick={cancel}>Cancel</button></>}</div> : <ScannerOrb />}
+        {preview ? <div className="scanner-chart-preview"><img src={preview} alt="Selected chart to analyse" />{!scanning && <button className="scanner-icon-button" type="button" aria-label="Remove chart" disabled={busy} onClick={() => { setFile(null); setResult(null); setError(null); }}><Trash2 size={18} /></button>}{phase === "chart" && <><div className="scanner-image-scan" aria-hidden="true"><div className="scanner-image-scan-beam" /><div className="scanner-image-scan-label"><ScanLine size={30} /><span>Analyzing...</span></div></div><button className="scanner-preview-cancel" type="button" aria-label="Cancel chart scan" onClick={cancel}>Cancel</button></>}</div> : <ScannerOrb />}
         <input ref={gallery} type="file" accept="image/png,image/jpeg,image/webp" aria-label="Choose chart from gallery" onChange={choose} hidden />
         <input ref={camera} type="file" accept="image/*" capture="environment" aria-label="Take chart photo" onChange={choose} hidden />
         {!scanning && <div className="scanner-upload-copy"><p className="scanner-mentor">{eaName}</p><h3 aria-live="polite">{phase === "preparing" ? "Preparing your chart" : file ? "Your chart is ready" : "Ready to Scan"}</h3><p className="scanner-ready-description">{busy ? "Preparing a clear, optimised chart image." : file ? "Review your image, choose a strategy and analyse." : "Upload a chart screenshot or take a photo"}</p>
@@ -136,7 +136,7 @@ export default function ChartScannerModal({ onClose, onNavigate }: ChartScannerM
         </div>}
       </section>
       {scanning && <section ref={scanArea} className="scanner-pending-analysis is-scanning" aria-label="Analysis progress"><div role="status" aria-live="polite"><ScannerOrb /><p className="scanner-mentor">{eaName}</p><h3>{phase === "chart" ? "Analyzing chart..." : "Analyzing fundamentals..."}</h3><p className="scanner-ready-description">{phase === "chart" ? "AI is scanning patterns and levels" : "AI is researching economic releases and market context"}</p><div className="scanner-analysis-dots" aria-hidden="true">{[0,1,2,3,4].map(i => <span key={i} style={{ animationDelay: `${i * .16}s` }} />)}</div></div><button type="button" className="scanner-cancel" onClick={cancel}><LoaderCircle size={17} className="scanner-loader" /> Cancel analysis</button></section>}
-      {error && <div className="scanner-error" role="alert"><p>{error}</p><button type="button" onClick={() => lastKind.current ? void analyse(lastKind.current) : gallery.current?.click()} disabled={busy}><RotateCcw size={14} /> Retry</button></div>}
+      {error && <div className="scanner-error" role="alert"><strong>{scannerErrorTitle(error)}</strong><p>{error.message}</p>{(!(error instanceof ScannerRequestError) || error.retryable) && <button type="button" onClick={() => lastKind.current ? void analyse(lastKind.current) : gallery.current?.click()} disabled={busy}><RotateCcw size={14} /> Retry</button>}</div>}
       <section className="scanner-strategies" aria-labelledby="scanner-strategies-title"><h3 id="scanner-strategies-title">Analysis strategy</h3><div>{strategies.map(item => <button key={item} type="button" aria-pressed={strategy === item} disabled={busy} onClick={() => setStrategy(item)}>{item}</button>)}</div></section>
       <section className="scanner-fundamentals" aria-labelledby="scanner-fundamentals-title">
         <h3 id="scanner-fundamentals-title"><Globe2 size={22} /> Fundamental Analysis</h3>
@@ -154,7 +154,7 @@ export default function ChartScannerModal({ onClose, onNavigate }: ChartScannerM
       </div>
       <section className="scanner-trade-settings" aria-label="Selected trade parameters" hidden={scanning}><div className="scanner-settings-launch"><div><h3>Trade settings</h3><p>{tradeSettings.positions} {tradeSettings.positions === 1 ? "position" : "positions"} · {formatLots(tradeSettings.lotUnits)} lots each</p></div><button type="button" aria-label="Edit trade settings" disabled={busy} onClick={() => setSettingsOpen(true)}><Settings2 size={18} /></button></div>{settingsSaved && <p className="scanner-settings-saved" role="status">Settings saved for this scanner session. No order submitted.</p>}{!chart && <button className="scanner-execute" type="button" disabled>Execute Trade</button>}<p>{chart?.signal === "NO TRADE" ? "NO TRADE — no order is available. " : ""}MT5 scanner execution is not integrated. No order will be submitted.</p></section>
       <section className="scanner-history" aria-labelledby="scanner-history-title"><h3 id="scanner-history-title"><History size={21} /> Scan History <button type="button" aria-label="Refresh scan history" disabled={historyLoading} onClick={() => void loadHistory()}><RotateCcw size={17} /></button></h3>
-        {historyError ? <p className="scanner-history-error" role="alert">{historyError}<button type="button" onClick={() => void loadHistory()}>Retry history</button></p> : historyLoading && !records.length ? <p>Loading your saved reports…</p> : !records.length ? <div className="scanner-history-empty"><History size={25} /><p>Your next insight starts here.</p><span>Completed reports will appear in your private history.</span></div> : <div className="scanner-history-list">{records.map(record => <button key={record.id} type="button" onClick={() => { setResult(record); requestAnimationFrame(() => results.current?.scrollIntoView({ behavior: "smooth", block: "start" })); }}><span className="scanner-history-icon">{record.kind === "chart" ? <ScanLine size={19} /> : <Globe2 size={19} />}</span><span><strong>{record.kind === "chart" ? `${(record.report as ChartReport).symbol || "Chart"} · ${(record.report as ChartReport).signal}` : `${(record.report as FundamentalReport).context.market} · Fundamentals`}</strong><small>{formatDate(record.createdAt)}</small></span><ArrowUpRight size={16} /></button>)}</div>}
+        {historyError ? <p className="scanner-history-error" role="alert">{historyError.message}{(!(historyError instanceof ScannerRequestError) || historyError.retryable) && <button type="button" onClick={() => void loadHistory()}>Retry history</button>}</p> : historyLoading && !records.length ? <p>Loading your saved reports…</p> : !records.length ? <div className="scanner-history-empty"><History size={25} /><p>Your next insight starts here.</p><span>Completed reports will appear in your private history.</span></div> : <div className="scanner-history-list">{records.map(record => <button key={record.id} type="button" onClick={() => { setResult(record); requestAnimationFrame(() => results.current?.scrollIntoView({ behavior: "smooth", block: "start" })); }}><span className="scanner-history-icon">{record.kind === "chart" ? <ScanLine size={19} /> : <Globe2 size={19} />}</span><span><strong>{record.kind === "chart" ? `${(record.report as ChartReport).symbol || "Chart"} · ${(record.report as ChartReport).signal}` : `${(record.report as FundamentalReport).context.market} · Fundamentals`}</strong><small>{formatDate(record.createdAt)}</small></span><ArrowUpRight size={16} /></button>)}</div>}
         {hasMore && <button className="scanner-history-more" type="button" disabled={historyLoading} onClick={() => void loadHistory(historyPage + 1)}>{historyLoading ? "Loading…" : "Load older scans"}</button>}
       </section>
       <footer className="scanner-disclosure">{configured === false && <p>AI analysis is not configured yet.</p>}Charts are sent to Google Gemini only when you request analysis. AI suggestions can be wrong; verify prices and risk before trading. No guaranteed results.</footer>

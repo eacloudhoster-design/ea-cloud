@@ -25,6 +25,8 @@ await page.route('**/*',async route=>{
     if(url.pathname.endsWith('/history'))return route.fulfill(historyFails?{status:503,json:{error:'Scan history is unavailable. Please retry later.'}}:{json:{records:reports,hasMore:false}});
     if(req.method()==='POST'){
       await new Promise(resolve=>setTimeout(resolve,delay));
+      if(mode==='access-denied')return route.fulfill({status:403,json:{error:'Your scanner subscription has expired. Renew scanner access or contact support.',code:'SCANNER_SUBSCRIPTION_EXPIRED',category:'access',retryable:false}}).catch(()=>{});
+      if(mode==='provider-denied')return route.fulfill({status:503,json:{error:'The AI provider rejected the server credentials. Contact support.',code:'AI_PROVIDER_ACCESS_DENIED',category:'configuration',retryable:false}}).catch(()=>{});
       if(mode==='failure')return route.fulfill({status:503,json:{error:'AI analysis is not configured yet. Please try again later.'}}).catch(()=>{});
       const fundamental=url.pathname.endsWith('/fundamentals');
       const report=fundamental?{summary:'Isolated report fixture: CPI and FOMC uncertainty; no current figures invented.',sources:[{title:'BLS CPI',url:'https://www.bls.gov/cpi/'}],asOf:'2026-10-21T10:00:00Z',context:JSON.parse(req.postData())}:mode==='no-trade'?{...chartReport,signal:'NO TRADE',entry:null,stopLoss:null,takeProfit:null}:chartReport;
@@ -146,6 +148,12 @@ try{
   delay=800;await dialog.getByRole('button',{name:'Analyse chart',exact:true}).click();await dialog.getByRole('heading',{name:'Analyzing chart...'}).waitFor();assert.equal(await dialog.locator('.scanner-pending-analysis .scanner-orbit-one').evaluate(el=>getComputedStyle(el).animationName),'none');assert.equal(await dialog.locator('.scanner-image-scan-beam').evaluate(el=>getComputedStyle(el).animationName),'none');assert.equal(await dialog.locator('.scanner-analysis-dots span').first().evaluate(el=>getComputedStyle(el).animationName),'none');await page.keyboard.press('Escape');
   await dialog.getByRole('button',{name:'Scanner trade settings'}).click();
   const smallSheet=page.getByRole('dialog',{name:'Trade Settings',exact:true});await smallSheet.waitFor();await smallSheet.getByRole('button',{name:'Confirm settings',exact:true}).scrollIntoViewIfNeeded();const sheetBox=await smallSheet.boundingBox();assert.ok(sheetBox.x>=0&&sheetBox.x+sheetBox.width<=320&&sheetBox.height<=568-85);await page.screenshot({path:output+'/08-settings-small-mobile.png'});await page.keyboard.press('Escape');assert.equal(await smallSheet.count(),0);
+  delay=20;
+  for(const [failureMode,title] of [['access-denied','Scanner access denied'],['provider-denied','AI analysis unavailable']]){
+    mode=failureMode;await dialog.getByRole('button',{name:'Analyse chart',exact:true}).click();
+    const alert=dialog.locator('.scanner-error');await alert.getByText(title,{exact:true}).waitFor();
+    assert.equal(await alert.getByRole('button',{name:'Retry',exact:true}).count(),0);
+  }
   await page.setViewportSize({width:1280,height:900});await dialog.locator('.scanner-scroll').evaluate(el=>el.scrollTop=0);assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
   await dialog.getByRole('button',{name:'Home',exact:true}).click();assert.equal(await page.getByRole('dialog').count(),0);
   assert.equal(calls.some(c=>c.path.endsWith('/execute')),false);

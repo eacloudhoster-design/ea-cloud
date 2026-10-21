@@ -1,28 +1,36 @@
 import { chartReportSchema, type ChartReport, type FundamentalRequest, type FundamentalReport, type Strategy } from "../../../../lib/api-zod/src/scanner";
 
 export class ScannerError extends Error {
-  constructor(message: string, public status = 503) { super(message); }
+  constructor(message: string, public status = 503, public code = "AI_UNAVAILABLE", public category: "ai" | "configuration" | "input" = "ai", public retryable = true) { super(message); }
 }
-export function scannerConfigured() { return Boolean(process.env.GEMINI_API_KEY && /^[a-zA-Z0-9.-]+$/.test(process.env.GEMINI_SCANNER_MODEL || "")); }
+export function scannerConfiguration() {
+  if (!process.env.GEMINI_API_KEY?.trim()) return { configured: false, code: "AI_KEY_NOT_CONFIGURED", error: "AI analysis is not configured yet. Contact support.", category: "configuration" as const, retryable: false };
+  if (!/^[a-zA-Z0-9][a-zA-Z0-9.-]*$/.test(process.env.GEMINI_SCANNER_MODEL || "")) return { configured: false, code: "AI_MODEL_NOT_CONFIGURED", error: "The AI scanner model is not configured correctly. Contact support.", category: "configuration" as const, retryable: false };
+  return { configured: true };
+}
+export function scannerConfigured() { return scannerConfiguration().configured; }
+export function requireScannerConfiguration() {
+  const config = scannerConfiguration();
+  if (!config.configured) throw new ScannerError(config.error!, 503, config.code, "configuration", false);
+}
 export function validateChartImage(bytes: Uint8Array, mime: string) {
   const b = Buffer.from(bytes);
   const valid = mime === "image/jpeg" ? b[0] === 0xff && b[1] === 0xd8 && b[2] === 0xff
     : mime === "image/png" ? b.subarray(0, 8).equals(Buffer.from([137,80,78,71,13,10,26,10]))
     : mime === "image/webp" && b.toString("ascii",0,4) === "RIFF" && b.toString("ascii",8,12) === "WEBP";
-  if (!valid || b.length < 16 || b.length > 2 * 1024 * 1024) throw new ScannerError("Upload a valid PNG, JPEG or WebP chart under 2 MB.", 400);
+  if (!valid || b.length < 16 || b.length > 2 * 1024 * 1024) throw new ScannerError("Upload a valid PNG, JPEG or WebP chart under 2 MB.", 400, "INVALID_CHART_IMAGE", "input", false);
 }
 export function parseChartReport(text: string): ChartReport {
   let raw: unknown;
-  try { raw = JSON.parse(text); } catch { throw new ScannerError("AI returned an unreadable report. Retry with a clearer chart.", 502); }
+  try { raw = JSON.parse(text); } catch { throw new ScannerError("AI returned an unreadable report. Retry with a clearer chart.", 502, "AI_INVALID_REPORT"); }
   const result = chartReportSchema.safeParse(raw);
-  if (!result.success) throw new ScannerError("AI could not produce valid trade levels. Retry with a clearer chart.", 502);
+  if (!result.success) throw new ScannerError("AI could not produce valid trade levels. Retry with a clearer chart.", 502, "AI_INVALID_REPORT");
   return result.data;
 }
 async function generate(parts: unknown[], grounded: boolean, signal: AbortSignal) {
-  const key = process.env.GEMINI_API_KEY;
-  if (!key) throw new ScannerError("AI analysis is not configured yet. Please try again later.");
-  const model = process.env.GEMINI_SCANNER_MODEL || "";
-  if (!/^[a-zA-Z0-9.-]+$/.test(model)) throw new ScannerError("AI analysis configuration is unavailable.");
+  requireScannerConfiguration();
+  const key = process.env.GEMINI_API_KEY!;
+  const model = process.env.GEMINI_SCANNER_MODEL!;
   let response: Response;
   try {
     response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
@@ -33,15 +41,20 @@ async function generate(parts: unknown[], grounded: boolean, signal: AbortSignal
         ...(grounded ? { tools: [{ google_search: {} }] } : {}),
       }),
     });
-  } catch { throw new ScannerError("AI analysis timed out or is unreachable. Please retry."); }
-  if (!response.ok) throw new ScannerError(response.status === 429 ? "AI is busy. Please wait a moment and retry." : "AI analysis is unavailable. Please retry.", response.status === 429 ? 429 : 503);
+  } catch { throw new ScannerError("AI analysis timed out or is unreachable. Your scanner access is separate; please retry.", 503, "AI_UNREACHABLE"); }
+  if (!response.ok) {
+    if (response.status === 401 || response.status === 403) throw new ScannerError("The AI provider rejected the server’s credentials or project access. Contact support; this is not a scanner subscription failure.", 503, "AI_PROVIDER_ACCESS_DENIED", "configuration", false);
+    if (response.status === 404) throw new ScannerError("The configured AI model is unavailable to the server. Contact support.", 503, "AI_MODEL_UNAVAILABLE", "configuration", false);
+    if (response.status === 429) throw new ScannerError("The AI provider’s quota or rate limit was reached. Please try again later.", 429, "AI_PROVIDER_QUOTA");
+    throw new ScannerError("The AI provider is unavailable. Please retry.", 503, "AI_PROVIDER_UNAVAILABLE");
+  }
   // Do not log provider responses: they may contain chart/account information.
   let data: any;
-  try { data = await response.json(); } catch { throw new ScannerError("AI returned an unreadable response.", 502); }
+  try { data = await response.json(); } catch { throw new ScannerError("AI returned an unreadable response.", 502, "AI_INVALID_RESPONSE"); }
   const candidate = data.candidates?.[0];
-  if (!candidate || candidate.finishReason !== "STOP") throw new ScannerError("AI could not complete this analysis. Try a clearer chart or a narrower request.", 502);
+  if (!candidate || candidate.finishReason !== "STOP") throw new ScannerError("AI could not complete this analysis. Try a clearer chart or a narrower request.", 502, "AI_INCOMPLETE_REPORT");
   const text = candidate.content?.parts?.filter((p: any) => !p.thought && typeof p.text === "string").map((p: any) => p.text).join("\n") || "";
-  if (!text || text.length > 20000) throw new ScannerError("AI returned an invalid report.", 502);
+  if (!text || text.length > 20000) throw new ScannerError("AI returned an invalid report.", 502, "AI_INVALID_REPORT");
   return { text, grounding: candidate.groundingMetadata };
 }
 export async function analyseChart(bytes: Uint8Array, mime: string, strategy: Strategy, signal: AbortSignal) {
@@ -60,6 +73,6 @@ export async function analyseFundamentals(context: FundamentalRequest, signal: A
     try { const url = new URL(chunk.web.uri); return url.protocol === "https:" ? [{ title: String(chunk.web.title || url.hostname).slice(0,200), url: url.href }] : []; }
     catch { return []; }
   }).slice(0, 12);
-  if (!sources.length || !grounding?.groundingSupports?.length) throw new ScannerError("Current economic sources could not be verified. Please retry later; no report was saved.", 503);
+  if (!sources.length || !grounding?.groundingSupports?.length) throw new ScannerError("Current economic sources could not be verified. Please retry later; no report was saved.", 503, "AI_GROUNDING_UNAVAILABLE");
   return { summary: text, sources, asOf, context };
 }
