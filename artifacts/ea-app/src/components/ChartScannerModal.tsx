@@ -1,216 +1,100 @@
-import { X, Camera, Upload, Sparkles } from "lucide-react";
-import { useState, useEffect } from "react";
-import { useApp } from "@/context/AppContext";
+import { useRef, useState } from "react";
+import { X, Camera, Upload, Sparkles, Settings, History, ChartNoAxesCombined, Globe, ChevronDown, Plus, Minus, ScanLine, LoaderCircle, ShieldAlert } from "lucide-react";
 import { eaLogo } from "@/lib/branding";
 
-interface ChartScannerModalProps {
-  onClose: () => void;
-}
-
+interface ChartScannerModalProps { onClose: () => void }
+type Signal = { symbol: string; timeframe: string; signal: "BUY" | "SELL" | "NO TRADE"; entry?: number; stopLoss?: number; takeProfit?: number; confidence?: number; reasoning: string; riskReward?: number };
+const strategies = ["Auto", "SMC", "ICT", "Price Action", "Supply/Demand", "Indicators"];
+const presets = [0.01, 0.05, 0.1, 0.5, 1];
+const red = "#ff443f";
 export default function ChartScannerModal({ onClose }: ChartScannerModalProps) {
-  const { accentColor } = useApp();
-  const [trades, setTrades] = useState(1);
-  const [scanning, setScanning] = useState(false);
-  const [scanResult, setScanResult] = useState<string | null>(null);
-  const [rotation, setRotation] = useState(0);
-
-  // Rotate the outer dashed ring
-  useEffect(() => {
-    if (!scanning) return;
-    const interval = setInterval(() => {
-      setRotation(r => (r + 2) % 360);
-    }, 16);
-    return () => clearInterval(interval);
-  }, [scanning]);
-
-  const handleScan = async () => {
-    setScanning(true);
-    setScanResult(null);
-    await new Promise(r => setTimeout(r, 3000));
-    setScanning(false);
-    setScanResult("XAUUSD • H1 • BUY Signal Detected");
+  const picker = useRef<HTMLInputElement>(null);
+  const camera = useRef<HTMLInputElement>(null);
+  const [image, setImage] = useState<string | null>(null);
+  const [file, setFile] = useState<File | null>(null);
+  const [strategy, setStrategy] = useState("Auto");
+  const [stage, setStage] = useState<"ready" | "scanning" | "result">("ready");
+  const [signal, setSignal] = useState<Signal | null>(null);
+  const [error, setError] = useState("");
+  const [tradeSettings, setTradeSettings] = useState(false);
+  const [lots, setLots] = useState(0.01);
+  const [positions, setPositions] = useState(1);
+  const [history, setHistory] = useState<Signal[]>([]);
+  const [showHistory, setShowHistory] = useState(false);
+  const [fundamentalEvent, setFundamentalEvent] = useState("CPI");
+  const [showFundamental, setShowFundamental] = useState(false);
+  const selectFile = (f?: File) => {
+    if (!f) return;
+    if (!f.type.startsWith("image/") || f.size > 10 * 1024 * 1024) { setError("Choose an image smaller than 10 MB."); return; }
+    if (image) URL.revokeObjectURL(image);
+    setFile(f); setImage(URL.createObjectURL(f)); setSignal(null); setError(""); setStage("ready");
   };
-
-  return (
-    <div className="absolute inset-0 flex flex-col" style={{ background: "#000", paddingBottom: 75 }}>
-      {/* Header */}
-      <div className="flex items-center justify-between px-4 pt-14 pb-4">
-        <div className="flex items-center gap-2">
-          <button onClick={onClose} className="active:scale-90 transition-transform">
-            <X size={22} style={{ color: accentColor }} />
-          </button>
-          <h2 className="text-white font-bold text-xl">
-            <span style={{ color: accentColor }}>Chart</span> Scanner
-          </h2>
+  const analyze = async () => {
+    if (!file) return;
+    setStage("scanning"); setError("");
+    try {
+      const form = new FormData(); form.append("image", file); form.append("strategy", strategy);
+      const response = await fetch("/api/chart-scanner/analyze", { method: "POST", body: form, credentials: "include" });
+      if (!response.ok) throw new Error(response.status === 404 ? "AI analysis is not configured yet. The secure Gemini backend must be connected." : "Chart analysis failed. Please try again.");
+      const result = await response.json() as Signal;
+      if (!result || !["BUY", "SELL", "NO TRADE"].includes(result.signal) || !result.reasoning || !result.symbol || !result.timeframe) throw new Error("AI returned an incomplete analysis.");
+      setSignal(result); setHistory(h => [result, ...h]); setStage("result");
+    } catch (e) { setError(e instanceof Error ? e.message : "Analysis failed."); setStage("ready"); }
+  };
+  const pill = (active: boolean) => ({ border: "1px solid " + (active ? red : "#444"), background: active ? "#300e0e" : "#151515", color: active ? red : "#ccc" });
+  return <div className="absolute inset-0 overflow-y-auto bg-black text-white" style={{ paddingBottom: 110 }}>
+    <header className="sticky top-0 z-20 flex items-center justify-between border-b border-red-950 bg-[#170909]/95 px-5 py-5 backdrop-blur">
+      <div className="flex items-center gap-3"><button onClick={onClose} aria-label="Close scanner"><X color={red}/></button><img src={eaLogo} alt="EA Cloud" className="h-9 w-9 rounded-full border border-red-500 object-cover"/><strong className="text-xl">AI Scanner</strong></div>
+      <span className="rounded-full border border-red-900 px-3 py-1 text-xs text-red-400">EA CLOUD</span>
+    </header>
+    <main className="mx-auto max-w-xl space-y-6 px-5 pt-6">
+      <section className="relative overflow-hidden rounded-3xl border border-red-900/60 bg-gradient-to-b from-[#330b0b] via-[#150707] to-black p-6 text-center">
+        <div className="relative mx-auto mb-5 flex h-44 w-44 items-center justify-center">
+          <div className={`absolute inset-0 rounded-full border border-red-500/40 ${stage === "scanning" ? "animate-ping" : ""}`}/>
+          <div className={`absolute inset-3 rounded-full border-2 border-dashed border-red-500/60 ${stage === "scanning" ? "animate-spin" : ""}`}/>
+          <img src={eaLogo} alt="EA Cloud AI" className="h-28 w-28 rounded-full border-4 border-red-500 object-cover shadow-[0_0_30px_#ff443f66]"/>
         </div>
-        <div
-          className="px-3 py-1 rounded-full text-sm font-semibold"
-          style={{ background: `${accentColor}22`, border: `1px solid ${accentColor}88`, color: accentColor }}
-        >
-          13 / 13 scans
-        </div>
-      </div>
-
-      {/* AI info box */}
-      <div
-        className="mx-4 rounded-xl p-3 flex items-start gap-2.5"
-        style={{ background: `${accentColor}18`, border: `1px solid ${accentColor}66` }}
-      >
-        <Sparkles size={18} style={{ color: accentColor }} className="flex-shrink-0 mt-0.5" />
-        <p className="text-sm leading-snug">
-          <span className="font-semibold" style={{ color: accentColor }}>AI auto-detects</span>
-          <span className="text-white/80"> symbol &amp; timeframe directly from your chart image</span>
-        </p>
-      </div>
-
-      {/* Trade / Lot size controls */}
-      <div className="flex gap-3 px-4 mt-4">
-        <div className="flex-1 rounded-2xl p-3" style={{ background: "rgba(18,18,18,0.95)", border: "1px solid rgba(255,255,255,0.08)" }}>
-          <p className="text-white/50 text-[10px] font-bold tracking-widest uppercase mb-2">Trades (Max 20)</p>
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => setTrades(Math.max(1, trades - 1))}
-              className="w-8 h-8 rounded-lg flex items-center justify-center text-white font-bold text-lg active:scale-90 transition-transform"
-              style={{ background: "rgba(255,255,255,0.08)" }}
-            >-</button>
-            <span className="text-white font-bold text-xl flex-1 text-center">{trades}</span>
-            <button
-              onClick={() => setTrades(Math.min(20, trades + 1))}
-              className="w-8 h-8 rounded-lg flex items-center justify-center text-white font-bold text-lg active:scale-90 transition-transform"
-              style={{ background: accentColor }}
-            >+</button>
-          </div>
-        </div>
-        <div className="flex-1 rounded-2xl p-3" style={{ background: "rgba(18,18,18,0.95)", border: "1px solid rgba(255,255,255,0.08)" }}>
-          <p className="text-white/50 text-[10px] font-bold tracking-widest uppercase mb-2">Lot Size</p>
-          <div className="flex items-center h-8">
-            <span className="text-white font-bold text-2xl">0.01</span>
-          </div>
-        </div>
-      </div>
-
-      {/* Animated scan circle */}
-      <div className="flex-1 flex flex-col items-center justify-center gap-4">
-        <button onClick={handleScan} className="relative flex items-center justify-center active:scale-95 transition-transform">
-          {/* Rotating outer dashed ring */}
-          <svg
-            width="200" height="200"
-            style={{ transform: `rotate(${rotation}deg)`, position: "absolute" }}
-          >
-            <circle
-              cx="100" cy="100" r="90"
-              fill="none"
-              stroke={accentColor}
-              strokeWidth="2"
-              strokeDasharray="15 10"
-              strokeOpacity="0.5"
-            />
-          </svg>
-          {/* Static outer ring */}
-          <div
-            className="w-[200px] h-[200px] rounded-full absolute"
-            style={{ border: `1px solid ${accentColor}22` }}
-          />
-          {/* Inner circle */}
-          <div
-            className="w-[72px] h-[72px] rounded-full flex items-center justify-center z-10"
-            style={{
-              border: `2px solid ${accentColor}cc`,
-              background: `${accentColor}18`,
-              boxShadow: scanning ? `0 0 20px ${accentColor}88` : "none",
-            }}
-          >
-            {scanning ? (
-              <div className="w-6 h-6 rounded-full border-2 border-t-transparent animate-spin" style={{ borderColor: `${accentColor}`, borderTopColor: "transparent" }} />
-            ) : (
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke={accentColor} strokeWidth="1.8">
-                <path d="M3 7v3a1 1 0 001 1h1M3 7V5a1 1 0 011-1h2M21 7v3a1 1 0 01-1 1h-1M21 7V5a1 1 0 00-1-1h-2M3 17v2a1 1 0 001 1h2M21 17v2a1 1 0 01-1 1h-2" />
-                <rect x="7" y="9" width="10" height="8" rx="1" />
-              </svg>
-            )}
-          </div>
-        </button>
-
-        {/* Scan result */}
-        {scanResult && (
-          <div
-            className="px-4 py-2 rounded-full"
-            style={{ background: `${accentColor}22`, border: `1px solid ${accentColor}88` }}
-          >
-            <p className="text-white font-semibold text-sm">{scanResult}</p>
-          </div>
-        )}
-        {scanning && (
-          <p className="text-white/50 text-sm">Analyzing chart...</p>
-        )}
-        {!scanning && !scanResult && (
-          <p className="font-semibold text-base" style={{ color: accentColor }}>
-            Tap circle to scan
-          </p>
-        )}
-      </div>
-
-      {/* Upload section */}
-      <div className="px-4 pb-2">
-        <p className="text-center font-semibold text-base mb-3" style={{ color: accentColor }}>
-          Upload your MT5 chart
-        </p>
-        <div className="flex gap-3 mb-2">
-          <button
-            onClick={handleScan}
-            className="flex-1 flex flex-col items-center justify-center py-5 rounded-2xl gap-2 active:scale-95 transition-transform"
-            style={{ border: `2px dashed ${accentColor}99`, background: `${accentColor}11` }}
-          >
-            <Camera size={28} style={{ color: accentColor }} />
-            <span className="text-white text-sm font-medium">Camera</span>
-          </button>
-          <button
-            onClick={handleScan}
-            className="flex-1 flex flex-col items-center justify-center py-5 rounded-2xl gap-2 active:scale-95 transition-transform"
-            style={{ border: `2px dashed ${accentColor}99`, background: `${accentColor}11` }}
-          >
-            <Upload size={28} style={{ color: accentColor }} />
-            <span className="text-white text-sm font-medium">Upload</span>
-          </button>
-        </div>
-        <p className="text-center text-white/35 text-xs">Take a screenshot of your MT5 chart or upload</p>
-      </div>
-
-      {/* Bottom nav strip */}
-      <div
-        className="absolute bottom-0 left-0 right-0 flex items-end justify-around"
-        style={{ height: 75, background: "linear-gradient(to top, #000 70%, transparent)", paddingBottom: 12, paddingLeft: 8, paddingRight: 8 }}
-      >
-        <div className="flex-1" />
-        <div className="flex flex-col items-center" style={{ marginTop: -28 }}>
-          <button
-            onClick={onClose}
-            className="w-[62px] h-[62px] rounded-full flex flex-col items-center justify-center active:scale-95 transition-transform"
-            style={{
-              background: `radial-gradient(circle at center, ${accentColor}33 0%, ${accentColor}11 60%, #000 100%)`,
-              boxShadow: `0 0 20px ${accentColor}bb, 0 0 40px ${accentColor}44`,
-              border: `1.5px solid ${accentColor}cc`,
-            }}
-          >
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={accentColor} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" /><polyline points="9 22 9 12 15 12 15 22" />
-            </svg>
-            <span className="text-[9px] font-bold tracking-widest uppercase" style={{ color: accentColor, marginTop: 2 }}>Home</span>
-          </button>
-        </div>
-        <div className="flex-1" />
-      </div>
-
-      {/* Floating bot avatar */}
-      <div className="absolute z-20" style={{ bottom: 88, right: 14 }}>
-        <div className="relative">
-          <div className="w-[46px] h-[46px] rounded-full overflow-hidden"
-            style={{ border: `2px solid ${accentColor}cc`, boxShadow: `0 0 12px ${accentColor}66` }}>
-            <img src={eaLogo} alt="Bot" className="w-full h-full object-cover" />
-          </div>
-          <div className="absolute top-0 right-0 w-3 h-3 rounded-full" style={{ background: accentColor, border: "1.5px solid #000" }} />
-        </div>
-      </div>
-    </div>
-  );
+        <p className="mb-2 text-sm font-bold tracking-wide text-red-400">EA CLOUD AI</p>
+        <h2 className="text-2xl font-bold">{stage === "scanning" ? "Analyzing chart..." : stage === "result" ? "Analysis complete" : "Ready to Scan"}</h2>
+        <p className="mt-2 text-sm text-gray-400">{stage === "scanning" ? "AI is scanning patterns and price levels" : "Upload a trading chart screenshot or take a photo"}</p>
+        {stage === "scanning" && <LoaderCircle className="mx-auto mt-5 animate-spin text-red-500"/>}
+        {stage !== "scanning" && <div className="mt-6 grid grid-cols-2 gap-3">
+          <button onClick={() => picker.current?.click()} className="flex items-center justify-center gap-2 rounded-full bg-[#ff443f] px-4 py-3 font-semibold"><Upload size={19}/> Gallery</button>
+          <button onClick={() => camera.current?.click()} className="flex items-center justify-center gap-2 rounded-full border border-gray-600 bg-[#242124] px-4 py-3 font-semibold"><Camera size={19}/> Camera</button>
+        </div>}
+        <input ref={picker} type="file" accept="image/*" className="hidden" onChange={e => selectFile(e.target.files?.[0])}/>
+        <input ref={camera} type="file" accept="image/*" capture="environment" className="hidden" onChange={e => selectFile(e.target.files?.[0])}/>
+      </section>
+      {image && <section className="relative overflow-hidden rounded-2xl border border-red-900 bg-[#101010]">
+        <img src={image} alt="Uploaded trading chart" className="max-h-80 w-full object-contain"/>
+        {stage === "scanning" && <div className="pointer-events-none absolute inset-0 overflow-hidden bg-black/30"><div className="absolute left-0 right-0 top-0 h-1 animate-bounce bg-red-500 shadow-[0_0_24px_#ff443f]"/><div className="absolute inset-0 flex items-center justify-center text-xl font-bold text-red-400"><ScanLine className="mr-2"/> Analyzing...</div></div>}
+      </section>}
+      <section><h3 className="mb-3 font-semibold">Analysis strategy</h3><div className="flex flex-wrap gap-2">{strategies.map(s => <button key={s} onClick={() => setStrategy(s)} style={pill(strategy === s)} className="rounded-full px-4 py-3 text-sm">{s}</button>)}</div></section>
+      <section className="rounded-2xl border border-[#383838] bg-[#111] p-5">
+        <h3 className="mb-4 flex items-center gap-2 text-lg font-bold"><Globe color={red}/> Fundamental Analysis</h3>
+        <div className="grid grid-cols-2 gap-3"><label className="text-xs text-gray-400">Market<select className="mt-2 w-full rounded-lg border border-gray-700 bg-black p-3 text-sm text-white"><option>XAUUSD · Gold</option><option>EURUSD</option><option>GBPUSD</option></select></label>
+        <label className="text-xs text-gray-400">News event<select value={fundamentalEvent} onChange={e => setFundamentalEvent(e.target.value)} className="mt-2 w-full rounded-lg border border-gray-700 bg-black p-3 text-sm text-white">{["CPI","PPI","NFP","FOMC"].map(e => <option key={e}>{e}</option>)}</select></label></div>
+        <button onClick={() => setShowFundamental(v => !v)} className="mt-5 w-full rounded-full border border-red-500 bg-red-950/30 py-3 font-semibold"><Globe className="mr-2 inline" size={19}/> Fundamental Analysis</button>
+        {showFundamental && <p className="mt-3 rounded-lg bg-black p-3 text-sm text-gray-300">Analysis for {fundamentalEvent} is only available on its verified release date. Economic calendar and live news integration are not configured yet; no market direction can be responsibly provided.</p>}
+      </section>
+      {image && stage === "ready" && <button onClick={analyze} className="flex w-full items-center justify-center gap-3 rounded-full bg-[#ff443f] py-5 text-lg font-bold"><ScanLine/> Analyze Chart</button>}
+      {error && <p role="alert" className="rounded-xl border border-red-700 bg-red-950/30 p-4 text-sm text-red-300"><ShieldAlert className="mr-2 inline" size={18}/>{error}</p>}
+      {stage === "result" && signal && <section className="space-y-4 rounded-3xl border border-red-900 bg-gradient-to-b from-[#271010] to-[#101010] p-5">
+        <div className="flex items-center justify-between"><div><p className="text-xs text-red-400">EA CLOUD AI SIGNAL</p><h3 className="text-2xl font-bold">{signal.symbol} · {signal.timeframe}</h3></div><span className="rounded-lg px-3 py-2 font-bold" style={{background:signal.signal === "BUY" ? "#065f46" : signal.signal === "SELL" ? "#7f1d1d" : "#333"}}>{signal.signal}</span></div>
+        {signal.signal !== "NO TRADE" && <div className="grid grid-cols-3 gap-2">{[["ENTRY",signal.entry],["TAKE PROFIT",signal.takeProfit],["STOP LOSS",signal.stopLoss]].map(([label,value],i)=><div key={String(label)} className="rounded-xl border border-white/10 bg-black/50 p-3 text-center"><p className="text-[10px] text-gray-400">{label}</p><p className={`mt-2 text-sm font-bold ${i===1?"text-green-400":i===2?"text-red-400":"text-white"}`}>{typeof value === "number" ? value : "—"}</p></div>)}</div>}
+        <div className="flex justify-between text-sm"><span>Confidence estimate: {signal.confidence ?? "—"}%</span><span>R:R {signal.riskReward ?? "—"}</span></div>
+        <div className="rounded-xl bg-black/50 p-4"><h4 className="mb-2 font-bold">Why This Trade?</h4><p className="whitespace-pre-wrap text-sm leading-relaxed text-gray-300">{signal.reasoning}</p></div>
+        {signal.signal !== "NO TRADE" && <button onClick={() => setTradeSettings(true)} className="w-full rounded-full bg-[#ff443f] py-4 text-lg font-bold">EXECUTE TRADE</button>}
+      </section>}
+      <section><button onClick={() => setShowHistory(v => !v)} className="flex w-full items-center justify-between border-b border-gray-800 py-4 font-semibold"><span className="flex items-center gap-2"><History color={red}/> Scan History ({history.length})</span><ChevronDown/></button>{showHistory && <div className="space-y-2 pt-3">{history.length ? history.map((h,i)=><button key={i} onClick={() => {setSignal(h);setStage("result")}} className="w-full rounded-xl bg-[#171717] p-3 text-left text-sm">{h.symbol} · {h.timeframe} — {h.signal}</button>) : <p className="text-sm text-gray-400">No scans this session. Persistent history requires backend integration.</p>}</div>}</section>
+    </main>
+    {tradeSettings && signal && <div className="fixed inset-0 z-50 flex items-end bg-black/80"><div className="max-h-[85vh] w-full overflow-y-auto rounded-t-3xl border-t border-red-900 bg-[#151517] p-6"><div className="mb-6 flex justify-between"><h3 className="text-2xl font-bold">Trade Settings</h3><button onClick={() => setTradeSettings(false)} aria-label="Close trade settings"><X/></button></div>
+      <p className="mb-2 text-sm text-gray-400">LOT SIZE</p><div className="flex items-center justify-between rounded-xl bg-[#252527] p-3"><button onClick={() => setLots(v => Math.max(0.01,Math.round((v-0.01)*100)/100))}><Minus/></button><strong className="text-2xl">{lots.toFixed(2)}</strong><button onClick={() => setLots(v => Math.round((v+0.01)*100)/100)}><Plus/></button></div>
+      <div className="my-3 flex gap-2">{presets.map(p=><button key={p} onClick={()=>setLots(p)} className="flex-1 rounded-lg p-2 text-xs" style={pill(lots===p)}>{p}</button>)}</div>
+      <p className="mb-2 mt-6 text-sm text-gray-400">TRADES PER SIGNAL</p><div className="flex items-center justify-between rounded-xl bg-[#252527] p-3"><button onClick={()=>setPositions(v=>Math.max(1,v-1))}><Minus/></button><strong className="text-2xl">{positions}</strong><button onClick={()=>setPositions(v=>Math.min(20,v+1))}><Plus/></button></div>
+      <div className="my-3 flex gap-2">{[1,2,3,5,10].map(p=><button key={p} onClick={()=>setPositions(p)} className="flex-1 rounded-lg p-2 text-sm" style={pill(positions===p)}>{p}</button>)}</div>
+      <p className="mt-5 rounded-xl border border-red-950 bg-red-950/20 p-4 text-center text-sm">Each signal places <strong className="text-red-400">{positions} trades × {lots.toFixed(2)} lots</strong></p>
+      <button disabled className="mt-5 w-full rounded-full bg-gray-700 py-4 font-bold text-gray-300">Connect MT5 to execute trades</button><p className="mt-2 text-center text-xs text-gray-400">Real order execution is unavailable until a secure MT5 connection and execution backend are verified.</p>
+    </div></div>}
+  </div>;
 }
