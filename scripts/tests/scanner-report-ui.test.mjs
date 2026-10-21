@@ -19,7 +19,7 @@ test('new BUY/SELL reports render confidence, all six analysis sections and disa
 });
 test('uncalibrated/closed/limited setups and archived history never present fabricated tradability',()=>{
  const html=show(buildDirectionalReport({...base,chartClarity:'limited',marketStatus:'closed',entry:null,stopLoss:null,takeProfit:null}));assert.ok(html.includes('Uncalibrated'));assert.ok(html.includes('Market reported closed'));assert.ok(html.includes('NOT EXECUTABLE'));assert.ok(!html.includes('Reference risk / reward'));
- const {limitOrderAppropriate,limitOrderReason,confidence,confidenceReason,chartClarity,marketStatus,analysis,...old}=base;const legacy=show({...old,signal:'NO TRADE',entry:null,stopLoss:null,takeProfit:null});assert.ok(legacy.includes('Archived analysis'));assert.ok(!legacy.includes('NO TRADE'));assert.match(legacy,/scanner-result-execute[^>]*disabled/);
+ const {priceEvidence,levelsUnavailableReason,limitOrderAppropriate,limitOrderReason,confidence,confidenceReason,chartClarity,marketStatus,analysis,...old}=base;const legacy=show({...old,signal:'NO TRADE',entry:null,stopLoss:null,takeProfit:null});assert.ok(legacy.includes('Archived analysis'));assert.ok(!legacy.includes('NO TRADE'));assert.match(legacy,/scanner-result-execute[^>]*disabled/);
 });
 
 test('normalized missing optional fields render safe unavailable labels without prices or percentages',()=>{

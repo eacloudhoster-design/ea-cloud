@@ -1,3 +1,4 @@
+import { directionalChartReportSchema } from "../../../../lib/api-zod/src/scanner";
 // Allowlisted, operational fields only. Never serialize Error/message/cause,
 // environment values, headers, prompts, image data or provider response bodies.
 export function scannerFailureDiagnostic(error: { code?: string; category?: string; upstreamStatus?: number | null; reportValidation?: unknown }) {
@@ -10,7 +11,7 @@ export function scannerFailureDiagnostic(error: { code?: string; category?: stri
 }
 
 export interface ReportFailureDetails { stage: "json" | "schema" | "envelope"; issues: { path: string; code: string; receivedType: string }[] }
-const reportFields = new Set(["limitOrderAppropriate", "limitOrderReason", "supplyDemand", "signal", "reasoning", "symbol", "timeframe", "entry", "stopLoss", "takeProfit", "limitations", "confidence", "confidenceReason", "chartClarity", "marketStatus", "analysis", "marketStructure", "trendDirection", "liquiditySweeps", "supportResistance", "entryReasoning", "risksInvalidation", "evidenceTags", "schemaVersion", "riskRewardRatio", "executionStatus", "nonExecutableReasons"]);
+const reportFields = new Set(["priceEvidence", "visibleMin", "visibleMax", "decimalPlaces", "basis", "levelsUnavailableReason", "levelAssessment", "limitOrderAppropriate", "limitOrderReason", "supplyDemand", "signal", "reasoning", "symbol", "timeframe", "entry", "stopLoss", "takeProfit", "limitations", "confidence", "confidenceReason", "chartClarity", "marketStatus", "analysis", "marketStructure", "trendDirection", "liquiditySweeps", "supportResistance", "entryReasoning", "risksInvalidation", "evidenceTags", "schemaVersion", "riskRewardRatio", "executionStatus", "nonExecutableReasons"]);
 const issueCodes = new Set(["invalid_type", "invalid_enum_value", "unrecognized_keys", "too_small", "too_big", "custom", "not_finite", "invalid_union", "invalid_literal"]);
 const receivedTypes = new Set(["missing", "null", "number", "string", "boolean", "array", "object", "unknown"]);
 export function reportValidationDetails(stage: ReportFailureDetails["stage"], issues: readonly { path: (string | number)[]; code: string }[] = [], raw?: unknown): ReportFailureDetails {
@@ -30,4 +31,16 @@ function sanitizeReportValidation(value: unknown): ReportFailureDetails | undefi
     path: typeof issue?.path === "string" && (issue.path === "$" || issue.path.split(".").every(part => part === "[]" || reportFields.has(part))) ? issue.path : "$unknown",
     code: issueCodes.has(issue?.code) ? issue.code : "invalid_value", receivedType: receivedTypes.has(issue?.receivedType) ? issue.receivedType : "unknown",
   })) };
+}
+
+// Success diagnostics describe data flow, never provider text, prices or images.
+export function scannerLevelDiagnostic(raw: unknown, stage: "normalized" | "persisted" = "persisted") {
+  const parsed = directionalChartReportSchema.safeParse(raw);
+  if (!parsed.success || !parsed.data.levelAssessment) return undefined;
+  const report = parsed.data;
+  return { event: "scanner_level_assessment", stage, code: report.levelAssessment!.code,
+    providerFields: report.levelAssessment!.providerFields,
+    outputFields: { entry: report.entry !== null, stopLoss: report.stopLoss !== null, takeProfit: report.takeProfit !== null },
+    hasPriceEvidence: report.priceEvidence != null, hasUnavailableReason: Boolean(report.levelsUnavailableReason),
+    hasSymbol: Boolean(report.symbol), hasTimeframe: Boolean(report.timeframe), liveVerified: false };
 }

@@ -8,7 +8,7 @@ import { fundamentalRequestSchema, strategySchema } from "../../../../lib/api-zo
 import { analyseChart, analyseFundamentals, ScannerError, scannerConfiguration, requireScannerConfiguration } from "../lib/scanner-gemini";
 
 import scannerTradingRouter from "./scanner-trading";
-import { scannerFailureDiagnostic } from "../lib/scanner-diagnostics";
+import { scannerLevelDiagnostic, scannerFailureDiagnostic } from "../lib/scanner-diagnostics";
 import { completeScannerReport } from "../lib/scanner-completion";
 import { evaluateScannerAccess } from "../lib/scanner-access";
 
@@ -82,8 +82,15 @@ router.post("/app/scanner/chart", limiter, (req, res, next) => upload(req, res, 
   try {
     requireScannerConfiguration();
     await ensureHistory(req.scannerClientId!);
-    const saved = await completeScannerReport(req.scannerClientId!, "chart", strategy.data, () => analyseChart(req.file!.buffer, req.file!.mimetype, strategy.data, attempt.signal), attempt.signal);
+    const saved = await completeScannerReport(req.scannerClientId!, "chart", strategy.data, async () => {
+      const report = await analyseChart(req.file!.buffer, req.file!.mimetype, strategy.data, attempt.signal);
+      const diagnostic = scannerLevelDiagnostic(report, "normalized");
+      if (diagnostic) req.log?.info(diagnostic, "Scanner chart levels normalized");
+      return report;
+    }, attempt.signal);
     if (attempt.signal.aborted) return;
+    const diagnostic = scannerLevelDiagnostic(saved.report);
+    if (diagnostic) req.log?.info(diagnostic, "Scanner chart levels persisted");
     res.status(201).json({ id: saved.id, kind: saved.kind, strategy: saved.strategy, report: saved.report, createdAt: saved.createdAt });
   } catch (error) { if (!attempt.signal.aborted) failure(req, res, error); }
   finally { if (req.file) req.file.buffer.fill(0); attempt.dispose(); }

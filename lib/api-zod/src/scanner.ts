@@ -33,8 +33,18 @@ export const legacyChartReportSchema = z.object({
 export const scannerAnalysisKeys = ["marketStructure", "trendDirection", "liquiditySweeps", "supportResistance", "entryReasoning", "risksInvalidation", "supplyDemand"] as const;
 export const scannerEvidenceTags = ["Liquidity Sweep", "Order Block", "Bullish Structure", "Bearish Structure", "Volume Support", "Supply Zone", "Demand Zone", "Support Retest", "Resistance Rejection", "Trend Continuation"] as const;
 const analysisSchema = z.object({ marketStructure: z.string().max(1500).nullable(), trendDirection: z.string().max(1500).nullable(), liquiditySweeps: z.string().max(1500).nullable(), supportResistance: z.string().max(1500).nullable(), entryReasoning: z.string().max(1500).nullable(), risksInvalidation: z.string().max(1500).nullable(), supplyDemand: z.string().max(1500).nullable().optional() }).strict();
+export const chartPriceEvidenceSchema = z.object({
+  visibleMin: z.number().positive().finite(), visibleMax: z.number().positive().finite(),
+  decimalPlaces: z.number().int().min(0).max(10),
+  basis: z.string().trim().min(20).max(1500),
+}).strict();
+export const levelAssessmentSchema = z.object({
+  code: z.enum(["CHART_LEVELS_RETAINED", "PROVIDER_LEVELS_MISSING", "PROVIDER_LEVELS_NULL", "PROVIDER_LEVELS_PARTIAL", "PRICE_SCALE_MISSING", "PRICE_SCALE_INVALID", "LEVEL_OUTSIDE_VISIBLE_SCALE", "UNSUPPORTED_PRICE_PRECISION"]),
+  providerFields: z.object({ entry: z.enum(["missing", "null", "number"]), stopLoss: z.enum(["missing", "null", "number"]), takeProfit: z.enum(["missing", "null", "number"]) }).strict(),
+}).strict();
 const normalizedPredictionObject = z.object({
   signal: z.enum(["BUY", "SELL"]),
+  priceEvidence: chartPriceEvidenceSchema.nullable().optional(), levelsUnavailableReason: z.string().trim().min(1).max(1500).nullable().optional(),
   symbol: z.string().max(30).nullable(), timeframe: z.string().max(20).nullable(),
   entry: z.number().positive().finite().nullable(), stopLoss: z.number().positive().finite().nullable(), takeProfit: z.number().positive().finite().nullable(),
   reasoning: z.string().trim().min(20).max(4000), limitations: z.string().max(1500).nullable(),
@@ -43,7 +53,7 @@ const normalizedPredictionObject = z.object({
   chartClarity: z.enum(["clear", "limited"]), marketStatus: z.enum(["open", "closed", "unknown"]), analysis: analysisSchema,
   evidenceTags: z.array(z.enum(scannerEvidenceTags)).max(4).refine(tags => new Set(tags).size === tags.length).optional(),
 }).strict();
-const optionalPredictionFields = { symbol: true, timeframe: true, entry: true, stopLoss: true, takeProfit: true, limitations: true, confidence: true, confidenceReason: true, chartClarity: true, marketStatus: true, analysis: true, evidenceTags: true, limitOrderAppropriate: true, limitOrderReason: true } as const;
+const optionalPredictionFields = { priceEvidence: true, levelsUnavailableReason: true, symbol: true, timeframe: true, entry: true, stopLoss: true, takeProfit: true, limitations: true, confidence: true, confidenceReason: true, chartClarity: true, marketStatus: true, analysis: true, evidenceTags: true, limitOrderAppropriate: true, limitOrderReason: true } as const;
 export const directionalPredictionSchema = normalizedPredictionObject.partial(optionalPredictionFields).extend({
   analysis: analysisSchema.partial().nullable().optional(),
   chartClarity: z.enum(["clear", "limited"]).nullable().optional(), marketStatus: z.enum(["open", "closed", "unknown"]).nullable().optional(),
@@ -56,6 +66,7 @@ export const directionalPredictionSchema = normalizedPredictionObject.partial(op
     ctx.addIssue({ code: "custom", path: ["entry"], message: "Invalid chart reference price ordering" });
 });
 export const directionalChartReportSchema = normalizedPredictionObject.extend({
+  levelAssessment: levelAssessmentSchema.optional(),
   schemaVersion: z.literal(2), riskRewardRatio: z.number().positive().finite().nullable(),
   executionStatus: z.literal("NOT_EXECUTABLE"), nonExecutableReasons: z.array(z.string()).min(1),
 }).strict();

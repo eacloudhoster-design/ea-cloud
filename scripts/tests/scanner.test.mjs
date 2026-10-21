@@ -5,7 +5,7 @@ import { build } from '../../artifacts/api-server/node_modules/esbuild/lib/main.
 const bundle = await build({ entryPoints: ['artifacts/api-server/src/lib/scanner-gemini.ts'], bundle: true, platform: 'node', format: 'esm', write: false, logLevel: 'silent' });
 const { parseChartReport, validateChartImage, analyseChart, analyseFundamentals, scannerConfiguration } = await import('data:text/javascript;base64,' + Buffer.from(bundle.outputFiles[0].text).toString('base64'));
 const valid = { ...directionalFields, evidenceTags: [], signal: 'BUY', symbol: 'XAUUSD', timeframe: 'H1', entry: 3300, stopLoss: 3280, takeProfit: 3340, reasoning: 'Visible structure suggests a possible retest with uncertainty.', limitations: 'Screenshot is not a live quote.' };
-const predictionOnly = ({schemaVersion,riskRewardRatio,executionStatus,nonExecutableReasons,...prediction})=>prediction;
+const predictionOnly = ({levelAssessment,schemaVersion,riskRewardRatio,executionStatus,nonExecutableReasons,...prediction})=>prediction;
 const bytes = Buffer.concat([Buffer.from([0xff,0xd8,0xff]),Buffer.alloc(40)]);
 const originalFetch = global.fetch, originalKey = process.env.GEMINI_API_KEY, originalModel = process.env.GEMINI_SCANNER_MODEL, originalAlias = process.env.GEMINI_MODEL;
 beforeEach(() => { delete process.env.GEMINI_MODEL; process.env.GEMINI_API_KEY = 'isolated-test-key'; process.env.GEMINI_SCANNER_MODEL='gemini-fixture-model'; });
