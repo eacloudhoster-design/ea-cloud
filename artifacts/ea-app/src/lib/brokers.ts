@@ -19,7 +19,7 @@ export const brokers: Broker[] = [
   { id: "ic-markets", name: "IC Markets", aliases: ["icmarkets", "internationalcapitalmarkets"], logo: new URL("../assets/brokers/ic-markets.png", import.meta.url).href, logoBackground: "#08131f", source: "https://www.icmarkets.com/" },
   { id: "pepperstone", name: "Pepperstone", aliases: ["pepperstone"], logo: new URL("../assets/brokers/pepperstone.png", import.meta.url).href, source: "https://pepperstone.com/" },
   { id: "xm", name: "XM", aliases: ["xmglobal", "xmtrading", "tradingpoint", "xm"], logo: new URL("../assets/brokers/xm.png", import.meta.url).href, logoBackground: "#08131f", source: "https://www.xm.com/" },
-  { id: "hfm", name: "HFM", aliases: ["hfmarkets", "hotforex", "hfm"], logo: new URL("../assets/brokers/hfm.png", import.meta.url).href, logoBackground: "#08131f", source: "https://affiliates.grouphfm.com/en/brand-guidelines" },
+  { id: "hfm", name: "HFM", aliases: ["hfmarkets", "hotforex", "hfm"], logo: new URL("../assets/brokers/hfm.svg", import.meta.url).href, logoBackground: "#08131f", source: "https://affiliates.grouphfm.com/en/brand-guidelines" },
   { id: "fbs", name: "FBS", aliases: ["fbs"], logo: new URL("../assets/brokers/fbs.png", import.meta.url).href, source: "https://fbs.com/" },
   { id: "tickmill", name: "Tickmill", aliases: ["tickmill"], logo: new URL("../assets/brokers/tickmill.png", import.meta.url).href, source: "https://www.tickmill.com/" },
   { id: "fxtm", name: "FXTM", aliases: ["forextimefxtm", "forextime", "fxtm"], logo: new URL("../assets/brokers/fxtm.svg", import.meta.url).href, source: "https://www.fxtm.com/" },

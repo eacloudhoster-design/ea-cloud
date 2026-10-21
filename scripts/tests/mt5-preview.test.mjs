@@ -73,3 +73,13 @@ test('completed preview always returns unverified without calling fetch', async 
     });
   } finally { globalThis.fetch = oldFetch; }
 });
+
+test('MetaTrader 5 uses the pinned full-colour original asset, not a generated icon', () => {
+  const root = new URL('../../artifacts/ea-app/src/assets/platform/', import.meta.url);
+  const manifest = JSON.parse(readFileSync(new URL('manifest.json', root), 'utf8'));
+  const image = readFileSync(new URL(manifest.file, root));
+  assert.equal(createHash('sha256').update(image).digest('hex'), manifest.sha256);
+  assert.equal(image.subarray(0, 8).toString('hex'), '89504e470d0a1a0a');
+  assert.equal(image.readUInt32BE(16), 512);
+  assert.equal(image.readUInt32BE(20), 512);
+});

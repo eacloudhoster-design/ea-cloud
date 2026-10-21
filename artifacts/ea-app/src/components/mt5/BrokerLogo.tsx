@@ -8,7 +8,7 @@ export default function BrokerLogo({ broker }: { broker: Broker | null }) {
   const [failed, setFailed] = useState(false);
   return (
     <div className={`mt5-broker-logo ${broker ? "mt5-broker-logo--image" : ""}`}
-      style={broker ? { background: broker.logoBackground ?? "#fff" } : undefined}>
+      style={broker ? { background: broker.logoBackground ?? "transparent" } : undefined}>
       {!broker ? <Building2 aria-label="Unknown broker" size={54} strokeWidth={1.2} /> : failed ? (
         <span role="alert" style={{ color: "#627b84", fontSize: 11, textAlign: "center" }}>
           {broker.name}<br />Logo unavailable<br />

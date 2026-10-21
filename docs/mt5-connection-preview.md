@@ -1,43 +1,49 @@
-# MT5 Connections visual prototype
+# MT5 Connections visual review — Draft PR #8
 
-The real client app at `/ea-app/` now uses a glass and mint MT5 account screen over `useApp().bgImageUrl`. That value comes from the authenticated client's linked mentor in `/api/app/dashboard`; there is no hardcoded screen background. Missing/broken mentor images use the dark gradient surface. The existing navigation and mentor name remain in place.
+The actual React client at `/ea-app/` uses three independent floating glass fields and a separate Connect MT5 button. There is no outer form card or surrounding connection panel. The original full-colour MetaTrader 5 app icon replaces the stacked-layers icon above “Your Trading World”. Account validation, password visibility, broker hints, navigation and saved account restoration remain available.
 
-**This change is a visual prototype, not an MT5 authentication implementation.** The Connect MT5 action plays a cancellable 3.2-second animation and always finishes at **Connection not verified**. The form, animation and outcome explicitly label this limitation. It never calls connect/disconnect endpoints, saves credentials, changes trading settings, or marks the account connected. Use a demo password. The password is cleared when the preview begins, closes, or the user leaves the tab.
+All accent lighting comes from the existing `AppContext.accentColor`: field focus, glow, button, ambient lighting and spinner. Broker artwork is never recoloured. The login background comes directly from the authenticated client's `useApp().bgImageUrl`, which is supplied by the linked mentor dashboard data. The same image remains throughout the connection flow, with cover cropping, gradually increased blur and darkness. No background is hardcoded in the screen.
 
-Existing saved account details are read from the unchanged `/api/app/trading-controls` endpoint and labelled unverified. A stored historical `mt5Connected` flag is not presented as proof of a live connection. Existing records are never disconnected, deleted, reassigned or rewritten by this screen. API implementations, licensing/authentication, schema, database and trading code are unchanged.
+## Updated mobile screenshots
 
-## Visual review before deployment
+These are actual production-build Chromium captures at 390 × 844, not generated mockups. The isolated browser harness supplies authentication/account/dashboard fixtures; the existing robot image represents that fixture mentor's uploaded background. No production account or database is used. The blue theme is selected through the existing Settings interface.
 
-These screenshots show the actual React app in Chromium at 390 × 844. The local browser test supplies isolated authentication/mentor fixtures and uses the repository's existing robot image as the fixture mentor upload. They do not show a production user's account. All third-party requests are deliberately blocked. Recognised brokers still render their real bundled logos; only unknown brokers use the neutral icon.
+| Login, red theme | Connecting to Exness |
+| --- | --- |
+| ![Independent floating login fields and original MT5 icon](previews/mt5/account-mobile.png) | ![Authentic bundled Exness logo, small red spinner, same blurred mentor image](previews/mt5/connecting-exness-mobile.png) |
 
-| Account screen | Connection animation / real Exness logo | Honest outcome |
-| --- | --- | --- |
-| ![MT5 account screen](previews/mt5/account-mobile.png) | ![Connecting to Exness with its authentic local logo](previews/mt5/connecting-exness-mobile.png) | ![Connection not verified](previews/mt5/unverified-mobile.png) |
+| Connecting to HFM, blue theme | Login, blue theme |
+| --- | --- |
+| ![Sharp original HF Markets vector mark and blue spinner](previews/mt5/connecting-hfm-mobile.png) | ![Same login with existing app blue theme](previews/mt5/account-blue-mobile.png) |
 
-Nothing has been deployed or merged. Approve the visual design before deploying the existing Pages project. No database migration, seed, schema push, new service or runtime secret is required.
+![Unverified outcome with Retry and Back to login](previews/mt5/unverified-mobile.png)
 
-## Broker identities and logo provenance
+## Connection behaviour and integration boundary
 
-`src/lib/brokers.ts` uses static references to 11 authentic logo files in `src/assets/brokers/`. Vite bundles/embeds them under the app's configured base path. No broker image requests go to external websites, favicons, Commons redirects, logo APIs or paid services. Broker detection remains a name hint, never identity verification; the recognised prefixes and server examples are unchanged.
+The connection animation contains one rounded-square broker block, one small theme-coloured spinner and “Connecting to [Broker]...”. Unknown servers use only the neutral fallback and exact “Connecting to broker...”. There are no percentages, invented stages, server details or development banners. A small cancel control and the existing navigation remain accessible.
 
-Exness, Deriv, XM, IC Markets, Pepperstone, HFM, FBS, Tickmill, FXTM, OANDA and AvaTrade each have their own real local logo. Only unknown brokers display the building fallback. An unexpected local asset error is explicitly labelled with the recognised broker name and a retry option rather than substituting a generic icon. The app does not recolour or redraw broker marks. Light-colour marks receive a dark backing inside the same logo tile so they remain readable.
+The logo fades in, gently scales up and then floats subtly without rotating. The spinner rotates; reduced-motion users see the complete artwork immediately without animation. The backdrop transitions to a strongly blurred version of the same mentor image.
 
-See [pinned asset provenance, attribution and licence notes](../artifacts/ea-app/src/assets/brokers/README.md) and the [SHA-256 manifest](../artifacts/ea-app/src/assets/brokers/manifest.json). The real files, not test substitutes, are decoded in Chromium with third-party access blocked, including an Exness animation screenshot and separate Deriv/XM/IC Markets captures. Broker images are no longer a deployment-time third-party availability dependency.
+**Live MT5 authentication is not integrated.** A quiet login disclosure states that credentials are not sent or saved. The cancellable 3.2-second adapter always ends unverified with exact heading **“Backend not reachable right now.”**, followed by explicit clarification that no broker login was performed. That message appears only after the animation. Retry repeats the unverified animation; Back to login or Escape cancels it and restores focus. The password clears when the attempt starts, closes, or the user leaves the tab. No connect/disconnect request, fake balance or connected status is produced.
 
-## Future backend integration boundary
+`src/lib/mt5-preview.ts` accepts only a login/server hint and AbortSignal, never a password or auth token. It performs no fetch or storage calls and can return only `unverified`. A separately reviewed real verification adapter can later drive these presentation states. A timer, matching broker name, historical saved flag or HTTP 200 must never substitute for authoritative backend verification.
 
-`src/lib/mt5-preview.ts` deliberately accepts only a login/server hint and an AbortSignal. Its result type can represent only `unverified`; it accepts no password or auth token and performs no fetch/storage calls. Do not change the simulated delay into a success flag.
+Existing saved login/server details use the unchanged read-only `/api/app/trading-controls` request and remain labelled unverified. Records are never disconnected, deleted, reassigned or rewritten by this screen. No API, authentication, licensing, trading, schema, database, R2 or deployment configuration is changed.
 
-A future separately reviewed verification adapter must authenticate the client against the existing API, require explicit server-side broker verification, handle cancellation/timeouts and surface a verified result only with authoritative evidence. Do not treat HTTP 200, existing saved connection flags or a matching broker name as proof of a live session. Review secure credential handling before adding credentials to that interface. This patch leaves every backend endpoint unchanged.
+## Authentic bundled artwork
 
-## Checks
+The existing broker detection rules and eleven supported brokers remain: Exness, Deriv, XM, IC Markets, Pepperstone, HFM, FBS, Tickmill, FXTM, OANDA and AvaTrade. Recognised brokers always use their real local assets. HFM's former 32-pixel favicon is replaced by an original scalable HF Markets wordmark; its geometry and colours are preserved. Dark backing is retained where light artwork needs contrast; no default white backing is imposed. Known-logo loading errors offer explicit retry rather than the unknown-broker icon.
 
-- TypeScript project/library build plus ea-app, ea-cloud and api-server checks.
-- Mobile and website Vite production builds and combined Pages routing verification.
-- Node tests for detection (including legacy/regional aliases, unknowns and spoofed strings), account validation, finite unverified completion and cancellation; existing loading, Pages, storage and bootstrap unit suites.
-- Browser checks at 390 × 844, 320 × 568 and 1280 × 900: linked mentor background, saved account preservation, password toggle/clearing, invalid account numbers, known/unknown brokers, real local logo rendering and unknown-only fallback, honest completion, cancellation, tab cleanup, reduced motion, focus trapping/restoration, no horizontal overflow, no write requests and no runtime errors.
+See [broker provenance and attribution](../artifacts/ea-app/src/assets/brokers/README.md), [broker SHA-256 manifest](../artifacts/ea-app/src/assets/brokers/manifest.json) and [MT5 artwork provenance](../artifacts/ea-app/src/assets/platform/README.md). Public packaging mirrors are identified honestly in those notes rather than claimed as direct official downloads. All image assets ship with the app; no third-party logo service or paid service is needed.
 
-Run from repository root:
+## Validation
+
+- **30 Node tests passed:** broker matching, unknowns/spoofing, validation, exact asset hashes and PNG/SVG safety, original MT5 PNG, bounded unverified result/cancellation, and existing mobile loading, Pages, background storage and bootstrap suites.
+- **TypeScript passed:** library project build plus ea-app, ea-cloud, api-server and scripts checks.
+- **Production builds passed:** mobile app, website and combined Pages output verification for `/` and `/ea-app/`.
+- **Production-browser checks passed:** all eleven authentic broker images decode with third-party requests blocked; actual Settings theme switching; no enclosing panels/layers icon; password toggle/clearing; validation; same mentor image/stronger blur; entrance fade/scale and themed spinner; exact final wording/retry; unknown fallback; cancellation and tab cleanup; focus trap/restoration including Retry; reduced motion; 320 × 568, 390 × 844, keyboard-height 390 × 420 and 1280 × 900 layouts; no overflow, write requests, third-party images, runtime or unexpected console errors. Authentication APIs and the existing account-update socket are isolated by fixtures.
+
+Normal repository commands:
 
 ```sh
 node --test --test-isolation=none scripts/tests/mt5-preview.test.mjs scripts/tests/mobile-loading.test.mjs scripts/tests/pages.test.mjs scripts/tests/background-storage.test.mjs scripts/tests/bootstrap.test.mjs
@@ -45,12 +51,10 @@ pnpm run typecheck
 pnpm run build:pages
 ```
 
-The browser script requires a local Vite ea-app server mounted at `/ea-app/`, Playwright and Chromium. It refuses non-loopback origins, mocks every API response, and never uses production credentials. Set `PLAYWRIGHT_MODULE` to an installed Playwright module URL if it is not in the project's module resolution; set `CHROMIUM_PATH` for another Chromium installation. Set `MT5_PREVIEW_ORIGIN` for a different loopback port.
+In this workspace the pnpm automatic dependency check attempted to reinstall already-present modules and could not create its home cache. Checks used the installed TypeScript binaries directly; the combined Pages build used `pnpm_config_verify_deps_before_run=false pnpm run build:pages` to avoid reinstalling dependencies. No manifest or lockfile changes are needed.
 
-```sh
-BASE_PATH=/ea-app/ pnpm --filter @workspace/ea-app dev
-# In another terminal with Playwright installed:
-node scripts/tests/mt5-preview.browser.mjs
-```
+Browser reproduction requires a local production ea-app preview at `/ea-app/`, Playwright and Chromium. It refuses non-loopback origins, fixtures every API/account socket and blocks third-party requests. Set `PLAYWRIGHT_MODULE`, `CHROMIUM_PATH`, `MT5_PREVIEW_ORIGIN` and optionally `MT5_SCREENSHOTS` for local paths/ports, then run `node scripts/tests/mt5-preview.browser.mjs`. Screenshots use fixture credentials only.
 
-After design approval, use the existing Pages `pnpm run build:pages` pipeline/output (`artifacts/ea-cloud/dist`). Preserve current API/R2 settings and data. Smoke-test with a licensed staging client and its mentor background, and verify the bundled logo assets are served with the app. No backend deployment is needed for this frontend-only change.
+## Approval and deployment
+
+The revision commit uses the documented `[skip ci]` prefix to suppress Cloudflare Pages automatic deployment while updating the PR. Keep existing PR #8 in Draft. This revision is for visual approval only: **do not merge or deploy before approval**. No migration, schema push, seed, new environment variable, new service or backend deployment is required. After approval, use the existing Pages build/output (`artifacts/ea-cloud/dist`) and preserve all current API/R2 settings and records. A licensed staging-client smoke test with a real linked mentor background remains appropriate before any later approved production rollout. Live broker authentication remains a future integration, not a delivered capability.
