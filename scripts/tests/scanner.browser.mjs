@@ -131,7 +131,7 @@ try{
   await dialog.getByRole('alert').filter({hasText:'JPEG, PNG or WebP'}).waitFor();
   const cameraChooser=page.waitForEvent('filechooser');await dialog.getByRole('button',{name:'Camera',exact:true}).click();const cameraInput=await cameraChooser;assert.equal(await cameraInput.element().getAttribute('capture'),'environment');await cameraInput.setFiles(upload);
   await dialog.getByRole('heading',{name:'Your chart is ready'}).waitFor();
-  mode='no-trade';await dialog.getByRole('button',{name:'Analyse chart',exact:true}).click();await dialog.getByRole('heading',{name:'NO TRADE',exact:true}).waitFor();await page.screenshot({path:output+'/11-no-trade-fixture-mobile.png'});
+  mode='no-trade';await dialog.getByRole('button',{name:'Analyse chart',exact:true}).click();await dialog.getByRole('heading',{name:'Archived analysis',exact:true}).waitFor();await page.screenshot({path:output+'/11-no-trade-fixture-mobile.png'});
   assert.equal(await dialog.getByRole('button',{name:'Execute Trade',exact:true}).isDisabled(),true);
   const legacy={id:'legacy-sell',kind:'chart',strategy:'SMC',createdAt:'2026-10-21T10:00:00Z',report:{...chartReport,signal:'SELL',stopLoss:3340,takeProfit:3280}};delete legacy.report.evidenceTags;reports.unshift(legacy);
   await dialog.getByRole('button',{name:'Refresh scan history'}).click();const legacyRow=dialog.locator('.scanner-history-list').getByRole('button').filter({hasText:'SELL'});await legacyRow.waitFor();await legacyRow.click();await dialog.getByRole('heading',{name:'SELL',exact:true}).waitFor();

@@ -1,3 +1,4 @@
+import { directionalFields } from "./fixtures/scanner-direction.mjs";
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
@@ -77,7 +78,8 @@ test('real Gemini adapter failures and malformed reports never charge; a validat
   }
   global.fetch=async()=>new Response(JSON.stringify({candidates:[{finishReason:'STOP',content:{parts:[{text:'{"fake":"unvalidated result"}'}]}}]}));
   await assert.rejects(analyse(),e=>e.code==='AI_INVALID_REPORT');assert.equal(state.entitlements[0].creditsRemaining,1);assert.equal(state.reports.length,0);
-  global.fetch=async()=>new Response(JSON.stringify({candidates:[{finishReason:'STOP',content:{parts:[{text:JSON.stringify(report)}]}}]}));
+  for(const invalid of [report,{error:'UNREADABLE_CHART'}]){global.fetch=async()=>new Response(JSON.stringify({candidates:[{finishReason:'STOP',content:{parts:[{text:JSON.stringify(invalid)}]}}]}));await assert.rejects(analyse());assert.equal(state.entitlements[0].creditsRemaining,1);assert.equal(state.reports.length,0);}
+  global.fetch=async()=>new Response(JSON.stringify({candidates:[{finishReason:'STOP',content:{parts:[{text:JSON.stringify({...report,...directionalFields,signal:'BUY'})}]}}]}));
   await analyse();assert.equal(state.entitlements[0].creditsRemaining,0);assert.equal(state.reports.length,1);
  }finally{
   global.fetch=original.fetch;
