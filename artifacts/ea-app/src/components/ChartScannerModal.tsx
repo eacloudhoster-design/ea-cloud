@@ -1,216 +1,158 @@
-import { X, Camera, Upload, Sparkles } from "lucide-react";
-import { useState, useEffect } from "react";
-import { useApp } from "@/context/AppContext";
+import { X, Camera, ImagePlus, Settings2, Globe2, History, ScanLine, ArrowUpRight, RotateCcw, ShieldCheck, LoaderCircle, Trash2 } from "lucide-react";
+import { useState, useEffect, useRef, useCallback, type ChangeEvent } from "react";
+import { useApp, type Tab } from "@/context/AppContext";
 import { eaLogo } from "@/lib/branding";
+import BottomNav from "@/components/BottomNav";
+import { prepareChart, scannerRequest, strategies, type Strategy, type ScannerRecord, type ChartReport, type FundamentalReport, type FundamentalRequest } from "@/lib/scanner";
+import "./ChartScannerModal.css";
 
-interface ChartScannerModalProps {
-  onClose: () => void;
-}
+interface ChartScannerModalProps { onClose: () => void; onNavigate: (tab: Tab) => void }
+type Phase = "idle" | "preparing" | "chart" | "fundamental";
+const formatDate = (date: string) => new Date(date).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" });
 
-export default function ChartScannerModal({ onClose }: ChartScannerModalProps) {
-  const { accentColor } = useApp();
-  const [trades, setTrades] = useState(1);
-  const [scanning, setScanning] = useState(false);
-  const [scanResult, setScanResult] = useState<string | null>(null);
-  const [rotation, setRotation] = useState(0);
+export default function ChartScannerModal({ onClose, onNavigate }: ChartScannerModalProps) {
+  const { bgImageUrl, eaName, clientToken } = useApp();
+  const [strategy, setStrategy] = useState<Strategy>("SMC");
+  const [file, setFile] = useState<File | null>(null);
+  const [preview, setPreview] = useState("");
+  const [phase, setPhase] = useState<Phase>("idle");
+  const [error, setError] = useState("");
+  const [configured, setConfigured] = useState<boolean | null>(null);
+  const [records, setRecords] = useState<ScannerRecord[]>([]);
+  const [historyError, setHistoryError] = useState("");
+  const [historyLoading, setHistoryLoading] = useState(false);
+  const [historyPage, setHistoryPage] = useState(1);
+  const [hasMore, setHasMore] = useState(false);
+  const [result, setResult] = useState<ScannerRecord | null>(null);
+  const [context, setContext] = useState<FundamentalRequest>({ market: "XAUUSD", focus: "General market", outlook: "Next 1–3 days" });
+  const [lot, setLot] = useState("0.01");
+  const [positions, setPositions] = useState(1);
+  const gallery = useRef<HTMLInputElement>(null), camera = useRef<HTMLInputElement>(null);
+  const modal = useRef<HTMLDivElement>(null), settings = useRef<HTMLDetailsElement>(null), results = useRef<HTMLDivElement>(null);
+  const attempt = useRef<AbortController | null>(null), historyAttempt = useRef<AbortController | null>(null);
+  const selection = useRef(0), alive = useRef(true), pending = useRef(false);
+  const lastKind = useRef<"chart" | "fundamental" | null>(null);
+  const busy = phase !== "idle";
+  const scanning = phase === "chart" || phase === "fundamental";
 
-  // Rotate the outer dashed ring
   useEffect(() => {
-    if (!scanning) return;
-    const interval = setInterval(() => {
-      setRotation(r => (r + 2) % 360);
-    }, 16);
-    return () => clearInterval(interval);
-  }, [scanning]);
-
-  const handleScan = async () => {
-    setScanning(true);
-    setScanResult(null);
-    await new Promise(r => setTimeout(r, 3000));
-    setScanning(false);
-    setScanResult("XAUUSD • H1 • BUY Signal Detected");
+    alive.current = true;
+    const previous = document.activeElement as HTMLElement | null;
+    modal.current?.querySelector<HTMLButtonElement>("button")?.focus();
+    return () => { alive.current = false; selection.current++; attempt.current?.abort(); historyAttempt.current?.abort(); previous?.focus(); };
+  }, []);
+  useEffect(() => {
+    if (!file) { setPreview(""); return; }
+    const url = URL.createObjectURL(file); setPreview(url);
+    return () => URL.revokeObjectURL(url);
+  }, [file]);
+  const loadHistory = useCallback(async (page = 1) => {
+    historyAttempt.current?.abort();
+    const controller = new AbortController(); historyAttempt.current = controller;
+    if (!clientToken) return;
+    setHistoryLoading(true); setHistoryError("");
+    try {
+      const data = await scannerRequest<{ records: ScannerRecord[]; hasMore: boolean }>(`history?page=${page}`, clientToken, controller.signal);
+      if (!controller.signal.aborted) { setRecords(old => page === 1 ? data.records : [...old, ...data.records.filter(row => !old.some(item => item.id === row.id))]); setHasMore(data.hasMore); setHistoryPage(page); }
+    } catch (e) { if (!controller.signal.aborted) setHistoryError((e as Error).message); }
+    finally { if (!controller.signal.aborted) setHistoryLoading(false); }
+  }, [clientToken]);
+  useEffect(() => {
+    const controller = new AbortController();
+    setConfigured(null); setRecords([]); setResult(null); setFile(null);
+    attempt.current?.abort(); selection.current++; setPhase("idle"); pending.current = false;
+    if (clientToken) {
+      void scannerRequest<{ configured: boolean }>("status", clientToken, controller.signal).then(data => { if (!controller.signal.aborted) setConfigured(data.configured); }).catch(() => { /* Request errors are surfaced on Analyse; do not invent readiness. */ });
+      void loadHistory();
+    }
+    return () => controller.abort();
+  }, [clientToken, loadHistory]);
+  const cancel = () => { selection.current++; attempt.current?.abort(); pending.current = false; setPhase("idle"); };
+  const choose = async (event: ChangeEvent<HTMLInputElement>) => {
+    const chosen = event.target.files?.[0]; event.target.value = "";
+    if (!chosen) return;
+    cancel(); lastKind.current = null; const current = ++selection.current; setPhase("preparing"); setError(""); setResult(null); setFile(null);
+    try { const prepared = await prepareChart(chosen); if (alive.current && current === selection.current) setFile(prepared); }
+    catch (e) { if (alive.current && current === selection.current) setError((e as Error).message); }
+    finally { if (alive.current && current === selection.current) setPhase("idle"); }
   };
+  const analyse = async (kind: "chart" | "fundamental") => {
+    if (!clientToken || busy || pending.current || (kind === "chart" && !file)) return;
+    pending.current = true; lastKind.current = kind;
+    attempt.current?.abort(); const controller = new AbortController(); attempt.current = controller;
+    setPhase(kind); setError(""); setResult(null);
+    try {
+      let init: RequestInit;
+      if (kind === "chart") { const body = new FormData(); body.append("image", file!); body.append("strategy", strategy); init = { method: "POST", body }; }
+      else init = { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(context) };
+      const saved = await scannerRequest<ScannerRecord>(kind === "chart" ? "chart" : "fundamentals", clientToken, controller.signal, init);
+      if (!controller.signal.aborted) { setResult(saved); void loadHistory(); requestAnimationFrame(() => results.current?.scrollIntoView({ behavior: "smooth", block: "start" })); }
+    } catch (e) { if (!controller.signal.aborted) setError((e as Error).message); }
+    finally { if (!controller.signal.aborted) { pending.current = false; setPhase("idle"); } }
+  };
+  const navigate = (tab: Tab) => { cancel(); onNavigate(tab); };
+  const chart = result?.kind === "chart" ? result.report as ChartReport : null;
+  const fundamental = result?.kind === "fundamental" ? result.report as FundamentalReport : null;
 
-  return (
-    <div className="absolute inset-0 flex flex-col" style={{ background: "#000", paddingBottom: 75 }}>
-      {/* Header */}
-      <div className="flex items-center justify-between px-4 pt-14 pb-4">
-        <div className="flex items-center gap-2">
-          <button onClick={onClose} className="active:scale-90 transition-transform">
-            <X size={22} style={{ color: accentColor }} />
-          </button>
-          <h2 className="text-white font-bold text-xl">
-            <span style={{ color: accentColor }}>Chart</span> Scanner
-          </h2>
+  return <div ref={modal} className="scanner-screen" role="dialog" aria-modal="true" aria-labelledby="scanner-title" onKeyDown={event => {
+    if (event.key === "Escape") { event.preventDefault(); if (busy) cancel(); else onClose(); }
+    if (event.key === "Tab") {
+      const items = Array.from(event.currentTarget.querySelectorAll<HTMLElement>('button:not(:disabled),input:not(:disabled):not([type="file"]),select:not(:disabled),summary,a[href]')).filter(el => el.getClientRects().length);
+      const first = items[0], last = items[items.length - 1];
+      if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last?.focus(); }
+      else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first?.focus(); }
+    }
+  }}>
+    {bgImageUrl && <img className="scanner-background" src={bgImageUrl} alt="" />}
+    <div className="scanner-shade" />
+    <header className="scanner-header">
+      <button className="scanner-icon-button" type="button" aria-label="Close scanner" onClick={onClose}><X size={23} /></button>
+      <img src={eaLogo} alt="" className="scanner-header-avatar" />
+      <h2 id="scanner-title">AI Scanner</h2>
+      <span className="scanner-ai-badge">Gemini AI</span>
+      <button className="scanner-icon-button" type="button" aria-label="Scanner trade settings" onClick={() => { if (settings.current) { settings.current.open = true; settings.current.scrollIntoView({ behavior: "smooth", block: "center" }); settings.current.querySelector("summary")?.focus(); } }}><Settings2 size={22} /></button>
+    </header>
+    <div className="scanner-scroll">
+      <section className={`scanner-ready ${scanning ? "is-scanning" : ""}`} aria-label="Chart upload" aria-busy={busy}>
+        {preview ? <div className="scanner-chart-preview"><img src={preview} alt="Selected chart to analyse" /><button className="scanner-icon-button" type="button" aria-label="Remove chart" disabled={busy} onClick={() => { setFile(null); setResult(null); setError(""); }}><Trash2 size={18} /></button>{phase === "chart" && <div className="scanner-sweep" />}</div>
+          : <div className="scanner-orb"><div className="scanner-orbit scanner-orbit-one" /><div className="scanner-orbit scanner-orbit-two" /><img src={eaLogo} alt="EA Cloud" /><ScanLine className="scanner-orb-mark" size={18} /></div>}
+        <p className="scanner-mentor">{eaName}</p>
+        <h3>{phase === "preparing" ? "Preparing your chart" : phase === "chart" ? "Reading the market" : phase === "fundamental" ? "Researching the market" : file ? "Your chart is ready" : "Ready to Scan"}</h3>
+        <p className="scanner-ready-description">{busy ? "You can cancel at any time." : file ? "Review your image, choose a strategy and analyse." : "Upload a chart screenshot or take a photo"}</p>
+        <input ref={gallery} type="file" accept="image/png,image/jpeg,image/webp" aria-label="Choose chart from gallery" onChange={choose} hidden />
+        <input ref={camera} type="file" accept="image/*" capture="environment" aria-label="Take chart photo" onChange={choose} hidden />
+        <div className="scanner-upload-actions"><button type="button" className="scanner-primary" disabled={busy} onClick={() => gallery.current?.click()}><ImagePlus size={21} /> Gallery</button><button type="button" className="scanner-glass-button" disabled={busy} onClick={() => camera.current?.click()}><Camera size={21} /> Camera</button></div>
+        {file && !busy && <p className="scanner-upload-note">Analyse sends this chart to Google Gemini. Avoid account details in the image.</p>}
+        {file && !busy && <button type="button" className="scanner-analyse" onClick={() => void analyse("chart")}><ScanLine size={18} /> Analyse chart <ArrowUpRight size={17} /></button>}
+        {busy && <button type="button" className="scanner-cancel" onClick={cancel}><LoaderCircle size={17} className="scanner-loader" /> Cancel {phase === "preparing" ? "preparation" : "analysis"}</button>}
+      </section>
+      {error && <div className="scanner-error" role="alert"><p>{error}</p><button type="button" onClick={() => lastKind.current ? void analyse(lastKind.current) : gallery.current?.click()} disabled={busy}><RotateCcw size={14} /> Retry</button></div>}
+      <section className="scanner-strategies" aria-labelledby="scanner-strategies-title"><h3 id="scanner-strategies-title">Analysis strategy</h3><div>{strategies.map(item => <button key={item} type="button" aria-pressed={strategy === item} disabled={busy} onClick={() => setStrategy(item)}>{item}</button>)}</div></section>
+      <section className="scanner-fundamentals" aria-labelledby="scanner-fundamentals-title">
+        <h3 id="scanner-fundamentals-title"><Globe2 size={22} /> Fundamental Analysis</h3>
+        <div className="scanner-fundamental-fields">
+          <label>Market<select aria-label="Market" value={context.market} disabled={busy} onChange={e => setContext({ ...context, market: e.target.value as FundamentalRequest["market"] })}>{[["XAUUSD","Gold · XAUUSD"],["EURUSD","Euro · EURUSD"],["GBPUSD","Pound · GBPUSD"],["USDJPY","Yen · USDJPY"],["US100","Nasdaq · US100"],["US30","Dow · US30"]].map(([value,label]) => <option key={value} value={value}>{label}</option>)}</select></label>
+          <label>Analysis focus<select aria-label="Analysis focus" value={context.focus} disabled={busy} onChange={e => setContext({ ...context, focus: e.target.value as FundamentalRequest["focus"] })}>{["General market","CPI","PPI","NFP","FOMC"].map(value => <option key={value}>{value}</option>)}</select></label>
+          <label>Outlook<select aria-label="Outlook" value={context.outlook} disabled={busy} onChange={e => setContext({ ...context, outlook: e.target.value as FundamentalRequest["outlook"] })}>{["Intraday","Next 1–3 days","This week"].map(value => <option key={value}>{value}</option>)}</select></label>
         </div>
-        <div
-          className="px-3 py-1 rounded-full text-sm font-semibold"
-          style={{ background: `${accentColor}22`, border: `1px solid ${accentColor}88`, color: accentColor }}
-        >
-          13 / 13 scans
-        </div>
+        <button type="button" className="scanner-fundamental-action" disabled={busy} onClick={() => void analyse("fundamental")}><Globe2 size={18} /> Fundamental Analysis</button>
+        <p>Source-backed context for CPI, PPI, NFP and FOMC. Reports include retrieval time and source links.</p>
+      </section>
+      <div ref={results} className="scanner-results" aria-live="polite">
+        {result && <article className="scanner-report">
+          <div className="scanner-report-top"><span>{result.kind === "chart" ? `${chart?.symbol || "Unknown symbol"} · ${chart?.timeframe || "Unknown timeframe"}` : `${fundamental?.context.market} · ${fundamental?.context.focus}`}</span><time dateTime={result.createdAt}>{formatDate(result.createdAt)}</time></div>
+          {chart && <><h3 className={`scanner-signal scanner-signal-${chart.signal.toLowerCase().replace(" ","-")}`}>{chart.signal}</h3><div className="scanner-levels">{[["Entry",chart.entry],["Stop Loss",chart.stopLoss],["Take Profit",chart.takeProfit]].map(([label,value]) => <div key={String(label)}><span>{label}</span><strong>{value ?? "—"}</strong></div>)}</div><h4>Trade reasoning</h4><p>{chart.reasoning}</p><p className="scanner-report-caution">{chart.limitations}</p></>}
+          {fundamental && <><h3>Market outlook</h3><p className="scanner-report-summary">{fundamental.summary}</p><p className="scanner-report-caution">Researched {formatDate(fundamental.asOf)}. This is not a live economic calendar.</p><h4>Sources</h4><ul>{fundamental.sources.map((source,i) => <li key={i}><a href={source.url} target="_blank" rel="noopener noreferrer">{source.title}<ArrowUpRight size={12} /></a></li>)}</ul></>}
+          <p className="scanner-record-note"><ShieldCheck size={14} /> Saved to your scan history</p>
+        </article>}
       </div>
-
-      {/* AI info box */}
-      <div
-        className="mx-4 rounded-xl p-3 flex items-start gap-2.5"
-        style={{ background: `${accentColor}18`, border: `1px solid ${accentColor}66` }}
-      >
-        <Sparkles size={18} style={{ color: accentColor }} className="flex-shrink-0 mt-0.5" />
-        <p className="text-sm leading-snug">
-          <span className="font-semibold" style={{ color: accentColor }}>AI auto-detects</span>
-          <span className="text-white/80"> symbol &amp; timeframe directly from your chart image</span>
-        </p>
-      </div>
-
-      {/* Trade / Lot size controls */}
-      <div className="flex gap-3 px-4 mt-4">
-        <div className="flex-1 rounded-2xl p-3" style={{ background: "rgba(18,18,18,0.95)", border: "1px solid rgba(255,255,255,0.08)" }}>
-          <p className="text-white/50 text-[10px] font-bold tracking-widest uppercase mb-2">Trades (Max 20)</p>
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => setTrades(Math.max(1, trades - 1))}
-              className="w-8 h-8 rounded-lg flex items-center justify-center text-white font-bold text-lg active:scale-90 transition-transform"
-              style={{ background: "rgba(255,255,255,0.08)" }}
-            >-</button>
-            <span className="text-white font-bold text-xl flex-1 text-center">{trades}</span>
-            <button
-              onClick={() => setTrades(Math.min(20, trades + 1))}
-              className="w-8 h-8 rounded-lg flex items-center justify-center text-white font-bold text-lg active:scale-90 transition-transform"
-              style={{ background: accentColor }}
-            >+</button>
-          </div>
-        </div>
-        <div className="flex-1 rounded-2xl p-3" style={{ background: "rgba(18,18,18,0.95)", border: "1px solid rgba(255,255,255,0.08)" }}>
-          <p className="text-white/50 text-[10px] font-bold tracking-widest uppercase mb-2">Lot Size</p>
-          <div className="flex items-center h-8">
-            <span className="text-white font-bold text-2xl">0.01</span>
-          </div>
-        </div>
-      </div>
-
-      {/* Animated scan circle */}
-      <div className="flex-1 flex flex-col items-center justify-center gap-4">
-        <button onClick={handleScan} className="relative flex items-center justify-center active:scale-95 transition-transform">
-          {/* Rotating outer dashed ring */}
-          <svg
-            width="200" height="200"
-            style={{ transform: `rotate(${rotation}deg)`, position: "absolute" }}
-          >
-            <circle
-              cx="100" cy="100" r="90"
-              fill="none"
-              stroke={accentColor}
-              strokeWidth="2"
-              strokeDasharray="15 10"
-              strokeOpacity="0.5"
-            />
-          </svg>
-          {/* Static outer ring */}
-          <div
-            className="w-[200px] h-[200px] rounded-full absolute"
-            style={{ border: `1px solid ${accentColor}22` }}
-          />
-          {/* Inner circle */}
-          <div
-            className="w-[72px] h-[72px] rounded-full flex items-center justify-center z-10"
-            style={{
-              border: `2px solid ${accentColor}cc`,
-              background: `${accentColor}18`,
-              boxShadow: scanning ? `0 0 20px ${accentColor}88` : "none",
-            }}
-          >
-            {scanning ? (
-              <div className="w-6 h-6 rounded-full border-2 border-t-transparent animate-spin" style={{ borderColor: `${accentColor}`, borderTopColor: "transparent" }} />
-            ) : (
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke={accentColor} strokeWidth="1.8">
-                <path d="M3 7v3a1 1 0 001 1h1M3 7V5a1 1 0 011-1h2M21 7v3a1 1 0 01-1 1h-1M21 7V5a1 1 0 00-1-1h-2M3 17v2a1 1 0 001 1h2M21 17v2a1 1 0 01-1 1h-2" />
-                <rect x="7" y="9" width="10" height="8" rx="1" />
-              </svg>
-            )}
-          </div>
-        </button>
-
-        {/* Scan result */}
-        {scanResult && (
-          <div
-            className="px-4 py-2 rounded-full"
-            style={{ background: `${accentColor}22`, border: `1px solid ${accentColor}88` }}
-          >
-            <p className="text-white font-semibold text-sm">{scanResult}</p>
-          </div>
-        )}
-        {scanning && (
-          <p className="text-white/50 text-sm">Analyzing chart...</p>
-        )}
-        {!scanning && !scanResult && (
-          <p className="font-semibold text-base" style={{ color: accentColor }}>
-            Tap circle to scan
-          </p>
-        )}
-      </div>
-
-      {/* Upload section */}
-      <div className="px-4 pb-2">
-        <p className="text-center font-semibold text-base mb-3" style={{ color: accentColor }}>
-          Upload your MT5 chart
-        </p>
-        <div className="flex gap-3 mb-2">
-          <button
-            onClick={handleScan}
-            className="flex-1 flex flex-col items-center justify-center py-5 rounded-2xl gap-2 active:scale-95 transition-transform"
-            style={{ border: `2px dashed ${accentColor}99`, background: `${accentColor}11` }}
-          >
-            <Camera size={28} style={{ color: accentColor }} />
-            <span className="text-white text-sm font-medium">Camera</span>
-          </button>
-          <button
-            onClick={handleScan}
-            className="flex-1 flex flex-col items-center justify-center py-5 rounded-2xl gap-2 active:scale-95 transition-transform"
-            style={{ border: `2px dashed ${accentColor}99`, background: `${accentColor}11` }}
-          >
-            <Upload size={28} style={{ color: accentColor }} />
-            <span className="text-white text-sm font-medium">Upload</span>
-          </button>
-        </div>
-        <p className="text-center text-white/35 text-xs">Take a screenshot of your MT5 chart or upload</p>
-      </div>
-
-      {/* Bottom nav strip */}
-      <div
-        className="absolute bottom-0 left-0 right-0 flex items-end justify-around"
-        style={{ height: 75, background: "linear-gradient(to top, #000 70%, transparent)", paddingBottom: 12, paddingLeft: 8, paddingRight: 8 }}
-      >
-        <div className="flex-1" />
-        <div className="flex flex-col items-center" style={{ marginTop: -28 }}>
-          <button
-            onClick={onClose}
-            className="w-[62px] h-[62px] rounded-full flex flex-col items-center justify-center active:scale-95 transition-transform"
-            style={{
-              background: `radial-gradient(circle at center, ${accentColor}33 0%, ${accentColor}11 60%, #000 100%)`,
-              boxShadow: `0 0 20px ${accentColor}bb, 0 0 40px ${accentColor}44`,
-              border: `1.5px solid ${accentColor}cc`,
-            }}
-          >
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={accentColor} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" /><polyline points="9 22 9 12 15 12 15 22" />
-            </svg>
-            <span className="text-[9px] font-bold tracking-widest uppercase" style={{ color: accentColor, marginTop: 2 }}>Home</span>
-          </button>
-        </div>
-        <div className="flex-1" />
-      </div>
-
-      {/* Floating bot avatar */}
-      <div className="absolute z-20" style={{ bottom: 88, right: 14 }}>
-        <div className="relative">
-          <div className="w-[46px] h-[46px] rounded-full overflow-hidden"
-            style={{ border: `2px solid ${accentColor}cc`, boxShadow: `0 0 12px ${accentColor}66` }}>
-            <img src={eaLogo} alt="Bot" className="w-full h-full object-cover" />
-          </div>
-          <div className="absolute top-0 right-0 w-3 h-3 rounded-full" style={{ background: accentColor, border: "1.5px solid #000" }} />
-        </div>
-      </div>
+      <details ref={settings} className="scanner-trade-settings" open={Boolean(chart) || undefined}><summary>Trade settings <span>MT5 preparation</span></summary><div className="scanner-trade-fields"><label>Lot size<input type="number" inputMode="decimal" min="0.01" max="100" step="0.01" value={lot} onChange={e => setLot(e.target.value)} /></label><label>Positions<input type="number" inputMode="numeric" min="1" max="20" step="1" value={positions} onChange={e => setPositions(Math.min(20,Math.max(1,Number(e.target.value) || 1)))} /></label></div><button className="scanner-execute" type="button" disabled>Execute Trade</button><p>{chart?.signal === "NO TRADE" ? "NO TRADE — no order is available. " : ""}Scanner trade execution is not integrated. No order will be submitted. Lot and position settings are preparation only.</p></details>
+      <section className="scanner-history" aria-labelledby="scanner-history-title"><h3 id="scanner-history-title"><History size={21} /> Scan History <button type="button" aria-label="Refresh scan history" disabled={historyLoading} onClick={() => void loadHistory()}><RotateCcw size={17} /></button></h3>
+        {historyError ? <p className="scanner-history-error" role="alert">{historyError}<button type="button" onClick={() => void loadHistory()}>Retry history</button></p> : historyLoading && !records.length ? <p>Loading your saved reports…</p> : !records.length ? <div className="scanner-history-empty"><History size={25} /><p>Your next insight starts here.</p><span>Completed reports will appear in your private history.</span></div> : <div className="scanner-history-list">{records.map(record => <button key={record.id} type="button" onClick={() => { setResult(record); requestAnimationFrame(() => results.current?.scrollIntoView({ behavior: "smooth", block: "start" })); }}><span className="scanner-history-icon">{record.kind === "chart" ? <ScanLine size={19} /> : <Globe2 size={19} />}</span><span><strong>{record.kind === "chart" ? `${(record.report as ChartReport).symbol || "Chart"} · ${(record.report as ChartReport).signal}` : `${(record.report as FundamentalReport).context.market} · Fundamentals`}</strong><small>{formatDate(record.createdAt)}</small></span><ArrowUpRight size={16} /></button>)}</div>}
+        {hasMore && <button className="scanner-history-more" type="button" disabled={historyLoading} onClick={() => void loadHistory(historyPage + 1)}>{historyLoading ? "Loading…" : "Load older scans"}</button>}
+      </section>
+      <footer className="scanner-disclosure">{configured === false && <p>AI analysis is not configured yet.</p>}Charts are sent to Google Gemini only when you request analysis. AI suggestions can be wrong; verify prices and risk before trading. No guaranteed results.</footer>
     </div>
-  );
+    <div className="scanner-navigation"><BottomNav activeTab="home" onTabChange={navigate} /></div>
+  </div>;
 }

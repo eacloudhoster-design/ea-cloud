@@ -248,7 +248,7 @@ export default function App() {
 
         {showChartScanner && (
           <div className="absolute inset-0 z-50">
-            <ChartScannerModal onClose={() => setShowChartScanner(false)} />
+            <ChartScannerModal onClose={() => setShowChartScanner(false)} onNavigate={tab => { setActiveTab(tab); setShowChartScanner(false); }} />
           </div>
         )}
       </div>

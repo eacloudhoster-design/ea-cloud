@@ -13,3 +13,4 @@ export * from "./client_symbol_configs";
 export * from "./mt5-accounts";
 export * from "./mt5-connections";
 export * from "./client-mt5-connections";
+export * from "./scanner-reports";
