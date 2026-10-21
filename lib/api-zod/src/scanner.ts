@@ -30,19 +30,20 @@ export const legacyChartReportSchema = z.object({
     ctx.addIssue({ code: "custom", message: "Invalid or incomplete trade levels" });
 });
 // Provider input and normalized history output deliberately have different optionality.
-export const scannerAnalysisKeys = ["marketStructure", "trendDirection", "liquiditySweeps", "supportResistance", "entryReasoning", "risksInvalidation"] as const;
+export const scannerAnalysisKeys = ["marketStructure", "trendDirection", "liquiditySweeps", "supportResistance", "entryReasoning", "risksInvalidation", "supplyDemand"] as const;
 export const scannerEvidenceTags = ["Liquidity Sweep", "Order Block", "Bullish Structure", "Bearish Structure", "Volume Support", "Supply Zone", "Demand Zone", "Support Retest", "Resistance Rejection", "Trend Continuation"] as const;
-const analysisSchema = z.object({ marketStructure: z.string().max(1500).nullable(), trendDirection: z.string().max(1500).nullable(), liquiditySweeps: z.string().max(1500).nullable(), supportResistance: z.string().max(1500).nullable(), entryReasoning: z.string().max(1500).nullable(), risksInvalidation: z.string().max(1500).nullable() }).strict();
+const analysisSchema = z.object({ marketStructure: z.string().max(1500).nullable(), trendDirection: z.string().max(1500).nullable(), liquiditySweeps: z.string().max(1500).nullable(), supportResistance: z.string().max(1500).nullable(), entryReasoning: z.string().max(1500).nullable(), risksInvalidation: z.string().max(1500).nullable(), supplyDemand: z.string().max(1500).nullable().optional() }).strict();
 const normalizedPredictionObject = z.object({
   signal: z.enum(["BUY", "SELL"]),
   symbol: z.string().max(30).nullable(), timeframe: z.string().max(20).nullable(),
   entry: z.number().positive().finite().nullable(), stopLoss: z.number().positive().finite().nullable(), takeProfit: z.number().positive().finite().nullable(),
   reasoning: z.string().trim().min(20).max(4000), limitations: z.string().max(1500).nullable(),
+  limitOrderAppropriate: z.boolean().nullable().optional(), limitOrderReason: z.string().max(1000).nullable().optional(),
   confidence: z.number().finite().min(0).max(100).nullable(), confidenceReason: z.string().max(1000).nullable(),
   chartClarity: z.enum(["clear", "limited"]), marketStatus: z.enum(["open", "closed", "unknown"]), analysis: analysisSchema,
   evidenceTags: z.array(z.enum(scannerEvidenceTags)).max(4).refine(tags => new Set(tags).size === tags.length).optional(),
 }).strict();
-const optionalPredictionFields = { symbol: true, timeframe: true, entry: true, stopLoss: true, takeProfit: true, limitations: true, confidence: true, confidenceReason: true, chartClarity: true, marketStatus: true, analysis: true, evidenceTags: true } as const;
+const optionalPredictionFields = { symbol: true, timeframe: true, entry: true, stopLoss: true, takeProfit: true, limitations: true, confidence: true, confidenceReason: true, chartClarity: true, marketStatus: true, analysis: true, evidenceTags: true, limitOrderAppropriate: true, limitOrderReason: true } as const;
 export const directionalPredictionSchema = normalizedPredictionObject.partial(optionalPredictionFields).extend({
   analysis: analysisSchema.partial().nullable().optional(),
   chartClarity: z.enum(["clear", "limited"]).nullable().optional(), marketStatus: z.enum(["open", "closed", "unknown"]).nullable().optional(),

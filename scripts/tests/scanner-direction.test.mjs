@@ -21,7 +21,7 @@ test('NO TRADE, invented/inverted prices, wrong types and executable overrides f
  for(const patch of [{signal:'NO TRADE'},{entry:-1},{entry:'3300'},{stopLoss:3400},{confidence:101},{executionStatus:'EXECUTABLE'},{analysis:{...base.analysis,liquiditySweeps:17}}])assert.throws(()=>report({...base,...patch}));
 });
 test('legacy NO TRADE and BUY/SELL history remains readable and is never rewritten into fabricated directions',()=>{
- const {confidence,confidenceReason,chartClarity,marketStatus,analysis,...legacy}=base;
+ const {limitOrderAppropriate,limitOrderReason,confidence,confidenceReason,chartClarity,marketStatus,analysis,...legacy}=base;
  assert.equal(chartReportSchema.safeParse(legacy).success,true);
  const archived={...legacy,signal:'NO TRADE',entry:null,stopLoss:null,takeProfit:null};assert.equal(chartReportSchema.safeParse(archived).success,true);assert.equal(directionalLabel(archived),'Archived analysis');assert.equal(confidenceLabel(legacy),'Uncalibrated');
 });

@@ -1,10 +1,12 @@
 import { useEffect, useRef, useState } from "react";
 import { Activity, ArrowRight, ChartNoAxesCombined, Coins, Crosshair, Info, Layers3, Minus, Plus, X } from "lucide-react";
 import { adjustLotUnits, formatLots, parseLotUnits, parsePositions, type ScannerTradeSettings as TradeSettings } from "@/lib/scanner-trade-settings";
+import { formatScannerPrice } from "@/lib/scanner-format";
 import "./ScannerTradeSettings.css";
 
-interface Props { initial: TradeSettings; onConfirm: (settings: TradeSettings) => void; onClose: () => void }
-export default function ScannerTradeSettings({ initial, onConfirm, onClose }: Props) {
+import type { ScannerPreflight } from "../../../../lib/api-zod/src/scanner-trading";
+interface Props { mode?: "settings" | "confirmation"; preflight?: ScannerPreflight | null; checking?: boolean; onPreflight?: (settings: TradeSettings) => void; initial: TradeSettings; onConfirm: (settings: TradeSettings) => void; onClose: () => void }
+export default function ScannerTradeSettings({ initial, onConfirm, onClose, mode = "settings", preflight, checking, onPreflight }: Props) {
   const [lot, setLot] = useState(formatLots(initial.lotUnits));
   const [positions, setPositions] = useState(String(initial.positions));
   const dialog = useRef<HTMLDivElement>(null);
@@ -28,7 +30,7 @@ export default function ScannerTradeSettings({ initial, onConfirm, onClose }: Pr
         }
       }}>
       <div className="scanner-sheet-handle" aria-hidden="true" />
-      <header className="scanner-sheet-header"><span className="scanner-sheet-title-icon"><Crosshair size={26} /></span><div><h3 id="scanner-trade-title">Trade Settings</h3><p>Configure your trade parameters</p></div><button type="button" className="scanner-sheet-close" aria-label="Close trade settings" onClick={onClose}><X size={23} /></button></header>
+      <header className="scanner-sheet-header"><span className="scanner-sheet-title-icon"><Crosshair size={26} /></span><div><h3 id="scanner-trade-title">{mode === "confirmation" ? "Trade Confirmation" : "Trade Settings"}</h3><p>Configure your trade parameters</p></div><button type="button" className="scanner-sheet-close" aria-label="Close trade settings" onClick={onClose}><X size={23} /></button></header>
       <div className="scanner-sheet-body">
         <section className="scanner-quantity-card" aria-labelledby="scanner-lot-title">
           <div className="scanner-quantity-heading"><Coins size={25} /><div><h4 id="scanner-lot-title">Lot size</h4><p>Select trade size per position</p></div><span className="scanner-limit"><Info size={15} /><span>Min: 0.01<br />Max: 50.00</span></span></div>
@@ -43,7 +45,8 @@ export default function ScannerTradeSettings({ initial, onConfirm, onClose }: Pr
           <div className="scanner-quantity-presets">{[1,2,3,5,10].map(value => <button key={value} type="button" aria-label={`Set positions to ${value}`} aria-pressed={count === value} onClick={() => setPositions(String(value))}>{value}</button>)}</div>
         </section>
         <div className="scanner-settings-summary" aria-live="polite"><ChartNoAxesCombined size={25} /><div><span>Selected parameters</span><strong>{valid ? `${count} ${count === 1 ? "trade" : "trades"} × ${formatLots(lotUnits)} lots` : "Check your trade parameters"}</strong></div></div>
-        <button type="button" className="scanner-confirm-settings" disabled={!valid} onClick={() => { if (valid) onConfirm({ lotUnits, positions: count }); }}><Activity size={22} /><span>Confirm settings</span><ArrowRight size={24} /></button>
+        <button type="button" className="scanner-confirm-settings" disabled={!valid || checking} onClick={() => { if (valid) { const value = { lotUnits, positions: count }; if (mode === "confirmation") onPreflight?.(value); else onConfirm(value); } }}><Activity size={22} /><span>{mode === "confirmation" ? checking ? "Checking broker…" : "Check broker & refresh quote" : "Confirm settings"}</span><ArrowRight size={24} /></button>
+        {mode === "confirmation" && <><p className="scanner-settings-disclosure">{preflight?.plan.type ?? "Signal type awaits verified quotes"} · Minimum target R:R 1:2. A quote/check is read-only, not an order.</p>{preflight && <p className="scanner-settings-disclosure">Entry {formatScannerPrice(preflight.plan.entry)} · Stop {formatScannerPrice(preflight.plan.stopLoss)} · Target {formatScannerPrice(preflight.plan.takeProfit)} · Execution R:R {preflight.plan.riskRewardRatio == null ? "Unavailable" : `1:${preflight.plan.riskRewardRatio.toPrecision(3)}`}. Refresh after editing quantities.</p>}<button type="button" className="scanner-confirm-settings" disabled>Confirm order — MT5 submission unavailable</button></>}
         <p id="scanner-trade-disclosure" className="scanner-settings-disclosure">Settings only. MT5 scanner execution is unavailable; no order will be submitted. Broker limits must be verified before live trading.</p>
       </div>
     </div>
