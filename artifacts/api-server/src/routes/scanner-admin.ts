@@ -6,6 +6,7 @@ import { db, usersTable, appAccessTable, scannerEntitlementsTable, scannerReport
 import { requireScannerAdmin } from "../middlewares/scanner-admin";
 import type { AuthRequest } from "../middlewares/auth";
 import { approvedScannerAdmin, scannerGrantSchema, scannerPasswordMatches, newScannerSession, hashScannerSession } from "../lib/scanner-admin";
+import { scannerFailureDiagnostic } from "../lib/scanner-diagnostics";
 import { analyseChart, scannerConfiguration, ScannerError } from "../lib/scanner-gemini";
 import { strategySchema } from "../../../../lib/api-zod/src/scanner";
 import { evaluateScannerAccess } from "../lib/scanner-access";
@@ -80,7 +81,7 @@ router.post("/superadmin/scanner/test/chart", testLimit, (req, res, next) => upl
   if (!req.file || !strategy.success) { res.status(400).json({ error: "Choose a chart and supported strategy." }); return; }
   const controller = new AbortController(), close = () => { if (!res.writableEnded) controller.abort(); }; res.on("close", close);
   try { const report = await analyseChart(req.file.buffer, req.file.mimetype, strategy.data, controller.signal); if (!controller.signal.aborted) res.json({ report, testOnly: true, executionAvailable: false }); }
-  catch (error) { if (!controller.signal.aborted) res.status(error instanceof ScannerError ? error.status : 503).json({ error: error instanceof ScannerError ? error.message : "AI test failed. Please retry.", code: error instanceof ScannerError ? error.code : "AI_UNAVAILABLE" }); }
+  catch (error) { req.log?.warn(scannerFailureDiagnostic(error instanceof ScannerError ? error : {}), "Scanner admin analysis failed"); if (!controller.signal.aborted) res.status(error instanceof ScannerError ? error.status : 503).json({ error: error instanceof ScannerError ? error.message : "AI test failed. Please retry.", code: error instanceof ScannerError ? error.code : "AI_UNAVAILABLE" }); }
   finally { req.file.buffer.fill(0); res.off("close", close); }
 });
 export default router;
