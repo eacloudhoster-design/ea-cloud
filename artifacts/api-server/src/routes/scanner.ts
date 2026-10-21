@@ -6,6 +6,7 @@ import { db, appAccessTable, scannerReportsTable, scannerEntitlementsTable } fro
 import { fundamentalRequestSchema, strategySchema } from "../../../../lib/api-zod/src/scanner";
 import { analyseChart, analyseFundamentals, ScannerError, scannerConfiguration, requireScannerConfiguration } from "../lib/scanner-gemini";
 
+import { scannerFailureDiagnostic } from "../lib/scanner-diagnostics";
 import { completeScannerReport } from "../lib/scanner-completion";
 import { evaluateScannerAccess } from "../lib/scanner-access";
 
@@ -43,7 +44,8 @@ const limiter = rateLimit({ windowMs: 60 * 60 * 1000, limit: 12, standardHeaders
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 2 * 1024 * 1024, files: 1, fields: 1, fieldSize: 100, parts: 3 },
   fileFilter: (_req, file, cb) => cb(null, ["image/jpeg", "image/png", "image/webp"].includes(file.mimetype)),
 }).single("image");
-function failure(res: Response, error: unknown) {
+function failure(req: Request, res: Response, error: unknown) {
+  req.log?.warn(scannerFailureDiagnostic(error instanceof ScannerError ? error : {}), "Scanner analysis failed");
   if (error instanceof ScannerError) { res.status(error.status).json({ error: error.message, code: error.code ?? "AI_UNAVAILABLE", category: error.category ?? "ai", retryable: error.retryable ?? true }); return; }
   // Missing migration / failed persistence is never reported as a saved success.
   res.status(503).json({ error: "Scanner history is unavailable. Your report could not be saved. Please retry later.", code: "SCANNER_STORAGE_UNAVAILABLE", category: "storage", retryable: true });
@@ -81,7 +83,7 @@ router.post("/app/scanner/chart", limiter, (req, res, next) => upload(req, res, 
     const saved = await completeScannerReport(req.scannerClientId!, "chart", strategy.data, () => analyseChart(req.file!.buffer, req.file!.mimetype, strategy.data, attempt.signal), attempt.signal);
     if (attempt.signal.aborted) return;
     res.status(201).json({ id: saved.id, kind: saved.kind, strategy: saved.strategy, report: saved.report, createdAt: saved.createdAt });
-  } catch (error) { if (!attempt.signal.aborted) failure(res, error); }
+  } catch (error) { if (!attempt.signal.aborted) failure(req, res, error); }
   finally { if (req.file) req.file.buffer.fill(0); attempt.dispose(); }
 });
 router.post("/app/scanner/fundamentals", limiter, express.json({ limit: "4kb" }), async (req: ClientRequest, res) => {
@@ -94,7 +96,7 @@ router.post("/app/scanner/fundamentals", limiter, express.json({ limit: "4kb" })
     const saved = await completeScannerReport(req.scannerClientId!, "fundamental", null, () => analyseFundamentals(parsed.data, attempt.signal), attempt.signal);
     if (attempt.signal.aborted) return;
     res.status(201).json({ id: saved.id, kind: saved.kind, strategy: saved.strategy, report: saved.report, createdAt: saved.createdAt });
-  } catch (error) { if (!attempt.signal.aborted) failure(res, error); }
+  } catch (error) { if (!attempt.signal.aborted) failure(req, res, error); }
   finally { attempt.dispose(); }
 });
 // Future adapter boundary only. Never forwards scanner suggestions to mentor webhooks.

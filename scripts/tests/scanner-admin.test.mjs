@@ -1,3 +1,4 @@
+import { directionalFields } from "./fixtures/scanner-direction.mjs";
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
@@ -61,4 +62,27 @@ test('paid scan completion serializes the final credit and rolls back failed/can
  const cancelled=new AbortController();cancelled.abort();await assert.rejects(completeScannerReport(7,'chart','Auto',async()=>report,cancelled.signal));assert.equal(state.entitlements[0].creditsRemaining,1);assert.equal(state.reports.length,1);
  state.entitlements[0].status='revoked';await assert.rejects(completeScannerReport(7,'chart','Auto',generate,new AbortController().signal),e=>e.code==='SCANNER_ACCESS_REVOKED');assert.equal(calls,1);
  state.entitlements[0]={clientId:7,status:'active',expiresAt:null,creditsRemaining:null};await completeScannerReport(7,'fundamental',null,generate,new AbortController().signal);assert.equal(state.entitlements[0].creditsRemaining,null);
+});
+
+test('real Gemini adapter failures and malformed reports never charge; a validated saved analysis charges once',async()=>{
+ const bundled=await build({entryPoints:['artifacts/api-server/src/lib/scanner-gemini.ts'],bundle:true,platform:'node',format:'esm',write:false});
+ const {analyseChart}=await import('data:text/javascript;base64,'+Buffer.from(bundled.outputFiles[0].text).toString('base64'));
+ const original={fetch:global.fetch,key:process.env.GEMINI_API_KEY,model:process.env.GEMINI_SCANNER_MODEL};
+ state.entitlements=[{clientId:7,status:'active',expiresAt:null,creditsRemaining:1}];state.reports=[];
+ const image=Buffer.concat([Buffer.from([255,216,255]),Buffer.alloc(40)]),signal=new AbortController().signal;
+ const analyse=()=>completeScannerReport(7,'chart','Auto',()=>analyseChart(image,'image/jpeg','Auto',signal),signal);
+ try{
+  process.env.GEMINI_API_KEY='isolated-test-key';process.env.GEMINI_SCANNER_MODEL='gemini-fixture-model';
+  for(const status of [400,401,403,404,429,503]){
+   global.fetch=async()=>new Response('private provider body',{status});await assert.rejects(analyse(),e=>e.upstreamStatus===status);assert.equal(state.entitlements[0].creditsRemaining,1);assert.equal(state.reports.length,0);
+  }
+  global.fetch=async()=>new Response(JSON.stringify({candidates:[{finishReason:'STOP',content:{parts:[{text:'{"fake":"unvalidated result"}'}]}}]}));
+  await assert.rejects(analyse(),e=>e.code==='AI_INVALID_REPORT');assert.equal(state.entitlements[0].creditsRemaining,1);assert.equal(state.reports.length,0);
+  for(const invalid of [report,{error:'UNREADABLE_CHART'}]){global.fetch=async()=>new Response(JSON.stringify({candidates:[{finishReason:'STOP',content:{parts:[{text:JSON.stringify(invalid)}]}}]}));await assert.rejects(analyse());assert.equal(state.entitlements[0].creditsRemaining,1);assert.equal(state.reports.length,0);}
+  global.fetch=async()=>new Response(JSON.stringify({candidates:[{finishReason:'STOP',content:{parts:[{text:JSON.stringify({...report,...directionalFields,signal:'BUY'})}]}}]}));
+  await analyse();assert.equal(state.entitlements[0].creditsRemaining,0);assert.equal(state.reports.length,1);
+ }finally{
+  global.fetch=original.fetch;
+  for(const [name,value] of [['GEMINI_API_KEY',original.key],['GEMINI_SCANNER_MODEL',original.model]]){if(value===undefined)delete process.env[name];else process.env[name]=value;}
+ }
 });
