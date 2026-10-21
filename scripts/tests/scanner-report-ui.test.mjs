@@ -21,3 +21,8 @@ test('uncalibrated/closed/limited setups and archived history never present fabr
  const html=show(buildDirectionalReport({...base,chartClarity:'limited',marketStatus:'closed',entry:null,stopLoss:null,takeProfit:null}));assert.ok(html.includes('Uncalibrated'));assert.ok(html.includes('Market reported closed'));assert.ok(html.includes('NOT EXECUTABLE'));assert.ok(!html.includes('Reference risk / reward'));
  const {confidence,confidenceReason,chartClarity,marketStatus,analysis,...old}=base;const legacy=show({...old,signal:'NO TRADE',entry:null,stopLoss:null,takeProfit:null});assert.ok(legacy.includes('Archived analysis'));assert.ok(!legacy.includes('NO TRADE'));assert.match(legacy,/scanner-result-execute[^>]*disabled/);
 });
+
+test('normalized missing optional fields render safe unavailable labels without prices or percentages',()=>{
+ const html=show(buildDirectionalReport({signal:'SELL',reasoning:'The visible trend supports a tentative downward bias, but trade levels are not established.'}));
+ assert.ok(html.includes('SELL'));assert.ok(html.includes('Uncalibrated'));assert.ok(html.includes('Not established from this chart.'));assert.ok(html.includes('NOT EXECUTABLE'));assert.match(html,/scanner-result-execute[^>]*disabled/);assert.ok(!html.includes('undefined%'));assert.ok(!html.includes('Reference risk / reward'));
+});

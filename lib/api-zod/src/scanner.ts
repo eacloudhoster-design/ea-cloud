@@ -29,32 +29,35 @@ export const legacyChartReportSchema = z.object({
     (report.signal === "BUY" ? !(stopLoss < entry && entry < takeProfit) : !(takeProfit < entry && entry < stopLoss)))
     ctx.addIssue({ code: "custom", message: "Invalid or incomplete trade levels" });
 });
-// New provider contract: direction is separate from execution eligibility.
-export const directionalPredictionSchema = z.object({
+// Provider input and normalized history output deliberately have different optionality.
+export const scannerAnalysisKeys = ["marketStructure", "trendDirection", "liquiditySweeps", "supportResistance", "entryReasoning", "risksInvalidation"] as const;
+export const scannerEvidenceTags = ["Liquidity Sweep", "Order Block", "Bullish Structure", "Bearish Structure", "Volume Support", "Supply Zone", "Demand Zone", "Support Retest", "Resistance Rejection", "Trend Continuation"] as const;
+const analysisSchema = z.object({ marketStructure: z.string().max(1500).nullable(), trendDirection: z.string().max(1500).nullable(), liquiditySweeps: z.string().max(1500).nullable(), supportResistance: z.string().max(1500).nullable(), entryReasoning: z.string().max(1500).nullable(), risksInvalidation: z.string().max(1500).nullable() }).strict();
+const normalizedPredictionObject = z.object({
   signal: z.enum(["BUY", "SELL"]),
   symbol: z.string().max(30).nullable(), timeframe: z.string().max(20).nullable(),
   entry: z.number().positive().finite().nullable(), stopLoss: z.number().positive().finite().nullable(), takeProfit: z.number().positive().finite().nullable(),
-  reasoning: z.string().min(20).max(4000), limitations: z.string().min(1).max(1500),
-  confidence: z.number().int().min(0).max(100).nullable(), confidenceReason: z.string().min(20).max(1000),
-  chartClarity: z.enum(["clear", "limited"]),
-  marketStatus: z.enum(["open", "closed", "unknown"]),
-  analysis: z.object({ marketStructure: z.string().min(20).max(1500), trendDirection: z.string().min(20).max(1500), liquiditySweeps: z.string().min(20).max(1500), supportResistance: z.string().min(20).max(1500), entryReasoning: z.string().min(20).max(1500), risksInvalidation: z.string().min(20).max(1500) }).strict(),
-  evidenceTags: z.array(z.enum(["Liquidity Sweep", "Order Block", "Bullish Structure", "Bearish Structure", "Volume Support", "Supply Zone", "Demand Zone", "Support Retest", "Resistance Rejection", "Trend Continuation"])).max(4).refine(tags => new Set(tags).size === tags.length).optional(),
+  reasoning: z.string().trim().min(20).max(4000), limitations: z.string().max(1500).nullable(),
+  confidence: z.number().finite().min(0).max(100).nullable(), confidenceReason: z.string().max(1000).nullable(),
+  chartClarity: z.enum(["clear", "limited"]), marketStatus: z.enum(["open", "closed", "unknown"]), analysis: analysisSchema,
+  evidenceTags: z.array(z.enum(scannerEvidenceTags)).max(4).refine(tags => new Set(tags).size === tags.length).optional(),
+}).strict();
+const optionalPredictionFields = { symbol: true, timeframe: true, entry: true, stopLoss: true, takeProfit: true, limitations: true, confidence: true, confidenceReason: true, chartClarity: true, marketStatus: true, analysis: true, evidenceTags: true } as const;
+export const directionalPredictionSchema = normalizedPredictionObject.partial(optionalPredictionFields).extend({
+  analysis: analysisSchema.partial().nullable().optional(),
+  chartClarity: z.enum(["clear", "limited"]).nullable().optional(), marketStatus: z.enum(["open", "closed", "unknown"]).nullable().optional(),
+  evidenceTags: normalizedPredictionObject.shape.evidenceTags.nullable(),
 }).strict().superRefine((r, ctx) => {
-  const levels = [r.entry, r.stopLoss, r.takeProfit];
-  if (levels.every(n => n === null)) return;
-  if (r.chartClarity !== "clear" || !r.symbol || !r.timeframe || levels.some(n => n === null) ||
-    (r.signal === "BUY" ? !(r.stopLoss! < r.entry! && r.entry! < r.takeProfit!) : !(r.takeProfit! < r.entry! && r.entry! < r.stopLoss!)))
-    ctx.addIssue({ code: "custom", message: "Invalid or unsupported chart reference levels" });
+  // Missing optional prices are non-actionable, not invalid analysis. Wrong types,
+  // negative numbers and complete but inverted risk levels remain errors.
+  if (r.entry != null && r.stopLoss != null && r.takeProfit != null &&
+    (r.signal === "BUY" ? !(r.stopLoss < r.entry && r.entry < r.takeProfit) : !(r.takeProfit < r.entry && r.entry < r.stopLoss)))
+    ctx.addIssue({ code: "custom", path: ["entry"], message: "Invalid chart reference price ordering" });
 });
-export const directionalChartReportSchema = z.object({
+export const directionalChartReportSchema = normalizedPredictionObject.extend({
   schemaVersion: z.literal(2), riskRewardRatio: z.number().positive().finite().nullable(),
   executionStatus: z.literal("NOT_EXECUTABLE"), nonExecutableReasons: z.array(z.string()).min(1),
-}).passthrough().and(z.preprocess(raw => {
-  if (!raw || typeof raw !== "object") return raw;
-  const { schemaVersion, riskRewardRatio, executionStatus, nonExecutableReasons, ...prediction } = raw as Record<string, unknown>;
-  return prediction;
-}, directionalPredictionSchema));
+}).strict();
 // Existing JSONB history is read as-is; it is never rewritten into a made-up direction.
 export const chartReportSchema = z.union([directionalChartReportSchema, legacyChartReportSchema]);
 export type DirectionalPrediction = z.infer<typeof directionalPredictionSchema>;

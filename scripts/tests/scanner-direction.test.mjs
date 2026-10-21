@@ -17,8 +17,8 @@ test('low-confidence, unclear and closed-market predictions keep direction while
  const closed=report({...base,signal:'SELL',entry:null,stopLoss:null,takeProfit:null,marketStatus:'closed'});assert.equal(closed.signal,'SELL');assert.ok(closed.nonExecutableReasons.some(r=>r.includes('closed')));
  const claimedOpen=report({...base,marketStatus:'open',confidence:98});assert.equal(claimedOpen.marketStatus,'unknown');assert.equal(claimedOpen.executionStatus,'NOT_EXECUTABLE');
 });
-test('NO TRADE, invented/partial/inverted prices, unsupported confidence and executable overrides fail new validation',()=>{
- for(const patch of [{signal:'NO TRADE'},{entry:-1},{entry:null},{stopLoss:3400},{confidence:101},{confidence:70,confidenceReason:'guess'},{executionStatus:'EXECUTABLE'},{analysis:{...base.analysis,liquiditySweeps:''}},{chartClarity:'limited'}])assert.throws(()=>report({...base,...patch}));
+test('NO TRADE, invented/inverted prices, wrong types and executable overrides fail validation',()=>{
+ for(const patch of [{signal:'NO TRADE'},{entry:-1},{entry:'3300'},{stopLoss:3400},{confidence:101},{executionStatus:'EXECUTABLE'},{analysis:{...base.analysis,liquiditySweeps:17}}])assert.throws(()=>report({...base,...patch}));
 });
 test('legacy NO TRADE and BUY/SELL history remains readable and is never rewritten into fabricated directions',()=>{
  const {confidence,confidenceReason,chartClarity,marketStatus,analysis,...legacy}=base;
