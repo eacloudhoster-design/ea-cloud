@@ -81,6 +81,7 @@ test('real Gemini adapter failures and malformed reports never charge; a validat
   for(const invalid of [report,{error:'UNREADABLE_CHART'}]){global.fetch=async()=>new Response(JSON.stringify({candidates:[{finishReason:'STOP',content:{parts:[{text:JSON.stringify(invalid)}]}}]}));await assert.rejects(analyse());assert.equal(state.entitlements[0].creditsRemaining,1);assert.equal(state.reports.length,0);}
   global.fetch=async()=>new Response(JSON.stringify({candidates:[{finishReason:'STOP',content:{parts:[{text:JSON.stringify({...report,...directionalFields,signal:'BUY'})}]}}]}));
   await analyse();assert.equal(state.entitlements[0].creditsRemaining,0);assert.equal(state.reports.length,1);
+  state.entitlements[0].creditsRemaining=1;global.fetch=async()=>new Response(JSON.stringify({candidates:[{finishReason:'STOP',content:{parts:[{text:JSON.stringify({signal:'SELL',reasoning:'A tentative downward bias is visible, without reliable optional trade levels.'})}]}}]}));await analyse();assert.equal(state.entitlements[0].creditsRemaining,0);assert.equal(state.reports.length,2);assert.equal(state.reports[1].report.entry,null);assert.equal(state.reports[1].report.confidence,null);
  }finally{
   global.fetch=original.fetch;
   for(const [name,value] of [['GEMINI_API_KEY',original.key],['GEMINI_SCANNER_MODEL',original.model]]){if(value===undefined)delete process.env[name];else process.env[name]=value;}

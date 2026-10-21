@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import { build } from '../../artifacts/api-server/node_modules/esbuild/lib/main.js';
 const bundle = await build({ entryPoints: ['artifacts/api-server/src/lib/scanner-gemini.ts'], bundle: true, platform: 'node', format: 'esm', write: false, logLevel: 'silent' });
 const { parseChartReport, validateChartImage, analyseChart, analyseFundamentals, scannerConfiguration } = await import('data:text/javascript;base64,' + Buffer.from(bundle.outputFiles[0].text).toString('base64'));
-const valid = { ...directionalFields, signal: 'BUY', symbol: 'XAUUSD', timeframe: 'H1', entry: 3300, stopLoss: 3280, takeProfit: 3340, reasoning: 'Visible structure suggests a possible retest with uncertainty.', limitations: 'Screenshot is not a live quote.' };
+const valid = { ...directionalFields, evidenceTags: [], signal: 'BUY', symbol: 'XAUUSD', timeframe: 'H1', entry: 3300, stopLoss: 3280, takeProfit: 3340, reasoning: 'Visible structure suggests a possible retest with uncertainty.', limitations: 'Screenshot is not a live quote.' };
 const predictionOnly = ({schemaVersion,riskRewardRatio,executionStatus,nonExecutableReasons,...prediction})=>prediction;
 const bytes = Buffer.concat([Buffer.from([0xff,0xd8,0xff]),Buffer.alloc(40)]);
 const originalFetch = global.fetch, originalKey = process.env.GEMINI_API_KEY, originalModel = process.env.GEMINI_SCANNER_MODEL, originalAlias = process.env.GEMINI_MODEL;
@@ -13,8 +13,8 @@ afterEach(() => { if(originalAlias===undefined)delete process.env.GEMINI_MODEL;e
 const response = (text, groundingMetadata) => new Response(JSON.stringify({ candidates: [{ finishReason: 'STOP', content: { parts: [{ text }] }, groundingMetadata }] }), { status: 200 });
 test('strict result validation rejects inverted/missing/negative levels and extra instructions', () => {
   assert.deepEqual(predictionOnly(parseChartReport(JSON.stringify(valid))), valid);
-  for (const patch of [{stopLoss:3400},{takeProfit:3200},{entry:null},{entry:-1},{symbol:null},{timeframe:null},{execute:true},{signal:'CONNECTED'}])
-    assert.throws(() => parseChartReport(JSON.stringify({...valid,...patch})), /valid trade levels/);
+  for (const patch of [{stopLoss:3400},{takeProfit:3200},{entry:-1},{entry:"3300"},{reasoning:""},{execute:true},{signal:'CONNECTED'}])
+    assert.throws(() => parseChartReport(JSON.stringify({...valid,...patch})), /invalid directional report/);
   assert.throws(() => parseChartReport('```json\n{}\n```'), /unreadable/);
 });
 test('successful analyses require BUY or SELL; missing levels remain non-executable', () => {
@@ -46,7 +46,7 @@ test('missing configuration and provider failures never manufacture signals or e
   global.fetch=async()=>new Response('private diagnostic isolated-test-key',{status:429});
   await assert.rejects(analyseChart(bytes,'image/jpeg','Auto',new AbortController().signal),error=>error.status===429 && !error.message.includes('isolated-test-key'));
   global.fetch=async()=>response(JSON.stringify({...valid,stopLoss:5000}));
-  await assert.rejects(analyseChart(bytes,'image/jpeg','Auto',new AbortController().signal),/valid trade levels/);
+  await assert.rejects(analyseChart(bytes,'image/jpeg','Auto',new AbortController().signal),/invalid directional report/);
 });
 test('fundamentals require grounded supports and HTTPS sources, not model-only current news', async () => {
   const context={market:'XAUUSD',focus:'CPI',outlook:'Next 1–3 days'};
@@ -70,7 +70,7 @@ test('evidence tags are optional for old history, bounded and reject out-of-rang
   const tags=['Liquidity Sweep','Order Block','Bullish Structure','Volume Support'];
   assert.deepEqual(parseChartReport(JSON.stringify({...valid,evidenceTags:tags})).evidenceTags,tags);
   for(const patch of [{evidenceTags:['Guaranteed Profit']},{evidenceTags:['Liquidity Sweep','Liquidity Sweep']},{evidenceTags:[...tags,'Trend Continuation']},{confidence:101}])
-    assert.throws(()=>parseChartReport(JSON.stringify({...valid,...patch})),/valid trade levels/);
+    assert.throws(()=>parseChartReport(JSON.stringify({...valid,...patch})),/invalid directional report/);
 });
 
 test('provider credentials/model/quota failures are distinct from client access failures', async()=>{
