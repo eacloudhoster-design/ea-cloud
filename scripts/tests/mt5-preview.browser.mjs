@@ -41,6 +41,7 @@ try {
   assert.equal(Math.round((await screen.boundingBox()).x), 0);
   assert.equal(await screen.locator('.mt5-mentor-background').getAttribute('src'), '/_fixture/mentor-background.jpg');
   assert.equal(await screen.locator('.mt5-mentor-background').evaluate(el => el.naturalWidth > 0), true);
+  assert.doesNotMatch(await screen.innerText(), /visual preview|demo connection|demo animation|animation preview/i);
   await page.screenshot({ path: screenshots + '/01-account-mobile.png' });
   await screen.getByLabel('LOGIN / ACCOUNT NUMBER', { exact: true }).fill('1e9');
   await screen.getByLabel('PASSWORD', { exact: true }).fill('demo-only-password');
@@ -53,7 +54,7 @@ try {
   await screen.getByLabel('LOGIN / ACCOUNT NUMBER', { exact: true }).fill('0012345678');
   await screen.getByRole('button', { name: 'Connect MT5', exact: true }).click();
   const dialog = page.getByRole('dialog');
-  await dialog.getByRole('heading', { name: 'Connecting to Exness' }).waitFor();
+  await dialog.getByRole('heading', { name: 'Connecting to Exness...', exact: true }).waitFor();
   assert.equal(await screen.getByLabel('PASSWORD', { exact: true }).inputValue(), '');
   const exnessLogo = dialog.getByRole('img', { name: 'Exness logo', exact: true });
   await exnessLogo.waitFor();
@@ -61,8 +62,20 @@ try {
   assert.ok(await exnessLogo.evaluate(img => img.naturalWidth >= 200));
   assert.equal(await dialog.getByLabel('Unknown broker', { exact: true }).count(), 0);
   assert.ok((await dialog.boundingBox()).x >= 0, 'Dialog must not be clipped by horizontal focus scrolling');
+  const reveal = dialog.locator('.mt5-broker-reveal');
+  const initialOpacity = await reveal.evaluate(el => Number(getComputedStyle(el).opacity));
+  const initialScale = await reveal.evaluate(el => new DOMMatrix(getComputedStyle(el).transform).a);
+  await page.waitForTimeout(1750);
+  const finalOpacity = await reveal.evaluate(el => Number(getComputedStyle(el).opacity));
+  const finalScale = await reveal.evaluate(el => new DOMMatrix(getComputedStyle(el).transform).a);
+  assert.ok(finalOpacity > .99 && finalOpacity > initialOpacity, 'Broker logo should fade into view');
+  assert.ok(finalScale > .99 && finalScale > initialScale, 'Broker logo should grow smoothly into view');
+  assert.notEqual(await dialog.locator('.mt5-small-spinner').evaluate(el => getComputedStyle(el).animationName), 'none');
+  assert.doesNotMatch(await dialog.innerText(), /visual preview|demo connection|demo animation|animation preview|playing the connection animation/i);
   await page.screenshot({ path: screenshots + '/02-connecting-mobile.png' });
-  await dialog.getByRole('heading', { name: 'Connection not verified' }).waitFor();
+  await dialog.getByRole('heading', { name: 'Live verification unavailable', exact: true }).waitFor();
+  assert.match(await dialog.innerText(), /Your account has not been connected/);
+  assert.equal(await dialog.getByRole('heading', { name: 'Connected', exact: true }).count(), 0);
   await page.screenshot({ path: screenshots + '/03-unverified-mobile.png' });
   await page.keyboard.press('Escape');
   assert.equal(await dialog.count(), 0);
@@ -72,9 +85,9 @@ try {
   await screen.getByLabel('BROKER SERVER', { exact: true }).fill('UnknownBroker-Live');
   await screen.getByLabel('PASSWORD', { exact: true }).fill('demo');
   await screen.getByRole('button', { name: 'Connect MT5', exact: true }).click();
-  await dialog.getByRole('heading', { name: 'Connecting to your broker' }).waitFor();
+  await dialog.getByRole('heading', { name: 'Connecting to your broker...', exact: true }).waitFor();
   await dialog.getByLabel('Unknown broker').waitFor();
-  await dialog.getByRole('button', { name: 'Cancel preview' }).click();
+  await dialog.getByRole('button', { name: 'Cancel connection' }).click();
   await page.waitForTimeout(3400);
   assert.equal(await dialog.count(), 0);
 
@@ -96,8 +109,11 @@ try {
     assert.ok(src.startsWith('data:') || new URL(src, origin).origin === origin, name + ' must not use a remote logo');
     assert.equal(await dialog.getByLabel('Unknown broker', { exact: true }).count(), 0);
     assert.equal(await dialog.getByRole('alert').count(), 0);
-    if (['Deriv', 'XM', 'IC Markets'].includes(name)) await page.screenshot({ path: screenshots + '/broker-' + name.toLowerCase().replaceAll(' ', '-') + '.png' });
-    await dialog.getByRole('button', { name: 'Cancel preview' }).click();
+    if (['Deriv', 'XM', 'IC Markets'].includes(name)) {
+      await page.waitForTimeout(1750);
+      await page.screenshot({ path: screenshots + '/broker-' + name.toLowerCase().replaceAll(' ', '-') + '.png' });
+    }
+    await dialog.getByRole('button', { name: 'Cancel connection' }).click();
   }
   await screen.getByLabel('BROKER SERVER', { exact: true }).fill('UnknownBroker-Live');
 
@@ -107,9 +123,10 @@ try {
   await screen.getByLabel('PASSWORD', { exact: true }).fill('demo');
   await screen.getByRole('button', { name: 'Connect MT5', exact: true }).click();
   await dialog.waitFor();
-  assert.equal(await dialog.locator('.mt5-orbit--outer').evaluate(el => getComputedStyle(el).animationName), 'none');
+  assert.equal(await dialog.locator('.mt5-small-spinner').evaluate(el => getComputedStyle(el).animationName), 'none');
+  assert.equal(await dialog.locator('.mt5-broker-reveal').evaluate(el => getComputedStyle(el).animationName), 'none');
   await page.keyboard.press('Tab');
-  assert.equal(await dialog.getByRole('button', { name: 'Cancel preview' }).evaluate(el => el === document.activeElement), true);
+  assert.equal(await dialog.getByRole('button', { name: 'Cancel connection' }).evaluate(el => el === document.activeElement), true);
   const box = await dialog.boundingBox();
   assert.ok(box.x >= 0 && box.x + box.width <= 320);
   assert.ok(box.y >= 0 && box.y + box.height <= 568 - 75);

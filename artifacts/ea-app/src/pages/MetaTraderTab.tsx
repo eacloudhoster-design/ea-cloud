@@ -7,7 +7,7 @@ import { requestJson } from "@/lib/request";
 import BrokerLogo from "@/components/mt5/BrokerLogo";
 import "./MetaTraderTab.css";
 
-type PreviewState = "idle" | "connecting" | "unverified";
+type ConnectionState = "idle" | "connecting" | "unverified";
 interface SavedAccount { login: string; server: string }
 
 export default function MetaTraderTab() {
@@ -16,7 +16,7 @@ export default function MetaTraderTab() {
   const [password, setPassword] = useState("");
   const [server, setServer] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [state, setState] = useState<PreviewState>("idle");
+  const [state, setState] = useState<ConnectionState>("idle");
   const [error, setError] = useState("");
   const [saved, setSaved] = useState<SavedAccount | null>(null);
   const [savedError, setSavedError] = useState(false);
@@ -76,7 +76,7 @@ export default function MetaTraderTab() {
     if (controller.current && !controller.current.signal.aborted && state === "connecting") return;
     const message = validateMt5Preview(login, password, server);
     if (message || !clientToken) {
-      setError(message || "Sign in to preview your MT5 connection.");
+      setError(message || "Sign in to manage your MT5 connection.");
       return;
     }
     setError("");
@@ -105,7 +105,7 @@ export default function MetaTraderTab() {
         </header>
 
         <div className="mt5-account-heading"><span className="mt5-heading-dot" />MT5 ACCOUNT<span className="mt5-version">05</span></div>
-        <div className="mt5-status"><span /> NOT VERIFIED <span className="mt5-status-divider">/</span><span className="mt5-preview-label">VISUAL PREVIEW</span></div>
+        <div className="mt5-status"><span /> NOT CONNECTED <span className="mt5-status-divider">/</span><span className="mt5-terminal-label">METATRADER 5</span></div>
 
         <div className="mt5-intro">
           <div className="mt5-platform-mark" aria-hidden="true"><Layers3 size={28} strokeWidth={1.4} /><span>5</span></div>
@@ -122,7 +122,7 @@ export default function MetaTraderTab() {
 
           <label htmlFor="mt5-password">PASSWORD</label>
           <div className="mt5-input-wrap"><LockKeyhole size={18} /><input id="mt5-password" type={showPassword ? "text" : "password"} autoComplete="off"
-            value={password} onChange={e => setPassword(e.target.value)} placeholder="Use a demo password for this preview" required />
+            value={password} onChange={e => setPassword(e.target.value)} placeholder="MT5 account password" required />
             <button type="button" className="mt5-eye" aria-label={showPassword ? "Hide password" : "Show password"} aria-pressed={showPassword} onClick={() => setShowPassword(v => !v)}>
               {showPassword ? <EyeOff size={19} /> : <Eye size={19} />}
             </button>
@@ -134,11 +134,11 @@ export default function MetaTraderTab() {
           <datalist id="mt5-broker-hints">
             {["Exness-MT5Real1", "Deriv-Demo", "ICMarketsSC-MT5", "Pepperstone-MT5-Live01", "XMGlobal-MT5", "HFMarketsSV-Live", "FBS-Real", "Tickmill-Live", "ForexTimeFXTM-Live"].map(value => <option key={value} value={value} />)}
           </datalist>
-          <div className="mt5-broker-hint"><Radio size={12} /><span>{broker ? `${broker.name} detected` : "Enter the server from your broker"}</span><span>NAME HINT ONLY</span></div>
+          <div className="mt5-broker-hint"><Radio size={12} /><span>{broker ? `${broker.name} detected` : "Enter the server from your broker"}</span><span>MT5 SERVER</span></div>
 
           {error && <p className="mt5-form-error" role="alert"><ShieldAlert size={15} />{error}</p>}
           <button ref={connectButton} type="submit" className="mt5-connect-button"><Shield size={18} /><span>Connect MT5</span><ArrowRight size={18} /></button>
-          <p className="mt5-prototype-note"><Info size={13} /><span>Animation preview only. No broker login is performed.<br />Your password is never sent or saved.</span></p>
+          <p className="mt5-availability-note"><Info size={13} /><span>Live verification is currently unavailable.<br />Your password is not sent or saved.</span></p>
         </form>
 
         {(saved || savedError) && <aside className="mt5-saved-account">
@@ -156,20 +156,20 @@ export default function MetaTraderTab() {
           else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
         }
       }}>
-        <div className="mt5-connection-modal" role="dialog" aria-modal="true" aria-labelledby="mt5-dialog-title" aria-describedby="mt5-dialog-description">
-          <button ref={closeButton} className="mt5-modal-close" type="button" aria-label={state === "connecting" ? "Cancel preview" : "Close preview"} onClick={closePreview}><X size={20} /></button>
-          <span className="mt5-modal-chip">VISUAL PREVIEW / MT5</span>
+        <div className="mt5-connection-modal" data-state={state} role="dialog" aria-modal="true" aria-labelledby="mt5-dialog-title" aria-describedby="mt5-dialog-description">
+          <button ref={closeButton} className="mt5-modal-close" type="button" aria-label={state === "connecting" ? "Cancel connection" : "Close connection details"} onClick={closePreview}><X size={20} /></button>
+          <span className="mt5-modal-chip"><Layers3 size={13} /> METATRADER 5</span>
           <div className={`mt5-broker-stage ${state === "connecting" ? "is-connecting" : ""}`}>
             <div className="mt5-orbit mt5-orbit--outer" /><div className="mt5-orbit mt5-orbit--inner" />
-            <BrokerLogo key={broker?.id ?? "unknown"} broker={broker} />
-            <span className="mt5-stage-status">{state === "connecting" ? <Radio size={16} /> : <ShieldAlert size={16} />}</span>
+            <div className="mt5-broker-reveal"><BrokerLogo key={broker?.id ?? "unknown"} broker={broker} /></div>
+            <span className="mt5-stage-status" aria-hidden="true">{state === "connecting" ? <span className="mt5-small-spinner" /> : <ShieldAlert size={16} />}</span>
           </div>
           <div aria-live="polite" aria-atomic="true">
-            <h3 id="mt5-dialog-title">{state === "connecting" ? `Connecting to ${brokerName}` : "Connection not verified"}</h3>
+            <h3 id="mt5-dialog-title">{state === "connecting" ? `Connecting to ${brokerName}...` : "Live verification unavailable"}</h3>
             <p className="mt5-dialog-server">{server.trim()}</p>
-            <p id="mt5-dialog-description">{state === "connecting" ? "Playing the connection animation. No broker authentication is taking place." : "Live MT5 verification is not available yet. This preview has not connected your account or changed your trading settings."}</p>
+            <p id="mt5-dialog-description">{state === "connecting" ? "Your account has not been verified. Live verification is currently unavailable." : "Your account has not been connected. Live MT5 verification is not available yet. Your saved account and trading settings are unchanged."}</p>
           </div>
-          {state === "connecting" ? <><div className="mt5-progress-track"><span /></div><span className="mt5-progress-caption">DEMO ANIMATION · NO LIVE CONNECTION</span></> : <button className="mt5-modal-return" type="button" onClick={closePreview}><RotateCcw size={16} /> Back to account details</button>}
+          {state === "connecting" ? <><div className="mt5-progress-track"><span /></div><span className="mt5-progress-caption">ACCOUNT NOT VERIFIED</span></> : <button className="mt5-modal-return" type="button" onClick={closePreview}><RotateCcw size={16} /> Back to account details</button>}
         </div>
       </div>}
     </section>
