@@ -36,7 +36,6 @@
 .is-scanning .scanner-orbit-one { animation:scanner-rotate 12s linear infinite; }
 .is-scanning .scanner-orbit-two { animation:scanner-rotate 8s linear infinite reverse; }
 .scanner-loader { animation:scanner-rotate 1.3s linear infinite; }
-.scanner-sweep { position:absolute; left:0; right:0; height:30%; top:-30%; background:linear-gradient(transparent,#e74e4a30); border-bottom:1px solid #ff8471; box-shadow:0 3px 14px #ec654c8a; pointer-events:none; animation:scanner-sweep 2.8s ease-in-out infinite; }
 .scanner-strategies { margin:24px 0 30px; }
 .scanner-strategies h3 { font-size:14px; font-weight:550; margin-bottom:14px; }
 .scanner-strategies > div { display:flex; flex-wrap:wrap; gap:8px; }
@@ -45,7 +44,7 @@
 .scanner-fundamentals,.scanner-report,.scanner-trade-settings { background:linear-gradient(135deg,#141212f0,#0c0c0be8); border:1px solid #ffffff29; border-radius:24px; padding:22px 17px; box-shadow:0 14px 35px #0003,inset 0 1px 0 #ffffff05; }
 .scanner-fundamentals h3 { display:flex; align-items:center; gap:9px; font-size:18px; line-height:1.3; font-weight:650; margin-bottom:24px; letter-spacing:-.3px; }
 .scanner-fundamentals h3 svg { color:var(--scanner-red); flex-shrink:0; }
-.scanner-fundamental-fields,.scanner-trade-fields { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:17px 12px; }
+.scanner-fundamental-fields { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:17px 12px; }
 .scanner-screen label { display:flex; flex-direction:column; gap:9px; min-width:0; font-size:12px; color:#aaa4ae; }
 .scanner-screen select,.scanner-screen input[type=number] { width:100%; color:#f5f2f3; background:#040404; border:1px solid #ffffff24; border-radius:9px; padding:11px 8px; min-height:44px; font-size:14px; min-width:0; }
 .scanner-screen select { padding-right:4px; }
@@ -73,9 +72,6 @@
 .scanner-report a svg { display:inline-block; margin-left:3px; }
 .scanner-report .scanner-record-note { display:flex; gap:7px; align-items:center; color:#a1c3ad; font-size:10px; border-top:1px solid #ffffff10; padding-top:14px; margin-top:20px; }
 .scanner-trade-settings { margin-top:22px; padding:17px; }
-.scanner-trade-settings summary { cursor:pointer; font-size:13px; min-height:28px; }
-.scanner-trade-settings summary span { color:#928894; font-size:10px; float:right; padding-top:3px; }
-.scanner-trade-fields { margin-top:18px; }
 .scanner-execute { border:1px solid #f16a5980; background:#661b175e; min-height:46px; border-radius:13px; width:100%; color:#ffc2b5; margin:16px 0 8px; font-size:13px; }
 .scanner-trade-settings p { font-size:10px; color:#b4a5ad; line-height:1.7; }
 .scanner-history { margin-top:35px; }
@@ -100,7 +96,36 @@
 .scanner-navigation { position:absolute; bottom:0; left:0; right:0; height:calc(85px + env(safe-area-inset-bottom)); padding-bottom:env(safe-area-inset-bottom); z-index:4; background:linear-gradient(0deg,#35110ff5,#180807ec 70%,#22080700); border-top:1px solid #c94f405c; backdrop-filter:blur(14px); }
 .scanner-navigation > div { bottom:env(safe-area-inset-bottom) !important; background:transparent !important; }
 @keyframes scanner-rotate { to { transform:rotate(360deg); } }
-@keyframes scanner-sweep { 0% { top:-30%; opacity:0; } 15% { opacity:1; } 90% { opacity:1; } 100% { top:100%; opacity:0; } }
 @media (max-width:360px) { .scanner-header { gap:7px; padding-inline:10px; } .scanner-header h2 { font-size:19px; } .scanner-header-avatar { width:24px; height:24px; } .scanner-ai-badge { font-size:9px; padding:5px; } .scanner-scroll { padding:20px 16px 110px; } .scanner-ready { padding:28px 14px 22px; } .scanner-ready h3 { font-size:25px; } .scanner-strategies button { padding-inline:14px; } .scanner-fundamentals { padding-inline:14px; } .scanner-fundamentals h3 { font-size:17px; } }
 @media (prefers-reduced-motion:reduce) { .scanner-screen *, .scanner-screen *::before, .scanner-screen *::after { animation:none !important; transition:none !important; scroll-behavior:auto !important; } }
 .scanner-upload-note { font-size:9px; color:#bca3ad; line-height:1.6; margin-top:13px; }
+/* Second reference batch: settings sheet and an atmospheric pending-analysis view. */
+.scanner-main { display:contents; }
+.scanner-scroll { display:flex; flex-direction:column; }
+.scanner-scroll > * { flex-shrink:0; }
+.scanner-strategies { order:1; }
+.scanner-fundamentals { order:2; }
+.scanner-ready.is-scanning { order:3; border-color:transparent; background:none; box-shadow:none; margin-top:25px; padding:25px 12px 10px; }
+.scanner-ready.is-scanning .scanner-orb { width:205px; height:205px; margin-bottom:23px; }
+.scanner-ready.is-scanning .scanner-orb > img { width:106px; height:106px; box-shadow:0 0 45px #eb433c6b; }
+.scanner-ready.is-scanning .scanner-orb-mark { display:none; }
+.scanner-ready.is-scanning .scanner-orbit-two { inset:29px; }
+.scanner-ready.is-scanning .scanner-mentor { color:#bdb0b6; font-size:11px; }
+.scanner-ready.is-scanning h3 { font-size:20px; margin-top:27px; }
+.scanner-ready.is-scanning .scanner-ready-description { font-size:12px; margin:11px 0 18px; }
+.scanner-analysis-dots { display:flex; justify-content:center; gap:7px; margin-top:18px; }
+.scanner-analysis-dots span { width:5px; height:5px; border-radius:50%; background:#fb574c; animation:scanner-dot 1.4s ease-in-out infinite; }
+.scanner-results { order:5; }
+.scanner-trade-settings { order:6; }
+.scanner-history { order:7; }
+.scanner-disclosure { order:8; }
+.scanner-settings-launch { display:flex; align-items:center; gap:12px; }
+.scanner-settings-launch h3 { font-size:13px; font-weight:600; }
+.scanner-settings-launch p { margin-top:7px; }
+.scanner-settings-launch button { width:44px; height:44px; margin-left:auto; border:1px solid #9b55404f; border-radius:12px; background:#8c362516; color:#f29480; display:grid; place-items:center; }
+.scanner-trade-settings .scanner-settings-saved { margin-top:10px; color:#b9d1ba; }
+@keyframes scanner-dot { 0%,100% { opacity:.25; transform:scale(.8); } 50% { opacity:1; transform:scale(1.1); } }
+@media (prefers-reduced-motion:reduce) { .scanner-analysis-dots span { animation:none; opacity:.8; } }
+.scanner-shade::after { content:''; position:absolute; inset:0; background:#080204; opacity:0; transition:opacity .5s ease; }
+.scanner-screen:has(.is-scanning) .scanner-shade::after { opacity:.22; }
+.scanner-ready.is-scanning .scanner-orbit { border-color:#ef675555; }

@@ -1,6 +1,6 @@
-# EA Cloud AI Scanner — first reference batch
+# EA Cloud AI Scanner — reference batches 1–2
 
-Development branch: `feat/gemini-chart-scanner`, based on main after the MT5 redesign was merged. This is the existing client app and API, not a separate project. This revision follows the supplied ready/upload and fundamental-analysis screenshots. Result-screen details can be refined against later reference batches. Nothing has been deployed or migrated.
+Development branch: `feat/gemini-chart-scanner`, based on main after the MT5 redesign was merged. This is the existing client app and API, not a separate project. This revision follows the supplied ready/upload, fundamental-analysis, Trade Settings and pending-analysis screenshots. Result-screen details can be refined against later reference batches. Nothing has been deployed or migrated.
 
 ## Actual client UI
 
@@ -8,10 +8,12 @@ Development branch: `feat/gemini-chart-scanner`, based on main after the MT5 red
 - Real Gallery chooser and rear-camera capture hint. JPEG, PNG and WebP only; HEIC users get a conversion message. Inputs are bounded to 10 MB and 40 megapixels; each selected image is prepared as JPEG at maximum 1600 px and 2 MB. Object URLs are revoked and bitmaps closed. No bulk image processing or new image service.
 - Selecting an image only prepares a local preview. **Analyse chart** explicitly sends it to Gemini through the authenticated API. The UI explains this next to the action. Original screenshots are not retained in app storage or the database.
 - Auto, SMC, ICT, Price Action, Supply/Demand and Indicators controls feed the analysis request. Scan animations run while a request is pending, respect reduced motion, and support cancellation/close cleanup. There is no fake percentage, hardcoded BUY result or invented credit balance.
+- Pending analysis now uses a centered upright EA Cloud mark, restrained rotating red rings and five pulsing dots, mentor name, exact “Analyzing chart...” and “AI is scanning patterns and levels” text. Fundamentals has its own truthful research text. This state appears below the fundamentals panel only while a real analysis request is pending; cancellation remains available, and reduced motion disables rings/dots. The settings summary is hidden while analysing so history follows directly below.
 - Typed BUY / SELL / NO TRADE results, entry/SL/TP, reasoning and limitations. Unclear charts should yield NO TRADE; invalid/inverted/missing levels are rejected by server validation. Results are suggestions from a screenshot, not live quotes or guarantees.
 - Fundamentals controls: XAUUSD/EURUSD/GBPUSD/USDJPY/US100/US30, General market/CPI/PPI/NFP/FOMC, Intraday/Next 1–3 days/This week. Gemini Google Search grounding supplies source links and retrieval time. Reports without grounding supports and HTTPS source links fail rather than inventing current news. This is a researched snapshot, not a streaming economic calendar. The model is instructed to distinguish actual/forecast/previous/unreleased figures and state missing dates/data.
 - Paginated, client-scoped PostgreSQL report history, refresh/reopen and explicit unavailable states. Empty history is shown only after a successful empty response. Images and credentials are not saved. An aborted request may already have reached Google or completed persistence; refreshing history reconciles reports the server completed before cancellation.
-- Lot-size/position preparation and **disabled Execute Trade**. Both UI and `/execute` endpoint explicitly state that scanner execution is not integrated and no order was sent. Scanner reports never enter mentor signal tables, the copy worker, webhooks or VPS execution.
+- A red glass Trade Settings bottom sheet with exact 0.01-lot steppers, manual decimal input and presets (0.01/0.05/0.10/0.50/1.00), preparation limits of 0.01–50.00 lots, whole positions from 1–20, count presets (1/2/3/5/10), and a live selected-parameters summary. Draft changes commit only through **Confirm settings**; close/backdrop/Escape discard the draft and restore focus. Values are held for this scanner session, not persisted to global trading controls. Underlying content is inert, the sheet traps focus and its body scrolls on small phones.
+- **Confirm settings** is intentionally used instead of the reference’s “Confirm execution”: it performs no API write or order request. Actual **Execute Trade stays disabled**. Both UI and `/execute` endpoint explicitly state that scanner execution is not integrated and no order was sent. Scanner reports never enter mentor signal tables, the copy worker, webhooks or VPS execution.
 - Existing MetaTrader/Home/Settings navigation is reused. Closing returns to the launcher; scanner navigation closes the modal and selects the requested tab. Keyboard focus is trapped/restored within the scanner.
 
 ## Server and contracts
@@ -51,19 +53,23 @@ These captures run the real React build at 390 × 844 with isolated auth, dashbo
 | --- | --- |
 | ![Ready, gallery/camera and strategies](previews/scanner/ready-mobile.png) | ![Fundamentals controls and history](previews/scanner/fundamentals-mobile.png) |
 
-[Pending chart animation](previews/scanner/scanning-mobile.png) · [Report UI — explicitly labelled fixture, not live Gemini](previews/scanner/report-fixture-mobile.png) · [Unavailable service](previews/scanner/unavailable-mobile.png) · [320px phone](previews/scanner/small-mobile.png)
+| Trade Settings — second batch | Pending analysis — second batch |
+| --- | --- |
+| ![Trade settings, 0.05 lots and two positions](previews/scanner/trade-settings-mobile.png) | ![Real pending request, centered rings and dots](previews/scanner/scanning-mobile.png) |
+
+[Scrollable settings at 320 × 568](previews/scanner/trade-settings-small-mobile.png) · [Pending chart animation](previews/scanner/scanning-mobile.png) · [Report UI — explicitly labelled fixture, not live Gemini](previews/scanner/report-fixture-mobile.png) · [Unavailable service](previews/scanner/unavailable-mobile.png) · [320px phone](previews/scanner/small-mobile.png)
 
 ## Validation
 
-- 37 unit tests passed: 7 new Gemini/result/image/grounding/cancellation checks plus 30 existing MT5/mobile loading/Pages/background-storage/bootstrap tests.
+- 40 unit tests passed: 3 lot/position validation/step tests, 7 Gemini/result/image/grounding/cancellation checks plus 30 existing MT5/mobile loading/Pages/background-storage/bootstrap tests.
 - Isolated scanner HTTP route test passed with in-memory records and mocked query conditions/provider: approved/licensed access, expired licences, two known clients seeing only their own reports even with clientId injection, invalid requests, history-unavailable preflight before AI cost, report persistence and always-unavailable execution. This does **not** validate the migration against a real PostgreSQL server or replace staging tests.
-- Production-browser suite passed: real Gallery/Camera chooser, capture hint, JPEG preparation, explicit request only after Analyse, strategy payload, animation, typed BUY/NO TRADE fixture rendering, grounded fundamental fixture/source link, report reopening from history, unavailable/history error and retry, cancellation, disabled execution, reduced motion, 320px/mobile/desktop overflow and no runtime/unexpected console errors. No production AI, MT5 or database calls.
+- Production-browser suite passed: real Gallery/Camera chooser, capture hint, JPEG preparation, explicit request only after Analyse, strategy payload, animation, typed BUY/NO TRADE fixture rendering, grounded fundamental fixture/source link, report reopening from history, unavailable/history error and retry, cancellation, disabled execution, settings presets/manual limits/confirm-without-API/cancel-draft/focus restoration, scrollable narrow settings sheet, reduced motion, 320px/mobile/desktop overflow and no runtime/unexpected console errors. No production AI, MT5 or database calls.
 - TypeScript library build plus mobile, website and API checks passed. API production build and combined Pages website/mobile build with route verification passed.
 
 Reproduce from repository root (installed dependencies required):
 
 ```sh
-node --test --test-isolation=none scripts/tests/scanner.test.mjs scripts/tests/mt5-preview.test.mjs scripts/tests/mobile-loading.test.mjs scripts/tests/pages.test.mjs scripts/tests/background-storage.test.mjs scripts/tests/bootstrap.test.mjs
+node --test --test-isolation=none scripts/tests/scanner-trade-settings.test.mjs scripts/tests/scanner.test.mjs scripts/tests/mt5-preview.test.mjs scripts/tests/mobile-loading.test.mjs scripts/tests/pages.test.mjs scripts/tests/background-storage.test.mjs scripts/tests/bootstrap.test.mjs
 node --test --test-isolation=none scripts/tests/scanner-api.test.mjs
 pnpm run typecheck
 pnpm run build:pages
