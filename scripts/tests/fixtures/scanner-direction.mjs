@@ -1,4 +1,5 @@
 export const directionalFields = {
+ priceEvidence:{visibleMin:3200,visibleMax:3500,decimalPlaces:2,basis:'Isolated fixture axis spans 3200 to 3500 with two decimal places; this is not real chart evidence.'}, levelsUnavailableReason:null,
  limitOrderAppropriate:false,limitOrderReason:null,confidence:null,confidenceReason:'No calibrated directional confidence can be established from a single screenshot.',chartClarity:'clear',marketStatus:'unknown',
  analysis:{supplyDemand:null,marketStructure:'The visible structure is only screenshot evidence, without live confirmation.',trendDirection:'The tentative direction follows the visible chart trend and may invalidate.',liquiditySweeps:'A liquidity sweep cannot be confirmed from this isolated fixture.',supportResistance:'Support and resistance require chart-visible levels and fresh market confirmation.',entryReasoning:'Entry references depend on readable chart prices and are not executable live quotes.',risksInvalidation:'A structure break, stale prices or a closed session invalidate the proposed setup.'},
 };

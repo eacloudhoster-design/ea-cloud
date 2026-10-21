@@ -7,6 +7,12 @@ export const scannerPredictionJsonSchema = {
   type: "object", additionalProperties: false,
   properties: {
     signal: { type: "string", enum: ["BUY", "SELL"] }, reasoning: { type: "string", minLength: 20, maxLength: 4000, description: "Detailed evidence-based directional reasoning, at least 20 characters. Never fabricate observations." },
+    priceEvidence: { anyOf: [{ type: "object", additionalProperties: false, properties: {
+      visibleMin: { type: "number", minimum: 0 }, visibleMax: { type: "number", minimum: 0 },
+      decimalPlaces: { type: "integer", minimum: 0, maximum: 10 },
+      basis: { type: "string", minLength: 20, maxLength: 1500, description: "Identify readable price-axis labels and structure supporting the entry, stop and target. Do not invent an axis." },
+    }, required: ["visibleMin", "visibleMax", "decimalPlaces", "basis"] }, { type: "null" }] },
+    levelsUnavailableReason: optionalText(1500),
     symbol: optionalText(30), timeframe: optionalText(20), entry: optionalPrice, stopLoss: optionalPrice, takeProfit: optionalPrice,
     limitOrderAppropriate: { type: ["boolean", "null"] }, limitOrderReason: optionalText(1000),
     limitations: optionalText(1500), confidence: { type: ["number", "null"], minimum: 0, maximum: 100 }, confidenceReason: optionalText(1000),
@@ -14,7 +20,7 @@ export const scannerPredictionJsonSchema = {
     marketStatus: { anyOf: [{ type: "string", enum: ["open", "closed", "unknown"] }, { type: "null" }] },
     analysis: { anyOf: [{ type: "object", additionalProperties: false, properties: Object.fromEntries(scannerAnalysisKeys.map(key => [key, optionalText(1500)])) }, { type: "null" }] },
     evidenceTags: { anyOf: [{ type: "array", maxItems: 4, items: { type: "string", enum: [...scannerEvidenceTags] } }, { type: "null" }] },
-  }, required: ["signal", "reasoning"],
+  }, required: ["signal", "reasoning", "entry", "stopLoss", "takeProfit", "priceEvidence", "levelsUnavailableReason"],
 };
 // A supported unreadable outcome is a separate strict object, never a fake bias.
 export const scannerChartResponseJsonSchema = { anyOf: [scannerPredictionJsonSchema, {

@@ -23,7 +23,7 @@ test('regression: short unavailable notes, partial analysis and fractional estim
  assert.equal(report.analysis.liquiditySweeps,'Not visible.');assert.equal(report.analysis.marketStructure,null);assert.equal(report.confidence,57.5);assert.equal(report.riskRewardRatio,2);
  const unsupported=parseObject({...full,confidence:90,confidenceReason:null});assert.equal(unsupported.confidence,null);
  const partial=parseObject({...full,takeProfit:undefined});assert.equal(partial.entry,null);assert.equal(partial.stopLoss,null);assert.equal(partial.takeProfit,null);
- const unclear=parseObject({...full,chartClarity:undefined,confidence:80});assert.equal(unclear.entry,null);assert.equal(unclear.confidence,null);
+ const unclear=parseObject({...full,chartClarity:undefined,confidence:80});assert.equal(unclear.entry,3300);assert.equal(unclear.confidence,null);
 });
 test('essential signal/reasoning and numeric/enum/price integrity remain strict with field/type diagnostics',()=>{
  for(const [patch,path,type] of [[{signal:'NO TRADE'},'signal','string'],[{signal:undefined},'signal','missing'],[{reasoning:'short'},'reasoning','string'],[{confidence:'75%'},'confidence','string'],[{entry:'3300'},'entry','string'],[{stopLoss:3400},'entry','number'],[{analysis:[]},'analysis','array'],[{analysis:{liquiditySweeps:12}},'analysis.liquiditySweeps','number']]){
@@ -38,11 +38,11 @@ test('malformed JSON, unreadable outcomes and malicious property names cannot le
  const safe=reportValidationDetails('schema',[{path:['private-secret'],code:'private-code'}],{'private-secret':'private-image'});assert.doesNotMatch(JSON.stringify(safe),/private/);
 });
 test('Gemini receives structured JSON schema with the same canonical optional field names/enums as backend validation',async()=>{
- assert.equal(jsonSchema.additionalProperties,false);assert.deepEqual(jsonSchema.required,['signal','reasoning']);
+ assert.equal(jsonSchema.additionalProperties,false);assert.deepEqual(jsonSchema.required,['signal','reasoning','entry','stopLoss','takeProfit','priceEvidence','levelsUnavailableReason']);
  assert.deepEqual(Object.keys(jsonSchema.properties).sort(),Object.keys(directionalPredictionSchema._def.schema.shape).sort());
  for(const field of ['entry','stopLoss','takeProfit','confidence']){assert.ok(jsonSchema.properties[field].type.includes('null'));assert.ok(jsonSchema.properties[field].type.includes('number'));}
  const image=Buffer.concat([Buffer.from([255,216,255]),Buffer.alloc(40)]);process.env.GEMINI_API_KEY='isolated-test-key';process.env.GEMINI_SCANNER_MODEL='gemini-fixture-model';
- global.fetch=async(_url,init)=>{const body=JSON.parse(init.body);assert.equal(body.generationConfig.responseMimeType,'application/json');assert.deepEqual(body.generationConfig.responseJsonSchema,responseSchema);assert.deepEqual(body.generationConfig.responseJsonSchema.anyOf[0].required,['signal','reasoning']);return new Response(JSON.stringify({candidates:[{finishReason:'STOP',content:{parts:[{text:JSON.stringify(minimum)}]}}]}));};
+ global.fetch=async(_url,init)=>{const body=JSON.parse(init.body);assert.equal(body.generationConfig.responseMimeType,'application/json');assert.deepEqual(body.generationConfig.responseJsonSchema,responseSchema);assert.deepEqual(body.generationConfig.responseJsonSchema.anyOf[0].required,jsonSchema.required);return new Response(JSON.stringify({candidates:[{finishReason:'STOP',content:{parts:[{text:JSON.stringify(minimum)}]}}]}));};
  const report=await analyseChart(image,'image/jpeg','Auto',new AbortController().signal);assert.equal(report.signal,'BUY');assert.equal(report.entry,null);
 });
 
@@ -51,4 +51,25 @@ test('multipart structured JSON is concatenated exactly, without injecting newli
  const text=JSON.stringify(minimum),split=text.indexOf('visible')+3;
  global.fetch=async()=>new Response(JSON.stringify({candidates:[{finishReason:'STOP',content:{parts:[{thought:true,text:'private thought not part of JSON'},{text:text.slice(0,split)},{text:text.slice(split)}]}}]}));
  const report=await analyseChart(Buffer.concat([Buffer.from([255,216,255]),Buffer.alloc(40)]),'image/jpeg','Auto',new AbortController().signal);assert.equal(report.reasoning,minimum.reasoning);assert.equal(report.signal,'BUY');
+});
+
+test('readable scale-backed levels survive missing metadata, limited clarity, low confidence and closed/unverified markets',()=>{
+ for(const patch of [{symbol:null},{timeframe:null},{chartClarity:null},{chartClarity:'limited',confidence:10},{marketStatus:'closed'},{confidence:null}]){
+  const report=parseObject({...full,...patch});
+  assert.equal(report.entry,3300);assert.equal(report.stopLoss,3280);assert.equal(report.takeProfit,3340);assert.equal(report.riskRewardRatio,2);
+  assert.equal(report.levelAssessment.code,'CHART_LEVELS_RETAINED');assert.equal(report.executionStatus,'NOT_EXECUTABLE');
+ }
+});
+test('null-level diagnostics distinguish provider omissions, partial responses, unreadable scales and unsupported precision',()=>{
+ const cases=[
+  [{entry:undefined,stopLoss:undefined,takeProfit:undefined},'PROVIDER_LEVELS_MISSING'],
+  [{entry:null,stopLoss:null,takeProfit:null},'PROVIDER_LEVELS_NULL'],
+  [{takeProfit:null},'PROVIDER_LEVELS_PARTIAL'],
+  [{priceEvidence:null},'PRICE_SCALE_MISSING'],
+  [{priceEvidence:{...full.priceEvidence,visibleMin:3500,visibleMax:3200}},'PRICE_SCALE_INVALID'],
+  [{priceEvidence:{...full.priceEvidence,visibleMax:3330}},'LEVEL_OUTSIDE_VISIBLE_SCALE'],
+  [{entry:3300.001},'UNSUPPORTED_PRICE_PRECISION'],
+ ];
+ for(const [patch,code] of cases){const r=parseObject({...full,...patch});assert.equal(r.levelAssessment.code,code);assert.equal(r.entry,null);assert.equal(r.stopLoss,null);assert.equal(r.takeProfit,null);assert.equal(r.riskRewardRatio,null);}
+ const r=parseObject({...full,entry:null,stopLoss:null,takeProfit:null,levelsUnavailableReason:'The screenshot crops out the price axis.'});assert.equal(r.levelsUnavailableReason,'The screenshot crops out the price axis.');
 });

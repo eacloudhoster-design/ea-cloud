@@ -1,10 +1,12 @@
 # Directional chart predictions
 
+Updated level-generation behavior is documented in [scanner-chart-levels.md](scanner-chart-levels.md); that document supersedes the original metadata/clarity gate described below.
+
 New successful Gemini chart reports use schemaVersion 2 and require signal BUY or SELL. Direction expresses an analytical bias, not permission to submit an order. The API rejects NO TRADE, missing directions, invalid price ordering and invented execution flags in new model output. Blank/non-chart/completely unreadable input fails with AI_DIRECTION_UNAVAILABLE when the model reports no directional evidence; the server never flips a coin to manufacture success. A limited but interpretable chart can return a tentative direction without prices or numerical confidence.
 
 The report contains six required explanations: market structure, trend direction, liquidity sweeps, support/resistance, entry reasoning, and risks/invalidation. The prompt requires explicit uncertainty and unavailable observations instead of fabricated liquidity events or prices. Confidence is an optional integer AI directional estimate with explanatory basis, explicitly **not a verified win probability**. Without a meaningful estimate it is null, displayed as **Uncalibrated**. Limited-clarity charts are always normalized to null confidence. These are subjective model estimates, not backtested statistics; no calibrated scoring model was introduced.
 
-Entry, stop loss and take profit must all be positive, readable, structurally supported chart references with known symbol/timeframe and correct BUY/SELL ordering, or all be null. The server calculates reward/risk = abs(TP-entry)/abs(entry-SL) from valid references; the model cannot supply it. The UI labels these historical chart references, not executable live quotes. It displays no numeric ratio when levels are missing.
+Entry, stop loss and take profit must all be positive, readable, structurally supported chart references with price-scale evidence and correct BUY/SELL ordering (symbol/timeframe are optional metadata), or all be null. The server calculates reward/risk = abs(TP-entry)/abs(entry-SL) from valid references; the model cannot supply it. The UI labels these historical chart references, not executable live quotes. It displays no numeric ratio when levels are missing.
 
 ## Execution policy
 
