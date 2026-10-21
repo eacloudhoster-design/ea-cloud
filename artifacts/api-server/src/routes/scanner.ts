@@ -6,6 +6,7 @@ import { db, appAccessTable, scannerReportsTable, scannerEntitlementsTable } fro
 import { fundamentalRequestSchema, strategySchema } from "../../../../lib/api-zod/src/scanner";
 import { analyseChart, analyseFundamentals, ScannerError, scannerConfiguration, requireScannerConfiguration } from "../lib/scanner-gemini";
 
+import { completeScannerReport } from "../lib/scanner-completion";
 import { evaluateScannerAccess } from "../lib/scanner-access";
 
 interface ClientRequest extends Request { scannerClientId?: number }
@@ -28,6 +29,9 @@ router.use("/app/scanner", async (req: ClientRequest, res: Response, next: NextF
     const [entitlement] = await db.select().from(scannerEntitlementsTable).where(eq(scannerEntitlementsTable.clientId, client.id)).limit(1);
     const decision = evaluateScannerAccess(client, entitlement ?? null);
     if (!decision.allowed) { res.status(decision.status).json(decision); return; }
+    if (req.method === "POST" && ["/chart", "/fundamentals"].includes(req.path) && entitlement.creditsRemaining !== null && entitlement.creditsRemaining <= 0) {
+      res.status(403).json({ error: "Your scanner credits are exhausted. Contact support to top up.", code: "SCANNER_CREDITS_EXHAUSTED", category: "access", retryable: false }); return;
+    }
     req.scannerClientId = client.id;
     next();
   } catch { res.status(503).json({ error: "Scanner access could not be checked. Please retry; if this persists, contact support.", code: "SCANNER_ACCESS_CHECK_UNAVAILABLE", category: "service", retryable: true }); }
@@ -74,9 +78,8 @@ router.post("/app/scanner/chart", limiter, (req, res, next) => upload(req, res, 
   try {
     requireScannerConfiguration();
     await ensureHistory(req.scannerClientId!);
-    const report = await analyseChart(req.file.buffer, req.file.mimetype, strategy.data, attempt.signal);
+    const saved = await completeScannerReport(req.scannerClientId!, "chart", strategy.data, () => analyseChart(req.file!.buffer, req.file!.mimetype, strategy.data, attempt.signal), attempt.signal);
     if (attempt.signal.aborted) return;
-    const [saved] = await db.insert(scannerReportsTable).values({ clientId: req.scannerClientId!, kind: "chart", strategy: strategy.data, report }).returning();
     res.status(201).json({ id: saved.id, kind: saved.kind, strategy: saved.strategy, report: saved.report, createdAt: saved.createdAt });
   } catch (error) { if (!attempt.signal.aborted) failure(res, error); }
   finally { if (req.file) req.file.buffer.fill(0); attempt.dispose(); }
@@ -88,9 +91,8 @@ router.post("/app/scanner/fundamentals", limiter, express.json({ limit: "4kb" })
   try {
     requireScannerConfiguration();
     await ensureHistory(req.scannerClientId!);
-    const report = await analyseFundamentals(parsed.data, attempt.signal);
+    const saved = await completeScannerReport(req.scannerClientId!, "fundamental", null, () => analyseFundamentals(parsed.data, attempt.signal), attempt.signal);
     if (attempt.signal.aborted) return;
-    const [saved] = await db.insert(scannerReportsTable).values({ clientId: req.scannerClientId!, kind: "fundamental", report }).returning();
     res.status(201).json({ id: saved.id, kind: saved.kind, strategy: saved.strategy, report: saved.report, createdAt: saved.createdAt });
   } catch (error) { if (!attempt.signal.aborted) failure(res, error); }
   finally { attempt.dispose(); }

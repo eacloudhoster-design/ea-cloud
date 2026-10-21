@@ -19,6 +19,7 @@ import AdminClients from "./pages/admin/Clients";
 import AdminSettings from "./pages/admin/Settings";
 import EAManager from "./pages/admin/EAManager";
 import Mt5Connections from "./pages/admin/Mt5Connections";
+import ScannerManagement from "./pages/superadmin/ScannerManagement";
 import SuperAdminLogin from "./pages/superadmin/Login";
 import SuperAdminDashboard from "./pages/superadmin/Dashboard";
 import SuperAdminMentors from "./pages/superadmin/Mentors";
@@ -105,6 +106,7 @@ function App() {
               <Route path="/superadmin/app-access">
                 <SuperAdminLayout><SuperAdminAppAccess /></SuperAdminLayout>
               </Route>
+              <Route path="/superadmin/scanner"><SuperAdminLayout><ScannerManagement /></SuperAdminLayout></Route>
               <Route path="/superadmin/licenses">
                 <SuperAdminLayout><SuperAdminLicenses /></SuperAdminLayout>
               </Route>

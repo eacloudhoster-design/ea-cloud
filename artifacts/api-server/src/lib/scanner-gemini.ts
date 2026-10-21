@@ -1,7 +1,7 @@
 import { chartReportSchema, type ChartReport, type FundamentalRequest, type FundamentalReport, type Strategy } from "../../../../lib/api-zod/src/scanner";
 
 export class ScannerError extends Error {
-  constructor(message: string, public status = 503, public code = "AI_UNAVAILABLE", public category: "ai" | "configuration" | "input" = "ai", public retryable = true) { super(message); }
+  constructor(message: string, public status = 503, public code = "AI_UNAVAILABLE", public category: "ai" | "configuration" | "input" | "access" = "ai", public retryable = true) { super(message); }
 }
 export function scannerConfiguration() {
   if (!process.env.GEMINI_API_KEY?.trim()) return { configured: false, code: "AI_KEY_NOT_CONFIGURED", error: "AI analysis is not configured yet. Contact support.", category: "configuration" as const, retryable: false };

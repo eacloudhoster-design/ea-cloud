@@ -7,6 +7,7 @@ export const scannerEntitlementsTable = pgTable("scanner_entitlements", {
   clientId: integer("client_id").primaryKey().references(() => appAccessTable.id, { onDelete: "cascade" }),
   status: text("status").notNull(),
   expiresAt: timestamp("expires_at", { withTimezone: true }),
+  creditsRemaining: integer("credits_remaining"), // NULL preserves explicitly unlimited grants
   reference: text("reference").notNull(), // audited payment/subscription/support reference, never returned to clients
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
-}, table => [check("scanner_entitlements_status_check", sql`${table.status} IN ('active', 'expired', 'revoked')`), check("scanner_entitlements_reference_check", sql`length(btrim(${table.reference})) > 0`)]);
+}, table => [check("scanner_entitlements_credits_check", sql`${table.creditsRemaining} IS NULL OR ${table.creditsRemaining} >= 0`), check("scanner_entitlements_status_check", sql`${table.status} IN ('active', 'expired', 'revoked')`), check("scanner_entitlements_reference_check", sql`length(btrim(${table.reference})) > 0`)]);

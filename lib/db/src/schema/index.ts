@@ -15,3 +15,4 @@ export * from "./mt5-connections";
 export * from "./client-mt5-connections";
 export * from "./scanner-reports";
 export * from "./scanner-entitlements";
+export * from "./scanner-admin";
