@@ -27,9 +27,9 @@
       "retrievedFrom": "https://github.com/peter-pan-tse/hoctrade.github.io/blob/15a0282a3328263c76b29fb3a6c53000e72cd295/img/ht-broker_fxtm.svg"
     },
     "hfm": {
-      "file": "hfm.png",
-      "sha256": "0de7850a11ad19c3f2aa1787969332cd6c5fb701d51a610f8471dae9142e4ab8",
-      "retrievedFrom": "https://github.com/ParsaZa79/trading-signal-copier/blob/bb1efbd3ea6c4d3e73bb44f7c6a78c2004fb9159/dashboard/public/brokers/hfm.png"
+      "file": "hfm.svg",
+      "sha256": "33cae49cacc337a7eb2113c98f49929a1f6581bf32597ab9a3a5a11183ad9728",
+      "retrievedFrom": "https://github.com/vas03/Forex-Dashboard/blob/3f68ed9b717d965bf28c9452a4d71955436bcf39/frontend/assets/images/hfmarkets_logo.svg"
     },
     "ic-markets": {
       "file": "ic-markets.png",
