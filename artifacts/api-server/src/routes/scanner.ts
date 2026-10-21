@@ -1,11 +1,13 @@
 import express, { Router, type Request, type Response, type NextFunction } from "express";
 import multer from "multer";
+import { z } from "zod";
 import rateLimit from "express-rate-limit";
 import { eq, desc } from "drizzle-orm";
 import { db, appAccessTable, scannerReportsTable, scannerEntitlementsTable } from "@workspace/db";
 import { fundamentalRequestSchema, strategySchema } from "../../../../lib/api-zod/src/scanner";
 import { analyseChart, analyseFundamentals, ScannerError, scannerConfiguration, requireScannerConfiguration } from "../lib/scanner-gemini";
 
+import scannerTradingRouter from "./scanner-trading";
 import { scannerFailureDiagnostic } from "../lib/scanner-diagnostics";
 import { completeScannerReport } from "../lib/scanner-completion";
 import { evaluateScannerAccess } from "../lib/scanner-access";
@@ -99,6 +101,13 @@ router.post("/app/scanner/fundamentals", limiter, express.json({ limit: "4kb" })
   } catch (error) { if (!attempt.signal.aborted) failure(req, res, error); }
   finally { attempt.dispose(); }
 });
+router.use("/app/scanner", scannerTradingRouter);
 // Future adapter boundary only. Never forwards scanner suggestions to mentor webhooks.
-router.post("/app/scanner/execute", (_req, res) => res.status(503).json({ error: "Scanner trade execution is not integrated. No order was submitted." }));
+const confirmOrder = z.object({ scanId: z.string().uuid(), requestId: z.string().uuid(), confirmed: z.literal(true), lotSize: z.number().positive().max(50), positions: z.number().int().min(1).max(20) }).strict();
+router.post("/app/scanner/execute", (req, res) => {
+  if (!confirmOrder.safeParse(req.body).success) { res.status(400).json({ error: "Explicit confirmation and a unique request ID are required. No order was submitted." }); return; }
+  // Request IDs alone are not durable idempotency. Keep fail-closed until a
+  // persistent broker-aware submission ledger/reconciliation adapter is installed.
+  res.status(503).json({ error: "Scanner trade execution is not integrated. No order was submitted." });
+});
 export default router;

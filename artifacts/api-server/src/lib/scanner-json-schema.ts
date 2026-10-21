@@ -8,6 +8,7 @@ export const scannerPredictionJsonSchema = {
   properties: {
     signal: { type: "string", enum: ["BUY", "SELL"] }, reasoning: { type: "string", minLength: 20, maxLength: 4000, description: "Detailed evidence-based directional reasoning, at least 20 characters. Never fabricate observations." },
     symbol: optionalText(30), timeframe: optionalText(20), entry: optionalPrice, stopLoss: optionalPrice, takeProfit: optionalPrice,
+    limitOrderAppropriate: { type: ["boolean", "null"] }, limitOrderReason: optionalText(1000),
     limitations: optionalText(1500), confidence: { type: ["number", "null"], minimum: 0, maximum: 100 }, confidenceReason: optionalText(1000),
     chartClarity: { anyOf: [{ type: "string", enum: ["clear", "limited"] }, { type: "null" }] },
     marketStatus: { anyOf: [{ type: "string", enum: ["open", "closed", "unknown"] }, { type: "null" }] },

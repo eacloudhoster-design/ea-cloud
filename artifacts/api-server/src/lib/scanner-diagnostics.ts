@@ -10,7 +10,7 @@ export function scannerFailureDiagnostic(error: { code?: string; category?: stri
 }
 
 export interface ReportFailureDetails { stage: "json" | "schema" | "envelope"; issues: { path: string; code: string; receivedType: string }[] }
-const reportFields = new Set(["signal", "reasoning", "symbol", "timeframe", "entry", "stopLoss", "takeProfit", "limitations", "confidence", "confidenceReason", "chartClarity", "marketStatus", "analysis", "marketStructure", "trendDirection", "liquiditySweeps", "supportResistance", "entryReasoning", "risksInvalidation", "evidenceTags", "schemaVersion", "riskRewardRatio", "executionStatus", "nonExecutableReasons"]);
+const reportFields = new Set(["limitOrderAppropriate", "limitOrderReason", "supplyDemand", "signal", "reasoning", "symbol", "timeframe", "entry", "stopLoss", "takeProfit", "limitations", "confidence", "confidenceReason", "chartClarity", "marketStatus", "analysis", "marketStructure", "trendDirection", "liquiditySweeps", "supportResistance", "entryReasoning", "risksInvalidation", "evidenceTags", "schemaVersion", "riskRewardRatio", "executionStatus", "nonExecutableReasons"]);
 const issueCodes = new Set(["invalid_type", "invalid_enum_value", "unrecognized_keys", "too_small", "too_big", "custom", "not_finite", "invalid_union", "invalid_literal"]);
 const receivedTypes = new Set(["missing", "null", "number", "string", "boolean", "array", "object", "unknown"]);
 export function reportValidationDetails(stage: ReportFailureDetails["stage"], issues: readonly { path: (string | number)[]; code: string }[] = [], raw?: unknown): ReportFailureDetails {

@@ -17,9 +17,11 @@ export function buildDirectionalReport(raw: unknown): DirectionalChartReport {
   else if (confidence < 60) reasons.push("Estimated directional confidence is insufficient for this setup.");
   if (entry === null) reasons.push("Reliable trade levels could not be established.");
   const ratio = entry !== null && stopLoss !== null && takeProfit !== null ? Math.abs(takeProfit - entry) / Math.abs(entry - stopLoss) : null;
+  if (ratio !== null && ratio < 2) reasons.push("Chart reference levels do not meet the minimum 1:2 target risk-to-reward.");
   return directionalChartReportSchema.parse({ signal: p.signal, reasoning: p.reasoning, symbol, timeframe, entry, stopLoss, takeProfit,
+    limitOrderAppropriate: p.limitOrderAppropriate ?? false, limitOrderReason: textOrNull(p.limitOrderReason),
     limitations: textOrNull(p.limitations), confidence, confidenceReason, chartClarity,
-    analysis: { marketStructure: textOrNull(p.analysis?.marketStructure), trendDirection: textOrNull(p.analysis?.trendDirection), liquiditySweeps: textOrNull(p.analysis?.liquiditySweeps), supportResistance: textOrNull(p.analysis?.supportResistance), entryReasoning: textOrNull(p.analysis?.entryReasoning), risksInvalidation: textOrNull(p.analysis?.risksInvalidation) },
+    analysis: { marketStructure: textOrNull(p.analysis?.marketStructure), trendDirection: textOrNull(p.analysis?.trendDirection), liquiditySweeps: textOrNull(p.analysis?.liquiditySweeps), supportResistance: textOrNull(p.analysis?.supportResistance), entryReasoning: textOrNull(p.analysis?.entryReasoning), risksInvalidation: textOrNull(p.analysis?.risksInvalidation), supplyDemand: textOrNull(p.analysis?.supplyDemand) },
     evidenceTags: p.evidenceTags ?? [], schemaVersion: 2,
     marketStatus: p.marketStatus === "closed" ? "closed" : "unknown",
     riskRewardRatio: ratio, executionStatus: "NOT_EXECUTABLE", nonExecutableReasons: reasons });

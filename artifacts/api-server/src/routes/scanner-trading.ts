@@ -1,0 +1,40 @@
+import { Router, type Request } from "express";
+import rateLimit from "express-rate-limit";
+import { z } from "zod";
+import { and,eq } from "drizzle-orm";
+import { db,scannerReportsTable } from "@workspace/db";
+import { chartReportSchema } from "../../../../lib/api-zod/src/scanner";
+import { scannerQuoteSchema, type ScannerTradePlan } from "../../../../lib/api-zod/src/scanner-trading";
+import { scannerMt5Read } from "../lib/scanner-mt5";
+import { planScannerOrder } from "../lib/scanner-order-policy";
+interface ClientRequest extends Request {scannerClientId?:number}
+const router=Router();
+const input=z.object({scanId:z.string().uuid(),lotSize:z.number().positive().max(50),positions:z.number().int().min(1).max(20)}).strict();
+router.post('/preflight',rateLimit({windowMs:60_000,limit:12,keyGenerator:req=>String((req as ClientRequest).scannerClientId)}),async(req:ClientRequest,res)=>{
+ const parsed=input.safeParse(req.body);if(!parsed.success){res.status(400).json({error:'Valid scan ID, lot size and positions required.'});return;}
+ const {scanId,lotSize,positions}=parsed.data;
+ try{
+  const [row]=await db.select().from(scannerReportsTable).where(and(eq(scannerReportsTable.id,scanId),eq(scannerReportsTable.clientId,req.scannerClientId!))).limit(1);
+  if(!row||row.kind!=='chart'){res.status(404).json({error:'Chart report not found.'});return;}
+  const report=chartReportSchema.safeParse(row.report);
+  if(!report.success||report.data.signal==='NO TRADE'){res.status(409).json({error:'This archived report cannot be used for a directional order.'});return;}
+  const p=report.data,setup={...p,generatedAtMs:new Date(row.createdAt).getTime(),signal:p.signal as "BUY"|"SELL",chartClarity:'chartClarity' in p?p.chartClarity:undefined,confidence:'confidence' in p?p.confidence:null,limitOrderAppropriate:'limitOrderAppropriate' in p?p.limitOrderAppropriate:false,limitOrderReason:'limitOrderReason' in p?p.limitOrderReason:null};
+  let plan:ScannerTradePlan=planScannerOrder(setup,null,lotSize,positions),brokerChecked=false;
+  try{
+   if(!p.symbol||p.entry===null||p.stopLoss===null||p.takeProfit===null)throw new Error('No price basis');
+   const first=await scannerMt5Read(req.scannerClientId!,'quote',{symbol:p.symbol}) as {quote?:unknown};
+   plan=planScannerOrder(setup,first?.quote,lotSize,positions);
+   if(plan.type&&plan.entry&&plan.stopLoss&&plan.takeProfit){
+    const checked=await scannerMt5Read(req.scannerClientId!,'check-order',{symbol:p.symbol,direction:p.signal,orderType:plan.type,entry:plan.entry,stopLoss:plan.stopLoss,takeProfit:plan.takeProfit,volume:lotSize}) as {quote?:unknown;brokerChecked?:boolean};
+    const refreshed=planScannerOrder(setup,checked?.quote,lotSize,positions);
+    // A changed order/entry needs another broker check, never reuse the old result.
+    brokerChecked=checked?.brokerChecked===true&&scannerQuoteSchema.safeParse(checked?.quote).success&&refreshed.type===plan.type&&refreshed.entry===plan.entry;
+    plan=refreshed;
+   }
+  }catch{/* Safe unavailable state; never expose bridge credentials or upstream bodies. */}
+  if(!brokerChecked){plan.eligible=false;plan.reasons.push('Broker-side order validation has not passed.');}
+  // No order sender is installed. Fresh policy checks are not execution permission.
+  res.json({plan,brokerChecked,submissionEnabled:false});
+ }catch{res.status(503).json({error:'Scanner order preflight is unavailable. No order was submitted.'});}
+});
+export default router;

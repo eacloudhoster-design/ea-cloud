@@ -623,3 +623,7 @@ def account_info(
                 "profit": a.get("profit"),
             },
         )
+
+# Scanner operations are read-only and have separate service-token authentication.
+from scanner_api import register_scanner_routes
+register_scanner_routes(app, mt5, MT5_LOCK, _filling_modes)
