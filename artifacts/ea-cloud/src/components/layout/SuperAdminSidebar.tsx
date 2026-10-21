@@ -1,7 +1,7 @@
 import { Link, useLocation } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
 import { logo } from "@/lib/branding";
-import { LayoutDashboard, Users, Smartphone, KeyRound, Settings, LogOut, Menu, X, ShieldCheck, Server, ListChecks } from "lucide-react";
+import { LayoutDashboard, Users, Smartphone, KeyRound, Settings, LogOut, Menu, X, ShieldCheck, Server, ListChecks, ScanLine } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -9,6 +9,7 @@ const navItems = [
   { href: "/superadmin/dashboard", icon: LayoutDashboard, label: "Dashboard" },
   { href: "/superadmin/mentors", icon: Users, label: "Mentors" },
   { href: "/superadmin/app-access", icon: Smartphone, label: "App Access" },
+  { href: "/superadmin/scanner", icon: ScanLine, label: "AI Scanner Management" },
   { href: "/superadmin/licenses", icon: KeyRound, label: "Licenses" },
   { href: "/superadmin/brokers", icon: Server, label: "Broker Whitelist" },
   { href: "/superadmin/signal-queue", icon: ListChecks, label: "Signal Queue" },

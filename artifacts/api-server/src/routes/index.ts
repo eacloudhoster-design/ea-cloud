@@ -20,12 +20,14 @@ import mt5ConnectRouter from "./mt5-connect";
 import clientMt5Router from "./client-mt5";
 import testEmailRouter from "./test-email";
 
+import scannerAdminRouter from "./scanner-admin";
 import scannerRouter from "./scanner";
 
 const router: IRouter = Router();
 
 router.use(healthRouter);
 router.use(scannerRouter);
+router.use(scannerAdminRouter);
 router.use(authRouter);
 router.use(profileRouter);
 router.use(dashboardRouter);

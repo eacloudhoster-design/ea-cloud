@@ -7,7 +7,7 @@ Scanner endpoints now require the existing approved account and a server-side `s
 ## Required migration and account configuration
 
 1. Back up through the normal production procedure and apply `docs/migrations/20261021-scanner-entitlements.sql` once **before** deploying this API. It only adds a table; it does not reset, overwrite or grant access to existing users. The existing scanner-reports migration is still required if not already installed.
-2. Reconcile paid scanner subscriptions and approved admin grants against your authoritative billing/support records. Provision each verified existing `app_access.id`; never infer entitlement from a hosting licence or registration plan. This repository has no scanner billing webhook/admin grant interface. Trusted administration must maintain these records until such integration exists.
+2. Reconcile paid scanner subscriptions and approved admin grants against your authoritative billing/support records. Provision each verified existing `app_access.id`; never infer entitlement from a hosting licence or registration plan. The superadmin dashboard now provides the scanner grant interface; see `docs/scanner-management.md`. No automated scanner billing webhook is implemented.
 3. Use a parameterised operation through trusted administration (not a public endpoint):
 
 ```sql
