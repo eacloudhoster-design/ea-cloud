@@ -69,3 +69,18 @@ test('evidence tags are optional for old history, bounded and never accept confi
   for(const patch of [{evidenceTags:['Guaranteed Profit']},{evidenceTags:['Liquidity Sweep','Liquidity Sweep']},{evidenceTags:[...tags,'Trend Continuation']},{confidence:87}])
     assert.throws(()=>parseChartReport(JSON.stringify({...valid,...patch})),/valid trade levels/);
 });
+
+test('provider credentials/model/quota failures are distinct from client access failures', async()=>{
+ for(const [status,code,category] of [[401,'AI_PROVIDER_ACCESS_DENIED','configuration'],[403,'AI_PROVIDER_ACCESS_DENIED','configuration'],[404,'AI_MODEL_UNAVAILABLE','configuration'],[429,'AI_PROVIDER_QUOTA','ai'],[500,'AI_PROVIDER_UNAVAILABLE','ai']]){
+  global.fetch=async()=>new Response('private provider diagnostic',{status});
+  await assert.rejects(analyseChart(bytes,'image/jpeg','Auto',new AbortController().signal),error=>error.code===code&&error.category===category&&error.status!==403&&!error.message.includes('private provider'));
+ }
+});
+test('blank key or invalid model fails before contacting Gemini',async()=>{
+ let calls=0;global.fetch=async()=>{calls++;return response('{}');};
+ process.env.GEMINI_API_KEY='   ';
+ await assert.rejects(analyseChart(bytes,'image/jpeg','Auto',new AbortController().signal),error=>error.code==='AI_KEY_NOT_CONFIGURED');
+ process.env.GEMINI_API_KEY='isolated-test-key';process.env.GEMINI_SCANNER_MODEL='../bad model';
+ await assert.rejects(analyseChart(bytes,'image/jpeg','Auto',new AbortController().signal),error=>error.code==='AI_MODEL_NOT_CONFIGURED');
+ assert.equal(calls,0);
+});

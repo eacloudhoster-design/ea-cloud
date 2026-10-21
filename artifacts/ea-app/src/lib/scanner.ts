@@ -1,6 +1,13 @@
 export { strategies } from "../../../../lib/api-zod/src/scanner-options";
 export type { ScannerRecord, ChartReport, FundamentalReport, FundamentalRequest, Strategy } from "../../../../lib/api-zod/src/scanner";
 
+export class ScannerRequestError extends Error {
+  constructor(message: string, public code = "SCANNER_UNAVAILABLE", public category = "service", public retryable = true) { super(message); }
+}
+export function scannerErrorTitle(error: Error): string {
+  const category = error instanceof ScannerRequestError ? error.category : "input";
+  return category === "access" ? "Scanner access denied" : category === "ai" || category === "configuration" ? "AI analysis unavailable" : category === "storage" ? "Scan history unavailable" : "Scanner unavailable";
+}
 export async function scannerRequest<T>(path: string, token: string, signal: AbortSignal, init: RequestInit = {}): Promise<T> {
   let response: Response;
   try {
@@ -8,11 +15,15 @@ export async function scannerRequest<T>(path: string, token: string, signal: Abo
       headers: { ...init.headers, Authorization: `Bearer ${token}` }, cache: "no-store" });
   } catch (error) {
     if (signal.aborted) throw error;
-    throw new Error("The scanner took too long or is unreachable. Please retry.");
+    throw new ScannerRequestError("The scanner took too long or is unreachable. Please retry.");
   }
   let data;
-  try { data = await response.json(); } catch { throw new Error("The scanner returned an unreadable response. Please retry."); }
-  if (!response.ok) throw new Error(typeof data.error === "string" ? data.error : "Scanner unavailable. Please retry.");
+  try { data = await response.json(); } catch { throw new ScannerRequestError("The scanner returned an unreadable response. Please retry."); }
+  if (!response.ok) throw new ScannerRequestError(
+    typeof data.error === "string" ? data.error : "Scanner unavailable. Please retry.",
+    typeof data.code === "string" ? data.code : "SCANNER_UNAVAILABLE",
+    typeof data.category === "string" ? data.category : response.status === 401 || response.status === 403 ? "access" : response.status === 400 ? "input" : "service",
+    typeof data.retryable === "boolean" ? data.retryable : ![400, 401, 403].includes(response.status));
   return data as T;
 }
 // Bounded per-image preparation; no originals are stored or sent to third parties
