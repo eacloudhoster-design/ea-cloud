@@ -5,6 +5,7 @@ export type InterfaceStyle = "regular" | "matrix" | "s2tone";
 export type ShapeStyle = "orbit" | "cornerstone" | "fortress" | "neural";
 
 export interface AppSettings {
+  activeTab: Tab;
   botRunning: boolean;
   setBotRunning: (v: boolean) => void;
   interfaceStyle: InterfaceStyle;
@@ -25,6 +26,7 @@ export interface AppSettings {
 }
 
 export const AppContext = createContext<AppSettings>({
+  activeTab: "home",
   botRunning: true,
   setBotRunning: () => {},
   interfaceStyle: "matrix",
