@@ -4,6 +4,7 @@ import { useApp, type Tab } from "@/context/AppContext";
 import { eaLogo } from "@/lib/branding";
 import BottomNav from "@/components/BottomNav";
 import ScannerTradeSettings from "@/components/ScannerTradeSettings";
+import ScannerChartReport from "@/components/ScannerChartReport";
 import { formatLots, type ScannerTradeSettings as TradeSettings } from "@/lib/scanner-trade-settings";
 import { prepareChart, scannerRequest, strategies, type Strategy, type ScannerRecord, type ChartReport, type FundamentalReport, type FundamentalRequest } from "@/lib/scanner";
 import "./ChartScannerModal.css";
@@ -11,6 +12,10 @@ import "./ChartScannerModal.css";
 interface ChartScannerModalProps { onClose: () => void; onNavigate: (tab: Tab) => void }
 type Phase = "idle" | "preparing" | "chart" | "fundamental";
 const formatDate = (date: string) => new Date(date).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" });
+
+function ScannerOrb() {
+  return <div className="scanner-orb"><div className="scanner-orbit scanner-orbit-one" /><div className="scanner-orbit scanner-orbit-two" /><img src={eaLogo} alt="EA Cloud" /><ScanLine className="scanner-orb-mark" size={18} /></div>;
+}
 
 export default function ChartScannerModal({ onClose, onNavigate }: ChartScannerModalProps) {
   const { bgImageUrl, eaName, clientToken } = useApp();
@@ -31,7 +36,7 @@ export default function ChartScannerModal({ onClose, onNavigate }: ChartScannerM
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [settingsSaved, setSettingsSaved] = useState(false);
   const gallery = useRef<HTMLInputElement>(null), camera = useRef<HTMLInputElement>(null);
-  const modal = useRef<HTMLDivElement>(null), scanArea = useRef<HTMLElement>(null), results = useRef<HTMLDivElement>(null);
+  const modal = useRef<HTMLDivElement>(null), scanArea = useRef<HTMLElement>(null), chartArea = useRef<HTMLElement>(null), results = useRef<HTMLDivElement>(null);
   const attempt = useRef<AbortController | null>(null), historyAttempt = useRef<AbortController | null>(null);
   const selection = useRef(0), alive = useRef(true), pending = useRef(false);
   const lastKind = useRef<"chart" | "fundamental" | null>(null);
@@ -85,7 +90,7 @@ export default function ChartScannerModal({ onClose, onNavigate }: ChartScannerM
     pending.current = true; lastKind.current = kind;
     attempt.current?.abort(); const controller = new AbortController(); attempt.current = controller;
     setPhase(kind); setError(""); setResult(null);
-    requestAnimationFrame(() => scanArea.current?.scrollIntoView({ block: "center", behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth" }));
+    requestAnimationFrame(() => (kind === "chart" ? chartArea.current : scanArea.current)?.scrollIntoView({ block: kind === "chart" ? "start" : "center", behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth" }));
     try {
       let init: RequestInit;
       if (kind === "chart") { const body = new FormData(); body.append("image", file!); body.append("strategy", strategy); init = { method: "POST", body }; }
@@ -119,20 +124,18 @@ export default function ChartScannerModal({ onClose, onNavigate }: ChartScannerM
       <button className="scanner-icon-button" type="button" aria-label="Scanner trade settings" disabled={busy} onClick={() => setSettingsOpen(true)}><Settings2 size={22} /></button>
     </header>
     <div className="scanner-scroll">
-      <section ref={scanArea} className={`scanner-ready ${scanning ? "is-scanning" : ""}`} aria-label="Chart upload" aria-busy={busy}>
-        {preview && !scanning ? <div className="scanner-chart-preview"><img src={preview} alt="Selected chart to analyse" /><button className="scanner-icon-button" type="button" aria-label="Remove chart" disabled={busy} onClick={() => { setFile(null); setResult(null); setError(""); }}><Trash2 size={18} /></button></div>
-          : <div className="scanner-orb"><div className="scanner-orbit scanner-orbit-one" /><div className="scanner-orbit scanner-orbit-two" /><img src={eaLogo} alt="EA Cloud" /><ScanLine className="scanner-orb-mark" size={18} /></div>}
-        <p className="scanner-mentor">{eaName}</p>
-        <h3 aria-live="polite">{phase === "preparing" ? "Preparing your chart" : phase === "chart" ? "Analyzing chart..." : phase === "fundamental" ? "Analyzing fundamentals..." : file ? "Your chart is ready" : "Ready to Scan"}</h3>
-        <p className="scanner-ready-description">{scanning ? phase === "chart" ? "AI is scanning patterns and levels" : "AI is researching economic releases and market context" : busy ? "Preparing a clear, optimised chart image." : file ? "Review your image, choose a strategy and analyse." : "Upload a chart screenshot or take a photo"}</p>
+      <section ref={chartArea} className={`scanner-ready ${preview ? "scanner-ready--chart" : ""}`} aria-label="Chart upload" aria-busy={busy} hidden={phase === "fundamental"}>
+        {preview ? <div className="scanner-chart-preview"><img src={preview} alt="Selected chart to analyse" />{!scanning && <button className="scanner-icon-button" type="button" aria-label="Remove chart" disabled={busy} onClick={() => { setFile(null); setResult(null); setError(""); }}><Trash2 size={18} /></button>}{phase === "chart" && <><div className="scanner-image-scan" aria-hidden="true"><div className="scanner-image-scan-beam" /><div className="scanner-image-scan-label"><ScanLine size={30} /><span>Analyzing...</span></div></div><button className="scanner-preview-cancel" type="button" aria-label="Cancel chart scan" onClick={cancel}>Cancel</button></>}</div> : <ScannerOrb />}
         <input ref={gallery} type="file" accept="image/png,image/jpeg,image/webp" aria-label="Choose chart from gallery" onChange={choose} hidden />
         <input ref={camera} type="file" accept="image/*" capture="environment" aria-label="Take chart photo" onChange={choose} hidden />
-        {!scanning && <div className="scanner-upload-actions"><button type="button" className="scanner-primary" disabled={busy} onClick={() => gallery.current?.click()}><ImagePlus size={21} /> Gallery</button><button type="button" className="scanner-glass-button" disabled={busy} onClick={() => camera.current?.click()}><Camera size={21} /> Camera</button></div>}
-        {file && !busy && <p className="scanner-upload-note">Analyse sends this chart to Google Gemini. Avoid account details in the image.</p>}
-        {file && !busy && <button type="button" className="scanner-analyse" onClick={() => void analyse("chart")}><ScanLine size={18} /> Analyse chart <ArrowUpRight size={17} /></button>}
-        {scanning && <div className="scanner-analysis-dots" aria-hidden="true">{[0,1,2,3,4].map(i => <span key={i} style={{ animationDelay: `${i * .16}s` }} />)}</div>}
-        {busy && <button type="button" className="scanner-cancel" onClick={cancel}><LoaderCircle size={17} className="scanner-loader" /> Cancel {phase === "preparing" ? "preparation" : "analysis"}</button>}
+        {!scanning && <div className="scanner-upload-copy"><p className="scanner-mentor">{eaName}</p><h3 aria-live="polite">{phase === "preparing" ? "Preparing your chart" : file ? "Your chart is ready" : "Ready to Scan"}</h3><p className="scanner-ready-description">{busy ? "Preparing a clear, optimised chart image." : file ? "Review your image, choose a strategy and analyse." : "Upload a chart screenshot or take a photo"}</p>
+          <div className="scanner-upload-actions"><button type="button" className="scanner-primary" disabled={busy} onClick={() => gallery.current?.click()}><ImagePlus size={21} /> Gallery</button><button type="button" className="scanner-glass-button" disabled={busy} onClick={() => camera.current?.click()}><Camera size={21} /> Camera</button></div>
+          {file && !busy && <p className="scanner-upload-note">Analyse sends this chart to Google Gemini. Avoid account details in the image.</p>}
+          {file && !busy && <button type="button" className="scanner-analyse" onClick={() => void analyse("chart")}><ScanLine size={18} /> Analyse chart <ArrowUpRight size={17} /></button>}
+          {phase === "preparing" && <button type="button" className="scanner-cancel" onClick={cancel}><LoaderCircle size={17} className="scanner-loader" /> Cancel preparation</button>}
+        </div>}
       </section>
+      {scanning && <section ref={scanArea} className="scanner-pending-analysis is-scanning" aria-label="Analysis progress"><div role="status" aria-live="polite"><ScannerOrb /><p className="scanner-mentor">{eaName}</p><h3>{phase === "chart" ? "Analyzing chart..." : "Analyzing fundamentals..."}</h3><p className="scanner-ready-description">{phase === "chart" ? "AI is scanning patterns and levels" : "AI is researching economic releases and market context"}</p><div className="scanner-analysis-dots" aria-hidden="true">{[0,1,2,3,4].map(i => <span key={i} style={{ animationDelay: `${i * .16}s` }} />)}</div></div><button type="button" className="scanner-cancel" onClick={cancel}><LoaderCircle size={17} className="scanner-loader" /> Cancel analysis</button></section>}
       {error && <div className="scanner-error" role="alert"><p>{error}</p><button type="button" onClick={() => lastKind.current ? void analyse(lastKind.current) : gallery.current?.click()} disabled={busy}><RotateCcw size={14} /> Retry</button></div>}
       <section className="scanner-strategies" aria-labelledby="scanner-strategies-title"><h3 id="scanner-strategies-title">Analysis strategy</h3><div>{strategies.map(item => <button key={item} type="button" aria-pressed={strategy === item} disabled={busy} onClick={() => setStrategy(item)}>{item}</button>)}</div></section>
       <section className="scanner-fundamentals" aria-labelledby="scanner-fundamentals-title">
@@ -146,14 +149,10 @@ export default function ChartScannerModal({ onClose, onNavigate }: ChartScannerM
         <p>Source-backed context for CPI, PPI, NFP and FOMC. Reports include retrieval time and source links.</p>
       </section>
       <div ref={results} className="scanner-results" aria-live="polite">
-        {result && <article className="scanner-report">
-          <div className="scanner-report-top"><span>{result.kind === "chart" ? `${chart?.symbol || "Unknown symbol"} · ${chart?.timeframe || "Unknown timeframe"}` : `${fundamental?.context.market} · ${fundamental?.context.focus}`}</span><time dateTime={result.createdAt}>{formatDate(result.createdAt)}</time></div>
-          {chart && <><h3 className={`scanner-signal scanner-signal-${chart.signal.toLowerCase().replace(" ","-")}`}>{chart.signal}</h3><div className="scanner-levels">{[["Entry",chart.entry],["Stop Loss",chart.stopLoss],["Take Profit",chart.takeProfit]].map(([label,value]) => <div key={String(label)}><span>{label}</span><strong>{value ?? "—"}</strong></div>)}</div><h4>Trade reasoning</h4><p>{chart.reasoning}</p><p className="scanner-report-caution">{chart.limitations}</p></>}
-          {fundamental && <><h3>Market outlook</h3><p className="scanner-report-summary">{fundamental.summary}</p><p className="scanner-report-caution">Researched {formatDate(fundamental.asOf)}. This is not a live economic calendar.</p><h4>Sources</h4><ul>{fundamental.sources.map((source,i) => <li key={i}><a href={source.url} target="_blank" rel="noopener noreferrer">{source.title}<ArrowUpRight size={12} /></a></li>)}</ul></>}
-          <p className="scanner-record-note"><ShieldCheck size={14} /> Saved to your scan history</p>
-        </article>}
+        {result && chart && <ScannerChartReport record={result} settings={tradeSettings} onEditSettings={() => setSettingsOpen(true)} />}
+        {result && fundamental && <article className="scanner-report"><div className="scanner-report-top"><span>{fundamental.context.market} · {fundamental.context.focus}</span><time dateTime={result.createdAt}>{formatDate(result.createdAt)}</time></div><h3>Market outlook</h3><p className="scanner-report-summary">{fundamental.summary}</p><p className="scanner-report-caution">Researched {formatDate(fundamental.asOf)}. This is not a live economic calendar.</p><h4>Sources</h4><ul>{fundamental.sources.map((source,i) => <li key={i}><a href={source.url} target="_blank" rel="noopener noreferrer">{source.title}<ArrowUpRight size={12} /></a></li>)}</ul><p className="scanner-record-note"><ShieldCheck size={14} /> Saved to your scan history</p></article>}
       </div>
-      <section className="scanner-trade-settings" aria-label="Selected trade parameters" hidden={scanning}><div className="scanner-settings-launch"><div><h3>Trade settings</h3><p>{tradeSettings.positions} {tradeSettings.positions === 1 ? "position" : "positions"} · {formatLots(tradeSettings.lotUnits)} lots each</p></div><button type="button" aria-label="Edit trade settings" disabled={busy} onClick={() => setSettingsOpen(true)}><Settings2 size={18} /></button></div>{settingsSaved && <p className="scanner-settings-saved" role="status">Settings saved for this scanner session. No order submitted.</p>}<button className="scanner-execute" type="button" disabled>Execute Trade</button><p>{chart?.signal === "NO TRADE" ? "NO TRADE — no order is available. " : ""}MT5 scanner execution is not integrated. No order will be submitted.</p></section>
+      <section className="scanner-trade-settings" aria-label="Selected trade parameters" hidden={scanning}><div className="scanner-settings-launch"><div><h3>Trade settings</h3><p>{tradeSettings.positions} {tradeSettings.positions === 1 ? "position" : "positions"} · {formatLots(tradeSettings.lotUnits)} lots each</p></div><button type="button" aria-label="Edit trade settings" disabled={busy} onClick={() => setSettingsOpen(true)}><Settings2 size={18} /></button></div>{settingsSaved && <p className="scanner-settings-saved" role="status">Settings saved for this scanner session. No order submitted.</p>}{!chart && <button className="scanner-execute" type="button" disabled>Execute Trade</button>}<p>{chart?.signal === "NO TRADE" ? "NO TRADE — no order is available. " : ""}MT5 scanner execution is not integrated. No order will be submitted.</p></section>
       <section className="scanner-history" aria-labelledby="scanner-history-title"><h3 id="scanner-history-title"><History size={21} /> Scan History <button type="button" aria-label="Refresh scan history" disabled={historyLoading} onClick={() => void loadHistory()}><RotateCcw size={17} /></button></h3>
         {historyError ? <p className="scanner-history-error" role="alert">{historyError}<button type="button" onClick={() => void loadHistory()}>Retry history</button></p> : historyLoading && !records.length ? <p>Loading your saved reports…</p> : !records.length ? <div className="scanner-history-empty"><History size={25} /><p>Your next insight starts here.</p><span>Completed reports will appear in your private history.</span></div> : <div className="scanner-history-list">{records.map(record => <button key={record.id} type="button" onClick={() => { setResult(record); requestAnimationFrame(() => results.current?.scrollIntoView({ behavior: "smooth", block: "start" })); }}><span className="scanner-history-icon">{record.kind === "chart" ? <ScanLine size={19} /> : <Globe2 size={19} />}</span><span><strong>{record.kind === "chart" ? `${(record.report as ChartReport).symbol || "Chart"} · ${(record.report as ChartReport).signal}` : `${(record.report as FundamentalReport).context.market} · Fundamentals`}</strong><small>{formatDate(record.createdAt)}</small></span><ArrowUpRight size={16} /></button>)}</div>}
         {hasMore && <button className="scanner-history-more" type="button" disabled={historyLoading} onClick={() => void loadHistory(historyPage + 1)}>{historyLoading ? "Loading…" : "Load older scans"}</button>}

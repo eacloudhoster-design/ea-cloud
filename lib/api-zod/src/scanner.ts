@@ -17,6 +17,7 @@ export const chartReportSchema = z.object({
   takeProfit: z.number().positive().finite().nullable(),
   reasoning: z.string().min(20).max(4000),
   limitations: z.string().min(1).max(1500),
+  evidenceTags: z.array(z.enum(["Liquidity Sweep", "Order Block", "Bullish Structure", "Bearish Structure", "Volume Support", "Supply Zone", "Demand Zone", "Support Retest", "Resistance Rejection", "Trend Continuation"])).max(4).refine(tags => new Set(tags).size === tags.length, "Duplicate evidence tags").optional(),
 }).strict().superRefine((report, ctx) => {
   if (report.signal === "NO TRADE") {
     if (report.entry !== null || report.stopLoss !== null || report.takeProfit !== null)

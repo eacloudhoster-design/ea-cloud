@@ -13,7 +13,7 @@ page.on('pageerror',error=>errors.push(error.message));
 page.on('console',message=>{ if(message.type()==='error' && !/Failed to load resource/.test(message.text())) errors.push(message.text()); });
 await page.routeWebSocket('**/api/ws?*',socket=>socket.onMessage(()=>{}));
 await page.addInitScript(()=>localStorage.setItem('appClientToken','isolated-scanner-client'));
-const chartReport={signal:'BUY',symbol:'XAUUSD',timeframe:'H1',entry:3300,stopLoss:3280,takeProfit:3340,reasoning:'Isolated browser test result: visible structure suggests a retest. This is not live Gemini output.',limitations:'Fixture report only; no order was submitted.'};
+const chartReport={signal:'BUY',symbol:'XAUUSD',timeframe:'H1',entry:3300,stopLoss:3280,takeProfit:3340,reasoning:'Isolated browser test result: visible structure suggests a retest. This is not live Gemini output.',limitations:'Fixture report only; no order was submitted.',evidenceTags:['Liquidity Sweep','Order Block','Bullish Structure','Volume Support']};
 await page.route('**/*',async route=>{
   const req=route.request(), url=new URL(req.url());
   if(url.origin!==origin){thirdParty.push(url.href);return route.abort();}
@@ -28,7 +28,7 @@ await page.route('**/*',async route=>{
       if(mode==='failure')return route.fulfill({status:503,json:{error:'AI analysis is not configured yet. Please try again later.'}}).catch(()=>{});
       const fundamental=url.pathname.endsWith('/fundamentals');
       const report=fundamental?{summary:'Isolated report fixture: CPI and FOMC uncertainty; no current figures invented.',sources:[{title:'BLS CPI',url:'https://www.bls.gov/cpi/'}],asOf:'2026-10-21T10:00:00Z',context:JSON.parse(req.postData())}:mode==='no-trade'?{...chartReport,signal:'NO TRADE',entry:null,stopLoss:null,takeProfit:null}:chartReport;
-      const saved={id:String(reports.length+1),kind:fundamental?'fundamental':'chart',strategy:fundamental?null:'SMC',report,createdAt:'2026-10-21T10:00:00Z'};
+      const saved={id:String(reports.length+1),kind:fundamental?'fundamental':'chart',strategy:fundamental?null:(req.postData().match(/name="strategy"\r\n\r\n([^\r\n]+)/)?.[1] || 'Auto'),report,createdAt:'2026-10-21T10:00:00Z'};
       reports=[saved,...reports]; return route.fulfill({status:201,json:saved}).catch(()=>{});
     }
   }
@@ -83,14 +83,24 @@ try{
   assert.equal(await dialog.getByRole('img',{name:'Selected chart to analyse'}).count(),1);
   assert.equal(calls.filter(c=>c.method==='POST').length,0,'Choosing an image must not send it to AI');
   await dialog.getByRole('button',{name:'ICT',exact:true}).click();
-  await dialog.getByRole('button',{name:'Analyse chart',exact:true}).click();
+  delay=2500;await dialog.getByRole('button',{name:'Analyse chart',exact:true}).click();
   await dialog.getByRole('heading',{name:'Analyzing chart...',exact:true}).waitFor();
   assert.equal(await dialog.locator('.scanner-analysis-dots span').count(),5);
-  assert.equal(await dialog.locator('.scanner-orbit-one').evaluate(el=>getComputedStyle(el).animationName),'scanner-rotate');
+  assert.equal(await dialog.locator('.scanner-pending-analysis .scanner-orbit-one').evaluate(el=>getComputedStyle(el).animationName),'scanner-rotate');
+  const selectedSource=await dialog.getByRole('img',{name:'Selected chart to analyse'}).getAttribute('src');assert.ok(selectedSource.startsWith('blob:'));
+  assert.equal(await dialog.locator('.scanner-image-scan-beam').evaluate(el=>getComputedStyle(el).animationName),'scanner-image-sweep');
+  await dialog.locator('.scanner-scroll').evaluate(el=>el.scrollTop=0);await page.waitForTimeout(100);await page.screenshot({path:output+'/09-chart-scan-overlay-mobile.png'});
+  await dialog.locator('.scanner-pending-analysis').evaluate(el=>el.scrollIntoView({block:'center',behavior:'instant'}));
   await page.waitForTimeout(300);
   await page.screenshot({path:output+'/03-scanning-mobile.png'});
   await dialog.getByRole('heading',{name:'BUY',exact:true}).waitFor();
-  assert.match(await dialog.locator('.scanner-levels').innerText(),/3300/);
+  delay=850;assert.match((await dialog.locator('.scanner-result-levels').innerText()).replace(/,/g,''),/3300\.00/);
+  assert.equal(await dialog.getByRole('img',{name:'Selected chart to analyse'}).getAttribute('src'),selectedSource);
+  assert.equal(await dialog.locator('.scanner-image-scan').count(),0);
+  assert.match(await dialog.locator('.scanner-analysis-report > header').innerText(),/ICT strategy/);
+  assert.equal(await dialog.getByLabel('AI observations',{exact:true}).getByRole('listitem').count(),4);
+  assert.match(await dialog.locator('.scanner-confidence').innerText(),/Not calibrated/);assert.doesNotMatch(await dialog.locator('.scanner-confidence').innerText(),/87%|High Probability|\d+%/);
+  assert.match(await dialog.locator('.scanner-result-status').innerText(),/Report saved/);
   assert.equal(await dialog.getByRole('button',{name:'Execute Trade',exact:true}).isDisabled(),true);
   assert.match(await dialog.locator('.scanner-settings-launch').innerText(),/2 positions · 0.05 lots each/);
   await page.screenshot({path:output+'/04-report-fixture-mobile.png'});
@@ -119,10 +129,13 @@ try{
   await dialog.getByRole('alert').filter({hasText:'JPEG, PNG or WebP'}).waitFor();
   const cameraChooser=page.waitForEvent('filechooser');await dialog.getByRole('button',{name:'Camera',exact:true}).click();const cameraInput=await cameraChooser;assert.equal(await cameraInput.element().getAttribute('capture'),'environment');await cameraInput.setFiles(upload);
   await dialog.getByRole('heading',{name:'Your chart is ready'}).waitFor();
-  mode='no-trade';await dialog.getByRole('button',{name:'Analyse chart',exact:true}).click();await dialog.getByRole('heading',{name:'NO TRADE',exact:true}).waitFor();
+  mode='no-trade';await dialog.getByRole('button',{name:'Analyse chart',exact:true}).click();await dialog.getByRole('heading',{name:'NO TRADE',exact:true}).waitFor();await page.screenshot({path:output+'/11-no-trade-fixture-mobile.png'});
   assert.equal(await dialog.getByRole('button',{name:'Execute Trade',exact:true}).isDisabled(),true);
+  const legacy={id:'legacy-sell',kind:'chart',strategy:'SMC',createdAt:'2026-10-21T10:00:00Z',report:{...chartReport,signal:'SELL',stopLoss:3340,takeProfit:3280}};delete legacy.report.evidenceTags;reports.unshift(legacy);
+  await dialog.getByRole('button',{name:'Refresh scan history'}).click();const legacyRow=dialog.locator('.scanner-history-list').getByRole('button').filter({hasText:'SELL'});await legacyRow.waitFor();await legacyRow.click();await dialog.getByRole('heading',{name:'SELL',exact:true}).waitFor();
+  await page.screenshot({path:output+'/10-sell-fixture-mobile.png'});assert.equal(await dialog.locator('.scanner-chart-result--sell').count(),1);assert.equal(await dialog.getByLabel('AI observations',{exact:true}).count(),0);assert.equal(await dialog.getByRole('button',{name:'Execute Trade',exact:true}).isDisabled(),true);
   mode='success';delay=2000;await dialog.getByRole('button',{name:'Analyse chart',exact:true}).click();
-  await dialog.getByRole('heading',{name:'Analyzing chart...'}).waitFor();await dialog.getByRole('button',{name:'Cancel analysis',exact:true}).click();
+  await dialog.getByRole('heading',{name:'Analyzing chart...'}).waitFor();await dialog.getByRole('button',{name:'Cancel chart scan',exact:true}).click();
   await page.waitForTimeout(2200);assert.equal(await dialog.getByRole('heading',{name:'BUY',exact:true}).count(),0,'Cancelled result must not reappear');
   await page.emulateMedia({reducedMotion:'reduce'});await page.setViewportSize({width:320,height:568});
   await dialog.locator('.scanner-scroll').evaluate(el=>el.scrollTop=0);await page.screenshot({path:output+'/06-small-mobile.png'});
@@ -130,7 +143,7 @@ try{
   assert.equal(await dialog.locator('.scanner-analysis-dots').count(),0);
   // Honest history failure is distinct from an empty successful history.
   historyFails=true;await dialog.getByRole('button',{name:'Refresh scan history'}).click();await dialog.getByRole('alert').filter({hasText:'Scan history is unavailable'}).waitFor();
-  delay=800;await dialog.getByRole('button',{name:'Analyse chart',exact:true}).click();await dialog.getByRole('heading',{name:'Analyzing chart...'}).waitFor();assert.equal(await dialog.locator('.scanner-orbit-one').evaluate(el=>getComputedStyle(el).animationName),'none');assert.equal(await dialog.locator('.scanner-analysis-dots span').first().evaluate(el=>getComputedStyle(el).animationName),'none');await page.keyboard.press('Escape');
+  delay=800;await dialog.getByRole('button',{name:'Analyse chart',exact:true}).click();await dialog.getByRole('heading',{name:'Analyzing chart...'}).waitFor();assert.equal(await dialog.locator('.scanner-pending-analysis .scanner-orbit-one').evaluate(el=>getComputedStyle(el).animationName),'none');assert.equal(await dialog.locator('.scanner-image-scan-beam').evaluate(el=>getComputedStyle(el).animationName),'none');assert.equal(await dialog.locator('.scanner-analysis-dots span').first().evaluate(el=>getComputedStyle(el).animationName),'none');await page.keyboard.press('Escape');
   await dialog.getByRole('button',{name:'Scanner trade settings'}).click();
   const smallSheet=page.getByRole('dialog',{name:'Trade Settings',exact:true});await smallSheet.waitFor();await smallSheet.getByRole('button',{name:'Confirm settings',exact:true}).scrollIntoViewIfNeeded();const sheetBox=await smallSheet.boundingBox();assert.ok(sheetBox.x>=0&&sheetBox.x+sheetBox.width<=320&&sheetBox.height<=568-85);await page.screenshot({path:output+'/08-settings-small-mobile.png'});await page.keyboard.press('Escape');assert.equal(await smallSheet.count(),0);
   await page.setViewportSize({width:1280,height:900});await dialog.locator('.scanner-scroll').evaluate(el=>el.scrollTop=0);assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);

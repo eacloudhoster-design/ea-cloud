@@ -61,3 +61,11 @@ test('aborted provider call never returns a completed report', async () => {
   const controller=new AbortController(); controller.abort();
   await assert.rejects(analyseChart(bytes,'image/jpeg','Auto',controller.signal));
 });
+
+test('evidence tags are optional for old history, bounded and never accept confidence or invented tag fields', () => {
+  assert.deepEqual(parseChartReport(JSON.stringify(valid)), valid);
+  const tags=['Liquidity Sweep','Order Block','Bullish Structure','Volume Support'];
+  assert.deepEqual(parseChartReport(JSON.stringify({...valid,evidenceTags:tags})).evidenceTags,tags);
+  for(const patch of [{evidenceTags:['Guaranteed Profit']},{evidenceTags:['Liquidity Sweep','Liquidity Sweep']},{evidenceTags:[...tags,'Trend Continuation']},{confidence:87}])
+    assert.throws(()=>parseChartReport(JSON.stringify({...valid,...patch})),/valid trade levels/);
+});
