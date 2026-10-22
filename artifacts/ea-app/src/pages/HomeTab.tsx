@@ -1,6 +1,7 @@
 import BotName from "@/components/BotName";
+import "@/components/S2toneActions.css";
 import RobotImageFrame from "@/components/RobotImageFrame";
-import { Bell, Trash2, DollarSign, Play, X, TrendingUp, Settings2, Check, Menu, BarChart2, Plus, ArrowUpRight, ArrowDownRight, Activity, ChevronDown, ChevronLeft, Loader2 } from "lucide-react";
+import { Bell, Trash2, DollarSign, Play, Pause, X, TrendingUp, Settings2, Check, Menu, BarChart2, Plus, ArrowUpRight, ArrowDownRight, Activity, ChevronDown, ChevronLeft, Loader2 } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { useApp } from "@/context/AppContext";
 import { useTradeExecutions, type TradeExecution } from "@/hooks/use-trade-executions";
@@ -192,12 +193,12 @@ function S2ToneLayout({ shapeStyle, accentColor, botRunning, setBotRunning, eaNa
       {/* Two-column row: pill buttons left | robots list right */}
       <div className="w-full flex gap-3 items-start">
 
-        {/* LEFT — 3 stacked dark pill buttons */}
-        <div className="flex flex-col gap-3" style={{ flex: "0 0 52%" }}>
+        {/* LEFT — 3 illuminated concave controls, themed by Select Colour */}
+        <div className="flex flex-col gap-3" style={{ flex: "0 0 52%", "--s2tone-accent-rgb": hexToRgb(accentColor) } as React.CSSProperties}>
           <button
             onClick={() => setShowRemoveConfirm(true)}
-            className="flex items-center gap-3 px-5 rounded-2xl active:scale-95 transition-transform"
-            style={{ background: "rgba(22,22,22,0.95)", height: 58 }}
+            type="button"
+            className="s2tone-action-button flex items-center gap-3 px-5 rounded-2xl"
           >
             <X size={18} className="text-white/75 flex-shrink-0" />
             <span className="text-white font-semibold text-base">Remove</span>
@@ -205,17 +206,19 @@ function S2ToneLayout({ shapeStyle, accentColor, botRunning, setBotRunning, eaNa
 
           <button
             onClick={() => setBotRunning(!botRunning)}
-            className="flex items-center gap-3 px-5 rounded-2xl active:scale-95 transition-transform"
-            style={{ background: "rgba(22,22,22,0.95)", height: 58 }}
+            type="button"
+            className="s2tone-action-button flex items-center gap-3 px-5 rounded-2xl"
           >
-            <Play size={18} className="text-white/75 flex-shrink-0" style={{ marginLeft: 1 }} />
+            {botRunning
+              ? <Pause size={18} className="text-white/75 flex-shrink-0" />
+              : <Play size={18} className="text-white/75 flex-shrink-0" style={{ marginLeft: 1 }} />}
             <span className="text-white font-semibold text-base">{botRunning ? "Stop" : "Start"}</span>
           </button>
 
           <button
             onClick={() => setShowQuotes(true)}
-            className="flex items-center gap-3 px-5 rounded-2xl active:scale-95 transition-transform"
-            style={{ background: "rgba(22,22,22,0.95)", height: 58 }}
+            type="button"
+            className="s2tone-action-button flex items-center gap-3 px-5 rounded-2xl"
           >
             <BarChart2 size={18} className="text-white/75 flex-shrink-0" />
             <span className="text-white font-semibold text-base">Symbols</span>

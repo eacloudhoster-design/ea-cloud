@@ -1,0 +1,308 @@
+[
+  {
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "layout": "regular",
+    "marker": {
+      "text": "SMC BLUEPRINT EA V3+",
+      "font": "\"EA Bot Inter\", sans-serif"
+    },
+    "signatures": [
+      {
+        "html": "<button class=\"rounded-full flex items-center justify-center active:scale-95 transition-transform\" style=\"width: 54px; height: 54px; border: 1.5px solid rgb(239, 68, 68); background: transparent;\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"lucide lucide-x\" aria-hidden=\"true\" style=\"color: rgb(239, 68, 68);\"><path d=\"M18 6 6 18\"></path><path d=\"m6 6 12 12\"></path></svg></button>",
+        "height": 54,
+        "width": 54,
+        "background": "rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box",
+        "shadow": "none"
+      },
+      {
+        "html": "<button class=\"rounded-full flex items-center justify-center active:scale-95 transition-transform\" style=\"width: 64px; height: 64px; border: 2px solid rgb(239, 68, 68); background: transparent; box-shadow: rgba(239, 68, 68, 0.333) 0px 0px 22px;\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"lucide lucide-play\" aria-hidden=\"true\" style=\"color: rgb(239, 68, 68); margin-left: 3px;\"><path d=\"M5 5a2 2 0 0 1 3.008-1.728l11.997 6.998a2 2 0 0 1 .003 3.458l-12 7A2 2 0 0 1 5 19z\"></path></svg></button>",
+        "height": 64,
+        "width": 64,
+        "background": "rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box",
+        "shadow": "rgba(239, 68, 68, 0.333) 0px 0px 22px 0px"
+      },
+      {
+        "html": "<button class=\"rounded-full flex items-center justify-center active:scale-95 transition-transform\" style=\"width: 54px; height: 54px; border: 1.5px solid rgb(239, 68, 68); background: transparent;\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"lucide lucide-chart-no-axes-column\" aria-hidden=\"true\" style=\"color: rgb(239, 68, 68);\"><path d=\"M5 21v-6\"></path><path d=\"M12 21V3\"></path><path d=\"M19 21V9\"></path></svg></button>",
+        "height": 54,
+        "width": 54,
+        "background": "rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box",
+        "shadow": "none"
+      }
+    ]
+  },
+  {
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "layout": "matrix",
+    "marker": {
+      "text": "SMC BLUEPRINT EA V3+",
+      "font": "\"EA Bot Inter\", sans-serif"
+    },
+    "signatures": [
+      {
+        "html": "<button class=\"flex flex-col items-center gap-1 active:scale-95 transition-transform\" style=\"min-width: 56px;\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"lucide lucide-trash2 lucide-trash-2 text-white/65\" aria-hidden=\"true\"><path d=\"M10 11v6\"></path><path d=\"M14 11v6\"></path><path d=\"M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6\"></path><path d=\"M3 6h18\"></path><path d=\"M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2\"></path></svg><span class=\"text-[10px] tracking-widest font-bold text-white/55\">REMOVE</span></button>",
+        "height": 41,
+        "width": 56,
+        "background": "rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box",
+        "shadow": "none"
+      },
+      {
+        "html": "<button class=\"absolute left-1/2 -translate-x-1/2 active:scale-95 transition-transform flex flex-col items-center justify-center gap-1\" style=\"width: 68px; height: 68px; border-radius: 18px; background: radial-gradient(circle at 40% 35%, rgb(26, 26, 58) 0%, rgb(10, 10, 30) 100%); border: 2px solid rgba(26, 107, 255, 0.267); box-shadow: rgba(26, 107, 255, 0.133) 0px 0px 10px, rgba(0, 0, 0, 0.6) 0px 6px 24px;\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"lucide lucide-play text-white ml-0.5\" aria-hidden=\"true\"><path d=\"M5 5a2 2 0 0 1 3.008-1.728l11.997 6.998a2 2 0 0 1 .003 3.458l-12 7A2 2 0 0 1 5 19z\"></path></svg><span class=\"text-[9px] font-black tracking-widest text-white/90\">START</span></button>",
+        "height": 68,
+        "width": 68,
+        "background": "rgba(0, 0, 0, 0) radial-gradient(circle at 40% 35%, rgb(26, 26, 58) 0%, rgb(10, 10, 30) 100%) repeat scroll 0% 0% / auto padding-box border-box",
+        "shadow": "rgba(26, 107, 255, 0.133) 0px 0px 10px 0px, rgba(0, 0, 0, 0.6) 0px 6px 24px 0px"
+      },
+      {
+        "html": "<button class=\"flex flex-col items-center gap-1 active:scale-95 transition-transform\" style=\"min-width: 56px;\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"lucide lucide-trending-up text-white/65\" aria-hidden=\"true\"><path d=\"M16 7h6v6\"></path><path d=\"m22 7-8.5 8.5-5-5L2 17\"></path></svg><span class=\"text-[10px] tracking-widest font-bold text-white/55\">QUOTES</span></button>",
+        "height": 41,
+        "width": 56,
+        "background": "rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box",
+        "shadow": "none"
+      }
+    ]
+  },
+  {
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "layout": "s2tone",
+    "marker": {
+      "text": "SMC BLUEPRINT EA V3+",
+      "font": "\"EA Bot Inter\", sans-serif"
+    },
+    "signatures": [
+      {
+        "html": "<button class=\"flex items-center gap-3 px-5 rounded-2xl active:scale-95 transition-transform\" style=\"background: rgba(22, 22, 22, 0.95); height: 58px;\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"lucide lucide-x text-white/75 flex-shrink-0\" aria-hidden=\"true\"><path d=\"M18 6 6 18\"></path><path d=\"m6 6 12 12\"></path></svg><span class=\"text-white font-semibold text-base\">Remove</span></button>",
+        "height": 58,
+        "width": 182,
+        "background": "rgba(22, 22, 22, 0.95) none repeat scroll 0% 0% / auto padding-box border-box",
+        "shadow": "none"
+      },
+      {
+        "html": "<button class=\"flex items-center gap-3 px-5 rounded-2xl active:scale-95 transition-transform\" style=\"background: rgba(22, 22, 22, 0.95); height: 58px;\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"lucide lucide-play text-white/75 flex-shrink-0\" aria-hidden=\"true\" style=\"margin-left: 1px;\"><path d=\"M5 5a2 2 0 0 1 3.008-1.728l11.997 6.998a2 2 0 0 1 .003 3.458l-12 7A2 2 0 0 1 5 19z\"></path></svg><span class=\"text-white font-semibold text-base\">Start</span></button>",
+        "height": 58,
+        "width": 182,
+        "background": "rgba(22, 22, 22, 0.95) none repeat scroll 0% 0% / auto padding-box border-box",
+        "shadow": "none"
+      },
+      {
+        "html": "<button class=\"flex items-center gap-3 px-5 rounded-2xl active:scale-95 transition-transform\" style=\"background: rgba(22, 22, 22, 0.95); height: 58px;\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"lucide lucide-chart-no-axes-column text-white/75 flex-shrink-0\" aria-hidden=\"true\"><path d=\"M5 21v-6\"></path><path d=\"M12 21V3\"></path><path d=\"M19 21V9\"></path></svg><span class=\"text-white font-semibold text-base\">Symbols</span></button>",
+        "height": 58,
+        "width": 182,
+        "background": "rgba(22, 22, 22, 0.95) none repeat scroll 0% 0% / auto padding-box border-box",
+        "shadow": "none"
+      }
+    ]
+  },
+  {
+    "viewport": {
+      "width": 360,
+      "height": 800
+    },
+    "layout": "regular",
+    "marker": {
+      "text": "SMC BLUEPRINT EA V3+",
+      "font": "\"EA Bot Inter\", sans-serif"
+    },
+    "signatures": [
+      {
+        "html": "<button class=\"rounded-full flex items-center justify-center active:scale-95 transition-transform\" style=\"width: 54px; height: 54px; border: 1.5px solid rgb(239, 68, 68); background: transparent;\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"lucide lucide-x\" aria-hidden=\"true\" style=\"color: rgb(239, 68, 68);\"><path d=\"M18 6 6 18\"></path><path d=\"m6 6 12 12\"></path></svg></button>",
+        "height": 54,
+        "width": 54,
+        "background": "rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box",
+        "shadow": "none"
+      },
+      {
+        "html": "<button class=\"rounded-full flex items-center justify-center active:scale-95 transition-transform\" style=\"width: 64px; height: 64px; border: 2px solid rgb(239, 68, 68); background: transparent; box-shadow: rgba(239, 68, 68, 0.333) 0px 0px 22px;\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"lucide lucide-play\" aria-hidden=\"true\" style=\"color: rgb(239, 68, 68); margin-left: 3px;\"><path d=\"M5 5a2 2 0 0 1 3.008-1.728l11.997 6.998a2 2 0 0 1 .003 3.458l-12 7A2 2 0 0 1 5 19z\"></path></svg></button>",
+        "height": 64,
+        "width": 64,
+        "background": "rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box",
+        "shadow": "rgba(239, 68, 68, 0.333) 0px 0px 22px 0px"
+      },
+      {
+        "html": "<button class=\"rounded-full flex items-center justify-center active:scale-95 transition-transform\" style=\"width: 54px; height: 54px; border: 1.5px solid rgb(239, 68, 68); background: transparent;\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"lucide lucide-chart-no-axes-column\" aria-hidden=\"true\" style=\"color: rgb(239, 68, 68);\"><path d=\"M5 21v-6\"></path><path d=\"M12 21V3\"></path><path d=\"M19 21V9\"></path></svg></button>",
+        "height": 54,
+        "width": 54,
+        "background": "rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box",
+        "shadow": "none"
+      }
+    ]
+  },
+  {
+    "viewport": {
+      "width": 360,
+      "height": 800
+    },
+    "layout": "matrix",
+    "marker": {
+      "text": "SMC BLUEPRINT EA V3+",
+      "font": "\"EA Bot Inter\", sans-serif"
+    },
+    "signatures": [
+      {
+        "html": "<button class=\"flex flex-col items-center gap-1 active:scale-95 transition-transform\" style=\"min-width: 56px;\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"lucide lucide-trash2 lucide-trash-2 text-white/65\" aria-hidden=\"true\"><path d=\"M10 11v6\"></path><path d=\"M14 11v6\"></path><path d=\"M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6\"></path><path d=\"M3 6h18\"></path><path d=\"M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2\"></path></svg><span class=\"text-[10px] tracking-widest font-bold text-white/55\">REMOVE</span></button>",
+        "height": 41,
+        "width": 56,
+        "background": "rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box",
+        "shadow": "none"
+      },
+      {
+        "html": "<button class=\"absolute left-1/2 -translate-x-1/2 active:scale-95 transition-transform flex flex-col items-center justify-center gap-1\" style=\"width: 68px; height: 68px; border-radius: 18px; background: radial-gradient(circle at 40% 35%, rgb(26, 26, 58) 0%, rgb(10, 10, 30) 100%); border: 2px solid rgba(26, 107, 255, 0.267); box-shadow: rgba(26, 107, 255, 0.133) 0px 0px 10px, rgba(0, 0, 0, 0.6) 0px 6px 24px;\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"lucide lucide-play text-white ml-0.5\" aria-hidden=\"true\"><path d=\"M5 5a2 2 0 0 1 3.008-1.728l11.997 6.998a2 2 0 0 1 .003 3.458l-12 7A2 2 0 0 1 5 19z\"></path></svg><span class=\"text-[9px] font-black tracking-widest text-white/90\">START</span></button>",
+        "height": 68,
+        "width": 68,
+        "background": "rgba(0, 0, 0, 0) radial-gradient(circle at 40% 35%, rgb(26, 26, 58) 0%, rgb(10, 10, 30) 100%) repeat scroll 0% 0% / auto padding-box border-box",
+        "shadow": "rgba(26, 107, 255, 0.133) 0px 0px 10px 0px, rgba(0, 0, 0, 0.6) 0px 6px 24px 0px"
+      },
+      {
+        "html": "<button class=\"flex flex-col items-center gap-1 active:scale-95 transition-transform\" style=\"min-width: 56px;\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"lucide lucide-trending-up text-white/65\" aria-hidden=\"true\"><path d=\"M16 7h6v6\"></path><path d=\"m22 7-8.5 8.5-5-5L2 17\"></path></svg><span class=\"text-[10px] tracking-widest font-bold text-white/55\">QUOTES</span></button>",
+        "height": 41,
+        "width": 56,
+        "background": "rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box",
+        "shadow": "none"
+      }
+    ]
+  },
+  {
+    "viewport": {
+      "width": 360,
+      "height": 800
+    },
+    "layout": "s2tone",
+    "marker": {
+      "text": "SMC BLUEPRINT EA V3+",
+      "font": "\"EA Bot Inter\", sans-serif"
+    },
+    "signatures": [
+      {
+        "html": "<button class=\"flex items-center gap-3 px-5 rounded-2xl active:scale-95 transition-transform\" style=\"background: rgba(22, 22, 22, 0.95); height: 58px;\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"lucide lucide-x text-white/75 flex-shrink-0\" aria-hidden=\"true\"><path d=\"M18 6 6 18\"></path><path d=\"m6 6 12 12\"></path></svg><span class=\"text-white font-semibold text-base\">Remove</span></button>",
+        "height": 58,
+        "width": 166.390625,
+        "background": "rgba(22, 22, 22, 0.95) none repeat scroll 0% 0% / auto padding-box border-box",
+        "shadow": "none"
+      },
+      {
+        "html": "<button class=\"flex items-center gap-3 px-5 rounded-2xl active:scale-95 transition-transform\" style=\"background: rgba(22, 22, 22, 0.95); height: 58px;\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"lucide lucide-play text-white/75 flex-shrink-0\" aria-hidden=\"true\" style=\"margin-left: 1px;\"><path d=\"M5 5a2 2 0 0 1 3.008-1.728l11.997 6.998a2 2 0 0 1 .003 3.458l-12 7A2 2 0 0 1 5 19z\"></path></svg><span class=\"text-white font-semibold text-base\">Start</span></button>",
+        "height": 58,
+        "width": 166.390625,
+        "background": "rgba(22, 22, 22, 0.95) none repeat scroll 0% 0% / auto padding-box border-box",
+        "shadow": "none"
+      },
+      {
+        "html": "<button class=\"flex items-center gap-3 px-5 rounded-2xl active:scale-95 transition-transform\" style=\"background: rgba(22, 22, 22, 0.95); height: 58px;\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"lucide lucide-chart-no-axes-column text-white/75 flex-shrink-0\" aria-hidden=\"true\"><path d=\"M5 21v-6\"></path><path d=\"M12 21V3\"></path><path d=\"M19 21V9\"></path></svg><span class=\"text-white font-semibold text-base\">Symbols</span></button>",
+        "height": 58,
+        "width": 166.390625,
+        "background": "rgba(22, 22, 22, 0.95) none repeat scroll 0% 0% / auto padding-box border-box",
+        "shadow": "none"
+      }
+    ]
+  },
+  {
+    "viewport": {
+      "width": 1280,
+      "height": 900
+    },
+    "layout": "regular",
+    "marker": {
+      "text": "SMC BLUEPRINT EA V3+",
+      "font": "\"EA Bot Inter\", sans-serif"
+    },
+    "signatures": [
+      {
+        "html": "<button class=\"rounded-full flex items-center justify-center active:scale-95 transition-transform\" style=\"width: 54px; height: 54px; border: 1.5px solid rgb(239, 68, 68); background: transparent;\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"lucide lucide-x\" aria-hidden=\"true\" style=\"color: rgb(239, 68, 68);\"><path d=\"M18 6 6 18\"></path><path d=\"m6 6 12 12\"></path></svg></button>",
+        "height": 54,
+        "width": 54,
+        "background": "rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box",
+        "shadow": "none"
+      },
+      {
+        "html": "<button class=\"rounded-full flex items-center justify-center active:scale-95 transition-transform\" style=\"width: 64px; height: 64px; border: 2px solid rgb(239, 68, 68); background: transparent; box-shadow: rgba(239, 68, 68, 0.333) 0px 0px 22px;\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"lucide lucide-play\" aria-hidden=\"true\" style=\"color: rgb(239, 68, 68); margin-left: 3px;\"><path d=\"M5 5a2 2 0 0 1 3.008-1.728l11.997 6.998a2 2 0 0 1 .003 3.458l-12 7A2 2 0 0 1 5 19z\"></path></svg></button>",
+        "height": 64,
+        "width": 64,
+        "background": "rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box",
+        "shadow": "rgba(239, 68, 68, 0.333) 0px 0px 22px 0px"
+      },
+      {
+        "html": "<button class=\"rounded-full flex items-center justify-center active:scale-95 transition-transform\" style=\"width: 54px; height: 54px; border: 1.5px solid rgb(239, 68, 68); background: transparent;\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"lucide lucide-chart-no-axes-column\" aria-hidden=\"true\" style=\"color: rgb(239, 68, 68);\"><path d=\"M5 21v-6\"></path><path d=\"M12 21V3\"></path><path d=\"M19 21V9\"></path></svg></button>",
+        "height": 54,
+        "width": 54,
+        "background": "rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box",
+        "shadow": "none"
+      }
+    ]
+  },
+  {
+    "viewport": {
+      "width": 1280,
+      "height": 900
+    },
+    "layout": "matrix",
+    "marker": {
+      "text": "SMC BLUEPRINT EA V3+",
+      "font": "\"EA Bot Inter\", sans-serif"
+    },
+    "signatures": [
+      {
+        "html": "<button class=\"flex flex-col items-center gap-1 active:scale-95 transition-transform\" style=\"min-width: 56px;\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"lucide lucide-trash2 lucide-trash-2 text-white/65\" aria-hidden=\"true\"><path d=\"M10 11v6\"></path><path d=\"M14 11v6\"></path><path d=\"M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6\"></path><path d=\"M3 6h18\"></path><path d=\"M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2\"></path></svg><span class=\"text-[10px] tracking-widest font-bold text-white/55\">REMOVE</span></button>",
+        "height": 41,
+        "width": 56,
+        "background": "rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box",
+        "shadow": "none"
+      },
+      {
+        "html": "<button class=\"absolute left-1/2 -translate-x-1/2 active:scale-95 transition-transform flex flex-col items-center justify-center gap-1\" style=\"width: 68px; height: 68px; border-radius: 18px; background: radial-gradient(circle at 40% 35%, rgb(26, 26, 58) 0%, rgb(10, 10, 30) 100%); border: 2px solid rgba(26, 107, 255, 0.267); box-shadow: rgba(26, 107, 255, 0.133) 0px 0px 10px, rgba(0, 0, 0, 0.6) 0px 6px 24px;\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"lucide lucide-play text-white ml-0.5\" aria-hidden=\"true\"><path d=\"M5 5a2 2 0 0 1 3.008-1.728l11.997 6.998a2 2 0 0 1 .003 3.458l-12 7A2 2 0 0 1 5 19z\"></path></svg><span class=\"text-[9px] font-black tracking-widest text-white/90\">START</span></button>",
+        "height": 68,
+        "width": 68,
+        "background": "rgba(0, 0, 0, 0) radial-gradient(circle at 40% 35%, rgb(26, 26, 58) 0%, rgb(10, 10, 30) 100%) repeat scroll 0% 0% / auto padding-box border-box",
+        "shadow": "rgba(26, 107, 255, 0.133) 0px 0px 10px 0px, rgba(0, 0, 0, 0.6) 0px 6px 24px 0px"
+      },
+      {
+        "html": "<button class=\"flex flex-col items-center gap-1 active:scale-95 transition-transform\" style=\"min-width: 56px;\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"lucide lucide-trending-up text-white/65\" aria-hidden=\"true\"><path d=\"M16 7h6v6\"></path><path d=\"m22 7-8.5 8.5-5-5L2 17\"></path></svg><span class=\"text-[10px] tracking-widest font-bold text-white/55\">QUOTES</span></button>",
+        "height": 41,
+        "width": 56,
+        "background": "rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box",
+        "shadow": "none"
+      }
+    ]
+  },
+  {
+    "viewport": {
+      "width": 1280,
+      "height": 900
+    },
+    "layout": "s2tone",
+    "marker": {
+      "text": "SMC BLUEPRINT EA V3+",
+      "font": "\"EA Bot Inter\", sans-serif"
+    },
+    "signatures": [
+      {
+        "html": "<button class=\"flex items-center gap-3 px-5 rounded-2xl active:scale-95 transition-transform\" style=\"background: rgba(22, 22, 22, 0.95); height: 58px;\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"lucide lucide-x text-white/75 flex-shrink-0\" aria-hidden=\"true\"><path d=\"M18 6 6 18\"></path><path d=\"m6 6 12 12\"></path></svg><span class=\"text-white font-semibold text-base\">Remove</span></button>",
+        "height": 58,
+        "width": 202.796875,
+        "background": "rgba(22, 22, 22, 0.95) none repeat scroll 0% 0% / auto padding-box border-box",
+        "shadow": "none"
+      },
+      {
+        "html": "<button class=\"flex items-center gap-3 px-5 rounded-2xl active:scale-95 transition-transform\" style=\"background: rgba(22, 22, 22, 0.95); height: 58px;\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"lucide lucide-play text-white/75 flex-shrink-0\" aria-hidden=\"true\" style=\"margin-left: 1px;\"><path d=\"M5 5a2 2 0 0 1 3.008-1.728l11.997 6.998a2 2 0 0 1 .003 3.458l-12 7A2 2 0 0 1 5 19z\"></path></svg><span class=\"text-white font-semibold text-base\">Start</span></button>",
+        "height": 58,
+        "width": 202.796875,
+        "background": "rgba(22, 22, 22, 0.95) none repeat scroll 0% 0% / auto padding-box border-box",
+        "shadow": "none"
+      },
+      {
+        "html": "<button class=\"flex items-center gap-3 px-5 rounded-2xl active:scale-95 transition-transform\" style=\"background: rgba(22, 22, 22, 0.95); height: 58px;\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"lucide lucide-chart-no-axes-column text-white/75 flex-shrink-0\" aria-hidden=\"true\"><path d=\"M5 21v-6\"></path><path d=\"M12 21V3\"></path><path d=\"M19 21V9\"></path></svg><span class=\"text-white font-semibold text-base\">Symbols</span></button>",
+        "height": 58,
+        "width": 202.796875,
+        "background": "rgba(22, 22, 22, 0.95) none repeat scroll 0% 0% / auto padding-box border-box",
+        "shadow": "none"
+      }
+    ]
+  }
+]
