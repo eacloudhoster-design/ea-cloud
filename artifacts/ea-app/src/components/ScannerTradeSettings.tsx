@@ -5,8 +5,9 @@ import { formatScannerPrice } from "@/lib/scanner-format";
 import "./ScannerTradeSettings.css";
 
 import type { ScannerPreflight } from "../../../../lib/api-zod/src/scanner-trading";
-interface Props { mode?: "settings" | "confirmation"; preflight?: ScannerPreflight | null; checking?: boolean; onPreflight?: (settings: TradeSettings) => void; initial: TradeSettings; onConfirm: (settings: TradeSettings) => void; onClose: () => void }
-export default function ScannerTradeSettings({ initial, onConfirm, onClose, mode = "settings", preflight, checking, onPreflight }: Props) {
+import type { ChartReport } from "@/lib/scanner";
+interface Props { report?: ChartReport; historical?: boolean; mode?: "settings" | "confirmation"; preflight?: ScannerPreflight | null; checking?: boolean; onPreflight?: (settings: TradeSettings) => void; initial: TradeSettings; onConfirm: (settings: TradeSettings) => void; onClose: () => void }
+export default function ScannerTradeSettings({ initial, onConfirm, onClose, mode = "settings", report, historical = false, preflight, checking, onPreflight }: Props) {
   const [lot, setLot] = useState(formatLots(initial.lotUnits));
   const [positions, setPositions] = useState(String(initial.positions));
   const dialog = useRef<HTMLDivElement>(null);
@@ -32,6 +33,16 @@ export default function ScannerTradeSettings({ initial, onConfirm, onClose, mode
       <div className="scanner-sheet-handle" aria-hidden="true" />
       <header className="scanner-sheet-header"><span className="scanner-sheet-title-icon"><Crosshair size={26} /></span><div><h3 id="scanner-trade-title">{mode === "confirmation" ? "Trade Confirmation" : "Trade Settings"}</h3><p>Configure your trade parameters</p></div><button type="button" className="scanner-sheet-close" aria-label="Close trade settings" onClick={onClose}><X size={23} /></button></header>
       <div className="scanner-sheet-body">
+        {mode === "confirmation" && report && <section className="scanner-confirmation-overview" aria-label="Order review">
+          <h4>{report.symbol || "Unidentified instrument"} · {report.signal}</h4>
+          <dl><div><dt>MT5 account</dt><dd>{preflight?.brokerChecked ? "Authenticated account passed broker check; submission unavailable" : "Connection not verified"}</dd></div>
+          <div><dt>Order type</dt><dd>{preflight?.plan.type || "Awaiting live verification"}</dd></div>
+          <div><dt>Entry / Stop / Target</dt><dd>{formatScannerPrice(preflight?.plan.entry ?? report.entry)} / {formatScannerPrice(preflight?.plan.stopLoss ?? report.stopLoss)} / {formatScannerPrice(preflight?.plan.takeProfit ?? report.takeProfit)}</dd></div>
+          <div><dt>Reference R:R</dt><dd>{"riskRewardRatio" in report && report.riskRewardRatio != null ? `1:${report.riskRewardRatio.toFixed(2)}` : "Unavailable"}</dd></div>
+          <div><dt>Estimated monetary risk</dt><dd>Unavailable — broker tick value and account currency required</dd></div></dl>
+          <p>{historical ? "Historical reference prices." : "Chart references until live prices are verified."} No order has been submitted.</p>
+        </section>}
+
         <section className="scanner-quantity-card" aria-labelledby="scanner-lot-title">
           <div className="scanner-quantity-heading"><Coins size={25} /><div><h4 id="scanner-lot-title">Lot size</h4><p>Select trade size per position</p></div><span className="scanner-limit"><Info size={15} /><span>Min: 0.01<br />Max: 50.00</span></span></div>
           <div className="scanner-quantity-stepper"><button type="button" aria-label="Decrease lot size" disabled={lotUnits === null || lotUnits === 1} onClick={() => setLot(formatLots(adjustLotUnits(lotUnits!, -1)))}><Minus size={25} /></button><input aria-label="Lot size" aria-invalid={lotUnits === null} aria-describedby={lotUnits === null ? "scanner-lot-error" : undefined} inputMode="decimal" type="text" maxLength={6} value={lot} onChange={event => setLot(event.target.value)} /><button type="button" aria-label="Increase lot size" disabled={lotUnits === null || lotUnits === 5000} onClick={() => setLot(formatLots(adjustLotUnits(lotUnits!, 1)))}><Plus size={25} /></button></div>

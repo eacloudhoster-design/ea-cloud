@@ -34,3 +34,8 @@
 @media (max-width:360px) { .scanner-sheet-header { padding-inline:15px; gap:9px; } .scanner-sheet-header h3 { font-size:20px; } .scanner-sheet-title-icon { width:39px; height:39px; } .scanner-quantity-card { padding-inline:12px; } .scanner-quantity-heading { gap:8px; } .scanner-limit { font-size:8px; padding-inline:6px; gap:4px; } .scanner-quantity-heading p { max-width:125px; font-size:9px; } .scanner-quantity-presets { gap:6px; } }
 @media (max-height:700px) { .scanner-sheet-handle { margin-block:10px; } .scanner-sheet-header { padding-bottom:14px; } }
 @media (prefers-reduced-motion:reduce) { .scanner-trade-sheet { animation:none; } }
+.scanner-confirmation-overview { padding:15px; border:1px solid #fb80753b; border-radius:17px; background:linear-gradient(120deg,#48191b45,#13101695); margin-bottom:14px; }
+.scanner-confirmation-overview h4 { font-size:17px; color:#f9e9e5; margin:0 0 12px; }
+.scanner-confirmation-overview dl { display:grid; gap:10px; }
+.scanner-confirmation-overview dt { font-size:10px; color:#a99ba6; text-transform:uppercase; letter-spacing:.7px; }
+.scanner-confirmation-overview dd,.scanner-confirmation-overview p { font-size:12px; line-height:1.5; color:#e2d1d5; overflow-wrap:anywhere; margin:3px 0 0; }

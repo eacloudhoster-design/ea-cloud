@@ -67,7 +67,7 @@ test('scanner routes enforce approval/scanner entitlement/ownership and keep pre
         for(const field of ['entry','stopLoss','takeProfit'])assert.equal(persisted.report[field],raw[field]);
         assert.equal(persisted.report.riskRewardRatio,2);assert.equal(persisted.report.levelAssessment.code,'CHART_LEVELS_RETAINED');
         const html=render(persisted);for(const field of ['entry','stopLoss','takeProfit'])assert.ok(html.includes(formatPrice(raw[field])));
-        assert.ok(html.includes('not live quotes'));assert.ok(html.includes('NOT EXECUTABLE'));assert.match(html,/scanner-result-execute[^>]*disabled/);
+        assert.ok(html.includes('not live quotes'));assert.ok(html.includes('Live execution unavailable'));assert.match(html,/scanner-result-execute[^>]*disabled/);
         assert.equal(diagnostics.at(-1).stage,'persisted');assert.equal(diagnostics.at(-2).stage,'normalized');
         assert.doesNotMatch(JSON.stringify(diagnostics.at(-1)),/3300|isolated-pipeline-key|fixture axis/);
       }
