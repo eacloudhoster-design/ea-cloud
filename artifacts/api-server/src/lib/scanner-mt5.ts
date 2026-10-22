@@ -2,7 +2,7 @@ import { db, clientSettingsTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
 import { decryptMT5Password } from "./mt5-crypto";
 // This separate TLS-only bridge does not reuse the legacy HTTP copy sender.
-export async function scannerMt5Read(clientId:number,path:"quote"|"check-order",body:Record<string,unknown>):Promise<unknown> {
+export async function scannerMt5Read(clientId:number,path:"quote"|"check-order"|"activity-snapshot",body:Record<string,unknown>):Promise<unknown> {
  const base=process.env.SCANNER_MT5_VPS_URL,token=process.env.SCANNER_MT5_VPS_TOKEN;
  if(!base||!token||token.length<32)throw new Error("Scanner quote bridge is not configured.");
  const url=new URL(base);if(url.protocol!=="https:"||url.username||url.password||url.search||url.hash)throw new Error("Scanner bridge requires a trusted HTTPS URL.");

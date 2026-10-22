@@ -1,3 +1,4 @@
+import TradingActivityMonitor from "@/components/TradingActivityMonitor";
 import { useState, useEffect } from "react";
 import { AppContext, AppSettings, InterfaceStyle, ShapeStyle } from "@/context/AppContext";
 import HomeTab from "@/pages/HomeTab";
@@ -244,6 +245,7 @@ export default function App() {
           <SettingsTab onOpenChartScanner={() => setShowChartScanner(true)} />
         </div>
 
+        <TradingActivityMonitor />
         <BottomNav activeTab={activeTab} onTabChange={setActiveTab} />
 
         {showChartScanner && (
