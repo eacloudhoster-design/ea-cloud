@@ -1,6 +1,7 @@
+import {useShapePreference} from "@/hooks/use-shape-preference";
 import TradingActivityMonitor from "@/components/TradingActivityMonitor";
 import { useState, useEffect } from "react";
-import { AppContext, AppSettings, InterfaceStyle, ShapeStyle } from "@/context/AppContext";
+import { AppContext, AppSettings, InterfaceStyle } from "@/context/AppContext";
 import HomeTab from "@/pages/HomeTab";
 import MetaTraderTab from "@/pages/MetaTraderTab";
 import SettingsTab from "@/pages/SettingsTab";
@@ -29,7 +30,7 @@ export default function App() {
   const [interfaceStyle, setInterfaceStyle] = useState<InterfaceStyle>("matrix");
   const [showBg, setShowBg] = useState(true);
   const [accentColor, setAccentColor] = useState("#ef4444");
-  const [shapeStyle, setShapeStyle] = useState<ShapeStyle>("orbit");
+  const [shapeStyle, setShapeStyle] = useShapePreference(clientToken);
   const [mtConnected, setMtConnected] = useState(false);
 
   const [eaName, setEaName] = useState("EA Cloud Pro");

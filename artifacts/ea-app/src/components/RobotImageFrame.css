@@ -1,0 +1,7 @@
+.robot-image-frame{animation:robot-frame-reveal 240ms ease-out}
+.robot-frame-definitions{position:absolute;pointer-events:none}
+.robot-frame-content{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.robot-frame-content>img{object-fit:cover;object-position:center;width:100%;height:100%}
+.robot-frame-outline{position:absolute;inset:0;width:100%;height:100%;overflow:visible;pointer-events:none}
+@keyframes robot-frame-reveal{from{opacity:.25}to{opacity:1}}
+@media(prefers-reduced-motion:reduce){.robot-image-frame{animation:none}}

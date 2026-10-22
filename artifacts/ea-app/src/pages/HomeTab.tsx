@@ -1,3 +1,4 @@
+import RobotImageFrame from "@/components/RobotImageFrame";
 import { Bell, Trash2, DollarSign, Play, X, TrendingUp, Settings2, Check, Menu, BarChart2, Plus, ArrowUpRight, ArrowDownRight, Activity, ChevronDown, ChevronLeft, Loader2 } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { useApp } from "@/context/AppContext";
@@ -35,14 +36,8 @@ export default function HomeTab({ onOpenChartScanner }: HomeTabProps) {
 
   const accentRgb = hexToRgb(accentColor);
 
-  const avatarShape = {
-    orbit: "9999px",
-    cornerstone: "12px",
-    fortress: "40% 40% 40% 40% / 50% 50% 50% 50%",
-    neural: "28px",
-  }[shapeStyle];
-
   const sharedLayoutProps = {
+    shapeStyle,
     accentColor,
     botRunning,
     setBotRunning,
@@ -103,6 +98,8 @@ export default function HomeTab({ onOpenChartScanner }: HomeTabProps) {
         {/* ── MATRIX ── */}
         {interfaceStyle === "matrix" && (
           <MatrixLayout
+            shapeStyle={shapeStyle}
+            accentColor={accentColor}
             botRunning={botRunning}
             setBotRunning={setBotRunning}
             eaName={eaName}
@@ -139,7 +136,7 @@ export default function HomeTab({ onOpenChartScanner }: HomeTabProps) {
 /* ══════════════════════════════════════════════════════════════════ */
 /* S2TONE — v2: glowing sphere • large name • pill buttons + list   */
 /* ══════════════════════════════════════════════════════════════════ */
-function S2ToneLayout({ accentColor, botRunning, setBotRunning, eaName, eaTagline, bgImageUrl, showBg, setShowBg, setShowRemoveConfirm, setShowQuotes }: any) {
+function S2ToneLayout({ shapeStyle, accentColor, botRunning, setBotRunning, eaName, eaTagline, bgImageUrl, showBg, setShowBg, setShowRemoveConfirm, setShowQuotes }: any) {
   return (
     <div className="relative z-10 flex flex-col items-center px-5 pt-2 pb-6 gap-5">
 
@@ -151,7 +148,7 @@ function S2ToneLayout({ accentColor, botRunning, setBotRunning, eaName, eaTaglin
       </button>
 
       {/* Large glowing sphere */}
-      <div
+      <RobotImageFrame shape={shapeStyle} accent={accentColor} size={230} borderWidth={2.5}
         className="relative flex-shrink-0 flex items-center justify-center overflow-hidden"
         style={{
           width: 230,
@@ -179,7 +176,7 @@ function S2ToneLayout({ accentColor, botRunning, setBotRunning, eaName, eaTaglin
             }}
           />
         )}
-      </div>
+      </RobotImageFrame>
 
       {/* Bot name — large white bold, wraps naturally */}
       <h1
@@ -266,7 +263,7 @@ function S2ToneLayout({ accentColor, botRunning, setBotRunning, eaName, eaTaglin
 /* ══════════════════════════════════════════════════════════════════ */
 /* REGULAR — v2: large glowing circle • white bot name • 3 buttons  */
 /* ══════════════════════════════════════════════════════════════════ */
-function RegularLayout({ accentColor, botRunning, setBotRunning, eaName, bgImageUrl, showBg, setShowBg, setShowRemoveConfirm, setShowQuotes }: any) {
+function RegularLayout({ shapeStyle, accentColor, botRunning, setBotRunning, eaName, bgImageUrl, showBg, setShowBg, setShowRemoveConfirm, setShowQuotes }: any) {
   return (
     <div className="relative z-10 flex flex-col items-center px-2 mt-0">
 
@@ -285,7 +282,7 @@ function RegularLayout({ accentColor, botRunning, setBotRunning, eaName, bgImage
       />
 
       {/* Circle — very large */}
-      <div
+      <RobotImageFrame shape={shapeStyle} accent={accentColor} size={290} borderWidth={2.5}
         className="relative flex items-center justify-center overflow-hidden mb-6"
         style={{
           width: 290,
@@ -302,7 +299,7 @@ function RegularLayout({ accentColor, botRunning, setBotRunning, eaName, bgImage
         ) : (
           <ChipIcon size={110} color={accentColor} style={{ filter: `drop-shadow(0 0 18px ${accentColor}) drop-shadow(0 0 36px ${accentColor}66)` }} />
         )}
-      </div>
+      </RobotImageFrame>
 
       {/* Bot name — tap to toggle bg */}
       <button onClick={() => setShowBg(!showBg)} className="active:opacity-70 transition-opacity mb-3 z-10 px-4">
@@ -400,7 +397,7 @@ function ThreeButtons({
 /* ══════════════════════════════════════════════════════════════════ */
 /* MATRIX layout                                                     */
 /* ══════════════════════════════════════════════════════════════════ */
-function MatrixLayout({ botRunning, setBotRunning, eaName, eaTagline, bgImageUrl, setShowQuotes, setShowRemoveConfirm, onOpenTrades, tradeCount = 0 }: any) {
+function MatrixLayout({ shapeStyle, accentColor, botRunning, setBotRunning, eaName, eaTagline, bgImageUrl, setShowQuotes, setShowRemoveConfirm, onOpenTrades, tradeCount = 0 }: any) {
   const blue = "#1a6bff";
   return (
     <div className="relative z-10 flex flex-col items-center" style={{ minHeight: "calc(100dvh - 88px)", paddingBottom: 16 }}>
@@ -441,12 +438,12 @@ function MatrixLayout({ botRunning, setBotRunning, eaName, eaTagline, bgImageUrl
       <div className="relative flex items-center justify-center mb-6" style={{ width: 210, height: 210 }}>
         <div className="absolute rounded-full pointer-events-none" style={{ inset: 0, border: "1px solid rgba(26,107,255,0.12)" }} />
         <div className="absolute rounded-full pointer-events-none" style={{ inset: 16, border: "1px solid rgba(26,107,255,0.22)" }} />
-        <div className="absolute rounded-full overflow-hidden flex items-center justify-center" style={{ inset: 30, background: bgImageUrl ? "transparent" : "rgba(240,245,255,0.96)", border: "3px solid rgba(190,215,255,0.9)", boxShadow: `0 0 40px ${blue}55, 0 0 80px ${blue}28` }}>
+        <RobotImageFrame shape={shapeStyle} accent={accentColor} size={150} borderWidth={3} className="absolute rounded-full overflow-hidden flex items-center justify-center" style={{ inset: 30, background: bgImageUrl ? "transparent" : "rgba(240,245,255,0.96)", border: "3px solid rgba(190,215,255,0.9)", boxShadow: `0 0 40px ${blue}55, 0 0 80px ${blue}28` }}>
           {bgImageUrl
             ? <img src={bgImageUrl} alt={eaName} className="w-full h-full object-cover" />
             : <span className="font-black select-none" style={{ fontSize: 58, color: "transparent", WebkitTextStroke: `3px ${blue}`, lineHeight: 1 }}>P</span>}
           {botRunning && <div className="absolute inset-0 rounded-full animate-ping" style={{ background: blue, opacity: 0.08 }} />}
-        </div>
+        </RobotImageFrame>
       </div>
 
       <h1 className="text-white font-black text-center tracking-tight mb-1 px-4" style={{ fontSize: 34, lineHeight: 1.0, textShadow: "0 2px 20px rgba(0,0,0,0.9)" }}>
