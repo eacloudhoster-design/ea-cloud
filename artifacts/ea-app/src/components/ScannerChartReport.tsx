@@ -1,50 +1,24 @@
-import { ArrowDown, ArrowRight, ArrowUp, ChartNoAxesCombined, ClipboardList, Coins, Crosshair, Layers3, Minus, Settings2, Shield, Target, Waves } from "lucide-react";
+import { ArrowDownRight, ArrowUpRight, Crosshair, Shield, Target } from "lucide-react";
 import type { ChartReport, ScannerRecord } from "@/lib/scanner";
-import { formatLots, type ScannerTradeSettings } from "@/lib/scanner-trade-settings";
+import type { ScannerTradeSettings } from "@/lib/scanner-trade-settings";
 import { formatScannerPrice } from "@/lib/scanner-format";
-import { isDirectionalReport, directionalLabel, confidenceLabel, formatRiskReward } from "@/lib/scanner-report-view";
 import ScannerTradeAction from "./ScannerTradeAction";
 import "./ScannerChartReport.css";
 
 interface Props { historical?: boolean; clientToken?: string | null; onSettingsSaved?: (settings: ScannerTradeSettings) => void; record: ScannerRecord; settings: ScannerTradeSettings; onEditSettings: () => void }
-export default function ScannerChartReport({ record, settings, onEditSettings, clientToken, onSettingsSaved, historical = false }: Props) {
+export default function ScannerChartReport({ record, settings, clientToken, onSettingsSaved }: Props) {
   const report = record.report as ChartReport;
-  const details = isDirectionalReport(report) ? report : null;
-  const direction = report.signal === "BUY" ? "buy" : report.signal === "SELL" ? "sell" : "no-trade";
-  const DirectionIcon = direction === "buy" ? ArrowUp : direction === "sell" ? ArrowDown : Minus;
-  const summaryWords = report.reasoning.trim().split(/\s+/);
-  const summary = summaryWords.slice(0, 80).join(" ") + (summaryWords.length > 80 ? "…" : "");
-  const isGold = report.symbol?.toUpperCase() === "XAUUSD";
-  const symbolCode = report.symbol?.toUpperCase() || "";
-  const assetLabel = isGold ? "Gold" : /BTC|ETH|SOL/.test(symbolCode) ? "Crypto" : /US100|US30|NAS|SPX|GER/.test(symbolCode) ? "Index" : /^[A-Z]{6}$/.test(symbolCode) ? "FX" : "Chart";
-  const metadata = [isGold ? "Gold" : null, report.timeframe, record.strategy].filter(Boolean).join(" · ");
-  const date = new Date(record.createdAt);
-  return <div className={`scanner-chart-result scanner-chart-result--${direction}`}>
-    <article className="scanner-chart-card" aria-label="AI chart analysis report">
-      <header className="scanner-result-header"><span className={`scanner-asset-icon ${isGold ? "scanner-asset-icon--gold" : "scanner-asset-icon--market"}`}>{isGold ? <Coins size={23} /> : assetLabel === "Chart" ? <ChartNoAxesCombined size={23} /> : <span className="scanner-asset-label">{assetLabel}</span>}</span><div><h3>{report.symbol || "Unidentified chart"}</h3><p>{metadata || "Chart analysis"}</p></div><div className="scanner-result-status"><time dateTime={record.createdAt}>{date.toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" })}</time><span>Report saved</span></div></header>
-      <div className="scanner-result-overview"><div className="scanner-result-signal"><span><DirectionIcon size={25} /></span><div><small>Directional bias</small><h3>{directionalLabel(report)}</h3></div></div><div className="scanner-confidence"><div><h4>Confidence</h4><p>{details?.confidence !== null && details ? "AI-estimated · uncalibrated" : "Uncalibrated"}</p><small>Not a verified win probability</small></div><span className="scanner-confidence-ring" aria-label={`Directional confidence: ${confidenceLabel(report)}`}>{details?.confidence != null ? `${details.confidence}%` : "—"}</span></div></div>
-      <div className="scanner-eligibility"><strong>{historical ? "Historical signal" : "Live execution unavailable"}</strong><span>{historical ? "Saved chart prices · not current quotes" : details?.marketStatus === "closed" ? "Market reported closed" : "Live market unverified"}</span></div>
-      <p className="scanner-level-caption">{historical ? "Historical reference levels · not live quotes" : "Chart reference levels · not live quotes"}</p>
-      {details?.levelAssessment && details.levelAssessment.code !== "CHART_LEVELS_RETAINED" && <p className="scanner-result-limitations">{details.levelsUnavailableReason || ({
-        PROVIDER_LEVELS_MISSING: "The AI omitted trading levels; a complete chart setup was not returned.",
-        PROVIDER_LEVELS_NULL: "The AI could not establish a complete setup from this chart.",
-        PROVIDER_LEVELS_PARTIAL: "The AI returned an incomplete setup; all three supported levels are required.",
-        PRICE_SCALE_MISSING: "Readable price-axis evidence was not returned. Include the price scale in your screenshot.",
-        PRICE_SCALE_INVALID: "The returned chart price scale was inconsistent.",
-        LEVEL_OUTSIDE_VISIBLE_SCALE: "Proposed levels fell outside the readable chart price scale.",
-        UNSUPPORTED_PRICE_PRECISION: "Proposed prices used precision unsupported by the chart scale.",
-      } as Record<string, string>)[details.levelAssessment.code]} <small>({details.levelAssessment.code})</small></p>}
-      <div className="scanner-result-levels">{[{ label: "Entry", value: report.entry, Icon: Crosshair, tone: "entry" }, { label: "Take Profit", value: report.takeProfit, Icon: Target, tone: "profit" }, { label: "Stop Loss", value: report.stopLoss, Icon: Shield, tone: "loss" }].map(({ label, value, Icon, tone }) => <div className={`scanner-result-level scanner-result-level--${tone}`} key={label}><span><Icon size={14} />{label}</span><strong>{formatScannerPrice(value)}</strong></div>)}</div>
-      {details?.riskRewardRatio != null && <p className="scanner-risk-reward">Reference risk / reward (target ≥ 1:2) <strong>1 : {formatRiskReward(details.riskRewardRatio)}</strong></p>}
-      <section className="scanner-analysis-report" aria-labelledby="scanner-analysis-report-title"><header><h4 id="scanner-analysis-report-title"><ClipboardList size={14} /> AI Analysis Report</h4>{record.strategy && <span>{record.strategy} strategy</span>}</header><p>{summary}</p>{details && <dl className="scanner-setup-brief">{[["Market structure",details.analysis.marketStructure],["Entry reason",details.analysis.entryReasoning]].map(([title,text]) => <div key={title}><dt>{title}</dt><dd>{text ? text.split(/\s+/).slice(0,24).join(" ") + (text.split(/\s+/).length > 24 ? "…" : "") : "Not established from this chart."}</dd></div>)}</dl>}<details className="scanner-report-expanded"><summary>Full analysis &amp; invalidation</summary>{details && <p className="scanner-confidence-explanation">{details.confidenceReason || "Directional confidence is uncalibrated."}</p>}{summaryWords.length > 80 && <p>{report.reasoning}</p>}{details && <dl className="scanner-analysis-details">{([
-        ["Market structure", details.analysis.marketStructure], ["Trend direction", details.analysis.trendDirection],
-        ["Liquidity sweeps", details.analysis.liquiditySweeps], ["Support & resistance", details.analysis.supportResistance],
-        ["Entry reasoning", details.analysis.entryReasoning], ["Risks & invalidation", details.analysis.risksInvalidation], ["Supply & demand", details.analysis.supplyDemand ?? null],
-      ]).map(([title, text]) => <div key={title}><dt>{title}</dt><dd>{text || "Not established from this chart."}</dd></div>)}</dl>}</details></section>
-      {Boolean(report.evidenceTags?.length) && <ul className="scanner-evidence-tags" aria-label="AI observations">{report.evidenceTags!.map(tag => <li key={tag}><Waves size={11} />{tag}</li>)}</ul>}
-      <details className="scanner-report-expanded"><summary>Limitations &amp; price context</summary><p className="scanner-result-limitations">{report.limitations || "Live prices, market session and order execution have not been verified."}</p></details>
-    </article>
-    <ScannerTradeAction record={record} settings={settings} clientToken={historical ? null : clientToken} historical={historical} onSettingsSaved={onSettingsSaved} />
-    <button type="button" className="scanner-result-parameters" onClick={onEditSettings}><Settings2 size={14} /><span>{settings.positions} {settings.positions === 1 ? "position" : "positions"} × {formatLots(settings.lotUnits)} lots</span><Layers3 size={14} /></button>
-  </div>;
+  const buy = report.signal === "BUY", directional = buy || report.signal === "SELL";
+  const asset = report.symbol?.toUpperCase() === "XAUUSD" ? "GOLD" : report.symbol?.toUpperCase() === "XAGUSD" ? "SILVER" : "";
+  const confidence = "confidence" in report ? report.confidence : null;
+  const Icon = buy ? ArrowUpRight : ArrowDownRight;
+  // Display only a short excerpt; never mutate the original saved reasoning.
+  const analysis = report.reasoning.trim().split(/\s+/).slice(0, 36).join(" ");
+  return <article className={`scanner-chart-result scanner-terminal-signal ${buy ? "is-buy" : "is-sell"}`} aria-label="Trading signal">
+    <header className="terminal-signal-header"><h3>{report.symbol || "—"}{asset && <span> — {asset}</span>}</h3><div><span>Timeframe: <b>{report.timeframe || "—"}</b></span><span>Strategy: <b>{record.strategy || "—"}</b></span></div></header>
+    <section className="terminal-signal-direction"><span className="terminal-eyebrow">DIRECTIONAL BIAS</span><div><Icon size={36} aria-hidden="true" /><h4>{directional ? `${report.signal}${asset ? ` ${asset}` : ""}` : "Archived analysis"}</h4></div><p>Confidence: <strong>{confidence == null ? "—" : `${confidence}%`}</strong></p></section>
+    <div className="terminal-price-grid">{[{label:"ENTRY",value:report.entry,Icon:Crosshair,tone:"entry"},{label:"STOP LOSS",value:report.stopLoss,Icon:Shield,tone:"stop"},{label:"TAKE PROFIT",value:report.takeProfit,Icon:Target,tone:"target"}].map(({label,value,Icon:PriceIcon,tone})=><section className={`terminal-price terminal-price--${tone}`} key={label}><span><PriceIcon size={14} aria-hidden="true" />{label}</span><strong>{formatScannerPrice(value)}</strong></section>)}</div>
+    <section className="terminal-trade-analysis"><h4>TRADE ANALYSIS</h4><p>{analysis}{report.reasoning.trim().split(/\s+/).length > 36 ? "…" : ""}</p></section>
+    <ScannerTradeAction record={record} settings={settings} clientToken={clientToken} onSettingsSaved={onSettingsSaved} />
+  </article>;
 }

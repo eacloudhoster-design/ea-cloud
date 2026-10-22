@@ -24,7 +24,7 @@ if(!persisted||!isDeepStrictEqual(persisted.report,immediate.report))throw Error
 mkdirSync('work',{recursive:true});const {render,formatPrice}=await loadScannerRenderer();const html=render(persisted);
 const allLevels=['entry','stopLoss','takeProfit'].every(key=>typeof persisted.report[key]==='number');
 if(allLevels)for(const key of ['entry','stopLoss','takeProfit'])if(!html.includes(formatPrice(persisted.report[key])))throw Error('Actual frontend component lost '+key);
-if(!html.includes('Live execution unavailable'))throw Error('Expected current no-live-execution safeguard.');
+if(!html.includes('EXECUTE TRADE'))throw Error('Expected interactive trade review action.');
 // Private owner-only artifacts, never chart bytes, token or raw Gemini response.
 writeFileSync(resolve(output+'.json'),JSON.stringify({verification:'real deployed API; POST equals PostgreSQL history; actual client component SSR',immediate,persisted,allLevels},null,2)+'\n',{mode:0o600,flag:'wx'});
 writeFileSync(resolve(output+'.html'),html,{mode:0o600,flag:'wx'});

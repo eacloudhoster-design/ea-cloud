@@ -67,7 +67,7 @@ test('scanner routes enforce approval/scanner entitlement/ownership and keep pre
         for(const field of ['entry','stopLoss','takeProfit'])assert.equal(persisted.report[field],raw[field]);
         assert.equal(persisted.report.riskRewardRatio,2);assert.equal(persisted.report.levelAssessment.code,'CHART_LEVELS_RETAINED');
         const html=render(persisted);for(const field of ['entry','stopLoss','takeProfit'])assert.ok(html.includes(formatPrice(raw[field])));
-        assert.ok(html.includes('not live quotes'));assert.ok(html.includes('Live execution unavailable'));assert.match(html,/scanner-result-execute[^>]*disabled/);
+        assert.ok(html.includes('TRADE ANALYSIS'));assert.match(html,/<button class="scanner-result-execute" type="button">/);
         assert.equal(diagnostics.at(-1).stage,'persisted');assert.equal(diagnostics.at(-2).stage,'normalized');
         assert.doesNotMatch(JSON.stringify(diagnostics.at(-1)),/3300|isolated-pipeline-key|fixture axis/);
       }
@@ -80,7 +80,11 @@ test('scanner routes enforce approval/scanner entitlement/ownership and keep pre
     const executed=await fetch(base+'/execute',{method:'POST',headers:{Authorization:token(),'Content-Type':'application/json'},body:JSON.stringify({scanId:data.id,lotSize:.01,positions:1})});assert.equal(executed.status,400);assert.match((await executed.json()).error,/No order was submitted/);assert.equal(state.providerCalls,1);assert.equal(state.inserts,1);
     const ownedId='11111111-1111-4111-8111-111111111111';state.history.push({id:ownedId,clientId:7,kind:'chart',report:{...report,signal:'BUY',symbol:'XAUUSD',timeframe:'H1',entry:100,stopLoss:99,takeProfit:103},createdAt:new Date()});
     const preflightBody={scanId:ownedId,lotSize:.01,positions:1};const preflight=await fetch(base+'/preflight',{method:'POST',headers:{Authorization:token(),'Content-Type':'application/json'},body:JSON.stringify(preflightBody)});assert.equal(preflight.status,200);const check=await preflight.json();assert.equal(check.submissionEnabled,false);assert.equal(check.plan.eligible,false);assert.equal(state.inserts,1);
+    const confirm=async(patch={})=>fetch(base+'/execute',{method:'POST',headers:{Authorization:token(),'Content-Type':'application/json'},body:JSON.stringify({...preflightBody,confirmed:true,requestId:'22222222-2222-4222-8222-222222222222',...patch})});
+    const missingAccount=await confirm();assert.equal(missingAccount.status,503);assert.equal((await missingAccount.json()).error,'Connect your MT5 account to execute this trade.');
+    for(const patch of [{lotSize:.015},{positions:21},{confirmed:false},{symbol:'INJECTED'}])assert.equal((await confirm(patch)).status,400);
+    assert.equal((await fetch(base+'/execute',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(preflightBody)})).status,401);
     state.history.find(row=>row.id===ownedId).clientId=8;const privateReport=await fetch(base+'/preflight',{method:'POST',headers:{Authorization:token(),'Content-Type':'application/json'},body:JSON.stringify(preflightBody)});assert.equal(privateReport.status,404);
-    for(let repeat=0;repeat<2;repeat++){const denied=await fetch(base+'/execute',{method:'POST',headers:{Authorization:token(),'Content-Type':'application/json'},body:JSON.stringify({...preflightBody,confirmed:true,requestId:'22222222-2222-4222-8222-222222222222'})});assert.equal(denied.status,503);}assert.equal(state.inserts,1);assert.equal(state.providerCalls,1);
+    for(let repeat=0;repeat<2;repeat++){const denied=await fetch(base+'/execute',{method:'POST',headers:{Authorization:token(),'Content-Type':'application/json'},body:JSON.stringify({...preflightBody,confirmed:true,requestId:'22222222-2222-4222-8222-222222222222'})});assert.equal(denied.status,404);}assert.equal(state.inserts,1);assert.equal(state.providerCalls,1);
   }finally{rmSync(output,{force:true});delete globalThis.__scannerDB;delete globalThis.__scannerProvider;}
 });
