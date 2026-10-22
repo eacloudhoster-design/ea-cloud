@@ -21,9 +21,8 @@ const INTERFACE_OPTIONS: { id: InterfaceStyle; label: string; desc: string }[] =
 ];
 
 const SHAPE_OPTIONS: { id: ShapeStyle; label: string; desc: string }[] = [
+  { id: "none", label: "None", desc: "Bot image without a decorative shape" },
   { id: "orbit", label: "The Orbit", desc: "Circle Shape Interface" },
-  { id: "cornerstone", label: "The Cornerstone", desc: "Square Shape Interface" },
-  { id: "fortress", label: "The Fortress", desc: "Pentagon Shape Interface" },
   { id: "neural", label: "The Neural Interface", desc: "Neural Network Style" },
 ];
 
@@ -39,12 +38,7 @@ const COLOUR_OPTIONS = [
 
 const SHAPE_ICONS: Record<ShapeStyle, React.ReactNode> = {
   orbit: <div className="w-9 h-9 rounded-full border-2 border-current" />,
-  cornerstone: <div className="w-8 h-8 rounded border-2 border-current" />,
-  fortress: (
-    <svg width="36" height="36" viewBox="0 0 36 36" fill="none" stroke="currentColor" strokeWidth="2">
-      <polygon points="18,3 33,13 28,31 8,31 3,13" />
-    </svg>
-  ),
+  none: <span aria-hidden="true" className="text-xl">—</span>,
   neural: <div className="w-8 h-8 rounded-xl border-2 border-current" />,
 };
 

@@ -5,7 +5,7 @@ import { Bell, Trash2, DollarSign, Play, Pause, X, TrendingUp, Settings2, Check,
 import { useState, useEffect, useRef } from "react";
 import { useApp } from "@/context/AppContext";
 import { useTradeExecutions, type TradeExecution } from "@/hooks/use-trade-executions";
-import { eaLogo } from "@/lib/branding";
+import { eaLogo, robotBg } from "@/lib/branding";
 
 /* Custom chip icon — no inner square */
 function ChipIcon({ size = 24, color = "currentColor", style }: { size?: number; color?: string; style?: React.CSSProperties }) {
@@ -156,11 +156,11 @@ function S2ToneLayout({ shapeStyle, accentColor, botRunning, setBotRunning, eaNa
             : `radial-gradient(circle at 38% 32%, ${accentColor}99 0%, ${accentColor}55 30%, rgba(50,0,0,0.98) 65%, rgba(12,0,0,1) 100%)`,
         }}
       >
-        {bgImageUrl && (
-          <img src={bgImageUrl} alt="" className="absolute inset-0 w-full h-full object-cover" />
+        {(bgImageUrl || shapeStyle === "none") && (
+          <img src={bgImageUrl || robotBg} alt="" className="absolute inset-0 w-full h-full object-cover" />
         )}
         {/* Inner highlight glint */}
-        {!bgImageUrl && (
+        {!bgImageUrl && shapeStyle !== "none" && (
           <div
             className="absolute"
             style={{
@@ -265,7 +265,7 @@ function RegularLayout({ shapeStyle, accentColor, botRunning, setBotRunning, eaN
     <div className="relative z-10 flex flex-col items-center px-2 mt-0">
 
       {/* Wide radial glow bloom behind the circle */}
-      <div
+      {shapeStyle !== "none" && <div
         className="pointer-events-none absolute"
         style={{
           width: 360,
@@ -276,7 +276,7 @@ function RegularLayout({ shapeStyle, accentColor, botRunning, setBotRunning, eaN
           left: "50%",
           transform: "translateX(-50%)",
         }}
-      />
+      />}
 
       {/* Circle — very large */}
       <RobotImageFrame shape={shapeStyle} accent={accentColor} size={290} borderWidth={2.5}
@@ -291,8 +291,8 @@ function RegularLayout({ shapeStyle, accentColor, botRunning, setBotRunning, eaN
           zIndex: 1,
         }}
       >
-        {bgImageUrl ? (
-          <img src={bgImageUrl} alt="" className="absolute inset-0 w-full h-full object-cover" />
+        {(bgImageUrl || shapeStyle === "none") ? (
+          <img src={bgImageUrl || robotBg} alt="" className="absolute inset-0 w-full h-full object-cover" />
         ) : (
           <ChipIcon size={110} color={accentColor} style={{ filter: `drop-shadow(0 0 18px ${accentColor}) drop-shadow(0 0 36px ${accentColor}66)` }} />
         )}
@@ -432,6 +432,11 @@ function MatrixLayout({ shapeStyle, accentColor, botRunning, setBotRunning, eaNa
         {[...Array(5)].map((_, i) => <div key={i} className="w-1 h-1 rounded-full bg-white" style={{ opacity: i === 2 ? 0.8 : 0.4 }} />)}
       </div>
 
+      {shapeStyle === "none" ? (
+        <RobotImageFrame shape="none" accent={accentColor} size={150} borderWidth={0} className="mb-6" style={{}}>
+          <img src={bgImageUrl || robotBg} alt={eaName} />
+        </RobotImageFrame>
+      ) : (
       <div className="relative flex items-center justify-center mb-6" style={{ width: 210, height: 210 }}>
         <div className="absolute rounded-full pointer-events-none" style={{ inset: 0, border: "1px solid rgba(26,107,255,0.12)" }} />
         <div className="absolute rounded-full pointer-events-none" style={{ inset: 16, border: "1px solid rgba(26,107,255,0.22)" }} />
@@ -442,6 +447,7 @@ function MatrixLayout({ shapeStyle, accentColor, botRunning, setBotRunning, eaNa
           {botRunning && <div className="absolute inset-0 rounded-full animate-ping" style={{ background: blue, opacity: 0.08 }} />}
         </RobotImageFrame>
       </div>
+      )}
 
       <BotName primary className="text-white font-black text-center tracking-tight mb-1 px-4" style={{ fontSize: 34, lineHeight: 1.0, textShadow: "0 2px 20px rgba(0,0,0,0.9)" }}>
         {eaName.toUpperCase()}
