@@ -41,7 +41,8 @@
     "storageStateHasPosition": true,
     "tapAndKeyboardOpened": true,
     "dragDidNotOpen": true,
-    "interfaceSwitchesPreserved": true
+    "interfaceSwitchesPreserved": true,
+    "hiddenInSettings": true
   },
   {
     "viewport": {
@@ -85,7 +86,8 @@
     "storageStateHasPosition": true,
     "tapAndKeyboardOpened": true,
     "dragDidNotOpen": true,
-    "interfaceSwitchesPreserved": true
+    "interfaceSwitchesPreserved": true,
+    "hiddenInSettings": true
   },
   {
     "viewport": {
@@ -129,6 +131,7 @@
     "storageStateHasPosition": true,
     "tapAndKeyboardOpened": true,
     "dragDidNotOpen": true,
-    "interfaceSwitchesPreserved": true
+    "interfaceSwitchesPreserved": true,
+    "hiddenInSettings": true
   }
 ]

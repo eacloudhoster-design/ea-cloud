@@ -36,3 +36,11 @@ node scripts/tests/activity-monitor-ui.test.mjs
 Set PLAYWRIGHT_MODULE to the installed Playwright index.mjs path when outside the repository. Captures default to work/floating-robot/.
 
 These are desktop and emulated mobile Chromium tests, not claims of physical iOS/Android hardware testing. No production deployment was performed; live website rollout is not verified by these local production-artifact captures.
+
+## Settings-only visibility update
+
+Settings had two independent floating visuals: its own 46px decorative EA Cloud logo in SettingsTab.tsx and the shared draggable trading-activity trigger. The Settings-only decorative logo container and unused logo import are now removed. The shared trigger is hidden and removed from keyboard tab order whenever activeTab is settings. It stays mounted with its drag state and dimensions intact, so hiding does not reset or clamp away its saved position. Home and MetaTrader retain its original appearance and activity-panel action.
+
+![Settings with both floating circles absent](settings-hidden.png)
+
+The production-build browser suite now checks that the shared trigger is invisible and not tabbable throughout Settings and that the Settings component contains no leftover decorative logo image. It asserts the saved coordinates are unchanged and the trigger reappears at exactly the same coordinates on Home, for all three interfaces at both mobile sizes and desktop. Touch/mouse drag, click/keyboard activation, edge bounds, resizing and reopen tests still pass. This is locally verified; no production deployment was performed.
