@@ -1,32 +1,38 @@
-# Shape options: None, Orbit and Neural
+# Revised None visibility and Matrix sizing
 
-Cornerstone and Fortress have been removed from the menu, ShapeStyle type, valid saved-value registry and frame rendering/geometry logic. Legacy saved values safely fall back to Orbit. New selections still use the existing per-client localStorage key, including None, with no account or navigation changes.
+## Current behavior
 
-None returns the actual image element, not an empty transparent frame. Its intrinsic aspect ratio is preserved within each interface's image size limit, and it is centered without clipping, decorative border, outline, glow or shape background. If no mentor image is configured, None uses the existing default robot asset. Regular's additional frame glow, S2tone's highlight and Matrix's surrounding rings/pulse and 210px frame holder are absent in None mode. Orbit and Neural keep their existing rendering and immediate shared selection behavior.
+None now hides the main bot portrait and its complete frame in Regular, S2tone_ and Matrix, superseding the previous request to retain the image. RobotImageFrame returns null: there is no image, fallback, frame, transparent placeholder or reserved frame-sized DOM element. Existing frame-related glow, rings and pulses also remain absent. The interface's full background image, title, trading controls, navigation and independent trade-activity button are untouched. The None menu description reflects its new behavior.
 
-## Actual production-build browser verification
+Matrix's Orbit and Neural frames increase from 150px to 200px, with the existing surrounding holder increasing from 210px to 260px to retain the original 30px inset. Existing colors, borders and remaining layout are preserved. Regular's 290px and S2tone's 230px frames are unchanged. None still persists through the existing per-client preference store, and selecting another shape immediately restores its image and frame. Cornerstone and Fortress remain removed.
 
-The combined Cloudflare Pages build was served locally at `/ea-app/`. Chromium used Settings → Select Main Interface and Select Shape, with isolated API fixtures using the original default robot artwork as mentor image. No production account or trading service was used.
+## Production-build browser verification
 
-For each of Regular, S2tone_ and Matrix, selected None → Orbit → Neural → None. Assertions verified the main image/frame changed immediately while Settings remained open, before returning Home. All 12 switches kept a loaded image centered on screen. None rendered IMG directly, with zero border/radius, no background, shadow or clipping, no outline SVG, and its rendered aspect ratio matching the source image. Orbit and Neural frames returned correctly. Each None selection survived a full page reload and retained the matching Settings checkmark; the value remained scoped to the existing client key. Cornerstone and Fortress were absent from the clickable menu.
+Served the combined Cloudflare Pages output locally at `/ea-app/`. Chromium selected each actual interface and shape via Settings, using isolated API fixtures and the existing default robot artwork as mentor background. None → Orbit → Neural → None was exercised in all three layouts, verifying immediate DOM updates before leaving Settings, a visible unchanged background, no portrait/frame DOM for None, restored images for the remaining choices, centered frames, and retained None selection after reload. All twelve transitions passed. Matrix frames measured exactly 200px; Regular and S2tone measured 290px and 230px.
 
-![Regular with None](regular-none.png)
+![Regular: None hides the main portrait](regular-none.png)
 
-![S2tone_ with None](s2tone-none.png)
+![S2tone_: None hides the main portrait](s2tone-none.png)
 
-![Matrix with None](matrix-none.png)
+![Matrix: None hides the main portrait](matrix-none.png)
 
-[Recorded measurements for all 12 switches](browser-results.json)
+![Matrix: enlarged Orbit](matrix-orbit.png)
 
-The updated unit suite covers all nine layout/shape combinations, menu callbacks, removed-option rejection, fallback from old saved selections, per-account isolation and unavailable storage. TypeScript and production builds passed. No new dependencies were added.
+![Matrix: enlarged existing Neural](matrix-neural.png)
 
-Repeat with an existing production preview on port 5177:
+[Browser measurements](browser-results.json)
+
+Four unit tests also pass, covering all nine layout/shape combinations, menu callbacks, persistence, invalid legacy preferences, unavailable storage, and no fallback portrait in None mode. TypeScript and production builds passed.
 
 ```sh
-APP_ORIGIN=http://127.0.0.1:5177/ea-app/ CHROMIUM_PATH=/usr/bin/chromium node scripts/tests/shape-selection.browser.mjs
+APP_ORIGIN=http://127.0.0.1:5178/ea-app/ CHROMIUM_PATH=/usr/bin/chromium node scripts/tests/shape-selection.browser.mjs
 node scripts/tests/robot-shape.test.mjs
 ```
 
-Set PLAYWRIGHT_MODULE to the installed Playwright index.mjs path if the module is external to the repository. Browser evidence defaults to work/shape-selection/.
+For externally installed Playwright, set PLAYWRIGHT_MODULE to its index.mjs path. Captures default to work/shape-selection/.
 
-No production deployment was performed. These screenshots verify the locally served production artifact, not the live Cloudflare website. The request ended at “The selected shape”; persistence follows the application's existing per-client preference mechanism.
+## Pending requirement and deployment
+
+The request ends mid-sentence at “Only the existing interface background imag”, and no reference image is available in the supplied files. The user confirmed that “Neutral” refers to the existing Neural option in the Shapes section. The reference-based Matrix Neural redesign has NOT been implemented: it requires the missing reference and remaining instructions. This is a verified partial change, not completion of all three requested changes.
+
+No production deployment was performed. Live Cloudflare content has not been verified; screenshots establish the local production artifact only.
