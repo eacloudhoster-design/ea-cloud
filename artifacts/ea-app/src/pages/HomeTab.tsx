@@ -3,7 +3,7 @@ import BotName from "@/components/BotName";
 import "@/components/S2toneActions.css";
 import RobotImageFrame from "@/components/RobotImageFrame";
 import { Bell, Trash2, DollarSign, Play, Pause, X, TrendingUp, Settings2, Check, Menu, BarChart2, Plus, ArrowUpRight, ArrowDownRight, Activity, ChevronDown, ChevronLeft, Loader2 } from "lucide-react";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useLayoutEffect, useRef } from "react";
 import { useApp } from "@/context/AppContext";
 import { useTradeExecutions, type TradeExecution } from "@/hooks/use-trade-executions";
 import { eaLogo } from "@/lib/branding";
@@ -147,7 +147,9 @@ export default function HomeTab({ onOpenChartScanner, swipeEnabled = true }: Hom
 /* ══════════════════════════════════════════════════════════════════ */
 function S2ToneLayout({ shapeStyle, accentColor, botRunning, setBotRunning, eaName, eaTagline, bgImageUrl, showBg, setShowBg, setShowRemoveConfirm, setShowQuotes }: any) {
   return (
-    <div className="relative z-10 flex flex-col items-center px-5 pt-2 pb-6 gap-5">
+    <div className="relative z-10 flex flex-col items-center px-5 pt-2 pb-6 gap-5"
+      // Reserve the existing 230px frame and 20px gap using padding, not a hidden image.
+      style={shapeStyle === "none" ? { paddingTop: "calc(0.5rem + 230px + 1.25rem)" } : undefined}>
 
       {/* Large glowing sphere */}
       <RobotImageFrame shape={shapeStyle} accent={accentColor} size={230} borderWidth={2.5}
@@ -269,7 +271,9 @@ function S2ToneLayout({ shapeStyle, accentColor, botRunning, setBotRunning, eaNa
 /* ══════════════════════════════════════════════════════════════════ */
 function RegularLayout({ shapeStyle, accentColor, botRunning, setBotRunning, eaName, bgImageUrl, showBg, setShowBg, setShowRemoveConfirm, setShowQuotes }: any) {
   return (
-    <div className="relative z-10 flex flex-col items-center px-2 mt-0">
+    <div className="relative z-10 flex flex-col items-center px-2 mt-0"
+      // Reserve the existing 290px frame plus its 24px bottom margin for None only.
+      style={shapeStyle === "none" ? { paddingTop: 290 + 24 } : undefined}>
 
       {/* Wide radial glow bloom behind the circle */}
       {shapeStyle !== "none" && <div
@@ -403,8 +407,28 @@ function ThreeButtons({
 /* ══════════════════════════════════════════════════════════════════ */
 function MatrixLayout({ shapeStyle, accentColor, botRunning, setBotRunning, eaName, eaTagline, bgImageUrl, setShowQuotes, setShowRemoveConfirm, onOpenTrades, tradeCount = 0 }: any) {
   const blue = "#1a6bff";
+  const layoutRef = useRef<HTMLDivElement>(null);
+  useLayoutEffect(() => {
+    if (shapeStyle !== "none") return;
+    const layout = layoutRef.current;
+    const name = layout?.querySelector<HTMLElement>('[data-bot-name="primary"]');
+    const bar = layout?.querySelector<HTMLElement>('[data-matrix-functions]');
+    if (!layout || !name || !bar) return;
+    const positionName = () => {
+      // offsetTop ignores this transform: preserve all original flow measurements.
+      // Keep the existing pagination dots in the clean 32px gap above the bar.
+      const distance = Math.max(0, bar.offsetTop - name.offsetTop - name.offsetHeight - 32);
+      name.style.transform = `translateY(${distance}px)`;
+    };
+    positionName();
+    const observer = new ResizeObserver(positionName);
+    observer.observe(layout);
+    observer.observe(name);
+    observer.observe(bar);
+    return () => { observer.disconnect(); name.style.removeProperty("transform"); };
+  }, [shapeStyle]);
   return (
-    <div className="relative z-10 flex flex-col items-center" style={{ minHeight: "calc(100dvh - 88px)", paddingBottom: 16 }}>
+    <div ref={layoutRef} className="relative z-10 flex flex-col items-center" style={{ minHeight: "calc(100dvh - 88px)", paddingBottom: 16 }}>
       <div className="w-full flex items-center justify-between px-4 pt-3 pb-4">
         <button className="w-9 h-9 rounded-full flex items-center justify-center active:scale-95 transition-transform" style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.12)" }}>
           <Menu size={16} className="text-white/60" />
@@ -462,7 +486,7 @@ function MatrixLayout({ shapeStyle, accentColor, botRunning, setBotRunning, eaNa
         {[...Array(5)].map((_, i) => <div key={i} className="w-1 h-1 rounded-full bg-white" />)}
       </div>
 
-      <div className="relative mx-4 w-[calc(100%-32px)] max-w-[340px] flex items-center justify-between px-6" style={{ height: 84, borderRadius: 9999, background: "rgba(6,6,20,0.75)", border: `1px solid ${blue}44`, backdropFilter: "blur(16px)" }}>
+      <div data-matrix-functions className="relative mx-4 w-[calc(100%-32px)] max-w-[340px] flex items-center justify-between px-6" style={{ height: 84, borderRadius: 9999, background: "rgba(6,6,20,0.75)", border: `1px solid ${blue}44`, backdropFilter: "blur(16px)" }}>
         <button onClick={() => setShowQuotes(true)} className="flex flex-col items-center gap-1 active:scale-95 transition-transform" style={{ minWidth: 56 }}>
           <TrendingUp size={22} className="text-white/65" />
           <span className="text-[10px] tracking-widest font-bold text-white/55">QUOTES</span>

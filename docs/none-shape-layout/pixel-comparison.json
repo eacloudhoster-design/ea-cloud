@@ -1,0 +1,104 @@
+[
+  {
+    "layout": "regular",
+    "shape": "orbit",
+    "changedPixelsOutsideFloatingTrigger": 0,
+    "rawDifferenceBounds": [
+      318,
+      680,
+      373,
+      734
+    ],
+    "excludedFloatingTriggerBounds": [
+      312,
+      674,
+      378,
+      740
+    ]
+  },
+  {
+    "layout": "regular",
+    "shape": "neural",
+    "changedPixelsOutsideFloatingTrigger": 0,
+    "rawDifferenceBounds": [
+      318,
+      680,
+      373,
+      734
+    ],
+    "excludedFloatingTriggerBounds": [
+      312,
+      674,
+      378,
+      740
+    ]
+  },
+  {
+    "layout": "s2tone",
+    "shape": "orbit",
+    "changedPixelsOutsideFloatingTrigger": 0,
+    "rawDifferenceBounds": [
+      318,
+      680,
+      373,
+      734
+    ],
+    "excludedFloatingTriggerBounds": [
+      312,
+      674,
+      378,
+      740
+    ]
+  },
+  {
+    "layout": "s2tone",
+    "shape": "neural",
+    "changedPixelsOutsideFloatingTrigger": 0,
+    "rawDifferenceBounds": [
+      318,
+      680,
+      373,
+      734
+    ],
+    "excludedFloatingTriggerBounds": [
+      312,
+      674,
+      378,
+      740
+    ]
+  },
+  {
+    "layout": "matrix",
+    "shape": "orbit",
+    "changedPixelsOutsideFloatingTrigger": 0,
+    "rawDifferenceBounds": [
+      318,
+      680,
+      373,
+      734
+    ],
+    "excludedFloatingTriggerBounds": [
+      312,
+      674,
+      378,
+      740
+    ]
+  },
+  {
+    "layout": "matrix",
+    "shape": "neural",
+    "changedPixelsOutsideFloatingTrigger": 0,
+    "rawDifferenceBounds": [
+      318,
+      680,
+      373,
+      734
+    ],
+    "excludedFloatingTriggerBounds": [
+      312,
+      674,
+      378,
+      740
+    ]
+  }
+]

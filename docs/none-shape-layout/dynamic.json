@@ -1,0 +1,650 @@
+[
+  {
+    "viewport": {
+      "width": 320,
+      "height": 568
+    },
+    "font": "\"EA Bot Inter\", sans-serif",
+    "name": {
+      "x": 0,
+      "y": 214,
+      "width": 320,
+      "height": 68,
+      "top": 214,
+      "right": 320,
+      "bottom": 282,
+      "left": 0
+    },
+    "bar": {
+      "x": 16,
+      "y": 314,
+      "width": 288,
+      "height": 84,
+      "top": 314,
+      "right": 304,
+      "bottom": 398,
+      "left": 16
+    }
+  },
+  {
+    "viewport": {
+      "width": 390,
+      "height": 568
+    },
+    "font": "\"EA Bot Inter\", sans-serif",
+    "name": {
+      "x": 0,
+      "y": 214,
+      "width": 390,
+      "height": 68,
+      "top": 214,
+      "right": 390,
+      "bottom": 282,
+      "left": 0
+    },
+    "bar": {
+      "x": 25,
+      "y": 314,
+      "width": 340,
+      "height": 84,
+      "top": 314,
+      "right": 365,
+      "bottom": 398,
+      "left": 25
+    }
+  },
+  {
+    "viewport": {
+      "width": 320,
+      "height": 568
+    },
+    "font": "\"EA Bot Roboto\", sans-serif",
+    "name": {
+      "x": 0,
+      "y": 214,
+      "width": 320,
+      "height": 68,
+      "top": 214,
+      "right": 320,
+      "bottom": 282,
+      "left": 0
+    },
+    "bar": {
+      "x": 16,
+      "y": 314,
+      "width": 288,
+      "height": 84,
+      "top": 314,
+      "right": 304,
+      "bottom": 398,
+      "left": 16
+    }
+  },
+  {
+    "viewport": {
+      "width": 390,
+      "height": 568
+    },
+    "font": "\"EA Bot Roboto\", sans-serif",
+    "name": {
+      "x": 0,
+      "y": 214,
+      "width": 390,
+      "height": 68,
+      "top": 214,
+      "right": 390,
+      "bottom": 282,
+      "left": 0
+    },
+    "bar": {
+      "x": 25,
+      "y": 314,
+      "width": 340,
+      "height": 84,
+      "top": 314,
+      "right": 365,
+      "bottom": 398,
+      "left": 25
+    }
+  },
+  {
+    "viewport": {
+      "width": 320,
+      "height": 568
+    },
+    "font": "\"EA Bot Orbitron\", sans-serif",
+    "name": {
+      "x": 0,
+      "y": 180,
+      "width": 320,
+      "height": 102,
+      "top": 180,
+      "right": 320,
+      "bottom": 282,
+      "left": 0
+    },
+    "bar": {
+      "x": 16,
+      "y": 314,
+      "width": 288,
+      "height": 84,
+      "top": 314,
+      "right": 304,
+      "bottom": 398,
+      "left": 16
+    }
+  },
+  {
+    "viewport": {
+      "width": 390,
+      "height": 568
+    },
+    "font": "\"EA Bot Orbitron\", sans-serif",
+    "name": {
+      "x": 0,
+      "y": 214,
+      "width": 390,
+      "height": 68,
+      "top": 214,
+      "right": 390,
+      "bottom": 282,
+      "left": 0
+    },
+    "bar": {
+      "x": 25,
+      "y": 314,
+      "width": 340,
+      "height": 84,
+      "top": 314,
+      "right": 365,
+      "bottom": 398,
+      "left": 25
+    }
+  },
+  {
+    "viewport": {
+      "width": 320,
+      "height": 568
+    },
+    "font": "\"EA Bot Flipside BRK\", sans-serif",
+    "name": {
+      "x": 0,
+      "y": 180,
+      "width": 320,
+      "height": 102,
+      "top": 180,
+      "right": 320,
+      "bottom": 282,
+      "left": 0
+    },
+    "bar": {
+      "x": 16,
+      "y": 314,
+      "width": 288,
+      "height": 84,
+      "top": 314,
+      "right": 304,
+      "bottom": 398,
+      "left": 16
+    }
+  },
+  {
+    "viewport": {
+      "width": 390,
+      "height": 568
+    },
+    "font": "\"EA Bot Flipside BRK\", sans-serif",
+    "name": {
+      "x": 0,
+      "y": 180,
+      "width": 390,
+      "height": 102,
+      "top": 180,
+      "right": 390,
+      "bottom": 282,
+      "left": 0
+    },
+    "bar": {
+      "x": 25,
+      "y": 314,
+      "width": 340,
+      "height": 84,
+      "top": 314,
+      "right": 365,
+      "bottom": 398,
+      "left": 25
+    }
+  },
+  {
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "font": "\"EA Bot Inter\", sans-serif",
+    "name": {
+      "x": 0,
+      "y": 490,
+      "width": 390,
+      "height": 68,
+      "top": 490,
+      "right": 390,
+      "bottom": 558,
+      "left": 0
+    },
+    "bar": {
+      "x": 25,
+      "y": 590,
+      "width": 340,
+      "height": 84,
+      "top": 590,
+      "right": 365,
+      "bottom": 674,
+      "left": 25
+    }
+  },
+  {
+    "viewport": {
+      "width": 320,
+      "height": 844
+    },
+    "font": "\"EA Bot Inter\", sans-serif",
+    "name": {
+      "x": 0,
+      "y": 490,
+      "width": 320,
+      "height": 68,
+      "top": 490,
+      "right": 320,
+      "bottom": 558,
+      "left": 0
+    },
+    "bar": {
+      "x": 16,
+      "y": 590,
+      "width": 288,
+      "height": 84,
+      "top": 590,
+      "right": 304,
+      "bottom": 674,
+      "left": 16
+    }
+  },
+  {
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "font": "\"EA Bot Roboto\", sans-serif",
+    "name": {
+      "x": 0,
+      "y": 490,
+      "width": 390,
+      "height": 68,
+      "top": 490,
+      "right": 390,
+      "bottom": 558,
+      "left": 0
+    },
+    "bar": {
+      "x": 25,
+      "y": 590,
+      "width": 340,
+      "height": 84,
+      "top": 590,
+      "right": 365,
+      "bottom": 674,
+      "left": 25
+    }
+  },
+  {
+    "viewport": {
+      "width": 320,
+      "height": 844
+    },
+    "font": "\"EA Bot Roboto\", sans-serif",
+    "name": {
+      "x": 0,
+      "y": 490,
+      "width": 320,
+      "height": 68,
+      "top": 490,
+      "right": 320,
+      "bottom": 558,
+      "left": 0
+    },
+    "bar": {
+      "x": 16,
+      "y": 590,
+      "width": 288,
+      "height": 84,
+      "top": 590,
+      "right": 304,
+      "bottom": 674,
+      "left": 16
+    }
+  },
+  {
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "font": "\"EA Bot Orbitron\", sans-serif",
+    "name": {
+      "x": 0,
+      "y": 490,
+      "width": 390,
+      "height": 68,
+      "top": 490,
+      "right": 390,
+      "bottom": 558,
+      "left": 0
+    },
+    "bar": {
+      "x": 25,
+      "y": 590,
+      "width": 340,
+      "height": 84,
+      "top": 590,
+      "right": 365,
+      "bottom": 674,
+      "left": 25
+    }
+  },
+  {
+    "viewport": {
+      "width": 320,
+      "height": 844
+    },
+    "font": "\"EA Bot Orbitron\", sans-serif",
+    "name": {
+      "x": 0,
+      "y": 456,
+      "width": 320,
+      "height": 102,
+      "top": 456,
+      "right": 320,
+      "bottom": 558,
+      "left": 0
+    },
+    "bar": {
+      "x": 16,
+      "y": 590,
+      "width": 288,
+      "height": 84,
+      "top": 590,
+      "right": 304,
+      "bottom": 674,
+      "left": 16
+    }
+  },
+  {
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "font": "\"EA Bot Flipside BRK\", sans-serif",
+    "name": {
+      "x": 0,
+      "y": 456,
+      "width": 390,
+      "height": 102,
+      "top": 456,
+      "right": 390,
+      "bottom": 558,
+      "left": 0
+    },
+    "bar": {
+      "x": 25,
+      "y": 590,
+      "width": 340,
+      "height": 84,
+      "top": 590,
+      "right": 365,
+      "bottom": 674,
+      "left": 25
+    }
+  },
+  {
+    "viewport": {
+      "width": 320,
+      "height": 844
+    },
+    "font": "\"EA Bot Flipside BRK\", sans-serif",
+    "name": {
+      "x": 0,
+      "y": 456,
+      "width": 320,
+      "height": 102,
+      "top": 456,
+      "right": 320,
+      "bottom": 558,
+      "left": 0
+    },
+    "bar": {
+      "x": 16,
+      "y": 590,
+      "width": 288,
+      "height": 84,
+      "top": 590,
+      "right": 304,
+      "bottom": 674,
+      "left": 16
+    }
+  },
+  {
+    "viewport": {
+      "width": 430,
+      "height": 932
+    },
+    "font": "\"EA Bot Inter\", sans-serif",
+    "name": {
+      "x": 0,
+      "y": 612,
+      "width": 430,
+      "height": 34,
+      "top": 612,
+      "right": 430,
+      "bottom": 646,
+      "left": 0
+    },
+    "bar": {
+      "x": 45,
+      "y": 678,
+      "width": 340,
+      "height": 84,
+      "top": 678,
+      "right": 385,
+      "bottom": 762,
+      "left": 45
+    }
+  },
+  {
+    "viewport": {
+      "width": 320,
+      "height": 932
+    },
+    "font": "\"EA Bot Inter\", sans-serif",
+    "name": {
+      "x": 0,
+      "y": 578,
+      "width": 320,
+      "height": 68,
+      "top": 578,
+      "right": 320,
+      "bottom": 646,
+      "left": 0
+    },
+    "bar": {
+      "x": 16,
+      "y": 678,
+      "width": 288,
+      "height": 84,
+      "top": 678,
+      "right": 304,
+      "bottom": 762,
+      "left": 16
+    }
+  },
+  {
+    "viewport": {
+      "width": 430,
+      "height": 932
+    },
+    "font": "\"EA Bot Roboto\", sans-serif",
+    "name": {
+      "x": 0,
+      "y": 612,
+      "width": 430,
+      "height": 34,
+      "top": 612,
+      "right": 430,
+      "bottom": 646,
+      "left": 0
+    },
+    "bar": {
+      "x": 45,
+      "y": 678,
+      "width": 340,
+      "height": 84,
+      "top": 678,
+      "right": 385,
+      "bottom": 762,
+      "left": 45
+    }
+  },
+  {
+    "viewport": {
+      "width": 320,
+      "height": 932
+    },
+    "font": "\"EA Bot Roboto\", sans-serif",
+    "name": {
+      "x": 0,
+      "y": 578,
+      "width": 320,
+      "height": 68,
+      "top": 578,
+      "right": 320,
+      "bottom": 646,
+      "left": 0
+    },
+    "bar": {
+      "x": 16,
+      "y": 678,
+      "width": 288,
+      "height": 84,
+      "top": 678,
+      "right": 304,
+      "bottom": 762,
+      "left": 16
+    }
+  },
+  {
+    "viewport": {
+      "width": 430,
+      "height": 932
+    },
+    "font": "\"EA Bot Orbitron\", sans-serif",
+    "name": {
+      "x": 0,
+      "y": 578,
+      "width": 430,
+      "height": 68,
+      "top": 578,
+      "right": 430,
+      "bottom": 646,
+      "left": 0
+    },
+    "bar": {
+      "x": 45,
+      "y": 678,
+      "width": 340,
+      "height": 84,
+      "top": 678,
+      "right": 385,
+      "bottom": 762,
+      "left": 45
+    }
+  },
+  {
+    "viewport": {
+      "width": 320,
+      "height": 932
+    },
+    "font": "\"EA Bot Orbitron\", sans-serif",
+    "name": {
+      "x": 0,
+      "y": 544,
+      "width": 320,
+      "height": 102,
+      "top": 544,
+      "right": 320,
+      "bottom": 646,
+      "left": 0
+    },
+    "bar": {
+      "x": 16,
+      "y": 678,
+      "width": 288,
+      "height": 84,
+      "top": 678,
+      "right": 304,
+      "bottom": 762,
+      "left": 16
+    }
+  },
+  {
+    "viewport": {
+      "width": 430,
+      "height": 932
+    },
+    "font": "\"EA Bot Flipside BRK\", sans-serif",
+    "name": {
+      "x": 0,
+      "y": 578,
+      "width": 430,
+      "height": 68,
+      "top": 578,
+      "right": 430,
+      "bottom": 646,
+      "left": 0
+    },
+    "bar": {
+      "x": 45,
+      "y": 678,
+      "width": 340,
+      "height": 84,
+      "top": 678,
+      "right": 385,
+      "bottom": 762,
+      "left": 45
+    }
+  },
+  {
+    "viewport": {
+      "width": 320,
+      "height": 932
+    },
+    "font": "\"EA Bot Flipside BRK\", sans-serif",
+    "name": {
+      "x": 0,
+      "y": 544,
+      "width": 320,
+      "height": 102,
+      "top": 544,
+      "right": 320,
+      "bottom": 646,
+      "left": 0
+    },
+    "bar": {
+      "x": 16,
+      "y": 678,
+      "width": 288,
+      "height": 84,
+      "top": 678,
+      "right": 304,
+      "bottom": 762,
+      "left": 16
+    }
+  }
+]
