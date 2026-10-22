@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import {
   defaultHomePreferences,
+  isBackgroundAnimation,
+  type BackgroundAnimation,
   homePreferenceKey,
   isInterfaceStyle,
   readHomePreferences,
@@ -53,6 +55,9 @@ export function useHomePreferences(token: string | null) {
     ...preferences,
     setInterfaceStyle: (value: InterfaceStyle) => {
       if (isInterfaceStyle(value)) update({ interfaceStyle: value });
+    },
+    setBackgroundAnimation: (value: BackgroundAnimation) => {
+      if (isBackgroundAnimation(value)) update({ backgroundAnimation: value });
     },
     setShowBg: (value: boolean) => {
       if (typeof value === "boolean") update({ showBg: value });

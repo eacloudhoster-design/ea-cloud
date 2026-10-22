@@ -5,13 +5,28 @@ export const interfaceOrder: readonly InterfaceStyle[] = [
   "matrix",
   "s2tone",
 ];
+export const backgroundAnimations = [
+  "none",
+  "pulse",
+  "glow",
+  "matrix",
+  "particles",
+] as const;
+export type BackgroundAnimation = (typeof backgroundAnimations)[number];
+export const isBackgroundAnimation = (
+  value: unknown,
+): value is BackgroundAnimation =>
+  backgroundAnimations.includes(value as BackgroundAnimation);
+
 export type HomePreferences = {
+  backgroundAnimation: BackgroundAnimation;
   interfaceStyle: InterfaceStyle;
   showBg: boolean;
 };
 export const defaultHomePreferences: HomePreferences = {
   interfaceStyle: "matrix",
   showBg: true,
+  backgroundAnimation: "none",
 };
 export const isInterfaceStyle = (value: unknown): value is InterfaceStyle =>
   interfaceOrder.includes(value as InterfaceStyle);
@@ -39,6 +54,9 @@ export function readHomePreferences(
         interfaceStyle: isInterfaceStyle(value?.interfaceStyle)
           ? value.interfaceStyle
           : "matrix",
+        backgroundAnimation: isBackgroundAnimation(value?.backgroundAnimation)
+          ? value.backgroundAnimation
+          : "none",
         showBg: typeof value?.showBg === "boolean" ? value.showBg : true,
       };
     } catch {
@@ -56,7 +74,8 @@ export function saveHomePreferences(
   if (
     !key ||
     !isInterfaceStyle(value.interfaceStyle) ||
-    typeof value.showBg !== "boolean"
+    typeof value.showBg !== "boolean" ||
+    !isBackgroundAnimation(value.backgroundAnimation)
   )
     return false;
   try {

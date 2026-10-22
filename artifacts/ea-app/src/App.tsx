@@ -1,3 +1,4 @@
+import BackgroundAnimation from "@/components/BackgroundAnimation";
 import {useHomePreferences} from "@/hooks/use-home-preferences";
 import "@/components/HomeInteractions.css";
 import {useFontPreference} from "@/hooks/use-font-preference";
@@ -36,7 +37,7 @@ function EACloudApp({ onReady }: { onReady: (ready: boolean) => void }) {
   const [activeTab, setActiveTab] = useState<Tab>("home");
   const [showChartScanner, setShowChartScanner] = useState(false);
   const [botRunning, setBotRunning] = useState(true);
-  const { interfaceStyle, setInterfaceStyle, showBg, setShowBg } = useHomePreferences(clientToken);
+  const { interfaceStyle, setInterfaceStyle, showBg, setShowBg, backgroundAnimation, setBackgroundAnimation } = useHomePreferences(clientToken);
   const [accentColor, setAccentColor] = useState("#ef4444");
   const [shapeStyle, setShapeStyle] = useShapePreference(clientToken);
   const [botFont, setBotFont] = useFontPreference(clientToken);
@@ -166,7 +167,7 @@ function EACloudApp({ onReady }: { onReady: (ready: boolean) => void }) {
     botFont, setBotFont,
     mtConnected, setMtConnected,
     eaName, eaTagline, eaSymbols, bgImageUrl,
-    showBg, setShowBg,
+    showBg, setShowBg, backgroundAnimation, setBackgroundAnimation,
     clientToken,
   };
 
@@ -240,6 +241,8 @@ function EACloudApp({ onReady }: { onReady: (ready: boolean) => void }) {
           className="ea-home-background absolute inset-0 w-full h-full object-cover object-center pointer-events-none"
           style={{ zIndex: 0, opacity: showBg ? 1 : 0 }}
         />
+
+        <BackgroundAnimation effect={backgroundAnimation} color={accentColor} active={activeTab === "home"} />
 
         <HomeTab swipeEnabled={!showChartScanner} onOpenChartScanner={() => setShowChartScanner(true)} />
 

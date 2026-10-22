@@ -1,3 +1,4 @@
+import { backgroundAnimations } from "@/lib/home-preferences";
 import {botFonts,botFontStyle,type BotFont} from "@/lib/font-preference";
 import "../assets/bot-fonts/fonts.css";
 import { useState } from "react";
@@ -43,7 +44,7 @@ const SHAPE_ICONS: Record<ShapeStyle, React.ReactNode> = {
 };
 
 export default function SettingsTab({ onOpenChartScanner }: SettingsTabProps) {
-  const { accentColor, setAccentColor, interfaceStyle, setInterfaceStyle, shapeStyle, setShapeStyle, activeTab, botFont="Inter", setBotFont } = useApp();
+  const { backgroundAnimation, setBackgroundAnimation, accentColor, setAccentColor, interfaceStyle, setInterfaceStyle, shapeStyle, setShapeStyle, activeTab, botFont="Inter", setBotFont } = useApp();
   const [open, setOpen] = useState<OpenSection>(null);
 
   const toggle = (section: OpenSection) => setOpen(prev => prev === section ? null : section);
@@ -205,10 +206,10 @@ export default function SettingsTab({ onOpenChartScanner }: SettingsTabProps) {
           accentColor={accentColor}
         >
           <div className="mt-2 space-y-2">
-            {["None", "Pulse", "Glow", "Matrix Rain", "Particles"].map(anim => (
-              <button key={anim} className="w-full px-4 py-3 rounded-2xl text-left active:scale-[0.98] transition-transform"
-                style={{ background: "rgba(15,15,15,0.8)", border: "1px solid rgba(255,255,255,0.1)" }}>
-                <p className="text-white font-semibold text-sm">{anim}</p>
+            {backgroundAnimations.map(anim => (
+              <button key={anim} aria-pressed={backgroundAnimation === anim} onClick={() => setBackgroundAnimation(anim)} className="w-full px-4 py-3 rounded-2xl text-left active:scale-[0.98] transition-transform"
+                style={{ background: backgroundAnimation === anim ? `${accentColor}22` : "rgba(15,15,15,0.8)", border: `1px solid ${backgroundAnimation === anim ? accentColor : "rgba(255,255,255,0.1)"}` }}>
+                <p className="text-white font-semibold text-sm">{{none:"None",pulse:"Pulse",glow:"Glow",matrix:"Matrix Rain",particles:"Particles"}[anim]}{backgroundAnimation === anim && <Check size={16} className="inline ml-2" style={{color:accentColor}} />}</p>
               </button>
             ))}
           </div>

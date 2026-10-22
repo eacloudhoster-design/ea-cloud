@@ -1,0 +1,97 @@
+{
+  "results": [
+    {
+      "layout": "regular",
+      "effect": "pulse",
+      "frameChanged": true,
+      "exclusiveLayer": true,
+      "backgroundAndShapePreserved": true
+    },
+    {
+      "layout": "regular",
+      "effect": "glow",
+      "frameChanged": true,
+      "exclusiveLayer": true,
+      "backgroundAndShapePreserved": true
+    },
+    {
+      "layout": "regular",
+      "effect": "matrix",
+      "frameChanged": true,
+      "exclusiveLayer": true,
+      "backgroundAndShapePreserved": true
+    },
+    {
+      "layout": "regular",
+      "effect": "particles",
+      "frameChanged": true,
+      "exclusiveLayer": true,
+      "backgroundAndShapePreserved": true
+    },
+    {
+      "layout": "s2tone",
+      "effect": "pulse",
+      "frameChanged": true,
+      "exclusiveLayer": true,
+      "backgroundAndShapePreserved": true
+    },
+    {
+      "layout": "s2tone",
+      "effect": "glow",
+      "frameChanged": true,
+      "exclusiveLayer": true,
+      "backgroundAndShapePreserved": true
+    },
+    {
+      "layout": "s2tone",
+      "effect": "matrix",
+      "frameChanged": true,
+      "exclusiveLayer": true,
+      "backgroundAndShapePreserved": true
+    },
+    {
+      "layout": "s2tone",
+      "effect": "particles",
+      "frameChanged": true,
+      "exclusiveLayer": true,
+      "backgroundAndShapePreserved": true
+    },
+    {
+      "layout": "matrix",
+      "effect": "pulse",
+      "frameChanged": true,
+      "exclusiveLayer": true,
+      "backgroundAndShapePreserved": true
+    },
+    {
+      "layout": "matrix",
+      "effect": "glow",
+      "frameChanged": true,
+      "exclusiveLayer": true,
+      "backgroundAndShapePreserved": true
+    },
+    {
+      "layout": "matrix",
+      "effect": "matrix",
+      "frameChanged": true,
+      "exclusiveLayer": true,
+      "backgroundAndShapePreserved": true
+    },
+    {
+      "layout": "matrix",
+      "effect": "particles",
+      "frameChanged": true,
+      "exclusiveLayer": true,
+      "backgroundAndShapePreserved": true
+    }
+  ],
+  "themeUpdated": true,
+  "reloadPersisted": true,
+  "reopenPersisted": true,
+  "hiddenDocumentStopsEffects": true,
+  "tabsStopInactiveEffects": true,
+  "reducedMotionHonored": true,
+  "responsiveDensity": true,
+  "touchDraggingAndControls": true,
+  "errors": []
+}
