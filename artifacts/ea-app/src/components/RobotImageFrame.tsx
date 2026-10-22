@@ -1,20 +1,12 @@
-import {Children,cloneElement,isValidElement,useId,type CSSProperties,type ReactNode} from "react";
+import {useId,type CSSProperties,type ReactNode} from "react";
 import type {ShapeStyle} from "@/context/AppContext";
 import {frameGeometry} from "@/lib/robot-frame-shape";
 import "./RobotImageFrame.css";
 interface Props{shape:ShapeStyle;accent:string;size:number;borderWidth:number;className?:string;style:CSSProperties;children:ReactNode}
 export default function RobotImageFrame({shape,accent,size,borderWidth,className="",style,children}:Props){
  const id=`robot-frame-${useId().replace(/:/g,"")}`;const geometry=frameGeometry(shape,size,borderWidth);
- // None renders the image itself, not a transparent decorative frame.
- if(shape==="none"){
-  const image=Children.toArray(children).find(child=>isValidElement(child)&&child.type==="img");
-  if(!isValidElement<{className?:string;style?:CSSProperties}>(image))return null;
-  return cloneElement(image,{
-   ...{"data-robot-shape":"none"},
-   className:`${className} robot-image-unframed`,
-   style:{...style,position:"relative",inset:"auto",width:"auto",height:"auto",maxWidth:size,maxHeight:size,display:"block",flexShrink:0,alignSelf:"center",marginLeft:"auto",marginRight:"auto",border:0,borderRadius:0,boxShadow:"none",background:"none",filter:"none",clipPath:"none",objectFit:"contain",objectPosition:"center",overflow:"visible"}
-  });
- }
+ // None removes the portrait and its frame without leaving a layout element.
+ if(shape==="none")return null;
  // Orbit retains each layout's original border, glow, background and content box.
  if(shape==="orbit")return <div key={shape} className={`${className} robot-image-frame`} data-robot-shape={shape} style={style}>{children}</div>;
  const outline=<rect x={geometry.inset} y={geometry.inset} width={geometry.extent} height={geometry.extent} rx={geometry.radius}/>;

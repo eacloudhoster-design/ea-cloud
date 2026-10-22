@@ -21,7 +21,7 @@ const INTERFACE_OPTIONS: { id: InterfaceStyle; label: string; desc: string }[] =
 ];
 
 const SHAPE_OPTIONS: { id: ShapeStyle; label: string; desc: string }[] = [
-  { id: "none", label: "None", desc: "Bot image without a decorative shape" },
+  { id: "none", label: "None", desc: "Hide the bot image and decorative shape" },
   { id: "orbit", label: "The Orbit", desc: "Circle Shape Interface" },
   { id: "neural", label: "The Neural Interface", desc: "Neural Network Style" },
 ];

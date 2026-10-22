@@ -5,7 +5,7 @@ import { Bell, Trash2, DollarSign, Play, Pause, X, TrendingUp, Settings2, Check,
 import { useState, useEffect, useRef } from "react";
 import { useApp } from "@/context/AppContext";
 import { useTradeExecutions, type TradeExecution } from "@/hooks/use-trade-executions";
-import { eaLogo, robotBg } from "@/lib/branding";
+import { eaLogo } from "@/lib/branding";
 
 /* Custom chip icon — no inner square */
 function ChipIcon({ size = 24, color = "currentColor", style }: { size?: number; color?: string; style?: React.CSSProperties }) {
@@ -156,8 +156,8 @@ function S2ToneLayout({ shapeStyle, accentColor, botRunning, setBotRunning, eaNa
             : `radial-gradient(circle at 38% 32%, ${accentColor}99 0%, ${accentColor}55 30%, rgba(50,0,0,0.98) 65%, rgba(12,0,0,1) 100%)`,
         }}
       >
-        {(bgImageUrl || shapeStyle === "none") && (
-          <img src={bgImageUrl || robotBg} alt="" className="absolute inset-0 w-full h-full object-cover" />
+        {bgImageUrl && (
+          <img src={bgImageUrl} alt="" className="absolute inset-0 w-full h-full object-cover" />
         )}
         {/* Inner highlight glint */}
         {!bgImageUrl && shapeStyle !== "none" && (
@@ -291,8 +291,8 @@ function RegularLayout({ shapeStyle, accentColor, botRunning, setBotRunning, eaN
           zIndex: 1,
         }}
       >
-        {(bgImageUrl || shapeStyle === "none") ? (
-          <img src={bgImageUrl || robotBg} alt="" className="absolute inset-0 w-full h-full object-cover" />
+        {bgImageUrl ? (
+          <img src={bgImageUrl} alt="" className="absolute inset-0 w-full h-full object-cover" />
         ) : (
           <ChipIcon size={110} color={accentColor} style={{ filter: `drop-shadow(0 0 18px ${accentColor}) drop-shadow(0 0 36px ${accentColor}66)` }} />
         )}
@@ -432,15 +432,11 @@ function MatrixLayout({ shapeStyle, accentColor, botRunning, setBotRunning, eaNa
         {[...Array(5)].map((_, i) => <div key={i} className="w-1 h-1 rounded-full bg-white" style={{ opacity: i === 2 ? 0.8 : 0.4 }} />)}
       </div>
 
-      {shapeStyle === "none" ? (
-        <RobotImageFrame shape="none" accent={accentColor} size={150} borderWidth={0} className="mb-6" style={{}}>
-          <img src={bgImageUrl || robotBg} alt={eaName} />
-        </RobotImageFrame>
-      ) : (
-      <div className="relative flex items-center justify-center mb-6" style={{ width: 210, height: 210 }}>
+      {shapeStyle !== "none" && (
+      <div className="relative flex items-center justify-center mb-6" style={{ width: 260, height: 260 }}>
         <div className="absolute rounded-full pointer-events-none" style={{ inset: 0, border: "1px solid rgba(26,107,255,0.12)" }} />
         <div className="absolute rounded-full pointer-events-none" style={{ inset: 16, border: "1px solid rgba(26,107,255,0.22)" }} />
-        <RobotImageFrame shape={shapeStyle} accent={accentColor} size={150} borderWidth={3} className="absolute rounded-full overflow-hidden flex items-center justify-center" style={{ inset: 30, background: bgImageUrl ? "transparent" : "rgba(240,245,255,0.96)", border: "3px solid rgba(190,215,255,0.9)", boxShadow: `0 0 40px ${blue}55, 0 0 80px ${blue}28` }}>
+        <RobotImageFrame shape={shapeStyle} accent={accentColor} size={200} borderWidth={3} className="absolute rounded-full overflow-hidden flex items-center justify-center" style={{ inset: 30, background: bgImageUrl ? "transparent" : "rgba(240,245,255,0.96)", border: "3px solid rgba(190,215,255,0.9)", boxShadow: `0 0 40px ${blue}55, 0 0 80px ${blue}28` }}>
           {bgImageUrl
             ? <img src={bgImageUrl} alt={eaName} className="w-full h-full object-cover" />
             : <span className="font-black select-none" style={{ fontSize: 58, color: "transparent", WebkitTextStroke: `3px ${blue}`, lineHeight: 1 }}>P</span>}

@@ -21,29 +21,34 @@ try{
   for(const [shape,option] of [['none','None'],['orbit','The Orbit'],['neural','The Neural Interface'],['none','None']]){
    await page.getByRole('button',{name:new RegExp(option)}).click();
    // Changes must already be present behind Settings, with no navigation/reload.
-   assert.equal(await page.locator('[data-robot-shape]').getAttribute('data-robot-shape'),shape);
+   assert.equal(await page.locator('[data-robot-shape]').count(),shape==='none'?0:1);
+   if(shape!=='none')assert.equal(await page.locator('[data-robot-shape]').getAttribute('data-robot-shape'),shape);
    assert.equal(await page.evaluate(()=>localStorage.getItem('ea-cloud:client:7:robot-shape')),shape);
    await home();
-   const frame=page.locator('[data-robot-shape]');
-   const state=await frame.evaluate(el=>{const css=getComputedStyle(el);const img=el.tagName==='IMG'?el:el.querySelector('img');const box=el.getBoundingClientRect();return {tag:el.tagName,border:css.borderTopWidth,radius:css.borderRadius,background:css.backgroundImage,shadow:css.boxShadow,clip:css.clipPath,fit:css.objectFit,imageLoaded:img?.naturalWidth>0,x:box.x+box.width/2,viewport:innerWidth,naturalWidth:img?.naturalWidth,naturalHeight:img?.naturalHeight,width:box.width,height:box.height,parentChildren:el.parentElement.children.length}});
-   assert(state.imageLoaded);assert(Math.abs(state.x-state.viewport/2)<1);
+   let state;
+   const background=page.locator('img[src="/fixture-robot.jpg"]').first();
+   assert(await background.isVisible(), 'The interface background must remain visible');
    if(shape==='none'){
-    assert.equal(state.tag,'IMG');assert.equal(state.border,'0px');assert.equal(state.radius,'0px');assert.equal(state.background,'none');assert.equal(state.shadow,'none');assert.equal(state.clip,'none');assert.equal(state.fit,'contain');
-    assert(Math.abs(state.width/state.height-state.naturalWidth/state.naturalHeight)<.01, 'Unframed image must keep its intrinsic proportions');
-    assert.equal(await page.locator('.robot-frame-outline').count(),0);
-    // With no frame wrapper, no rings or pulse siblings may surround this image.
-    if(layout==='matrix')assert(await frame.locator('..').getAttribute('class').then(c=>c.includes('flex-col')));
-   }else if(shape==='neural')assert.equal(await page.locator('.robot-frame-outline').count(),1);
-   else assert.notEqual(state.border,'0px');
+    assert.equal(await page.locator('[data-robot-shape], .robot-frame-outline, .robot-image-unframed').count(),0);
+    state={portraitHidden:true,backgroundVisible:true};
+   }else{
+    const frame=page.locator('[data-robot-shape]');
+    state=await frame.evaluate(el=>{const css=getComputedStyle(el);const img=el.querySelector('img');const box=el.getBoundingClientRect();return {tag:el.tagName,border:css.borderTopWidth,imageLoaded:img?.naturalWidth>0,x:box.x+box.width/2,viewport:innerWidth,width:box.width,height:box.height}});
+    assert(state.imageLoaded);assert(Math.abs(state.x-state.viewport/2)<1);
+    if(layout==='matrix')assert.equal(Math.round(state.width),200);
+    else assert.equal(Math.round(state.width),layout==='regular'?290:230);
+    if(shape==='neural')assert.equal(await page.locator('.robot-frame-outline').count(),1);
+    else assert.notEqual(state.border,'0px');
+   }
    await page.screenshot({path:`work/shape-selection/${layout}-${shape}.png`});results.push({layout,shape,...state});
    await settings();await shapes();
   }
   await page.reload();await page.waitForSelector('.ea-startup',{state:'detached'});
-  assert.equal(await page.locator('[data-robot-shape]').getAttribute('data-robot-shape'),'none');
+  assert.equal(await page.locator('[data-robot-shape]').count(),0);
   await settings();await shapes();
   assert.equal(await page.getByRole('button',{name:/None/}).getAttribute('aria-pressed'),'true');
   // Close the shape accordion before choosing the next interface.
   await shapes();await home();
  }
- await writeFile('work/shape-selection/results.json',JSON.stringify(results,null,2));console.log(JSON.stringify(results.map(r=>({layout:r.layout,shape:r.shape,imageLoaded:r.imageLoaded,tag:r.tag})),null,2));
+ await writeFile('work/shape-selection/results.json',JSON.stringify(results,null,2));console.log(JSON.stringify(results.map(r=>({layout:r.layout,shape:r.shape,imageLoaded:r.imageLoaded,portraitHidden:r.portraitHidden,width:r.width})),null,2));
 }finally{await browser.close()}
