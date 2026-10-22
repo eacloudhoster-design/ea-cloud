@@ -19,7 +19,6 @@
 .scanner-orbit { position:absolute; inset:0; border:1px solid #ef675535; border-radius:50%; }
 .scanner-orbit::before { content:''; position:absolute; inset:9px; border:1px dashed #f57a5d4a; border-radius:50%; }
 .scanner-orbit-two { inset:19px; border-color:#fa624b4a; }
-.scanner-orb-mark { position:absolute; bottom:24px; right:28px; color:#f2b5a4; background:#49170c; border-radius:50%; padding:3px; width:25px; height:25px; }
 .scanner-mentor { color:var(--scanner-red); font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:.25px; overflow-wrap:anywhere; }
 .scanner-ready h3 { font-size:27px; font-weight:650; letter-spacing:-.6px; margin-top:15px; line-height:1.2; }
 .scanner-ready-description { font-size:12px; color:#b6adb4; margin:12px -5px 25px; line-height:1.6; }
@@ -101,7 +100,6 @@
 .scanner-pending-analysis { text-align:center; order:3; border-color:transparent; background:none; box-shadow:none; margin-top:25px; padding:25px 12px 10px; }
 .scanner-pending-analysis .scanner-orb { width:205px; height:205px; margin-bottom:23px; }
 .scanner-pending-analysis .scanner-orb > img { width:106px; height:106px; box-shadow:0 0 45px #eb433c6b; }
-.scanner-pending-analysis .scanner-orb-mark { display:none; }
 .scanner-pending-analysis .scanner-orbit-two { inset:29px; }
 .scanner-pending-analysis .scanner-mentor { color:#bdb0b6; font-size:11px; }
 .scanner-pending-analysis h3 { font-weight:650; letter-spacing:-.6px; line-height:1.2; font-size:20px; margin-top:27px; }
@@ -141,7 +139,6 @@
 .scanner-ready { padding:24px 18px 20px; border-style:solid; border-color:#f4776940; background:linear-gradient(130deg,#491e2138,#100b10a3); backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px); box-shadow:inset 0 1px #ffffff18,0 16px 50px #0004; }
 .scanner-orb { width:120px; height:120px; margin-bottom:17px; }
 .scanner-orb-avatar { width:78px; height:78px; border-radius:24px; object-fit:cover; border:1px solid #ff776d; box-shadow:0 0 30px #e83f3d48; }
-.scanner-orb-mark { bottom:12px; right:14px; }
 .scanner-ready h3 { margin-top:9px; font-size:26px; }
 .scanner-fundamentals,.scanner-trade-settings { background:linear-gradient(135deg,#1a1417b8,#0a080bc9); backdrop-filter:blur(18px); -webkit-backdrop-filter:blur(18px); box-shadow:inset 0 1px #ffffff10,0 12px 32px #0004; }
 .scanner-history-list > button { border-color:#e5786d29; background:linear-gradient(115deg,#3920257d,#0b0a0ebd); backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px); box-shadow:inset 0 1px #ffffff0d; }
@@ -152,3 +149,5 @@
 .scanner-pending-analysis .scanner-orb { width:160px; height:160px; margin-bottom:16px; }
 .scanner-pending-analysis .scanner-orb > .scanner-orb-avatar { width:96px; height:96px; }
 .scanner-pending-analysis h3 { margin-top:14px; }
+/* Circular mentor portrait: no badge, square or overlapping icon. */
+.scanner-orb > .scanner-orb-avatar,.scanner-pending-analysis .scanner-orb > .scanner-orb-avatar { border-radius:50%; overflow:hidden; object-fit:cover; }

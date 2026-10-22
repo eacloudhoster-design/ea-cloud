@@ -9,12 +9,13 @@ test('each mentor gets its own existing uploaded branding, responsive header and
   const html=modal({eaName,bgImageUrl:'/uploads/mentor-custom.png',clientToken:null});
   assert.ok(html.includes(eaName));assert.ok(html.includes('Chart Scanner'));assert.ok(html.includes('scanner-orb-avatar'));assert.ok(html.includes('/uploads/mentor-custom.png'));
   assert.ok(html.includes('image/heic'));assert.ok(html.includes('Gallery'));assert.ok(html.includes('Camera'));assert.ok(html.includes('CPI'));
-  assert.ok(!html.includes('Gemini AI'));assert.ok(!html.includes('ea-cloud-logo'));assert.ok(html.includes('Google Gemini only when you request analysis'));
+  assert.ok(!html.includes('Gemini AI'));assert.ok(!html.includes('ea-cloud-logo'));assert.ok(!html.includes('Google Gemini'));assert.ok(!html.includes('scanner-orb-mark'));assert.ok(!html.includes('scanner-disclosure'));
  }
  const fallback=modal({eaName:'Unbranded EA',bgImageUrl:null,clientToken:null});assert.ok(fallback.includes('scanner-mentor-fallback'));assert.ok(!fallback.includes('ea-cloud-logo'));
 });
 test('confirmation restores real chart levels and quantities without inventing account identity, risk or execution',()=>{
  const html=confirmation({signal:'SELL',symbol:'XAUUSD',entry:3300,stopLoss:3320,takeProfit:3260,riskRewardRatio:2});
- for(const text of ['XAUUSD','SELL','3,300.00','3,320.00','3,260.00','Connection not verified','Estimated monetary risk','broker tick value','Lot size','Trades per signal'])assert.ok(html.includes(text),text);
- assert.match(html,/<button[^>]*disabled=""[^>]*>Confirm order/);assert.ok(html.includes('No order has been submitted'));
+ for(const text of ['XAUUSD','SELL','3,300.00','3,320.00','3,260.00','Lot size','Trades per signal','CANCEL','CONFIRM EXECUTION'])assert.ok(html.includes(text),text);
+ assert.ok(!html.includes('disabled=""'));assert.ok(!html.includes('tick value'));assert.ok(!html.includes('Connection not verified'));
+
 });
