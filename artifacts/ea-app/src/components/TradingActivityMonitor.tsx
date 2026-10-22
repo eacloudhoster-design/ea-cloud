@@ -4,10 +4,13 @@ import {useApp} from '@/context/AppContext';
 import {robotBg} from '@/lib/branding';
 import type {ActivitySnapshot,TradingActivity} from '../../../../lib/api-zod/src/trading-activity';
 import './TradingActivityMonitor.css';
+import {useFloatingRobot} from '@/hooks/useFloatingRobot';
 
 export default function TradingActivityMonitor(){
  const {clientToken,eaName,bgImageUrl}=useApp();const [open,setOpen]=useState(false),[events,setEvents]=useState<TradingActivity[]>([]),[snapshot,setSnapshot]=useState<ActivitySnapshot|null>(null),[error,setError]=useState(''),[refresh,setRefresh]=useState(0),[clock,setClock]=useState(Date.now());
+ const container=useRef<HTMLDivElement>(null);
  const panel=useRef<HTMLDivElement>(null),terminal=useRef<HTMLDivElement>(null),trigger=useRef<HTMLButtonElement>(null),autoscroll=useRef(true);
+ const floating=useFloatingRobot(container,trigger,Boolean(clientToken));
  const [failedImage,setFailedImage]=useState<string|null>(null);const image=bgImageUrl&&failedImage!==bgImageUrl?bgImageUrl:robotBg;
  useEffect(()=>{const show=()=>setOpen(true);window.addEventListener('ea:open-trading-activity',show);return()=>window.removeEventListener('ea:open-trading-activity',show);},[]);
  useEffect(()=>{if(!open)return;const frame=requestAnimationFrame(()=>panel.current?.querySelector<HTMLButtonElement>('button')?.focus());return()=>cancelAnimationFrame(frame);},[open]);
@@ -31,8 +34,8 @@ export default function TradingActivityMonitor(){
  const status=error?'offline':active?'active':!snapshot?'waiting':'offline';
  const amount=(value:number|null|undefined)=>value==null||!snapshot?.account?'—':`${snapshot.account.currency} ${value.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})}`;
  if(!clientToken)return null;
- return <div className="trading-activity-root">
- <button ref={trigger} type="button" className="trading-activity-trigger" aria-label="Open live trading activity" aria-expanded={open} onClick={()=>setOpen(true)}><img src={image} alt="" onError={()=>setFailedImage(bgImageUrl)}/><span className={`activity-dot ${status}`} role="img" aria-label={status==='active'?'Trading active':status==='waiting'?'Awaiting status':'Trading unavailable'}/></button>
+ return <div ref={container} className="trading-activity-root">
+ <button ref={trigger} type="button" className="trading-activity-trigger" aria-label="Open live trading activity" aria-expanded={open} style={floating.style} onPointerDown={floating.onPointerDown} onPointerMove={floating.onPointerMove} onPointerUp={floating.onPointerUp} onPointerCancel={floating.onPointerCancel} onLostPointerCapture={floating.onLostPointerCapture} onClick={event=>{if(floating.allowClick(event))setOpen(true);}}><img draggable={false} src={image} alt="" onError={()=>setFailedImage(bgImageUrl)}/><span className={`activity-dot ${status}`} role="img" aria-label={status==='active'?'Trading active':status==='waiting'?'Awaiting status':'Trading unavailable'}/></button>
  {open&&<div className="trading-activity-backdrop" onClick={e=>{if(e.target===e.currentTarget)close();}}><div ref={panel} className="trading-activity-panel" role="dialog" aria-modal="true" aria-label="Live trading activity monitor" onKeyDown={event=>{if(event.key==='Escape'){event.stopPropagation();close();}if(event.key==='Tab'){event.stopPropagation();const buttons=panel.current?.querySelectorAll<HTMLButtonElement>('button');const first=buttons?.[0],last=buttons?.[buttons.length-1];if(event.shiftKey&&document.activeElement===first){event.preventDefault();last?.focus();}else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first?.focus();}}}}>
  <header className="trading-activity-header" style={{backgroundImage:`linear-gradient(0deg,#150204 3%,#15020455 75%),url("${image.replace(/["\\\n\r]/g,'')}")`}}><button className="activity-close" type="button" aria-label="Close trading activity" onClick={close}><X size={23}/></button><div><h2>{eaName}</h2><div className="activity-badges"><span className={active?'on':'off'}><Activity size={12}/>{active?'TRADING ACTIVE':!fresh?'AWAITING STATUS':connected?(snapshot?.robotEnabled?'ENGINE UNCONFIRMED':'TRADING STOPPED'):'DISCONNECTED'}</span><span>{active?'ROBOT ACTIVATED':snapshot?.robotEnabled?'ROBOT WAITING':'ROBOT STOPPED'}</span></div></div></header>
  <div className="trading-account-grid">{[['BALANCE',snapshot?.account?.balance],['EQUITY',snapshot?.account?.equity],['P&L',snapshot?.account?.profit]].map(([label,value])=><section key={String(label)}><h3>{label}</h3><strong className={label==='P&L'&&typeof value==='number'?(value<0?'loss':'gain'):''}>{fresh?`${label==='P&L'&&typeof value==='number'&&value>0?'+':''}${amount(value as number|undefined)}`:'—'}</strong></section>)}</div>
