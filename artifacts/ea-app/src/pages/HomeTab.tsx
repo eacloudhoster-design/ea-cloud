@@ -64,19 +64,20 @@ export default function HomeTab({ onOpenChartScanner }: HomeTabProps) {
         className="absolute inset-0 overflow-y-auto"
         style={{ paddingBottom: 88, scrollbarWidth: "none", WebkitOverflowScrolling: "touch" } as React.CSSProperties}
       >
-        {/* Top bar — all except matrix */}
+        {/* Regular header scrolls with content; other interface headers retain their behavior. */}
         {interfaceStyle !== "matrix" && (
           <div
-            className="sticky top-0 z-10 flex items-center justify-between px-4"
-            style={{ paddingTop: 52, paddingBottom: 8, background: "transparent" }}
+            className={`${interfaceStyle === "regular" ? "relative" : "sticky top-0"} z-10 flex items-center justify-between px-4`}
+            style={{ paddingTop: interfaceStyle === "regular" ? "max(16px, env(safe-area-inset-top))" : 52, paddingBottom: 8, background: "transparent" }}
           >
             <div className="flex items-center gap-1.5 px-2 py-1 rounded-full" style={{ background: "rgba(0,0,0,0.4)", border: `1px solid ${botRunning ? "#22c55e55" : "#f59e0b55"}` }}>
               <span className="w-1.5 h-1.5 rounded-full" style={{ background: botRunning ? "#22c55e" : "#f59e0b" }} />
               <span className="text-[9px] font-bold tracking-wider" style={{ color: botRunning ? "#22c55e" : "#f59e0b" }}>{botRunning ? "ACTIVE" : "PAUSED"}</span>
             </div>
-            <p className="text-white/40 text-xs tracking-widest">{eaTagline || "@ea_cloud"}</p>
+            {interfaceStyle !== "regular" && <p className="text-white/40 text-xs tracking-widest">{eaTagline || "@ea_cloud"}</p>}
             <button
               onClick={() => setShowTrades(true)}
+              aria-label="Notifications"
               className="relative w-9 h-9 rounded-full border border-white/20 bg-black/30 flex items-center justify-center active:bg-white/10"
             >
               <Bell size={16} className="text-white/70" />
