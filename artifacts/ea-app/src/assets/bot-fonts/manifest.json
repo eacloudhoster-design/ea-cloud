@@ -1,0 +1,168 @@
+[
+  {
+    "package": "@fontsource/inter",
+    "version": "5.3.0",
+    "tarball": "https://registry.npmjs.org/@fontsource/inter/-/inter-5.3.0.tgz",
+    "integrity": "sha512-RofMylZmjlJEfELXeNHFWBRcSs75rGU/6bV2S2jfnvv/3rPXPGe0LgUJTklcHZ9lM4OZmAVFhcJPnACfb91A3g==",
+    "files": [
+      {
+        "file": "inter/inter-latin-600-normal.woff2",
+        "sha256": "f9a06e79cd3a2a20951c0f0e28f66dd0e6d3fda73911d640a2125c8fcb78f21a",
+        "bytes": 24452,
+        "weight": 600,
+        "subset": "latin"
+      },
+      {
+        "file": "inter/inter-latin-900-normal.woff2",
+        "sha256": "d5c0ed7b8b5dde97d48b97947d740bbd8ad3ba9f2c5cc6b8280f16acba2d828e",
+        "bytes": 23900,
+        "weight": 900,
+        "subset": "latin"
+      },
+      {
+        "file": "inter/inter-latin-ext-600-normal.woff2",
+        "sha256": "e4bdf67b0cd15ca9e184509275be95db942195d3cc2b17f6a0452f2adf75d0bf",
+        "bytes": 36260,
+        "weight": 600,
+        "subset": "latin-ext"
+      },
+      {
+        "file": "inter/inter-latin-ext-900-normal.woff2",
+        "sha256": "de536299a1eeca46fe494787380486ec890627e0d50e1be18ef6001cbd1e5105",
+        "bytes": 35328,
+        "weight": 900,
+        "subset": "latin-ext"
+      }
+    ]
+  },
+  {
+    "package": "@fontsource/roboto",
+    "version": "5.3.0",
+    "tarball": "https://registry.npmjs.org/@fontsource/roboto/-/roboto-5.3.0.tgz",
+    "integrity": "sha512-BapRJOWYP+LZ21zp+wBQjfpPYKRoxc4LspJ/RLuI+HSMBD5u/X4O+ESDrSvEqDSy0rAl7GwBJ+09mdc16cVQ1Q==",
+    "files": [
+      {
+        "file": "roboto/roboto-latin-600-normal.woff2",
+        "sha256": "3eac5e2f468629b4673394bb25a387aba117e0dfa646b7f371a2cbd2bbf91d87",
+        "bytes": 22240,
+        "weight": 600,
+        "subset": "latin"
+      },
+      {
+        "file": "roboto/roboto-latin-900-normal.woff2",
+        "sha256": "7523c0cc7f5c088ab663be51e111b9429a4f15681802a7e027eb658f497a26a8",
+        "bytes": 21916,
+        "weight": 900,
+        "subset": "latin"
+      },
+      {
+        "file": "roboto/roboto-latin-ext-600-normal.woff2",
+        "sha256": "82ea2dcb706db06dad121fce946cdd5551985e90f7b986a3c1ea390d9bdb4244",
+        "bytes": 15188,
+        "weight": 600,
+        "subset": "latin-ext"
+      },
+      {
+        "file": "roboto/roboto-latin-ext-900-normal.woff2",
+        "sha256": "5b432d767f3d5f8ff225506caf67bfea71da46f0219c054b43914fbefd11556f",
+        "bytes": 15048,
+        "weight": 900,
+        "subset": "latin-ext"
+      }
+    ]
+  },
+  {
+    "package": "@fontsource/orbitron",
+    "version": "5.3.0",
+    "tarball": "https://registry.npmjs.org/@fontsource/orbitron/-/orbitron-5.3.0.tgz",
+    "integrity": "sha512-+BhPsbUAo/AF7sRcf+TEexm+EWWkgTiR9Zwb7AhYIPkc5oplfvw0C45Oc2xlKPhwVEmxG8hHuA6/Ansbl+Bc6w==",
+    "files": [
+      {
+        "file": "orbitron/orbitron-latin-600-normal.woff2",
+        "sha256": "585062e775d70397653192777533f65f3afb707320fcc2a4bc510470e03762e6",
+        "bytes": 6588,
+        "weight": 600,
+        "subset": "latin"
+      },
+      {
+        "file": "orbitron/orbitron-latin-900-normal.woff2",
+        "sha256": "ce87e6a1b1955bbc7b1d2d1c30fb5b53af5e34edb5b93a33e28068054892ef74",
+        "bytes": 6400,
+        "weight": 900,
+        "subset": "latin"
+      }
+    ]
+  },
+  {
+    "package": "@fontsource/rajdhani",
+    "version": "5.3.0",
+    "tarball": "https://registry.npmjs.org/@fontsource/rajdhani/-/rajdhani-5.3.0.tgz",
+    "integrity": "sha512-oBJgSIibWJvVBKseme1JczqPLoDHN97LHti4uh0LjfcJqQoVmnQQlRKIpEjTJV559rmVQ6qbVZZwKwk2wkBTtw==",
+    "files": [
+      {
+        "file": "rajdhani/rajdhani-latin-600-normal.woff2",
+        "sha256": "433a7007e4747a02a790167a6efa2625855f013970ba49b9b739a5d3db8b2601",
+        "bytes": 15732,
+        "weight": 600,
+        "subset": "latin"
+      },
+      {
+        "file": "rajdhani/rajdhani-latin-700-normal.woff2",
+        "sha256": "5b7e4a6f97163c2636724d4de90304fc895653dcfe64c67a7a22f26331ca5c5f",
+        "bytes": 15688,
+        "weight": 700,
+        "subset": "latin"
+      },
+      {
+        "file": "rajdhani/rajdhani-latin-ext-600-normal.woff2",
+        "sha256": "f57c2b379ba92460d25730ef1f7b8745afb4eadb401d652900f2059f8ee2f2b6",
+        "bytes": 13124,
+        "weight": 600,
+        "subset": "latin-ext"
+      },
+      {
+        "file": "rajdhani/rajdhani-latin-ext-700-normal.woff2",
+        "sha256": "c6b9df58743ccca1236e9521720b135138309bc4149d5d027a9bd10183cc8ed5",
+        "bytes": 12964,
+        "weight": 700,
+        "subset": "latin-ext"
+      }
+    ]
+  },
+  {
+    "package": "@fontsource/exo-2",
+    "version": "5.3.0",
+    "tarball": "https://registry.npmjs.org/@fontsource/exo-2/-/exo-2-5.3.0.tgz",
+    "integrity": "sha512-jVI6qXPPuV1Fne7m2Hpyc9rTt4O7ZIo+wsUZZzAW+u/iHem4CyWXXCGUoSw3utZUW82/bsGVQO9yO+hDsjZH8A==",
+    "files": [
+      {
+        "file": "exo-2/exo-2-latin-600-normal.woff2",
+        "sha256": "fd2112e53440975a4885179f3d09058787b97b711e7e141c55fcaecaf48fbcb6",
+        "bytes": 17264,
+        "weight": 600,
+        "subset": "latin"
+      },
+      {
+        "file": "exo-2/exo-2-latin-900-normal.woff2",
+        "sha256": "5fc50d53efbd7434ee4b94f93314bb36722afc51912c38ad1d4e6b04a5696cae",
+        "bytes": 16576,
+        "weight": 900,
+        "subset": "latin"
+      },
+      {
+        "file": "exo-2/exo-2-latin-ext-600-normal.woff2",
+        "sha256": "0400839c0abf86c44889cf26087d1f64e1514e1fb607a36bc11e76fbceb03688",
+        "bytes": 13964,
+        "weight": 600,
+        "subset": "latin-ext"
+      },
+      {
+        "file": "exo-2/exo-2-latin-ext-900-normal.woff2",
+        "sha256": "d84b25476517e5ae94f991f31a22d74534307dac011d1339f902f3c8efee85b6",
+        "bytes": 13292,
+        "weight": 900,
+        "subset": "latin-ext"
+      }
+    ]
+  }
+]

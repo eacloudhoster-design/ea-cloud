@@ -1,3 +1,4 @@
+import BotName from "@/components/BotName";
 import RobotImageFrame from "@/components/RobotImageFrame";
 import { Bell, Trash2, DollarSign, Play, X, TrendingUp, Settings2, Check, Menu, BarChart2, Plus, ArrowUpRight, ArrowDownRight, Activity, ChevronDown, ChevronLeft, Loader2 } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
@@ -180,12 +181,12 @@ function S2ToneLayout({ shapeStyle, accentColor, botRunning, setBotRunning, eaNa
       </RobotImageFrame>
 
       {/* Bot name — large white bold, wraps naturally */}
-      <h1
+      <BotName primary
         className="text-white font-black text-center tracking-tight leading-tight"
         style={{ fontSize: 40, textShadow: "0 2px 24px rgba(0,0,0,0.9)" }}
       >
         {eaName.toUpperCase()}
-      </h1>
+      </BotName>
 
       {/* Powered By pill */}
       <div
@@ -232,9 +233,9 @@ function S2ToneLayout({ shapeStyle, accentColor, botRunning, setBotRunning, eaNa
         {/* RIGHT — Robots List panel */}
         <div className="flex-1 flex flex-col items-start pt-1 pl-2">
           <p className="text-white/45 text-sm mb-2">Robots List:</p>
-          <p className="text-white font-black leading-tight" style={{ fontSize: 22 }}>
+          <BotName as="p" className="text-white font-black leading-tight" style={{ fontSize: 22 }}>
             {eaName.toUpperCase()}
-          </p>
+          </BotName>
           {/* Small avatar circle — green tinted like reference */}
           <div
             className="mt-4 flex-shrink-0 overflow-hidden"
@@ -303,10 +304,10 @@ function RegularLayout({ shapeStyle, accentColor, botRunning, setBotRunning, eaN
       </RobotImageFrame>
 
       {/* Bot name — tap to toggle bg */}
-      <button onClick={() => setShowBg(!showBg)} className="active:opacity-70 transition-opacity mb-3 z-10 px-4">
-        <h1 className="text-white font-black text-center tracking-tight" style={{ fontSize: 36, textShadow: "0 2px 20px rgba(0,0,0,0.9)" }}>
+      <button onClick={() => setShowBg(!showBg)} className="active:opacity-70 transition-opacity mb-3 z-10 px-4" style={{maxWidth:"100%"}}>
+        <BotName primary className="text-white font-black text-center tracking-tight" style={{ fontSize: 36, textShadow: "0 2px 20px rgba(0,0,0,0.9)" }}>
           {eaName.toUpperCase()}
-        </h1>
+        </BotName>
       </button>
 
       {/* Powered By pill */}
@@ -411,7 +412,7 @@ function MatrixLayout({ shapeStyle, accentColor, botRunning, setBotRunning, eaNa
             <span className="text-[11px] font-black" style={{ color: blue }}>P</span>
           </div>
           <div className="text-left">
-            <p className="text-white font-black text-[11px] leading-none tracking-widest">{eaName.toUpperCase()}</p>
+            <BotName as="p" className="text-white font-black text-[11px] leading-none tracking-widest">{eaName.toUpperCase()}</BotName>
             <p className="text-[8px] tracking-[0.2em] mt-[2px] font-bold" style={{ color: botRunning ? "#22c55e" : "#f59e0b" }}>{botRunning ? "ACTIVE" : "PAUSED"}</p>
           </div>
         </div>
@@ -447,9 +448,9 @@ function MatrixLayout({ shapeStyle, accentColor, botRunning, setBotRunning, eaNa
         </RobotImageFrame>
       </div>
 
-      <h1 className="text-white font-black text-center tracking-tight mb-1 px-4" style={{ fontSize: 34, lineHeight: 1.0, textShadow: "0 2px 20px rgba(0,0,0,0.9)" }}>
+      <BotName primary className="text-white font-black text-center tracking-tight mb-1 px-4" style={{ fontSize: 34, lineHeight: 1.0, textShadow: "0 2px 20px rgba(0,0,0,0.9)" }}>
         {eaName.toUpperCase()}
-      </h1>
+      </BotName>
       {eaTagline && <p className="text-white/35 text-sm text-center mb-2 tracking-wide">{eaTagline}</p>}
 
       <div className="flex-1" style={{ minHeight: 32 }} />
