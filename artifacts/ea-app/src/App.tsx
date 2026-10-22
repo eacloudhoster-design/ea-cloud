@@ -181,7 +181,7 @@ function EACloudApp({ onReady }: { onReady: (ready: boolean) => void }) {
             if (authStage === "app") setBrandingAttempt(v => v + 1);
             else { try { const token = localStorage.getItem("appClientToken"); if (token) void validateToken(token); else setAuthStage("access"); } catch { window.location.reload(); } }
           }}>Retry</button>
-        </div> : <img src={eaLogo} alt="Preparing EA Cloud" style={{ width: "min(52.5vw, 210px)", height: "auto" }} />}
+        </div> : <img src={eaLogo} alt="Preparing EA Cloud" style={{ width: "min(39.375vw, 157.5px)", height: "auto" }} />}
       </div>
     );
   }
