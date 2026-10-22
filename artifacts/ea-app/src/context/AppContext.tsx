@@ -3,7 +3,7 @@ import { createContext, useContext } from "react";
 
 export type Tab = "home" | "metatrader" | "settings";
 export type InterfaceStyle = "regular" | "matrix" | "s2tone";
-export type ShapeStyle = "orbit" | "cornerstone" | "fortress" | "neural";
+export type ShapeStyle = "orbit" | "neural" | "none";
 
 export interface AppSettings {
   activeTab: Tab;
