@@ -18,13 +18,18 @@ export const isBackgroundAnimation = (
 ): value is BackgroundAnimation =>
   backgroundAnimations.includes(value as BackgroundAnimation);
 
+export const isAccentColor = (value: unknown): value is string =>
+  typeof value === "string" && /^#[0-9a-f]{6}$/i.test(value);
+
 export type HomePreferences = {
+  accentColor: string;
   backgroundAnimation: BackgroundAnimation;
   interfaceStyle: InterfaceStyle;
   showBg: boolean;
 };
 export const defaultHomePreferences: HomePreferences = {
   interfaceStyle: "matrix",
+  accentColor: "#ef4444",
   showBg: true,
   backgroundAnimation: "none",
 };
@@ -51,6 +56,9 @@ export function readHomePreferences(
     try {
       const value = JSON.parse(storage.getItem(key) || "null");
       return {
+        accentColor: isAccentColor(value?.accentColor)
+          ? value.accentColor
+          : "#ef4444",
         interfaceStyle: isInterfaceStyle(value?.interfaceStyle)
           ? value.interfaceStyle
           : "matrix",
@@ -74,6 +82,7 @@ export function saveHomePreferences(
   if (
     !key ||
     !isInterfaceStyle(value.interfaceStyle) ||
+    !isAccentColor(value.accentColor) ||
     typeof value.showBg !== "boolean" ||
     !isBackgroundAnimation(value.backgroundAnimation)
   )

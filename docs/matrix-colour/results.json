@@ -1,0 +1,240 @@
+{
+  "results": [
+    {
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "hex": "#ef4444",
+      "styled": {
+        "activeBorder": "rgb(239, 68, 68)",
+        "selectedDot": "rgb(239, 68, 68)",
+        "activeBackground": "radial-gradient(circle at 40% 35%, rgba(239, 68, 68, 0.933) 0%, color(srgb 0.609216 0.173333 0.173333) 100%)",
+        "barBorder": "rgba(239, 68, 68, 0.267)",
+        "frameShadow": "rgba(239, 68, 68, 0.333) 0px 0px 40px 0px, rgba(239, 68, 68, 0.157) 0px 0px 80px 0px",
+        "ringBorders": [
+          "rgba(239, 68, 68, 0.12)",
+          "rgba(239, 68, 68, 0.22)"
+        ],
+        "branding": "rgb(239, 68, 68)"
+      },
+      "trigger": {
+        "border": "rgb(239, 68, 68)",
+        "shadow": "color(srgb 0.937255 0.266667 0.266667 / 0.31) 0px 0px 20px 0px",
+        "background": "color(srgb 0.161569 0.0508235 0.0575686)",
+        "image": "/fixture-robot.jpg",
+        "filter": "none"
+      },
+      "layoutPreserved": true,
+      "imagePixelsUnchanged": true,
+      "positionPreserved": true
+    },
+    {
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "hex": "#3b82f6",
+      "styled": {
+        "activeBorder": "rgb(59, 130, 246)",
+        "selectedDot": "rgb(59, 130, 246)",
+        "activeBackground": "radial-gradient(circle at 40% 35%, rgba(59, 130, 246, 0.933) 0%, color(srgb 0.150392 0.331373 0.627059) 100%)",
+        "barBorder": "rgba(59, 130, 246, 0.267)",
+        "frameShadow": "rgba(59, 130, 246, 0.333) 0px 0px 40px 0px, rgba(59, 130, 246, 0.157) 0px 0px 80px 0px",
+        "ringBorders": [
+          "rgba(59, 130, 246, 0.12)",
+          "rgba(59, 130, 246, 0.22)"
+        ],
+        "branding": "rgb(59, 130, 246)"
+      },
+      "trigger": {
+        "border": "rgb(59, 130, 246)",
+        "shadow": "color(srgb 0.231373 0.509804 0.964706 / 0.31) 0px 0px 20px 0px",
+        "background": "color(srgb 0.0627451 0.0848627 0.155294)",
+        "image": "/fixture-robot.jpg",
+        "filter": "none"
+      },
+      "layoutPreserved": true,
+      "imagePixelsUnchanged": true,
+      "positionPreserved": true
+    },
+    {
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "hex": "#22c55e",
+      "styled": {
+        "activeBorder": "rgb(34, 197, 94)",
+        "selectedDot": "rgb(34, 197, 94)",
+        "activeBackground": "radial-gradient(circle at 40% 35%, rgba(34, 197, 94, 0.933) 0%, color(srgb 0.0866667 0.502157 0.239608) 100%)",
+        "barBorder": "rgba(34, 197, 94, 0.267)",
+        "frameShadow": "rgba(34, 197, 94, 0.333) 0px 0px 40px 0px, rgba(34, 197, 94, 0.157) 0px 0px 80px 0px",
+        "ringBorders": [
+          "rgba(34, 197, 94, 0.12)",
+          "rgba(34, 197, 94, 0.22)"
+        ],
+        "branding": "rgb(34, 197, 94)"
+      },
+      "trigger": {
+        "border": "rgb(34, 197, 94)",
+        "shadow": "color(srgb 0.133333 0.772549 0.368627 / 0.31) 0px 0px 20px 0px",
+        "background": "color(srgb 0.0490196 0.121647 0.0718431)",
+        "image": "/fixture-robot.jpg",
+        "filter": "none"
+      },
+      "layoutPreserved": true,
+      "imagePixelsUnchanged": true,
+      "positionPreserved": true
+    },
+    {
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "hex": "#a855f7",
+      "styled": {
+        "activeBorder": "rgb(168, 85, 247)",
+        "selectedDot": "rgb(168, 85, 247)",
+        "activeBackground": "radial-gradient(circle at 40% 35%, rgba(168, 85, 247, 0.933) 0%, color(srgb 0.428235 0.216667 0.629608) 100%)",
+        "barBorder": "rgba(168, 85, 247, 0.267)",
+        "frameShadow": "rgba(168, 85, 247, 0.333) 0px 0px 40px 0px, rgba(168, 85, 247, 0.157) 0px 0px 80px 0px",
+        "ringBorders": [
+          "rgba(168, 85, 247, 0.12)",
+          "rgba(168, 85, 247, 0.22)"
+        ],
+        "branding": "rgb(168, 85, 247)"
+      },
+      "trigger": {
+        "border": "rgb(168, 85, 247)",
+        "shadow": "color(srgb 0.658824 0.333333 0.968627 / 0.31) 0px 0px 20px 0px",
+        "background": "color(srgb 0.122588 0.0601569 0.155843)",
+        "image": "/fixture-robot.jpg",
+        "filter": "none"
+      },
+      "layoutPreserved": true,
+      "imagePixelsUnchanged": true,
+      "positionPreserved": true
+    },
+    {
+      "viewport": {
+        "width": 1280,
+        "height": 900
+      },
+      "hex": "#ef4444",
+      "styled": {
+        "activeBorder": "rgb(239, 68, 68)",
+        "selectedDot": "rgb(239, 68, 68)",
+        "activeBackground": "radial-gradient(circle at 40% 35%, rgba(239, 68, 68, 0.933) 0%, color(srgb 0.609216 0.173333 0.173333) 100%)",
+        "barBorder": "rgba(239, 68, 68, 0.267)",
+        "frameShadow": "rgba(239, 68, 68, 0.333) 0px 0px 40px 0px, rgba(239, 68, 68, 0.157) 0px 0px 80px 0px",
+        "ringBorders": [
+          "rgba(239, 68, 68, 0.12)",
+          "rgba(239, 68, 68, 0.22)"
+        ],
+        "branding": "rgb(239, 68, 68)"
+      },
+      "trigger": {
+        "border": "rgb(239, 68, 68)",
+        "shadow": "color(srgb 0.937255 0.266667 0.266667 / 0.31) 0px 0px 20px 0px",
+        "background": "color(srgb 0.161569 0.0508235 0.0575686)",
+        "image": "/fixture-robot.jpg",
+        "filter": "none"
+      },
+      "layoutPreserved": true,
+      "imagePixelsUnchanged": true,
+      "positionPreserved": true
+    },
+    {
+      "viewport": {
+        "width": 1280,
+        "height": 900
+      },
+      "hex": "#3b82f6",
+      "styled": {
+        "activeBorder": "rgb(59, 130, 246)",
+        "selectedDot": "rgb(59, 130, 246)",
+        "activeBackground": "radial-gradient(circle at 40% 35%, rgba(59, 130, 246, 0.933) 0%, color(srgb 0.150392 0.331373 0.627059) 100%)",
+        "barBorder": "rgba(59, 130, 246, 0.267)",
+        "frameShadow": "rgba(59, 130, 246, 0.333) 0px 0px 40px 0px, rgba(59, 130, 246, 0.157) 0px 0px 80px 0px",
+        "ringBorders": [
+          "rgba(59, 130, 246, 0.12)",
+          "rgba(59, 130, 246, 0.22)"
+        ],
+        "branding": "rgb(59, 130, 246)"
+      },
+      "trigger": {
+        "border": "rgb(59, 130, 246)",
+        "shadow": "color(srgb 0.231373 0.509804 0.964706 / 0.31) 0px 0px 20px 0px",
+        "background": "color(srgb 0.0627451 0.0848627 0.155294)",
+        "image": "/fixture-robot.jpg",
+        "filter": "none"
+      },
+      "layoutPreserved": true,
+      "imagePixelsUnchanged": true,
+      "positionPreserved": true
+    },
+    {
+      "viewport": {
+        "width": 1280,
+        "height": 900
+      },
+      "hex": "#22c55e",
+      "styled": {
+        "activeBorder": "rgb(34, 197, 94)",
+        "selectedDot": "rgb(34, 197, 94)",
+        "activeBackground": "radial-gradient(circle at 40% 35%, rgba(34, 197, 94, 0.933) 0%, color(srgb 0.0866667 0.502157 0.239608) 100%)",
+        "barBorder": "rgba(34, 197, 94, 0.267)",
+        "frameShadow": "rgba(34, 197, 94, 0.333) 0px 0px 40px 0px, rgba(34, 197, 94, 0.157) 0px 0px 80px 0px",
+        "ringBorders": [
+          "rgba(34, 197, 94, 0.12)",
+          "rgba(34, 197, 94, 0.22)"
+        ],
+        "branding": "rgb(34, 197, 94)"
+      },
+      "trigger": {
+        "border": "rgb(34, 197, 94)",
+        "shadow": "color(srgb 0.133333 0.772549 0.368627 / 0.31) 0px 0px 20px 0px",
+        "background": "color(srgb 0.0490196 0.121647 0.0718431)",
+        "image": "/fixture-robot.jpg",
+        "filter": "none"
+      },
+      "layoutPreserved": true,
+      "imagePixelsUnchanged": true,
+      "positionPreserved": true
+    },
+    {
+      "viewport": {
+        "width": 1280,
+        "height": 900
+      },
+      "hex": "#a855f7",
+      "styled": {
+        "activeBorder": "rgb(168, 85, 247)",
+        "selectedDot": "rgb(168, 85, 247)",
+        "activeBackground": "radial-gradient(circle at 40% 35%, rgba(168, 85, 247, 0.933) 0%, color(srgb 0.428235 0.216667 0.629608) 100%)",
+        "barBorder": "rgba(168, 85, 247, 0.267)",
+        "frameShadow": "rgba(168, 85, 247, 0.333) 0px 0px 40px 0px, rgba(168, 85, 247, 0.157) 0px 0px 80px 0px",
+        "ringBorders": [
+          "rgba(168, 85, 247, 0.12)",
+          "rgba(168, 85, 247, 0.22)"
+        ],
+        "branding": "rgb(168, 85, 247)"
+      },
+      "trigger": {
+        "border": "rgb(168, 85, 247)",
+        "shadow": "color(srgb 0.658824 0.333333 0.968627 / 0.31) 0px 0px 20px 0px",
+        "background": "color(srgb 0.122588 0.0601569 0.155843)",
+        "image": "/fixture-robot.jpg",
+        "filter": "none"
+      },
+      "layoutPreserved": true,
+      "imagePixelsUnchanged": true,
+      "positionPreserved": true
+    }
+  ],
+  "touchAndMouseDragging": true,
+  "clickFunctionPreserved": true,
+  "persistedOnReloadAndReopen": true,
+  "allInterfacesPreservePosition": true
+}

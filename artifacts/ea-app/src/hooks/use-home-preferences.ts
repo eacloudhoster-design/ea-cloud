@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import {
   defaultHomePreferences,
+  isAccentColor,
   isBackgroundAnimation,
   type BackgroundAnimation,
   homePreferenceKey,
@@ -53,6 +54,9 @@ export function useHomePreferences(token: string | null) {
     state.key === key ? state.preferences : defaultHomePreferences;
   return {
     ...preferences,
+    setAccentColor: (value: string) => {
+      if (isAccentColor(value)) update({ accentColor: value });
+    },
     setInterfaceStyle: (value: InterfaceStyle) => {
       if (isInterfaceStyle(value)) update({ interfaceStyle: value });
     },
