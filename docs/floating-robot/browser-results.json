@@ -42,7 +42,8 @@
     "tapAndKeyboardOpened": true,
     "dragDidNotOpen": true,
     "interfaceSwitchesPreserved": true,
-    "hiddenInSettings": true
+    "settingsLogoHidden": true,
+    "draggableRobotPreservedInSettings": true
   },
   {
     "viewport": {
@@ -87,7 +88,8 @@
     "tapAndKeyboardOpened": true,
     "dragDidNotOpen": true,
     "interfaceSwitchesPreserved": true,
-    "hiddenInSettings": true
+    "settingsLogoHidden": true,
+    "draggableRobotPreservedInSettings": true
   },
   {
     "viewport": {
@@ -132,6 +134,7 @@
     "tapAndKeyboardOpened": true,
     "dragDidNotOpen": true,
     "interfaceSwitchesPreserved": true,
-    "hiddenInSettings": true
+    "settingsLogoHidden": true,
+    "draggableRobotPreservedInSettings": true
   }
 ]

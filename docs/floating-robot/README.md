@@ -37,10 +37,14 @@ Set PLAYWRIGHT_MODULE to the installed Playwright index.mjs path when outside th
 
 These are desktop and emulated mobile Chromium tests, not claims of physical iOS/Android hardware testing. No production deployment was performed; live website rollout is not verified by these local production-artifact captures.
 
-## Settings-only visibility update
+## Settings-only logo visibility correction
 
-Settings had two independent floating visuals: its own 46px decorative EA Cloud logo in SettingsTab.tsx and the shared draggable trading-activity trigger. The Settings-only decorative logo container and unused logo import are now removed. The shared trigger is hidden and removed from keyboard tab order whenever activeTab is settings. It stays mounted with its drag state and dimensions intact, so hiding does not reset or clamp away its saved position. Home and MetaTrader retain its original appearance and activity-panel action.
+The Settings panel contains its own 46px decorative EA Cloud logo, independent of the shared draggable trading-activity robot. Only that Settings logo receives `visibility: hidden` while `activeTab === "settings"`. Its original image, container, dimensions, colors, position and status dot stay mounted unchanged. The previous patch's deletion of that logo and hiding of the separate draggable robot are reverted. The final runtime diff against main is only two lines in SettingsTab.tsx. TradingActivityMonitor, the drag hook, Settings options and all three Home layout implementations match main.
 
-![Settings with both floating circles absent](settings-hidden.png)
+![Settings: bottom-right logo hidden, separate draggable robot preserved](settings-hidden.png)
 
-The production-build browser suite now checks that the shared trigger is invisible and not tabbable throughout Settings and that the Settings component contains no leftover decorative logo image. It asserts the saved coordinates are unchanged and the trigger reappears at exactly the same coordinates on Home, for all three interfaces at both mobile sizes and desktop. Touch/mouse drag, click/keyboard activation, edge bounds, resizing and reopen tests still pass. This is locally verified; no production deployment was performed.
+The actual production-build browser test verifies the logo is still mounted but invisible, the other robot remains visible and tabbable in Settings, and its saved coordinates remain exactly unchanged through Settings/Home, all three interface choices, MetaTrader, reload and app-tab reopening. Original tap/click, keyboard activation, drag suppression, safe-area bounds and resize handling also pass at two emulated mobile sizes and desktop.
+
+Important source limitation: the 46px decorative logo exists only inside SettingsTab; it has no separate visible Home counterpart in the current code. This change restores its original visibility value when Settings closes, but does not move it out of the Settings panel or add a new Home logo. Home remains unchanged as requested. The separate draggable robot is preserved everywhere. Clarification is needed if a new Home counterpart for the Settings-only logo is intended.
+
+No production deployment was performed.

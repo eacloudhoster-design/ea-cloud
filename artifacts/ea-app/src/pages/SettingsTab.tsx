@@ -6,6 +6,7 @@ import {
   ChevronDown, ChevronUp, ChevronRight, BellOff, Check
 } from "lucide-react";
 import { useApp, InterfaceStyle, ShapeStyle } from "@/context/AppContext";
+import { eaLogo } from "@/lib/branding";
 
 interface SettingsTabProps {
   onOpenChartScanner?: () => void;
@@ -42,7 +43,7 @@ const SHAPE_ICONS: Record<ShapeStyle, React.ReactNode> = {
 };
 
 export default function SettingsTab({ onOpenChartScanner }: SettingsTabProps) {
-  const { accentColor, setAccentColor, interfaceStyle, setInterfaceStyle, shapeStyle, setShapeStyle, botFont="Inter", setBotFont } = useApp();
+  const { accentColor, setAccentColor, interfaceStyle, setInterfaceStyle, shapeStyle, setShapeStyle, activeTab, botFont="Inter", setBotFont } = useApp();
   const [open, setOpen] = useState<OpenSection>(null);
 
   const toggle = (section: OpenSection) => setOpen(prev => prev === section ? null : section);
@@ -221,6 +222,17 @@ export default function SettingsTab({ onOpenChartScanner }: SettingsTabProps) {
           <LineChart size={18} />
           Live Chart
         </button>
+      </div>
+
+      {/* Floating bot avatar */}
+      <div className="absolute z-20" style={{ bottom: 88, right: 14, visibility: activeTab === "settings" ? "hidden" : undefined }}>
+        <div className="relative">
+          <div className="w-[46px] h-[46px] rounded-full overflow-hidden"
+            style={{ border: `2px solid ${accentColor}cc`, boxShadow: `0 0 12px ${accentColor}66` }}>
+            <img src={eaLogo} alt="Bot" className="w-full h-full object-cover" />
+          </div>
+          <div className="absolute top-0 right-0 w-3 h-3 rounded-full" style={{ background: accentColor, border: "1.5px solid #000" }} />
+        </div>
       </div>
     </div>
   );
