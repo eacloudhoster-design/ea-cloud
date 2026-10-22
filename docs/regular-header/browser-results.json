@@ -1,0 +1,89 @@
+[
+  {
+    "viewport": {
+      "width": 320,
+      "height": 568
+    },
+    "before": {
+      "position": "relative",
+      "bell": {
+        "x": 268,
+        "y": 16,
+        "width": 36,
+        "height": 36
+      },
+      "status": {
+        "x": 16,
+        "y": 22.25,
+        "width": 65.703125,
+        "height": 23.5
+      },
+      "width": 320,
+      "top": 0
+    },
+    "scroll": 100,
+    "bellAfterY": -84,
+    "activeAfterY": -77.75,
+    "notificationOpened": true,
+    "statusToggled": true,
+    "lowerBrandingRetained": true
+  },
+  {
+    "viewport": {
+      "width": 390,
+      "height": 667
+    },
+    "before": {
+      "position": "relative",
+      "bell": {
+        "x": 338,
+        "y": 16,
+        "width": 36,
+        "height": 36
+      },
+      "status": {
+        "x": 16,
+        "y": 22.25,
+        "width": 65.703125,
+        "height": 23.5
+      },
+      "width": 390,
+      "top": 0
+    },
+    "scroll": 100,
+    "bellAfterY": -84,
+    "activeAfterY": -77.75,
+    "notificationOpened": true,
+    "statusToggled": true,
+    "lowerBrandingRetained": true
+  },
+  {
+    "viewport": {
+      "width": 430,
+      "height": 740
+    },
+    "before": {
+      "position": "relative",
+      "bell": {
+        "x": 378,
+        "y": 16,
+        "width": 36,
+        "height": 36
+      },
+      "status": {
+        "x": 16,
+        "y": 22.25,
+        "width": 65.703125,
+        "height": 23.5
+      },
+      "width": 430,
+      "top": 0
+    },
+    "scroll": 89,
+    "bellAfterY": -73,
+    "activeAfterY": -66.75,
+    "notificationOpened": true,
+    "statusToggled": true,
+    "lowerBrandingRetained": true
+  }
+]
