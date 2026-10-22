@@ -1,0 +1,97 @@
+/* Every effect uses the same finite 2s clock; nothing loops during slow setup. */
+.ea-startup {
+  position: fixed; inset: 0; z-index: 10000; overflow: hidden;
+  display: grid; place-items: center; background: #000;
+  isolation: isolate; animation: ea-launch 2000ms linear both;
+}
+.ea-startup-scene { position: relative; width: min(100vw, 560px); aspect-ratio: 1; }
+.ea-startup-mark {
+  position: absolute; width:  min(52.5vw, 210px); aspect-ratio: 1;
+  left: 50%; top: 50%; margin: 0; overflow: hidden;
+  transform: translate(-50%, -50%);
+  animation: ea-mark 2000ms ease-out both;
+  /* 210px is 25% smaller than a 280px startup presentation. */
+  mix-blend-mode: screen;
+}
+.ea-startup-mark img { width: 100%; height: 100%; display: block; }
+.ea-startup-haze, .ea-startup-pulse {
+  position: absolute; inset: 15%; border-radius: 50%; opacity: 0;
+  background: radial-gradient(ellipse, #ab10102b, #40080818 36%, transparent 67%);
+  animation: ea-haze 2000ms ease-out both;
+}
+.ea-startup-haze::before, .ea-startup-haze::after {
+  content: ''; position: absolute; inset: 14% -8%; border-radius: 50%;
+  background: radial-gradient(ellipse at 30% 40%, #68202022, transparent 56%),
+    radial-gradient(ellipse at 70% 55%, #49141430, transparent 52%);
+  transform: rotate(-28deg); filter: blur(12px);
+}
+.ea-startup-haze::after { transform: rotate(37deg); }
+.ea-startup-pulse { background: radial-gradient(ellipse, #f3202026, transparent 65%); animation-name: ea-pulse; }
+.ea-startup-energy, .ea-startup-sweep { position: absolute; inset: 0; width: 100%; height: 100%; }
+.ea-startup-edge {
+  stroke: #ff6868; stroke-width: 5; stroke-linecap: round;
+  stroke-dasharray: .12 .88; filter: drop-shadow(0 0 8px #ff1414);
+  animation: ea-edge 2000ms linear both;
+}
+.ea-startup-circuits { stroke: #ff4848; stroke-width: 4; filter: drop-shadow(0 0 5px red); animation: ea-circuits 2000ms ease-out both; }
+.ea-startup-circuits path { stroke-dasharray: 1; }
+.ea-startup-sweep {
+  background: linear-gradient(110deg, transparent 43%, #fff2 49%, #fff6 50%, transparent 57%);
+  mix-blend-mode: screen; animation: ea-sweep 2000ms ease-in-out both;
+  /* Confine the reflection to the visible logo instead of lighting the square asset. */
+  clip-path: polygon(4% 52%, 11% 43%, 21% 35%, 34% 24%, 42% 15%, 57% 14%, 66% 24%, 75% 32%, 87% 42%, 96% 50%, 94% 79%, 5% 79%);
+}
+.ea-startup-particle {
+  position: absolute; left: var(--x); top: var(--y); width: 2px; height: 2px;
+  border-radius: 50%; background: #ff4141; box-shadow: 0 0 7px #ff2020;
+  opacity: 0; animation: ea-particle 2000ms ease-out both;
+  /* Delay stays inside the two-second timeline via keyframe placement. */
+}
+.ea-startup[data-ready="false"] { opacity: 1 !important; }
+.ea-startup[data-elapsed="true"][data-ready="false"] .ea-startup-haze,
+.ea-startup[data-elapsed="true"][data-ready="false"] .ea-startup-pulse { opacity: 0; }
+@keyframes ea-mark {
+  0%, 4% { opacity: 0; transform: translate(-50%, -50%) scale(.97); }
+  20% { opacity: .24; }
+  50% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+  80%, 100% { opacity: 1; transform: translate(-50%, -50%) scale(1.015); }
+}
+@keyframes ea-haze {
+  0% { opacity: 0; transform: scale(.8) rotate(-8deg); }
+  20% { opacity: .3; } 50% { opacity: .8; }
+  80% { opacity: .5; } 100% { opacity: 0; transform: scale(1.12) rotate(6deg); }
+}
+@keyframes ea-pulse {
+  0%, 20% { opacity: 0; transform: scale(.65); }
+  42% { opacity: .8; } 55% { opacity: .2; }
+  68% { opacity: .65; transform: scale(1); }
+  80% { opacity: .15; } 86% { opacity: .65; }
+  100% { opacity: 0; transform: scale(1.2); }
+}
+@keyframes ea-edge {
+  0%, 20% { opacity: 0; stroke-dashoffset: 1; }
+  24% { opacity: 1; } 50% { opacity: .8; stroke-dashoffset: 0; }
+  72% { opacity: .3; stroke-dashoffset: -.6; } 80%, 100% { opacity: 0; stroke-dashoffset: -1; }
+}
+@keyframes ea-circuits {
+  0%, 50% { opacity: 0; stroke-dashoffset: 1; }
+  65% { opacity: .9; stroke-dashoffset: 0; }
+  80%, 100% { opacity: 0; stroke-dashoffset: 0; }
+}
+@keyframes ea-sweep {
+  0%, 30% { opacity: 0; transform: translateX(-100%); }
+  34% { opacity: .65; } 48% { opacity: .45; }
+  53%, 100% { opacity: 0; transform: translateX(100%); }
+}
+@keyframes ea-particle {
+  0%, 8% { opacity: 0; transform: translate(0, 12px); }
+  20% { opacity: .25; } 48% { opacity: .65; }
+  80%, 100% { opacity: 0; transform: translate(var(--drift), -22px); }
+}
+@keyframes ea-launch { 0%, 80% { opacity: 1; } 100% { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) {
+  .ea-startup-mark { animation-name: ea-quiet-mark; }
+  .ea-startup-energy, .ea-startup-sweep, .ea-startup-particle,
+  .ea-startup-haze, .ea-startup-pulse { display: none; }
+}
+@keyframes ea-quiet-mark { 0% { opacity: 0; } 30%, 100% { opacity: 1; } }

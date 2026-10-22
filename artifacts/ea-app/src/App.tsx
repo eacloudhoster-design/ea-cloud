@@ -11,11 +11,17 @@ import PendingScreen from "@/pages/PendingScreen";
 import ActivateScreen from "@/pages/ActivateScreen";
 import type { Tab } from "@/context/AppContext";
 import { requestJson } from "@/lib/request";
-import { robotBg } from "@/lib/branding";
+import StartupSplash from "@/components/StartupSplash";
+import { eaLogo, robotBg } from "@/lib/branding";
 
 type AuthStage = "loading" | "error" | "access" | "pending" | "rejected" | "activate" | "app";
 
 export default function App() {
+  const [ready, setReady] = useState(false);
+  return <StartupSplash ready={ready}><EACloudApp onReady={setReady} /></StartupSplash>;
+}
+
+function EACloudApp({ onReady }: { onReady: (ready: boolean) => void }) {
   const [authStage, setAuthStage] = useState<AuthStage>("loading");
   const [loadError, setLoadError] = useState("");
   const [brandingReady, setBrandingReady] = useState(false);
@@ -161,6 +167,10 @@ export default function App() {
 
   const backgroundSrc = bgImageUrl || robotBg;
 
+  const initializing = authStage === "loading" || (authStage === "app" && !brandingReady && !loadError);
+  useEffect(() => { onReady(!initializing); }, [initializing, onReady]);
+
+  // Keep the existing retry flow; slow initialization holds the logo without replay.
   // Loading splash
   if (authStage === "loading" || authStage === "error" || (authStage === "app" && !brandingReady)) {
     return (
@@ -171,7 +181,7 @@ export default function App() {
             if (authStage === "app") setBrandingAttempt(v => v + 1);
             else { try { const token = localStorage.getItem("appClientToken"); if (token) void validateToken(token); else setAuthStage("access"); } catch { window.location.reload(); } }
           }}>Retry</button>
-        </div> : <div role="status" aria-label="Loading" className="w-8 h-8 rounded-full border-2 border-red-500/30 border-t-red-500 animate-spin" />}
+        </div> : <img src={eaLogo} alt="Preparing EA Cloud" style={{ width: "min(52.5vw, 210px)", height: "auto" }} />}
       </div>
     );
   }
