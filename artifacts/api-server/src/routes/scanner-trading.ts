@@ -1,3 +1,5 @@
+import {scannerExecutionReceiptSchema} from "../../../../lib/api-zod/src/scanner-execution";
+import {recordTradingActivity} from "../lib/trading-activity";
 import { Router, type Request } from "express";
 import rateLimit from "express-rate-limit";
 import { z } from "zod";
@@ -48,6 +50,15 @@ router.post('/execute',rateLimit({windowMs:60_000,limit:12,keyGenerator:req=>Str
   if(!row||row.kind!=='chart'){res.status(404).json({error:'Trading signal not found.',code:'SCANNER_ORDER_NOT_FOUND'});return;}
   const report=chartReportSchema.safeParse(row.report);
   if(!report.success||report.data.signal==='NO TRADE'||!report.data.symbol||report.data.entry===null||report.data.stopLoss===null||report.data.takeProfit===null){res.status(409).json({error:'Analyse a readable chart before executing a trade.',code:'SCANNER_SETUP_INVALID'});return;}
+  await recordTradingActivity(req.scannerClientId!,'scanner','info','Trade execution requested',{scanId,positions,lotSize,symbol:report.data.symbol,direction:report.data.signal,entry:report.data.entry,stopLoss:report.data.stopLoss,takeProfit:report.data.takeProfit});
+  let activityError:string|undefined,receipt:unknown;const originalJson=res.json.bind(res);res.json=(body:any)=>{if(typeof body?.error==='string')activityError=body.error.slice(0,200);receipt=body;return originalJson(body);};
+  res.once('finish',()=>{
+   void recordTradingActivity(req.scannerClientId!,'scanner',res.statusCode>=400?'error':'info',res.statusCode>=400?`Scanner execution request rejected${activityError?`: ${activityError}`:''}`:'Scanner request completed; broker receipt required',{scanId,positions,httpStatus:res.statusCode});
+   const checked=scannerExecutionReceiptSchema.safeParse(receipt);
+   if(res.statusCode<400&&checked.success&&checked.data.scanId===scanId&&checked.data.requestId===parsed.data.requestId&&checked.data.requestedPositions===positions){
+    for(const outcome of checked.data.outcomes)void recordTradingActivity(req.scannerClientId!,'scanner',outcome.status==='accepted'?'success':'error',outcome.status==='accepted'?`Broker accepted scanner position ${outcome.position} · ticket #${outcome.ticket}`:`Scanner position ${outcome.position} rejected${outcome.reason?`: ${outcome.reason}`:''}`,{scanId,position:outcome.position,ticket:outcome.status==='accepted'?outcome.ticket:null});
+   }
+  });
   const p=report.data,createdAt=new Date(row.createdAt).getTime(),ordered=p.signal==='BUY'?p.stopLoss!<p.entry!&&p.entry!<p.takeProfit!:p.takeProfit!<p.entry!&&p.entry!<p.stopLoss!,ratio=Math.abs(p.takeProfit!-p.entry!)/Math.abs(p.entry!-p.stopLoss!);
   if(!ordered||!Number.isFinite(ratio)||ratio<2||!Number.isFinite(createdAt)||createdAt>Date.now()+1000||Date.now()-createdAt>15*60_000){res.status(409).json({error:'Scan a current chart with a valid trading setup.',code:'SCANNER_SETUP_INVALID'});return;}
   const [account]=await db.select().from(clientSettingsTable).where(eq(clientSettingsTable.clientId,req.scannerClientId!)).limit(1);

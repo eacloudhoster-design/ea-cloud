@@ -25,6 +25,8 @@ const RETRY_MAX_MS = 5 * 60_000;
 const EXECUTING_LEASE_SECONDS = 10 * 60;
 
 let pollTimer: ReturnType<typeof setInterval> | null = null;
+let lastHealthyPoll = 0;
+export function signalWorkerHealthy(now=Date.now()){return pollTimer!==null&&!stopped&&now-lastHealthyPoll<30_000;}
 let ticking = false;       // re-entrancy guard for a single tick
 let pendingWake = false;   // a wake arrived while a tick was in flight
 let stopped = false;
@@ -128,6 +130,7 @@ async function tick(log: Logger): Promise<void> {
   ticking = true;
   try {
     const ids = await claimSignals();
+    lastHealthyPoll=Date.now();
     if (ids.length === 0) return;
 
     const signals = await db.select().from(tradeSignalsTable).where(inArray(tradeSignalsTable.id, ids));

@@ -1,0 +1,2 @@
+export interface TradingActivity {id:string;source:'mentor'|'scanner'|'system';level:'info'|'success'|'warning'|'error';message:string;details:Record<string,unknown>;createdAt:string}
+export interface ActivitySnapshot {observedAt:number;engine:boolean;robotEnabled:boolean;connected:boolean;tradeAllowed:boolean;account:{balance:number;equity:number;profit:number;currency:string}|null;symbols:{symbol:string;available:boolean}[];unavailable?:string}

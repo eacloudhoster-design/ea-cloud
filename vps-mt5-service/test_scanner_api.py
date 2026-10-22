@@ -35,4 +35,19 @@ class ScannerBridgeTests(unittest.TestCase):
         self.mt5.account_info=lambda:N(login=7,server='Fixture',trade_allowed=True,trade_expert=True);self.mt5.order_check=lambda r:N(retcode=10018)
         p=dict(self.payload,direction='SELL',orderType='MARKET',entry=100,stopLoss=101,takeProfit=97,volume=.05)
         _,r=self.call('/scanner/check-order',p);self.assertFalse(r['brokerChecked']);self.assertFalse(r['quote']['marketOpen'])
+
+    def test_real_snapshot_identity_currency_and_exact_symbol(self):
+        self.mt5.account_info=lambda:N(login=7,server='Fixture',trade_allowed=True,trade_expert=True,balance=1200,equity=1235.5,profit=35.5,currency='ZAR')
+        original=self.mt5.symbol_info
+        self.mt5.symbol_info=lambda symbol:None if symbol=='GOLD' else original(symbol)
+        from scanner_api import ScannerActivityRequest
+        payload=ScannerActivityRequest(**self.payload,symbols=['XAUUSDm','GOLD'])
+        endpoint=self.endpoints['/scanner/activity-snapshot']
+        with self.assertRaises(HTTPException):endpoint(payload,'wrong')
+        result=endpoint(payload,self.auth['x-scanner-token'])
+        self.assertEqual(result['account']['currency'],'ZAR')
+        self.assertEqual(result['account']['equity'],1235.5)
+        self.assertEqual(result['symbols'],[dict(symbol='XAUUSDm',available=True),dict(symbol='GOLD',available=False)])
+        self.assertEqual(self.calls,[])
+
 if __name__=='__main__':unittest.main()

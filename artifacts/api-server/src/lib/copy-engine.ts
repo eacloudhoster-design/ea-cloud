@@ -1,3 +1,4 @@
+import { recordExecutionActivity } from "./trading-activity";
 import {
   db,
   appAccessTable,
@@ -103,6 +104,7 @@ function vpsSummary(r: VpsResult): Record<string, unknown> {
 function pushUpdate(clientId: number, execution: unknown) {
   try {
     broadcastToClient(clientId, { type: "TRADE_EXECUTION", execution });
+    void recordExecutionActivity(clientId,execution as Parameters<typeof recordExecutionActivity>[1]);
   } catch {
     // WS delivery is best-effort; never let it break execution.
   }

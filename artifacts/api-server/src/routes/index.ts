@@ -1,3 +1,4 @@
+import tradingActivityRouter from "./trading-activity";
 import { Router, type IRouter } from "express";
 import healthRouter from "./health";
 import authRouter from "./auth";
@@ -26,6 +27,7 @@ import scannerRouter from "./scanner";
 const router: IRouter = Router();
 
 router.use(healthRouter);
+router.use(tradingActivityRouter);
 router.use(scannerRouter);
 router.use(scannerAdminRouter);
 router.use(authRouter);

@@ -1,3 +1,4 @@
+import {openActivityMonitor} from "@/lib/activity-monitor";
 import { useEffect, useRef, useState } from "react";
 import { ArrowUpRight } from "lucide-react";
 import type { ChartReport, ScannerRecord } from "@/lib/scanner";
@@ -16,6 +17,7 @@ export default function ScannerTradeAction({record,settings,clientToken,onSettin
   if(pending.current)return;
   if(!clientToken){setMessage('Sign in to execute this trade.');return;}
   if(!valid){setMessage('Analyse a readable chart before executing a trade.');return;}
+  openActivityMonitor(record.id,clientToken,false);
   pending.current=true;setSubmitting(true);setMessage('');onSettingsSaved?.(value);
   const controller=new AbortController();attempt.current=controller;const run=++generation.current;
   try {
@@ -25,7 +27,7 @@ export default function ScannerTradeAction({record,settings,clientToken,onSettin
   finally{if(run===generation.current){pending.current=false;setSubmitting(false);}}
  };
  return <>
-  <button className="scanner-result-execute" type="button" disabled={!valid||submitting} onClick={()=>{setMessage('');setOpen(true);}}><ArrowUpRight size={21} /> EXECUTE TRADE</button>
+  <button className="scanner-result-execute" type="button" disabled={!valid||submitting} onClick={()=>{setMessage('');setOpen(true);openActivityMonitor(record.id,clientToken);}}><ArrowUpRight size={21} /> EXECUTE TRADE</button>
   {open&&<ScannerTradeSettings initial={settings} mode="confirmation" report={report} checking={submitting} message={message} onClose={()=>{if(!pending.current)setOpen(false);}} onConfirm={value=>void confirm(value)} />}
  </>;
 }

@@ -19,6 +19,12 @@ class ScannerCheckRequest(ScannerQuoteRequest):
     takeProfit: float = Field(gt=0, allow_inf_nan=False)
     volume: float = Field(gt=0, allow_inf_nan=False)
 
+class ScannerActivityRequest(BaseModel):
+    login: int = Field(gt=0)
+    password: str
+    server: str
+    symbols: list[str] = Field(default_factory=list, max_length=20)
+
 def register_scanner_routes(app, mt5, lock, filling_modes=None):
     def authenticate(token):
         expected = os.environ.get('SCANNER_MT5_VPS_TOKEN', '')
@@ -54,6 +60,23 @@ def register_scanner_routes(app, mt5, lock, filling_modes=None):
             # Tick freshness/order_check are not a verified trading calendar.
             marketOpen=None,marketOrders=bool(info.order_mode & 1),limitOrders=bool(info.order_mode & 2),
             tradeMode=modes.get(info.trade_mode,'disabled'))
+
+    @app.post('/scanner/activity-snapshot')
+    def activity_snapshot(payload: ScannerActivityRequest, x_scanner_token: str = Header(default='')):
+        authenticate(x_scanner_token)
+        with lock:
+            try:
+                # Verify identity without requiring any particular symbol to exist.
+                if not mt5.initialize() or not mt5.login(login=payload.login, password=payload.password, server=payload.server):
+                    raise HTTPException(503, 'MT5 authentication unavailable')
+                account, terminal = mt5.account_info(), mt5.terminal_info()
+                if not account or not terminal or account.login != payload.login or account.server != payload.server:
+                    raise HTTPException(503, 'MT5 account identity mismatch')
+                return dict(connected=bool(terminal.connected),tradeAllowed=bool(terminal.trade_allowed and account.trade_allowed and account.trade_expert),
+                    account=dict(balance=account.balance,equity=account.equity,profit=account.profit,currency=account.currency),
+                    symbols=[dict(symbol=s,available=mt5.symbol_info(s) is not None) for s in payload.symbols if 0<len(s)<=40])
+            finally:
+                mt5.shutdown()
 
     @app.post('/scanner/quote')
     def quote(payload: ScannerQuoteRequest, x_scanner_token: str = Header(default='')):
