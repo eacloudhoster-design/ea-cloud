@@ -1,3 +1,4 @@
+import { useStartupReady } from "@/components/ClientStartup";
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useLocation } from "wouter";
@@ -358,21 +359,24 @@ function Mt5Tab() {
 type Tab = "bots" | "mt5";
 
 export default function AppDashboard() {
-  const { client, logout } = useClientAuth();
+  const { client, logout, loading: authLoading } = useClientAuth();
   const [, setLocation] = useLocation();
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
+  const startupReady = useStartupReady();
+  useEffect(() => { startupReady(!loading); }, [loading, startupReady]);
   const [activeEa, setActiveEa] = useState<Ea | null>(null);
   const [trading, setTrading] = useState(false);
   const [showInfo, setShowInfo] = useState(false);
   const [tab, setTab] = useState<Tab>("bots");
 
   useEffect(() => {
+    if (authLoading) return;
     if (!client) { setLocation("/app"); return; }
     if (client.status === "pending") { setLocation("/app/pending"); return; }
     if (!client.licenseKey) { setLocation("/app/activate"); return; }
     fetchDashboard();
-  }, [client]);
+  }, [client, authLoading]);
 
   const fetchDashboard = async () => {
     try {
@@ -399,8 +403,7 @@ export default function AppDashboard() {
   if (loading) return (
     <div className="min-h-screen bg-[#080810] flex items-center justify-center">
       <div className="flex flex-col items-center gap-4">
-        <div className="w-12 h-12 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
-        <p className="text-white/40 text-sm">Loading your dashboard…</p>
+        <span className="sr-only" role="status">Preparing dashboard</span>
       </div>
     </div>
   );

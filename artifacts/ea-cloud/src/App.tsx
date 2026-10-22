@@ -1,3 +1,4 @@
+import ClientStartup from "./components/ClientStartup";
 import { Switch, Route } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { AuthProvider } from "./contexts/AuthContext";
@@ -86,6 +87,7 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <ClientAuthProvider>
+          <ClientStartup>
           <div className="dark">
             <Switch>
               {/* ── Client App Portal ── */}
@@ -158,6 +160,7 @@ function App() {
               <Route component={NotFound} />
             </Switch>
           </div>
+          </ClientStartup>
         </ClientAuthProvider>
       </AuthProvider>
     </QueryClientProvider>
