@@ -305,5 +305,5 @@ export function ShapeChoices({shapeStyle,onSelect,accentColor}:{shapeStyle:Shape
 }
 
 export function FontChoices({selected,onSelect}:{selected:BotFont;onSelect:(font:BotFont)=>void}){
- return <div className="mt-2 space-y-2">{botFonts.map(font=><button key={font} type="button" aria-pressed={selected===font} onClick={()=>onSelect(font)} className="w-full px-4 py-3 rounded-2xl text-left active:scale-[0.98] transition-transform" style={{background:"rgba(15,15,15,0.8)",border:`1px solid ${selected===font?"#3b82f6":"rgba(255,255,255,0.1)"}`}}><p className="text-white font-semibold text-sm" style={{...botFontStyle(font),fontWeight:600}}>{font}</p></button>)}</div>;
+ return <div className="mt-2 space-y-2">{botFonts.map(font=><button key={font} type="button" aria-pressed={selected===font} onClick={()=>onSelect(font)} className="w-full px-4 py-3 rounded-2xl text-left active:scale-[0.98] transition-transform" style={{background:"rgba(15,15,15,0.8)",border:`1px solid ${selected===font?"#3b82f6":"rgba(255,255,255,0.1)"}`}}><p className="text-white font-semibold text-sm" style={{...botFontStyle(font),fontWeight:font==="Flipside BRK"?400:600}}>{font}</p></button>)}</div>;
 }

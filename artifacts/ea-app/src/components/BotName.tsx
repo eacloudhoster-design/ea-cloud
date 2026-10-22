@@ -23,7 +23,7 @@ export default function BotName({
     <Tag
       className={`${className} ea-bot-name ${primary ? "ea-bot-name-primary" : ""}`}
       data-bot-name={primary ? "primary" : "secondary"}
-      style={{ ...style, ...botFontStyle(botFont) }}
+      style={{ ...style, ...botFontStyle(primary ? botFont : "Inter") }}
       {...(toggleBackground
         ? {
             role: "button",

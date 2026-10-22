@@ -11,3 +11,11 @@ the browser's normal fallback.
 
 Each original SIL Open Font License is shipped in public/font-licenses/.
 No runtime font service, dependency or global typography override is added.
+
+Select Font now offers Inter, Roboto, Orbitron and Flipside BRK. Rajdhani and
+Exo 2 remain bundled for existing unrelated typography but are no longer selector
+options. Flipside BRK is the authentic, unchanged Brian Kent / Ænigma TTF from
+Ubuntu's fonts-aenigma package. additional-manifest.json records provenance and
+hashes; original author notice and the distributor's explicit permission are in
+public/font-licenses/flipside-brk/. Its native weight is 400, not synthetic 900.
+See docs/font-upgrade/README.md for the requested fonts not yet available.

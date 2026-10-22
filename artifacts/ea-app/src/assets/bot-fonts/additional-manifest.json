@@ -1,0 +1,19 @@
+[
+  {
+    "family": "Flipside BRK",
+    "designer": "Brian Kent / \u00c6nigma Fonts",
+    "version": "1.75",
+    "file": "flipside-brk/flipside.ttf",
+    "sha256": "98980beaddb46cdf603a834db9294e11ccf1480430951bba89e2776a4056d41c",
+    "bytes": 21856,
+    "weight": 400,
+    "source": "https://archive.ubuntu.com/ubuntu/pool/universe/f/fonts-aenigma/fonts-aenigma_0.0.20080511+dfsg-5_all.deb",
+    "packageSha256": "fc868a0c88032ebf4dd9f2e319a0f6de0a516b91241f24cf49200559d2c00099",
+    "upstreamFile": "usr/share/fonts/truetype/aenigma/flipside.ttf",
+    "licences": [
+      "public/font-licenses/flipside-brk/flipside.txt",
+      "public/font-licenses/flipside-brk/distribution-copyright.txt"
+    ],
+    "modified": false
+  }
+]
