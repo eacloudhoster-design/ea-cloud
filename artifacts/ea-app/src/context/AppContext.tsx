@@ -1,3 +1,4 @@
+import type { BackgroundAnimation } from "@/lib/home-preferences";
 import type {BotFont} from "@/lib/font-preference";
 import { createContext, useContext } from "react";
 
@@ -23,6 +24,8 @@ export interface AppSettings {
   eaTagline: string;
   eaSymbols: string[];
   bgImageUrl: string | null;
+  backgroundAnimation: BackgroundAnimation;
+  setBackgroundAnimation: (value: BackgroundAnimation) => void;
   showBg: boolean;
   setShowBg: (v: boolean) => void;
   clientToken: string | null;
@@ -46,6 +49,8 @@ export const AppContext = createContext<AppSettings>({
   eaTagline: "@ea_cloud",
   eaSymbols: ["EURUSD", "GBPUSD", "XAUUSD"],
   bgImageUrl: null,
+  backgroundAnimation: "none",
+  setBackgroundAnimation: () => {},
   showBg: true,
   setShowBg: () => {},
   clientToken: null,

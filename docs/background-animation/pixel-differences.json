@@ -1,0 +1,62 @@
+[
+  {
+    "capture": "matrix-matrix",
+    "changedPixelsAbove3": 40474,
+    "totalPixels": 329160
+  },
+  {
+    "capture": "regular-matrix",
+    "changedPixelsAbove3": 46100,
+    "totalPixels": 329160
+  },
+  {
+    "capture": "regular-pulse",
+    "changedPixelsAbove3": 150083,
+    "totalPixels": 329160
+  },
+  {
+    "capture": "matrix-pulse",
+    "changedPixelsAbove3": 157684,
+    "totalPixels": 329160
+  },
+  {
+    "capture": "s2tone-glow",
+    "changedPixelsAbove3": 187608,
+    "totalPixels": 329160
+  },
+  {
+    "capture": "s2tone-matrix",
+    "changedPixelsAbove3": 37524,
+    "totalPixels": 329160
+  },
+  {
+    "capture": "s2tone-particles",
+    "changedPixelsAbove3": 2374,
+    "totalPixels": 329160
+  },
+  {
+    "capture": "s2tone-pulse",
+    "changedPixelsAbove3": 146029,
+    "totalPixels": 329160
+  },
+  {
+    "capture": "regular-particles",
+    "changedPixelsAbove3": 2594,
+    "totalPixels": 329160
+  },
+  {
+    "capture": "matrix-particles",
+    "changedPixelsAbove3": 2634,
+    "totalPixels": 329160
+  },
+  {
+    "capture": "matrix-glow",
+    "changedPixelsAbove3": 202725,
+    "totalPixels": 329160
+  },
+  {
+    "capture": "regular-glow",
+    "changedPixelsAbove3": 201113,
+    "totalPixels": 329160
+  }
+]

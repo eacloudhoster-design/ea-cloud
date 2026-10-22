@@ -1,0 +1,149 @@
+.ea-back-animation {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  overflow: hidden;
+  pointer-events: none;
+  contain: strict;
+  color: var(--back-color);
+}
+.ea-back-animation * {
+  pointer-events: none;
+}
+.ea-back-ambient,
+.ea-back-wave {
+  position: absolute;
+  inset: 0;
+  display: block;
+}
+.ea-back-pulse .ea-back-ambient {
+  background: radial-gradient(
+    ellipse at 50% 45%,
+    currentColor,
+    transparent 72%
+  );
+  animation: ea-back-breathe 2.6s ease-in-out infinite;
+}
+.ea-back-pulse .ea-back-wave {
+  inset: 15% -15%;
+  border: 2px solid currentColor;
+  border-radius: 50%;
+  box-shadow:
+    0 0 25px currentColor,
+    inset 0 0 20px currentColor;
+  animation: ea-back-expand 2.6s ease-out infinite;
+}
+.ea-back-glow .ea-back-ambient {
+  background:
+    radial-gradient(ellipse at 0% 35%, currentColor, transparent 55%),
+    radial-gradient(ellipse at 100% 75%, currentColor, transparent 55%);
+  animation: ea-back-breathe 3.8s ease-in-out infinite;
+}
+.ea-back-glow .ea-back-wave {
+  box-shadow: inset 0 0 65px 8px currentColor;
+  animation: ea-back-edge 3.8s ease-in-out infinite;
+}
+.ea-back-stream {
+  position: absolute;
+  top: 0;
+  width: 12px;
+  font: 600 13px/18px monospace;
+  text-shadow: 0 0 6px currentColor;
+  animation: ea-back-rain var(--duration) linear var(--delay) infinite;
+  will-change: transform;
+}
+.ea-back-stream b {
+  display: block;
+  font-weight: inherit;
+}
+.ea-back-stream b:last-child {
+  color: #e7fff6;
+  text-shadow: 0 0 8px var(--back-color);
+}
+.ea-back-particle {
+  position: absolute;
+  border-radius: 50%;
+  background: currentColor;
+  box-shadow: 0 0 7px 1px currentColor;
+  animation: ea-back-float var(--duration) ease-in-out var(--delay) infinite;
+  will-change: transform, opacity;
+}
+@keyframes ea-back-breathe {
+  0%,
+  100% {
+    opacity: 0.035;
+  }
+  50% {
+    opacity: 0.23;
+  }
+}
+@keyframes ea-back-expand {
+  0% {
+    transform: scale(0.3);
+    opacity: 0;
+  }
+  20% {
+    opacity: 0.22;
+  }
+  100% {
+    transform: scale(1.7);
+    opacity: 0;
+  }
+}
+@keyframes ea-back-edge {
+  0%,
+  100% {
+    opacity: 0.08;
+  }
+  50% {
+    opacity: 0.26;
+  }
+}
+@keyframes ea-back-rain {
+  0% {
+    transform: translateY(-410px);
+    opacity: 0;
+  }
+  12% {
+    opacity: 0.48;
+  }
+  80% {
+    opacity: 0.32;
+  }
+  100% {
+    transform: translateY(100dvh);
+    opacity: 0;
+  }
+}
+@keyframes ea-back-float {
+  0%,
+  100% {
+    transform: translate3d(0, 15px, 0);
+    opacity: 0;
+  }
+  30% {
+    opacity: 0.55;
+  }
+  65% {
+    opacity: 0.3;
+  }
+  80% {
+    transform: translate3d(var(--drift), -65px, 0);
+    opacity: 0.45;
+  }
+}
+@media (max-width: 360px) {
+  .ea-back-stream:nth-child(3n),
+  .ea-back-particle:nth-child(3n) {
+    display: none;
+    animation: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ea-back-animation {
+    display: none;
+  }
+  .ea-back-animation * {
+    animation: none !important;
+  }
+}

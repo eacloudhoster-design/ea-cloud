@@ -62,31 +62,47 @@ test("interface and background preferences survive storage, default safely and s
   assert.deepEqual(readHomePreferences(storage, key), {
     interfaceStyle: "matrix",
     showBg: true,
+    backgroundAnimation: "none",
   });
   for (const interfaceStyle of ["regular", "matrix", "s2tone"])
-    for (const showBg of [true, false]) {
-      assert.equal(
-        saveHomePreferences(storage, key, { interfaceStyle, showBg }),
-        true,
-      );
-      assert.deepEqual(readHomePreferences(storage, key), {
-        interfaceStyle,
-        showBg,
-      });
-    }
+    for (const showBg of [true, false])
+      for (const backgroundAnimation of [
+        "none",
+        "pulse",
+        "glow",
+        "matrix",
+        "particles",
+      ]) {
+        assert.equal(
+          saveHomePreferences(storage, key, {
+            interfaceStyle,
+            showBg,
+            backgroundAnimation,
+          }),
+          true,
+        );
+        assert.deepEqual(readHomePreferences(storage, key), {
+          interfaceStyle,
+          showBg,
+          backgroundAnimation,
+        });
+      }
   assert.deepEqual(readHomePreferences(storage, other), {
     interfaceStyle: "matrix",
     showBg: true,
+    backgroundAnimation: "none",
   });
   data.set(key, "broken JSON");
   assert.deepEqual(readHomePreferences(storage, key), {
     interfaceStyle: "matrix",
     showBg: true,
+    backgroundAnimation: "none",
   });
   data.set(key, JSON.stringify({ interfaceStyle: "bogus", showBg: "false" }));
   assert.deepEqual(readHomePreferences(storage, key), {
     interfaceStyle: "matrix",
     showBg: true,
+    backgroundAnimation: "none",
   });
   assert.equal(
     saveHomePreferences(storage, key, {
@@ -106,12 +122,45 @@ test("interface and background preferences survive storage, default safely and s
   assert.deepEqual(readHomePreferences(blocked, key), {
     interfaceStyle: "matrix",
     showBg: true,
+    backgroundAnimation: "none",
   });
   assert.equal(
     saveHomePreferences(blocked, key, {
       interfaceStyle: "regular",
       showBg: false,
     }),
+    false,
+  );
+});
+
+test("legacy home settings retain their values and default to no extra animation", () => {
+  const storage = {
+    getItem: () =>
+      JSON.stringify({
+        interfaceStyle: "s2tone",
+        showBg: false,
+        backgroundAnimation: "invalid",
+      }),
+  };
+  assert.deepEqual(readHomePreferences(storage, "client"), {
+    interfaceStyle: "s2tone",
+    showBg: false,
+    backgroundAnimation: "none",
+  });
+  assert.equal(
+    saveHomePreferences(
+      {
+        setItem() {
+          throw Error("must not write");
+        },
+      },
+      "client",
+      {
+        interfaceStyle: "regular",
+        showBg: true,
+        backgroundAnimation: "invalid",
+      },
+    ),
     false,
   );
 });
