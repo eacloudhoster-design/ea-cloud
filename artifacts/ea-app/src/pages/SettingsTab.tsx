@@ -116,32 +116,7 @@ export default function SettingsTab({ onOpenChartScanner }: SettingsTabProps) {
           onToggle={() => toggle("shape")}
           accentColor={accentColor}
         >
-          <div className="mt-2 space-y-2">
-            {SHAPE_OPTIONS.map(opt => {
-              const selected = shapeStyle === opt.id;
-              return (
-                <button
-                  key={opt.id}
-                  onClick={() => setShapeStyle(opt.id)}
-                  className="w-full flex items-center gap-4 px-4 py-3 rounded-2xl active:scale-[0.98] transition-transform text-left"
-                  style={{
-                    background: selected ? `${accentColor}22` : "rgba(10,10,10,0.8)",
-                    border: `1px solid ${selected ? accentColor : `${accentColor}44`}`,
-                  }}
-                >
-                  <div className="flex-shrink-0 w-12 flex items-center justify-center"
-                    style={{ color: selected ? accentColor : "rgba(255,255,255,0.7)" }}>
-                    {SHAPE_ICONS[opt.id]}
-                  </div>
-                  <div>
-                    <p className="font-bold text-sm" style={{ color: selected ? accentColor : "#fff" }}>{opt.label}</p>
-                    <p className="text-white/45 text-xs">{opt.desc}</p>
-                  </div>
-                  {selected && <div className="ml-auto"><Check size={16} style={{ color: accentColor }} /></div>}
-                </button>
-              );
-            })}
-          </div>
+          <ShapeChoices shapeStyle={shapeStyle} onSelect={setShapeStyle} accentColor={accentColor} />
         </AccordionItem>
 
         {/* Select Colour */}
@@ -304,5 +279,37 @@ function AccordionItem({ icon, label, isOpen, onToggle, children, accentColor }:
       </button>
       {isOpen && <div className="px-1">{children}</div>}
     </div>
+  );
+}
+
+export function ShapeChoices({shapeStyle,onSelect,accentColor}:{shapeStyle:ShapeStyle;onSelect:(shape:ShapeStyle)=>void;accentColor:string}) {
+  return (
+          <div className="mt-2 space-y-2">
+            {SHAPE_OPTIONS.map(opt => {
+              const selected = shapeStyle === opt.id;
+              return (
+                <button
+                  key={opt.id}
+                  aria-pressed={selected}
+                  onClick={() => onSelect(opt.id)}
+                  className="w-full flex items-center gap-4 px-4 py-3 rounded-2xl active:scale-[0.98] transition-transform text-left"
+                  style={{
+                    background: selected ? `${accentColor}22` : "rgba(10,10,10,0.8)",
+                    border: `1px solid ${selected ? accentColor : `${accentColor}44`}`,
+                  }}
+                >
+                  <div className="flex-shrink-0 w-12 flex items-center justify-center"
+                    style={{ color: selected ? accentColor : "rgba(255,255,255,0.7)" }}>
+                    {SHAPE_ICONS[opt.id]}
+                  </div>
+                  <div>
+                    <p className="font-bold text-sm" style={{ color: selected ? accentColor : "#fff" }}>{opt.label}</p>
+                    <p className="text-white/45 text-xs">{opt.desc}</p>
+                  </div>
+                  {selected && <div className="ml-auto"><Check size={16} style={{ color: accentColor }} /></div>}
+                </button>
+              );
+            })}
+          </div>
   );
 }
