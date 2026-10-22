@@ -37,24 +37,21 @@ export default function StartupSplash({ ready, children }: { ready: boolean; chi
       role="status" aria-label={elapsed ? "Preparing EA Cloud" : "Starting EA Cloud"}>
       {assetFailed && <button className="ea-startup-retry" onClick={() => window.location.reload()}>Retry startup</button>}
       <div className="ea-startup-scene" aria-hidden="true">
-        <div className="ea-startup-haze" />
-        <div className="ea-startup-pulse" />
-        {Array.from({ length: 14 }, (_, i) => <i key={i} className="ea-startup-particle" style={{
-          "--x": `${12 + ((i * 37) % 76)}%`, "--y": `${18 + ((i * 23) % 66)}%`,
-          "--spark": `${.45 + (i % 4) * .15}`,
-          "--drift": `${(i % 2 ? 1 : -1) * (8 + i)}px`,
-        } as CSSProperties} />)}
         <div className="ea-startup-mark">
           <img ref={imageRef} src={eaLogo} alt="" decoding="sync" fetchPriority="high" />
           {/* Overlays follow the original image's cloud contour and circuit traces. */}
-          <svg viewBox="0 0 1254 1254" className="ea-startup-energy" fill="none">
+          <svg viewBox="0 150 1254 690" className="ea-startup-energy" fill="none">
+            <g className="ea-startup-eyes">
+              <path d="M403 507 L551 602 L452 567 Z" />
+              <path d="M834 507 L688 602 L785 567 Z" />
+            </g>
             <path className="ea-startup-edge" pathLength="1" d="M463 800H190C35 800 0 590 139 537Q174 446 260 443Q291 307 426 309C500 133 733 133 817 308Q905 310 935 400Q1054 398 1072 519C1238 541 1247 794 1070 798H775" />
             <g className="ea-startup-circuits">
               <path pathLength="1" d="M168 661H266L308 700H384 M174 703H192L212 694H263L304 727H403 M247 743H418" />
               <path pathLength="1" d="M1073 661H977L934 701H856 M1068 703H1048L1035 694H978L936 727H835 M993 743H817" />
             </g>
           </svg>
-          <div className="ea-startup-sweep" />
+          <div className="ea-startup-reflection"><div className="ea-startup-sweep" /></div>
         </div>
       </div>
     </div>}
