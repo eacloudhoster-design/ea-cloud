@@ -65,17 +65,16 @@ export default function HomeTab({ onOpenChartScanner }: HomeTabProps) {
         className="absolute inset-0 overflow-y-auto"
         style={{ paddingBottom: 88, scrollbarWidth: "none", WebkitOverflowScrolling: "touch" } as React.CSSProperties}
       >
-        {/* Regular header scrolls with content; other interface headers retain their behavior. */}
+        {/* Regular and S2tone headers belong to the same scrolling content. */}
         {interfaceStyle !== "matrix" && (
           <div
-            className={`${interfaceStyle === "regular" ? "relative" : "sticky top-0"} z-10 flex items-center justify-between px-4`}
-            style={{ paddingTop: interfaceStyle === "regular" ? "max(16px, env(safe-area-inset-top))" : 52, paddingBottom: 8, background: "transparent" }}
+            className="relative z-10 flex items-center justify-between px-4"
+            style={{ paddingTop: "max(16px, env(safe-area-inset-top))", paddingBottom: 8, background: "transparent" }}
           >
             <div className="flex items-center gap-1.5 px-2 py-1 rounded-full" style={{ background: "rgba(0,0,0,0.4)", border: `1px solid ${botRunning ? "#22c55e55" : "#f59e0b55"}` }}>
               <span className="w-1.5 h-1.5 rounded-full" style={{ background: botRunning ? "#22c55e" : "#f59e0b" }} />
               <span className="text-[9px] font-bold tracking-wider" style={{ color: botRunning ? "#22c55e" : "#f59e0b" }}>{botRunning ? "ACTIVE" : "PAUSED"}</span>
             </div>
-            {interfaceStyle !== "regular" && <p className="text-white/40 text-xs tracking-widest">{eaTagline || "@ea_cloud"}</p>}
             <button
               onClick={() => setShowTrades(true)}
               aria-label="Notifications"
@@ -141,13 +140,6 @@ export default function HomeTab({ onOpenChartScanner }: HomeTabProps) {
 function S2ToneLayout({ shapeStyle, accentColor, botRunning, setBotRunning, eaName, eaTagline, bgImageUrl, showBg, setShowBg, setShowRemoveConfirm, setShowQuotes }: any) {
   return (
     <div className="relative z-10 flex flex-col items-center px-5 pt-2 pb-6 gap-5">
-
-      {/* Tagline in accent color — tap to toggle bg */}
-      <button onClick={() => setShowBg(!showBg)} className="active:opacity-70 transition-opacity mt-1">
-        <p className="text-center text-sm font-medium tracking-wide" style={{ color: accentColor }}>
-          {eaTagline || "@ea_cloud"}
-        </p>
-      </button>
 
       {/* Large glowing sphere */}
       <RobotImageFrame shape={shapeStyle} accent={accentColor} size={230} borderWidth={2.5}
