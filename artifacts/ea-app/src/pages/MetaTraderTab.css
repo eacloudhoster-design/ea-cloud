@@ -1,3 +1,5 @@
+@import "../assets/bot-fonts/fonts.css";
+
 /* All illumination derives from the existing AppContext accentColor. Broker
    artwork is intentionally excluded from theme filtering/recolouring. */
 .mt5-screen {
@@ -9,6 +11,9 @@
 }
 .mt5-mentor-background { position: absolute; inset: 0; z-index: -3; width: 100%; height: 100%; object-fit: cover; object-position: center; opacity: .78; transform: scale(1.015); filter: blur(0); transition: filter .7s ease, transform .9s ease, opacity .7s ease; }
 .mt5-background-shade { position: absolute; inset: 0; z-index: -2; background: linear-gradient(180deg,#06070d40,#06070d80 45%,#06070def),radial-gradient(ellipse at 90% 24%,var(--mt5-glow),transparent 65%); }
+/* Brighten only the connection form; the existing connection presentation stays intact. */
+.mt5-screen[data-state="idle"] .mt5-mentor-background { opacity: .98; filter: saturate(1.12); }
+.mt5-screen[data-state="idle"] .mt5-background-shade { background: linear-gradient(180deg,#06070d14,#06070d38 45%,#06070d9e),radial-gradient(ellipse at 90% 24%,var(--mt5-glow),transparent 65%); }
 .mt5-background-shade::after { content: ''; position: absolute; inset: 0; background: #06070d; opacity: 0; transition: opacity .7s ease; }
 .mt5-screen:not([data-state="idle"]) .mt5-mentor-background { filter: blur(18px); transform: scale(1.09); opacity: .65; }
 .mt5-screen:not([data-state="idle"]) .mt5-background-shade::after { opacity: .35; }
@@ -19,19 +24,19 @@
 .mt5-mentor-name { color: #c2c5ce; font-size: 10px; letter-spacing: .2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .mt5-intro { padding: clamp(29px, 5vh, 44px) 0 28px; text-align: center; }
 .mt5-platform-logo { display: block; width: 58px; height: 58px; object-fit: contain; margin: 0 auto 18px; border-radius: 13px; box-shadow: 0 8px 24px #0005; }
-.mt5-intro h2 { font-size: clamp(24px,6.7vw,29px); font-weight: 550; letter-spacing: -1px; line-height: 1.2; text-shadow: 0 2px 20px #0007; }
-.mt5-intro p { color: #c6c9d1; font-size: 11px; line-height: 1.6; margin-top: 9px; }
+.mt5-intro h2 { font-family: "EA Bot Exo 2", Inter, sans-serif; font-size: clamp(24px,6.7vw,29px); font-weight: 900; letter-spacing: .15px; line-height: 1.2; color: #fff5f1; text-shadow: 0 2px 20px #0009,0 0 22px var(--mt5-glow); }
+.mt5-intro p { font-family: "EA Bot Inter", Inter, sans-serif; color: #e4e7ed; font-size: 11px; font-weight: 600; letter-spacing: .12px; line-height: 1.6; margin-top: 9px; text-shadow: 0 1px 7px #000b; }
 /* Semantic form only. Each field and the button has its own separate surface. */
 .mt5-form { display: flex; flex-direction: column; gap: 19px; background: none; border: 0; box-shadow: none; padding: 0; }
 .mt5-floating-field { min-width: 0; }
-.mt5-floating-field > label { display: block; color: #e0e2e8; font-size: 10px; font-weight: 500; letter-spacing: .6px; margin: 0 4px 8px; }
-.mt5-input-wrap { position: relative; isolation: isolate; display: flex; align-items: center; gap: 13px; min-height: 58px; padding: 0 17px; border-radius: 19px; border: 1px solid #ffffff24; background: linear-gradient(125deg,#ffffff17,#ffffff03 55%),#0c101b8c; backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); box-shadow: inset 0 1px 0 #ffffff18, 0 12px 25px #0003, 0 0 24px var(--mt5-glow); transition: border-color .25s ease, box-shadow .25s ease, background .25s ease; }
+.mt5-floating-field > label { display: block; color: #fff0ee; font-family: "EA Bot Exo 2", Inter, sans-serif; font-size: 10px; font-weight: 600; letter-spacing: .8px; text-shadow: 0 1px 7px #000b; margin: 0 4px 8px; }
+.mt5-input-wrap { position: relative; isolation: isolate; display: flex; align-items: center; gap: 13px; min-height: 58px; padding: 0 17px; border-radius: 19px; border: 1px solid color-mix(in srgb,var(--mt5-accent) 35%,#ffffff35); background: linear-gradient(125deg,#ffffff17,#ffffff03 55%),#0c101b8c; backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); box-shadow: inset 0 1px 0 #ffffff18, 0 12px 25px #0003, 0 0 24px var(--mt5-glow); transition: border-color .25s ease, box-shadow .25s ease, background .25s ease; }
 .mt5-input-wrap::after { content: ''; pointer-events: none; position: absolute; inset: 0; border-radius: inherit; background: linear-gradient(115deg,#ffffff08,transparent 28%); }
-.mt5-input-wrap > svg { color: #a5aab8; flex-shrink: 0; }
+.mt5-input-wrap > svg { color: var(--mt5-light); flex-shrink: 0; }
 .mt5-input-wrap:focus-within { border-color: var(--mt5-accent); box-shadow: 0 0 0 3px var(--mt5-glow),0 10px 30px #0004,inset 0 1px 0 #fff2; }
 .mt5-input-wrap:focus-within > svg { color: var(--mt5-light); }
-.mt5-input-wrap input { width: 100%; min-width: 0; flex: 1; height: 56px; background: transparent; border: 0; outline: none; font-size: 16px; color: #fff; scroll-margin-block: 110px; }
-.mt5-input-wrap input::placeholder { font-size: 12px; color: #a8adbc; opacity: 1; }
+.mt5-input-wrap input { width: 100%; min-width: 0; flex: 1; height: 56px; background: transparent; border: 0; outline: none; font-family: "EA Bot Inter", Inter, sans-serif; font-size: 16px; font-weight: 600; letter-spacing: .1px; color: #fff; scroll-margin-block: 110px; }
+.mt5-input-wrap input::placeholder { font-size: 12px; font-weight: 600; color: #d5d9e4; opacity: 1; }
 .mt5-eye { display: grid; place-items: center; width: 44px; height: 48px; margin-right: -12px; color: #c0c4cf; flex-shrink: 0; background: transparent; border: 0; border-radius: 12px; cursor: pointer; }
 .mt5-screen button:focus-visible { outline: 2px solid var(--mt5-accent); outline-offset: 4px; }
 .mt5-connect-button { position: relative; display: flex; align-items: center; justify-content: center; width: 100%; min-height: 58px; margin-top: 9px; padding: 16px 20px; gap: 12px; border-radius: 19px; border: 1px solid color-mix(in srgb,var(--mt5-accent) 65%,#ffffff24); color: #fff; font-size: 13px; font-weight: 600; letter-spacing: .3px; background: linear-gradient(115deg,#ffffff14,transparent 65%),color-mix(in srgb,var(--mt5-accent) 27%,#10131bc9); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); box-shadow: 0 10px 30px #0005,0 0 25px var(--mt5-glow),inset 0 1px 0 #ffffff36; cursor: pointer; transition: transform .2s ease,box-shadow .2s ease; }

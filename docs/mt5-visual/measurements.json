@@ -1,0 +1,926 @@
+{
+  "before": [
+    {
+      "viewport": {
+        "width": 320,
+        "height": 740
+      },
+      "boxes": {
+        ".mt5-topline": {
+          "x": 22,
+          "y": 25,
+          "width": 276,
+          "height": 15
+        },
+        ".mt5-platform-logo": {
+          "x": 131,
+          "y": 77,
+          "width": 58,
+          "height": 58
+        },
+        ".mt5-intro h2": {
+          "x": 22,
+          "y": 153,
+          "width": 276,
+          "height": 28.796875
+        },
+        ".mt5-intro p": {
+          "x": 22,
+          "y": 190.796875,
+          "width": 276,
+          "height": 17.59375
+        },
+        "#mt5-login": {
+          "x": 72,
+          "y": 260.390625,
+          "width": 208,
+          "height": 56
+        },
+        "#mt5-password": {
+          "x": 72,
+          "y": 360.390625,
+          "width": 163,
+          "height": 56
+        },
+        "#mt5-server": {
+          "x": 72,
+          "y": 460.390625,
+          "width": 208,
+          "height": 56
+        },
+        ".mt5-connect-button": {
+          "x": 22,
+          "y": 545.390625,
+          "width": 276,
+          "height": 58
+        },
+        ".mt5-availability-note": {
+          "x": 28,
+          "y": 622.390625,
+          "width": 264,
+          "height": 30.59375
+        }
+      },
+      "logoStyles": {
+        "width": "58px",
+        "height": "58px",
+        "object-fit": "contain",
+        "border-radius": "13px",
+        "box-shadow": "rgba(0, 0, 0, 0.333) 0px 8px 24px 0px",
+        "filter": "none"
+      },
+      "buttonStyles": {
+        "width": "276px",
+        "height": "58px",
+        "border": "1px solid color(srgb 0.941688 0.318475 0.318475 / 0.699412)",
+        "border-radius": "19px",
+        "background": "linear-gradient(115deg, rgba(255, 255, 255, 0.08), rgba(0, 0, 0, 0) 65%) repeat scroll 0% 0% / auto padding-box border-box, color(srgb 0.342038 0.135879 0.157232 / 0.845412) none repeat scroll 0% 0% / auto padding-box border-box",
+        "box-shadow": "rgba(0, 0, 0, 0.333) 0px 10px 30px 0px, color(srgb 0.937255 0.266667 0.266667 / 0.14) 0px 0px 25px 0px, rgba(255, 255, 255, 0.21) 0px 1px 0px 0px inset",
+        "font-family": "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+        "font-size": "13px",
+        "font-weight": "600",
+        "color": "rgb(255, 255, 255)"
+      },
+      "heading": {
+        "font-family": "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+        "font-size": "24px",
+        "font-weight": "550",
+        "letter-spacing": "-1px",
+        "color": "rgb(244, 245, 247)"
+      },
+      "labels": [
+        {
+          "text": "MT5 Account Number",
+          "font": "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+          "weight": "500",
+          "color": "rgb(224, 226, 232)"
+        },
+        {
+          "text": "Password",
+          "font": "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+          "weight": "500",
+          "color": "rgb(224, 226, 232)"
+        },
+        {
+          "text": "Server",
+          "font": "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+          "weight": "500",
+          "color": "rgb(224, 226, 232)"
+        }
+      ],
+      "image": {
+        "src": "/fixture-robot.jpg",
+        "opacity": "0.78"
+      },
+      "disclaimer": "Live authentication is not integrated yet.Credentials are not sent or saved.",
+      "headingFits": true
+    },
+    {
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "boxes": {
+        ".mt5-topline": {
+          "x": 28,
+          "y": 25,
+          "width": 334,
+          "height": 15
+        },
+        ".mt5-platform-logo": {
+          "x": 166,
+          "y": 82.1875,
+          "width": 58,
+          "height": 58
+        },
+        ".mt5-intro h2": {
+          "x": 28,
+          "y": 158.1875,
+          "width": 334,
+          "height": 31.34375
+        },
+        ".mt5-intro p": {
+          "x": 28,
+          "y": 198.53125,
+          "width": 334,
+          "height": 17.59375
+        },
+        "#mt5-login": {
+          "x": 78,
+          "y": 268.125,
+          "width": 266,
+          "height": 56
+        },
+        "#mt5-password": {
+          "x": 78,
+          "y": 368.125,
+          "width": 221,
+          "height": 56
+        },
+        "#mt5-server": {
+          "x": 78,
+          "y": 468.125,
+          "width": 266,
+          "height": 56
+        },
+        ".mt5-connect-button": {
+          "x": 28,
+          "y": 553.125,
+          "width": 334,
+          "height": 58
+        },
+        ".mt5-availability-note": {
+          "x": 34,
+          "y": 630.125,
+          "width": 322,
+          "height": 30.59375
+        }
+      },
+      "logoStyles": {
+        "width": "58px",
+        "height": "58px",
+        "object-fit": "contain",
+        "border-radius": "13px",
+        "box-shadow": "rgba(0, 0, 0, 0.333) 0px 8px 24px 0px",
+        "filter": "none"
+      },
+      "buttonStyles": {
+        "width": "334px",
+        "height": "58px",
+        "border": "1px solid color(srgb 0.941688 0.318475 0.318475 / 0.699412)",
+        "border-radius": "19px",
+        "background": "linear-gradient(115deg, rgba(255, 255, 255, 0.08), rgba(0, 0, 0, 0) 65%) repeat scroll 0% 0% / auto padding-box border-box, color(srgb 0.342038 0.135879 0.157232 / 0.845412) none repeat scroll 0% 0% / auto padding-box border-box",
+        "box-shadow": "rgba(0, 0, 0, 0.333) 0px 10px 30px 0px, color(srgb 0.937255 0.266667 0.266667 / 0.14) 0px 0px 25px 0px, rgba(255, 255, 255, 0.21) 0px 1px 0px 0px inset",
+        "font-family": "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+        "font-size": "13px",
+        "font-weight": "600",
+        "color": "rgb(255, 255, 255)"
+      },
+      "heading": {
+        "font-family": "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+        "font-size": "26.13px",
+        "font-weight": "550",
+        "letter-spacing": "-1px",
+        "color": "rgb(244, 245, 247)"
+      },
+      "labels": [
+        {
+          "text": "MT5 Account Number",
+          "font": "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+          "weight": "500",
+          "color": "rgb(224, 226, 232)"
+        },
+        {
+          "text": "Password",
+          "font": "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+          "weight": "500",
+          "color": "rgb(224, 226, 232)"
+        },
+        {
+          "text": "Server",
+          "font": "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+          "weight": "500",
+          "color": "rgb(224, 226, 232)"
+        }
+      ],
+      "image": {
+        "src": "/fixture-robot.jpg",
+        "opacity": "0.78"
+      },
+      "disclaimer": "Live authentication is not integrated yet.Credentials are not sent or saved.",
+      "headingFits": true
+    },
+    {
+      "viewport": {
+        "width": 430,
+        "height": 932
+      },
+      "boxes": {
+        ".mt5-topline": {
+          "x": 28,
+          "y": 25,
+          "width": 374,
+          "height": 15
+        },
+        ".mt5-platform-logo": {
+          "x": 186,
+          "y": 84,
+          "width": 58,
+          "height": 58
+        },
+        ".mt5-intro h2": {
+          "x": 28,
+          "y": 160,
+          "width": 374,
+          "height": 34.5625
+        },
+        ".mt5-intro p": {
+          "x": 28,
+          "y": 203.5625,
+          "width": 374,
+          "height": 17.59375
+        },
+        "#mt5-login": {
+          "x": 78,
+          "y": 273.15625,
+          "width": 306,
+          "height": 56
+        },
+        "#mt5-password": {
+          "x": 78,
+          "y": 373.15625,
+          "width": 261,
+          "height": 56
+        },
+        "#mt5-server": {
+          "x": 78,
+          "y": 473.15625,
+          "width": 306,
+          "height": 56
+        },
+        ".mt5-connect-button": {
+          "x": 28,
+          "y": 558.15625,
+          "width": 374,
+          "height": 58
+        },
+        ".mt5-availability-note": {
+          "x": 34,
+          "y": 635.15625,
+          "width": 362,
+          "height": 30.59375
+        }
+      },
+      "logoStyles": {
+        "width": "58px",
+        "height": "58px",
+        "object-fit": "contain",
+        "border-radius": "13px",
+        "box-shadow": "rgba(0, 0, 0, 0.333) 0px 8px 24px 0px",
+        "filter": "none"
+      },
+      "buttonStyles": {
+        "width": "374px",
+        "height": "58px",
+        "border": "1px solid color(srgb 0.941688 0.318475 0.318475 / 0.699412)",
+        "border-radius": "19px",
+        "background": "linear-gradient(115deg, rgba(255, 255, 255, 0.08), rgba(0, 0, 0, 0) 65%) repeat scroll 0% 0% / auto padding-box border-box, color(srgb 0.342038 0.135879 0.157232 / 0.845412) none repeat scroll 0% 0% / auto padding-box border-box",
+        "box-shadow": "rgba(0, 0, 0, 0.333) 0px 10px 30px 0px, color(srgb 0.937255 0.266667 0.266667 / 0.14) 0px 0px 25px 0px, rgba(255, 255, 255, 0.21) 0px 1px 0px 0px inset",
+        "font-family": "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+        "font-size": "13px",
+        "font-weight": "600",
+        "color": "rgb(255, 255, 255)"
+      },
+      "heading": {
+        "font-family": "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+        "font-size": "28.81px",
+        "font-weight": "550",
+        "letter-spacing": "-1px",
+        "color": "rgb(244, 245, 247)"
+      },
+      "labels": [
+        {
+          "text": "MT5 Account Number",
+          "font": "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+          "weight": "500",
+          "color": "rgb(224, 226, 232)"
+        },
+        {
+          "text": "Password",
+          "font": "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+          "weight": "500",
+          "color": "rgb(224, 226, 232)"
+        },
+        {
+          "text": "Server",
+          "font": "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+          "weight": "500",
+          "color": "rgb(224, 226, 232)"
+        }
+      ],
+      "image": {
+        "src": "/fixture-robot.jpg",
+        "opacity": "0.78"
+      },
+      "disclaimer": "Live authentication is not integrated yet.Credentials are not sent or saved.",
+      "headingFits": true
+    },
+    {
+      "viewport": {
+        "width": 1024,
+        "height": 900
+      },
+      "boxes": {
+        ".mt5-topline": {
+          "x": 325,
+          "y": 25,
+          "width": 374,
+          "height": 15
+        },
+        ".mt5-platform-logo": {
+          "x": 483,
+          "y": 84,
+          "width": 58,
+          "height": 58
+        },
+        ".mt5-intro h2": {
+          "x": 325,
+          "y": 160,
+          "width": 374,
+          "height": 34.796875
+        },
+        ".mt5-intro p": {
+          "x": 325,
+          "y": 203.796875,
+          "width": 374,
+          "height": 17.59375
+        },
+        "#mt5-login": {
+          "x": 375,
+          "y": 273.390625,
+          "width": 306,
+          "height": 56
+        },
+        "#mt5-password": {
+          "x": 375,
+          "y": 373.390625,
+          "width": 261,
+          "height": 56
+        },
+        "#mt5-server": {
+          "x": 375,
+          "y": 473.390625,
+          "width": 306,
+          "height": 56
+        },
+        ".mt5-connect-button": {
+          "x": 325,
+          "y": 558.390625,
+          "width": 374,
+          "height": 58
+        },
+        ".mt5-availability-note": {
+          "x": 331,
+          "y": 635.390625,
+          "width": 362,
+          "height": 30.59375
+        }
+      },
+      "logoStyles": {
+        "width": "58px",
+        "height": "58px",
+        "object-fit": "contain",
+        "border-radius": "13px",
+        "box-shadow": "rgba(0, 0, 0, 0.333) 0px 8px 24px 0px",
+        "filter": "none"
+      },
+      "buttonStyles": {
+        "width": "374px",
+        "height": "58px",
+        "border": "1px solid color(srgb 0.941688 0.318475 0.318475 / 0.699412)",
+        "border-radius": "19px",
+        "background": "linear-gradient(115deg, rgba(255, 255, 255, 0.08), rgba(0, 0, 0, 0) 65%) repeat scroll 0% 0% / auto padding-box border-box, color(srgb 0.342038 0.135879 0.157232 / 0.845412) none repeat scroll 0% 0% / auto padding-box border-box",
+        "box-shadow": "rgba(0, 0, 0, 0.333) 0px 10px 30px 0px, color(srgb 0.937255 0.266667 0.266667 / 0.14) 0px 0px 25px 0px, rgba(255, 255, 255, 0.21) 0px 1px 0px 0px inset",
+        "font-family": "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+        "font-size": "13px",
+        "font-weight": "600",
+        "color": "rgb(255, 255, 255)"
+      },
+      "heading": {
+        "font-family": "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+        "font-size": "29px",
+        "font-weight": "550",
+        "letter-spacing": "-1px",
+        "color": "rgb(244, 245, 247)"
+      },
+      "labels": [
+        {
+          "text": "MT5 Account Number",
+          "font": "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+          "weight": "500",
+          "color": "rgb(224, 226, 232)"
+        },
+        {
+          "text": "Password",
+          "font": "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+          "weight": "500",
+          "color": "rgb(224, 226, 232)"
+        },
+        {
+          "text": "Server",
+          "font": "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+          "weight": "500",
+          "color": "rgb(224, 226, 232)"
+        }
+      ],
+      "image": {
+        "src": "/fixture-robot.jpg",
+        "opacity": "0.78"
+      },
+      "disclaimer": "Live authentication is not integrated yet.Credentials are not sent or saved.",
+      "headingFits": true
+    }
+  ],
+  "after": [
+    {
+      "viewport": {
+        "width": 320,
+        "height": 740
+      },
+      "boxes": {
+        ".mt5-topline": {
+          "x": 22,
+          "y": 25,
+          "width": 276,
+          "height": 15
+        },
+        ".mt5-platform-logo": {
+          "x": 131,
+          "y": 77,
+          "width": 58,
+          "height": 58
+        },
+        ".mt5-intro h2": {
+          "x": 22,
+          "y": 153,
+          "width": 276,
+          "height": 28.796875
+        },
+        ".mt5-intro p": {
+          "x": 22,
+          "y": 190.796875,
+          "width": 276,
+          "height": 17.59375
+        },
+        "#mt5-login": {
+          "x": 72,
+          "y": 260.390625,
+          "width": 208,
+          "height": 56
+        },
+        "#mt5-password": {
+          "x": 72,
+          "y": 360.390625,
+          "width": 163,
+          "height": 56
+        },
+        "#mt5-server": {
+          "x": 72,
+          "y": 460.390625,
+          "width": 208,
+          "height": 56
+        },
+        ".mt5-connect-button": {
+          "x": 22,
+          "y": 545.390625,
+          "width": 276,
+          "height": 58
+        },
+        ".mt5-availability-note": {
+          "x": 28,
+          "y": 622.390625,
+          "width": 264,
+          "height": 30.59375
+        }
+      },
+      "logoStyles": {
+        "width": "58px",
+        "height": "58px",
+        "object-fit": "contain",
+        "border-radius": "13px",
+        "box-shadow": "rgba(0, 0, 0, 0.333) 0px 8px 24px 0px",
+        "filter": "none"
+      },
+      "buttonStyles": {
+        "width": "276px",
+        "height": "58px",
+        "border": "1px solid color(srgb 0.941688 0.318475 0.318475 / 0.699412)",
+        "border-radius": "19px",
+        "background": "linear-gradient(115deg, rgba(255, 255, 255, 0.08), rgba(0, 0, 0, 0) 65%) repeat scroll 0% 0% / auto padding-box border-box, color(srgb 0.342038 0.135879 0.157232 / 0.845412) none repeat scroll 0% 0% / auto padding-box border-box",
+        "box-shadow": "rgba(0, 0, 0, 0.333) 0px 10px 30px 0px, color(srgb 0.937255 0.266667 0.266667 / 0.14) 0px 0px 25px 0px, rgba(255, 255, 255, 0.21) 0px 1px 0px 0px inset",
+        "font-family": "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+        "font-size": "13px",
+        "font-weight": "600",
+        "color": "rgb(255, 255, 255)"
+      },
+      "heading": {
+        "font-family": "\"EA Bot Exo 2\", Inter, sans-serif",
+        "font-size": "24px",
+        "font-weight": "900",
+        "letter-spacing": "0.15px",
+        "color": "rgb(255, 245, 241)"
+      },
+      "labels": [
+        {
+          "text": "MT5 Account Number",
+          "font": "\"EA Bot Exo 2\", Inter, sans-serif",
+          "weight": "600",
+          "color": "rgb(255, 240, 238)"
+        },
+        {
+          "text": "Password",
+          "font": "\"EA Bot Exo 2\", Inter, sans-serif",
+          "weight": "600",
+          "color": "rgb(255, 240, 238)"
+        },
+        {
+          "text": "Server",
+          "font": "\"EA Bot Exo 2\", Inter, sans-serif",
+          "weight": "600",
+          "color": "rgb(255, 240, 238)"
+        }
+      ],
+      "image": {
+        "src": "/fixture-robot.jpg",
+        "opacity": "0.98"
+      },
+      "disclaimer": "Live authentication is not integrated yet.Credentials are not sent or saved.",
+      "headingFits": true
+    },
+    {
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "boxes": {
+        ".mt5-topline": {
+          "x": 28,
+          "y": 25,
+          "width": 334,
+          "height": 15
+        },
+        ".mt5-platform-logo": {
+          "x": 166,
+          "y": 82.1875,
+          "width": 58,
+          "height": 58
+        },
+        ".mt5-intro h2": {
+          "x": 28,
+          "y": 158.1875,
+          "width": 334,
+          "height": 31.34375
+        },
+        ".mt5-intro p": {
+          "x": 28,
+          "y": 198.53125,
+          "width": 334,
+          "height": 17.59375
+        },
+        "#mt5-login": {
+          "x": 78,
+          "y": 268.125,
+          "width": 266,
+          "height": 56
+        },
+        "#mt5-password": {
+          "x": 78,
+          "y": 368.125,
+          "width": 221,
+          "height": 56
+        },
+        "#mt5-server": {
+          "x": 78,
+          "y": 468.125,
+          "width": 266,
+          "height": 56
+        },
+        ".mt5-connect-button": {
+          "x": 28,
+          "y": 553.125,
+          "width": 334,
+          "height": 58
+        },
+        ".mt5-availability-note": {
+          "x": 34,
+          "y": 630.125,
+          "width": 322,
+          "height": 30.59375
+        }
+      },
+      "logoStyles": {
+        "width": "58px",
+        "height": "58px",
+        "object-fit": "contain",
+        "border-radius": "13px",
+        "box-shadow": "rgba(0, 0, 0, 0.333) 0px 8px 24px 0px",
+        "filter": "none"
+      },
+      "buttonStyles": {
+        "width": "334px",
+        "height": "58px",
+        "border": "1px solid color(srgb 0.941688 0.318475 0.318475 / 0.699412)",
+        "border-radius": "19px",
+        "background": "linear-gradient(115deg, rgba(255, 255, 255, 0.08), rgba(0, 0, 0, 0) 65%) repeat scroll 0% 0% / auto padding-box border-box, color(srgb 0.342038 0.135879 0.157232 / 0.845412) none repeat scroll 0% 0% / auto padding-box border-box",
+        "box-shadow": "rgba(0, 0, 0, 0.333) 0px 10px 30px 0px, color(srgb 0.937255 0.266667 0.266667 / 0.14) 0px 0px 25px 0px, rgba(255, 255, 255, 0.21) 0px 1px 0px 0px inset",
+        "font-family": "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+        "font-size": "13px",
+        "font-weight": "600",
+        "color": "rgb(255, 255, 255)"
+      },
+      "heading": {
+        "font-family": "\"EA Bot Exo 2\", Inter, sans-serif",
+        "font-size": "26.13px",
+        "font-weight": "900",
+        "letter-spacing": "0.15px",
+        "color": "rgb(255, 245, 241)"
+      },
+      "labels": [
+        {
+          "text": "MT5 Account Number",
+          "font": "\"EA Bot Exo 2\", Inter, sans-serif",
+          "weight": "600",
+          "color": "rgb(255, 240, 238)"
+        },
+        {
+          "text": "Password",
+          "font": "\"EA Bot Exo 2\", Inter, sans-serif",
+          "weight": "600",
+          "color": "rgb(255, 240, 238)"
+        },
+        {
+          "text": "Server",
+          "font": "\"EA Bot Exo 2\", Inter, sans-serif",
+          "weight": "600",
+          "color": "rgb(255, 240, 238)"
+        }
+      ],
+      "image": {
+        "src": "/fixture-robot.jpg",
+        "opacity": "0.98"
+      },
+      "disclaimer": "Live authentication is not integrated yet.Credentials are not sent or saved.",
+      "headingFits": true
+    },
+    {
+      "viewport": {
+        "width": 430,
+        "height": 932
+      },
+      "boxes": {
+        ".mt5-topline": {
+          "x": 28,
+          "y": 25,
+          "width": 374,
+          "height": 15
+        },
+        ".mt5-platform-logo": {
+          "x": 186,
+          "y": 84,
+          "width": 58,
+          "height": 58
+        },
+        ".mt5-intro h2": {
+          "x": 28,
+          "y": 160,
+          "width": 374,
+          "height": 34.5625
+        },
+        ".mt5-intro p": {
+          "x": 28,
+          "y": 203.5625,
+          "width": 374,
+          "height": 17.59375
+        },
+        "#mt5-login": {
+          "x": 78,
+          "y": 273.15625,
+          "width": 306,
+          "height": 56
+        },
+        "#mt5-password": {
+          "x": 78,
+          "y": 373.15625,
+          "width": 261,
+          "height": 56
+        },
+        "#mt5-server": {
+          "x": 78,
+          "y": 473.15625,
+          "width": 306,
+          "height": 56
+        },
+        ".mt5-connect-button": {
+          "x": 28,
+          "y": 558.15625,
+          "width": 374,
+          "height": 58
+        },
+        ".mt5-availability-note": {
+          "x": 34,
+          "y": 635.15625,
+          "width": 362,
+          "height": 30.59375
+        }
+      },
+      "logoStyles": {
+        "width": "58px",
+        "height": "58px",
+        "object-fit": "contain",
+        "border-radius": "13px",
+        "box-shadow": "rgba(0, 0, 0, 0.333) 0px 8px 24px 0px",
+        "filter": "none"
+      },
+      "buttonStyles": {
+        "width": "374px",
+        "height": "58px",
+        "border": "1px solid color(srgb 0.941688 0.318475 0.318475 / 0.699412)",
+        "border-radius": "19px",
+        "background": "linear-gradient(115deg, rgba(255, 255, 255, 0.08), rgba(0, 0, 0, 0) 65%) repeat scroll 0% 0% / auto padding-box border-box, color(srgb 0.342038 0.135879 0.157232 / 0.845412) none repeat scroll 0% 0% / auto padding-box border-box",
+        "box-shadow": "rgba(0, 0, 0, 0.333) 0px 10px 30px 0px, color(srgb 0.937255 0.266667 0.266667 / 0.14) 0px 0px 25px 0px, rgba(255, 255, 255, 0.21) 0px 1px 0px 0px inset",
+        "font-family": "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+        "font-size": "13px",
+        "font-weight": "600",
+        "color": "rgb(255, 255, 255)"
+      },
+      "heading": {
+        "font-family": "\"EA Bot Exo 2\", Inter, sans-serif",
+        "font-size": "28.81px",
+        "font-weight": "900",
+        "letter-spacing": "0.15px",
+        "color": "rgb(255, 245, 241)"
+      },
+      "labels": [
+        {
+          "text": "MT5 Account Number",
+          "font": "\"EA Bot Exo 2\", Inter, sans-serif",
+          "weight": "600",
+          "color": "rgb(255, 240, 238)"
+        },
+        {
+          "text": "Password",
+          "font": "\"EA Bot Exo 2\", Inter, sans-serif",
+          "weight": "600",
+          "color": "rgb(255, 240, 238)"
+        },
+        {
+          "text": "Server",
+          "font": "\"EA Bot Exo 2\", Inter, sans-serif",
+          "weight": "600",
+          "color": "rgb(255, 240, 238)"
+        }
+      ],
+      "image": {
+        "src": "/fixture-robot.jpg",
+        "opacity": "0.98"
+      },
+      "disclaimer": "Live authentication is not integrated yet.Credentials are not sent or saved.",
+      "headingFits": true
+    },
+    {
+      "viewport": {
+        "width": 1024,
+        "height": 900
+      },
+      "boxes": {
+        ".mt5-topline": {
+          "x": 325,
+          "y": 25,
+          "width": 374,
+          "height": 15
+        },
+        ".mt5-platform-logo": {
+          "x": 483,
+          "y": 84,
+          "width": 58,
+          "height": 58
+        },
+        ".mt5-intro h2": {
+          "x": 325,
+          "y": 160,
+          "width": 374,
+          "height": 34.796875
+        },
+        ".mt5-intro p": {
+          "x": 325,
+          "y": 203.796875,
+          "width": 374,
+          "height": 17.59375
+        },
+        "#mt5-login": {
+          "x": 375,
+          "y": 273.390625,
+          "width": 306,
+          "height": 56
+        },
+        "#mt5-password": {
+          "x": 375,
+          "y": 373.390625,
+          "width": 261,
+          "height": 56
+        },
+        "#mt5-server": {
+          "x": 375,
+          "y": 473.390625,
+          "width": 306,
+          "height": 56
+        },
+        ".mt5-connect-button": {
+          "x": 325,
+          "y": 558.390625,
+          "width": 374,
+          "height": 58
+        },
+        ".mt5-availability-note": {
+          "x": 331,
+          "y": 635.390625,
+          "width": 362,
+          "height": 30.59375
+        }
+      },
+      "logoStyles": {
+        "width": "58px",
+        "height": "58px",
+        "object-fit": "contain",
+        "border-radius": "13px",
+        "box-shadow": "rgba(0, 0, 0, 0.333) 0px 8px 24px 0px",
+        "filter": "none"
+      },
+      "buttonStyles": {
+        "width": "374px",
+        "height": "58px",
+        "border": "1px solid color(srgb 0.941688 0.318475 0.318475 / 0.699412)",
+        "border-radius": "19px",
+        "background": "linear-gradient(115deg, rgba(255, 255, 255, 0.08), rgba(0, 0, 0, 0) 65%) repeat scroll 0% 0% / auto padding-box border-box, color(srgb 0.342038 0.135879 0.157232 / 0.845412) none repeat scroll 0% 0% / auto padding-box border-box",
+        "box-shadow": "rgba(0, 0, 0, 0.333) 0px 10px 30px 0px, color(srgb 0.937255 0.266667 0.266667 / 0.14) 0px 0px 25px 0px, rgba(255, 255, 255, 0.21) 0px 1px 0px 0px inset",
+        "font-family": "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+        "font-size": "13px",
+        "font-weight": "600",
+        "color": "rgb(255, 255, 255)"
+      },
+      "heading": {
+        "font-family": "\"EA Bot Exo 2\", Inter, sans-serif",
+        "font-size": "29px",
+        "font-weight": "900",
+        "letter-spacing": "0.15px",
+        "color": "rgb(255, 245, 241)"
+      },
+      "labels": [
+        {
+          "text": "MT5 Account Number",
+          "font": "\"EA Bot Exo 2\", Inter, sans-serif",
+          "weight": "600",
+          "color": "rgb(255, 240, 238)"
+        },
+        {
+          "text": "Password",
+          "font": "\"EA Bot Exo 2\", Inter, sans-serif",
+          "weight": "600",
+          "color": "rgb(255, 240, 238)"
+        },
+        {
+          "text": "Server",
+          "font": "\"EA Bot Exo 2\", Inter, sans-serif",
+          "weight": "600",
+          "color": "rgb(255, 240, 238)"
+        }
+      ],
+      "image": {
+        "src": "/fixture-robot.jpg",
+        "opacity": "0.98"
+      },
+      "disclaimer": "Live authentication is not integrated yet.Credentials are not sent or saved.",
+      "headingFits": true
+    }
+  ]
+}
