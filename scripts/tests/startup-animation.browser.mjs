@@ -60,6 +60,7 @@ try {
     return { time: splash.getAnimations()[0].currentTime, duration: splash.getAnimations()[0].effect.getTiming().duration,
      imageWidth: mark.querySelector('img').naturalWidth, opacity: getComputedStyle(mark).opacity,
      edge: getComputedStyle(splash.querySelector('.ea-startup-edge')).strokeDashoffset,
+     eyes: getComputedStyle(splash.querySelector('.ea-startup-eyes')).opacity,
      circuits: getComputedStyle(splash.querySelector('.ea-startup-circuits')).opacity,
      sweep: getComputedStyle(splash.querySelector('.ea-startup-sweep')).transform,
      x: rect.x + rect.width / 2, y: rect.y + rect.height / 2, width: rect.width,
@@ -67,10 +68,11 @@ try {
    });
    assert.equal(frame.duration, 2000); assert.equal(frame.imageWidth, 1254);
    assert(Math.abs(frame.x - frame.viewportWidth / 2) < 1); assert(Math.abs(frame.y - frame.viewportHeight / 2) < 1);
-   assert(Number(frame.opacity) > 0); assert(frame.width <= 160);
+   assert(Number(frame.opacity) > 0); assert(frame.width <= 530);
    await page.screenshot({ path: `${output}/${scenario}-${timestamp}.png` }); frames.push(frame);
   }
-  if (scenario !== 'reduced') { assert.notEqual(frames[0].edge, frames[2].edge); assert.notEqual(frames[1].sweep, frames[2].sweep); assert(Number(frames[3].circuits) > 0); }
+  assert(Number(frames[1].eyes) > 0);
+  if (scenario !== 'reduced') { assert(await page.evaluate(() => document.querySelector('.ea-startup-mark').getAnimations()[0].effect.getKeyframes().some(k => k.transform.includes('scale(0.08)')))); assert.notEqual(frames[2].edge, frames[4].edge); assert.notEqual(frames[2].sweep, frames[3].sweep); assert(Number(frames[3].circuits) > 0); }
   await page.waitForFunction(() => window.startupEvents.some(e => e.type === 'end'));
   assert.equal(await page.evaluate(() => window.startupEvents.find(e => e.type === 'end').elapsed), 2);
   if (scenario === 'slow-auth') {
