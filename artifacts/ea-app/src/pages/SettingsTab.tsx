@@ -43,7 +43,7 @@ const SHAPE_ICONS: Record<ShapeStyle, React.ReactNode> = {
 };
 
 export default function SettingsTab({ onOpenChartScanner }: SettingsTabProps) {
-  const { accentColor, setAccentColor, interfaceStyle, setInterfaceStyle, shapeStyle, setShapeStyle, botFont="Inter", setBotFont } = useApp();
+  const { accentColor, setAccentColor, interfaceStyle, setInterfaceStyle, shapeStyle, setShapeStyle, activeTab, botFont="Inter", setBotFont } = useApp();
   const [open, setOpen] = useState<OpenSection>(null);
 
   const toggle = (section: OpenSection) => setOpen(prev => prev === section ? null : section);
@@ -225,7 +225,7 @@ export default function SettingsTab({ onOpenChartScanner }: SettingsTabProps) {
       </div>
 
       {/* Floating bot avatar */}
-      <div className="absolute z-20" style={{ bottom: 88, right: 14 }}>
+      <div className="absolute z-20" style={{ bottom: 88, right: 14, visibility: activeTab === "settings" ? "hidden" : undefined }}>
         <div className="relative">
           <div className="w-[46px] h-[46px] rounded-full overflow-hidden"
             style={{ border: `2px solid ${accentColor}cc`, boxShadow: `0 0 12px ${accentColor}66` }}>

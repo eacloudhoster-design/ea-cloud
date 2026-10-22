@@ -46,8 +46,16 @@ try{
   // The existing shared instance retains its location through each interface and navigation tab.
   for(const layout of ['Regular Interface','S2tone_','The Matrix Interface']){
    await page.getByRole('button',{name:'Settings',exact:true}).click();await page.waitForTimeout(350);
+   assert.equal(await page.locator('.trading-activity-trigger').isVisible(),true,'The separate draggable robot must stay visible in Settings');
+   assert.notEqual(await page.locator('.trading-activity-trigger').getAttribute('tabindex'),'-1');
+   const settingsLogo=page.getByRole('heading',{name:'Settings',exact:true}).locator('../..').locator('img[alt="Bot"]');
+   assert.equal(await settingsLogo.count(),1,'Keep the logo mounted instead of deleting it');
+   assert.equal(await settingsLogo.isVisible(),false,'Only the Settings logo should be hidden');
+   assert.deepEqual(await page.evaluate(()=>JSON.parse(localStorage.getItem('ea-cloud:floating-robot-position'))),saved,'Settings must preserve the saved position');
+   if(layout==='Regular Interface')await page.screenshot({path:`work/floating-robot/${viewport.width}-settings-hidden.png`});
    const accordion=page.getByRole('button',{name:'Select Main Interface'});if(await accordion.locator('.lucide-chevron-down').count())await accordion.click();
    await page.getByRole('button',{name:layout,exact:false}).click({position:{x:20,y:20}});await page.getByRole('button',{name:'Home',exact:true}).click();await page.waitForTimeout(350);
+   assert(await button.isVisible(),'Floating robot must reappear on Home');
    const unchanged=await button.boundingBox();close(unchanged.x,restored.x);close(unchanged.y,restored.y);
    // Scrolling the real Home content must not move the floating trigger.
    await page.locator('.absolute.inset-0.overflow-y-auto').first().evaluate(el=>{el.scrollTop=150});
@@ -67,7 +75,7 @@ try{
   // Closing and reopening the application tab preserves its saved position.
   const storageState=await context.storageState();const expected=await page.evaluate(()=>JSON.parse(localStorage.getItem('ea-cloud:floating-robot-position')));
   const finalViewport=page.viewportSize();await page.close();const reopened=await context.newPage();await reopened.setViewportSize(finalViewport);await reopened.route('**/api/**',apiFixture);await reopened.goto(origin);await reopened.waitForSelector('.ea-startup',{state:'detached'});const reopenedRoot=await reopened.locator('.trading-activity-root').boundingBox(),reopenedButton=await reopened.getByRole('button',{name:'Open live trading activity',exact:true}).boundingBox();close(reopenedButton.x,reopenedRoot.x+expected.x);close(reopenedButton.y,reopenedRoot.y+expected.y);
-  results.push({viewport,reopenedPreserved:true,initial,topLeft,middle,saved,rotated,expected,storageStateHasPosition:storageState.origins.some(o=>o.localStorage.some(v=>v.name==='ea-cloud:floating-robot-position')),tapAndKeyboardOpened:true,dragDidNotOpen:true,interfaceSwitchesPreserved:true});
+  results.push({viewport,reopenedPreserved:true,initial,topLeft,middle,saved,rotated,expected,storageStateHasPosition:storageState.origins.some(o=>o.localStorage.some(v=>v.name==='ea-cloud:floating-robot-position')),tapAndKeyboardOpened:true,dragDidNotOpen:true,interfaceSwitchesPreserved:true,settingsLogoHidden:true,draggableRobotPreservedInSettings:true});
   await context.close();
  }
  await writeFile('work/floating-robot/results.json',JSON.stringify(results,null,2));console.log(JSON.stringify(results,null,2));

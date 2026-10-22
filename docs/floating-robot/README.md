@@ -36,3 +36,15 @@ node scripts/tests/activity-monitor-ui.test.mjs
 Set PLAYWRIGHT_MODULE to the installed Playwright index.mjs path when outside the repository. Captures default to work/floating-robot/.
 
 These are desktop and emulated mobile Chromium tests, not claims of physical iOS/Android hardware testing. No production deployment was performed; live website rollout is not verified by these local production-artifact captures.
+
+## Settings-only logo visibility correction
+
+The Settings panel contains its own 46px decorative EA Cloud logo, independent of the shared draggable trading-activity robot. Only that Settings logo receives `visibility: hidden` while `activeTab === "settings"`. Its original image, container, dimensions, colors, position and status dot stay mounted unchanged. The previous patch's deletion of that logo and hiding of the separate draggable robot are reverted. The final runtime diff against main is only two lines in SettingsTab.tsx. TradingActivityMonitor, the drag hook, Settings options and all three Home layout implementations match main.
+
+![Settings: bottom-right logo hidden, separate draggable robot preserved](settings-hidden.png)
+
+The actual production-build browser test verifies the logo is still mounted but invisible, the other robot remains visible and tabbable in Settings, and its saved coordinates remain exactly unchanged through Settings/Home, all three interface choices, MetaTrader, reload and app-tab reopening. Original tap/click, keyboard activation, drag suppression, safe-area bounds and resize handling also pass at two emulated mobile sizes and desktop.
+
+Important source limitation: the 46px decorative logo exists only inside SettingsTab; it has no separate visible Home counterpart in the current code. This change restores its original visibility value when Settings closes, but does not move it out of the Settings panel or add a new Home logo. Home remains unchanged as requested. The separate draggable robot is preserved everywhere. Clarification is needed if a new Home counterpart for the Settings-only logo is intended.
+
+No production deployment was performed.

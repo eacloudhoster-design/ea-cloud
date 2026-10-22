@@ -41,7 +41,9 @@
     "storageStateHasPosition": true,
     "tapAndKeyboardOpened": true,
     "dragDidNotOpen": true,
-    "interfaceSwitchesPreserved": true
+    "interfaceSwitchesPreserved": true,
+    "settingsLogoHidden": true,
+    "draggableRobotPreservedInSettings": true
   },
   {
     "viewport": {
@@ -85,7 +87,9 @@
     "storageStateHasPosition": true,
     "tapAndKeyboardOpened": true,
     "dragDidNotOpen": true,
-    "interfaceSwitchesPreserved": true
+    "interfaceSwitchesPreserved": true,
+    "settingsLogoHidden": true,
+    "draggableRobotPreservedInSettings": true
   },
   {
     "viewport": {
@@ -129,6 +133,8 @@
     "storageStateHasPosition": true,
     "tapAndKeyboardOpened": true,
     "dragDidNotOpen": true,
-    "interfaceSwitchesPreserved": true
+    "interfaceSwitchesPreserved": true,
+    "settingsLogoHidden": true,
+    "draggableRobotPreservedInSettings": true
   }
 ]
