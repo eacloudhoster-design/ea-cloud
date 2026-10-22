@@ -1,0 +1,905 @@
+{
+  "results": [
+    {
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "layout": "matrix",
+      "font": "Inter",
+      "actual": [
+        {
+          "family": "Inter Black",
+          "custom": true
+        }
+      ],
+      "metrics": {
+        "family": "\"EA Bot Inter\", sans-serif",
+        "weight": "900",
+        "left": 0,
+        "right": 390,
+        "centre": 195,
+        "text": "SMC BLUEPRINT EA V3+",
+        "scroll": 390,
+        "width": 390,
+        "transform": "uppercase"
+      }
+    },
+    {
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "layout": "matrix",
+      "font": "Roboto",
+      "actual": [
+        {
+          "family": "Roboto Black",
+          "custom": true
+        }
+      ],
+      "metrics": {
+        "family": "\"EA Bot Roboto\", sans-serif",
+        "weight": "900",
+        "left": 0,
+        "right": 390,
+        "centre": 195,
+        "text": "SMC BLUEPRINT EA V3+",
+        "scroll": 390,
+        "width": 390,
+        "transform": "uppercase"
+      }
+    },
+    {
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "layout": "matrix",
+      "font": "Orbitron",
+      "actual": [
+        {
+          "family": "Orbitron Black",
+          "custom": true
+        }
+      ],
+      "metrics": {
+        "family": "\"EA Bot Orbitron\", sans-serif",
+        "weight": "900",
+        "left": 0,
+        "right": 390,
+        "centre": 195,
+        "text": "SMC BLUEPRINT EA V3+",
+        "scroll": 390,
+        "width": 390,
+        "transform": "uppercase"
+      }
+    },
+    {
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "layout": "matrix",
+      "font": "Flipside BRK",
+      "actual": [
+        {
+          "family": "Flipside BRK",
+          "custom": true
+        }
+      ],
+      "metrics": {
+        "family": "\"EA Bot Flipside BRK\", sans-serif",
+        "weight": "400",
+        "left": 0,
+        "right": 390,
+        "centre": 195,
+        "text": "SMC BLUEPRINT EA V3+",
+        "scroll": 390,
+        "width": 390,
+        "transform": "uppercase"
+      }
+    },
+    {
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "layout": "regular",
+      "font": "Inter",
+      "actual": [
+        {
+          "family": "Inter Black",
+          "custom": true
+        }
+      ],
+      "metrics": {
+        "family": "\"EA Bot Inter\", sans-serif",
+        "weight": "900",
+        "left": 24,
+        "right": 366,
+        "centre": 195,
+        "text": "SMC BLUEPRINT EA V3+",
+        "scroll": 342,
+        "width": 342,
+        "transform": "uppercase"
+      }
+    },
+    {
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "layout": "regular",
+      "font": "Roboto",
+      "actual": [
+        {
+          "family": "Roboto Black",
+          "custom": true
+        }
+      ],
+      "metrics": {
+        "family": "\"EA Bot Roboto\", sans-serif",
+        "weight": "900",
+        "left": 24,
+        "right": 366,
+        "centre": 195,
+        "text": "SMC BLUEPRINT EA V3+",
+        "scroll": 342,
+        "width": 342,
+        "transform": "uppercase"
+      }
+    },
+    {
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "layout": "regular",
+      "font": "Orbitron",
+      "actual": [
+        {
+          "family": "Orbitron Black",
+          "custom": true
+        }
+      ],
+      "metrics": {
+        "family": "\"EA Bot Orbitron\", sans-serif",
+        "weight": "900",
+        "left": 24,
+        "right": 366,
+        "centre": 195,
+        "text": "SMC BLUEPRINT EA V3+",
+        "scroll": 342,
+        "width": 342,
+        "transform": "uppercase"
+      }
+    },
+    {
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "layout": "regular",
+      "font": "Flipside BRK",
+      "actual": [
+        {
+          "family": "Flipside BRK",
+          "custom": true
+        }
+      ],
+      "metrics": {
+        "family": "\"EA Bot Flipside BRK\", sans-serif",
+        "weight": "400",
+        "left": 24,
+        "right": 366,
+        "centre": 195,
+        "text": "SMC BLUEPRINT EA V3+",
+        "scroll": 342,
+        "width": 342,
+        "transform": "uppercase"
+      }
+    },
+    {
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "layout": "s2tone",
+      "font": "Inter",
+      "actual": [
+        {
+          "family": "Inter Black",
+          "custom": true
+        }
+      ],
+      "metrics": {
+        "family": "\"EA Bot Inter\", sans-serif",
+        "weight": "900",
+        "left": 20,
+        "right": 370,
+        "centre": 195,
+        "text": "SMC BLUEPRINT EA V3+",
+        "scroll": 350,
+        "width": 350,
+        "transform": "uppercase"
+      }
+    },
+    {
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "layout": "s2tone",
+      "font": "Roboto",
+      "actual": [
+        {
+          "family": "Roboto Black",
+          "custom": true
+        }
+      ],
+      "metrics": {
+        "family": "\"EA Bot Roboto\", sans-serif",
+        "weight": "900",
+        "left": 20,
+        "right": 370,
+        "centre": 195,
+        "text": "SMC BLUEPRINT EA V3+",
+        "scroll": 350,
+        "width": 350,
+        "transform": "uppercase"
+      }
+    },
+    {
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "layout": "s2tone",
+      "font": "Orbitron",
+      "actual": [
+        {
+          "family": "Orbitron Black",
+          "custom": true
+        }
+      ],
+      "metrics": {
+        "family": "\"EA Bot Orbitron\", sans-serif",
+        "weight": "900",
+        "left": 20,
+        "right": 370,
+        "centre": 195,
+        "text": "SMC BLUEPRINT EA V3+",
+        "scroll": 350,
+        "width": 350,
+        "transform": "uppercase"
+      }
+    },
+    {
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "layout": "s2tone",
+      "font": "Flipside BRK",
+      "actual": [
+        {
+          "family": "Flipside BRK",
+          "custom": true
+        }
+      ],
+      "metrics": {
+        "family": "\"EA Bot Flipside BRK\", sans-serif",
+        "weight": "400",
+        "left": 20,
+        "right": 370,
+        "centre": 195,
+        "text": "SMC BLUEPRINT EA V3+",
+        "scroll": 350,
+        "width": 350,
+        "transform": "uppercase"
+      }
+    },
+    {
+      "viewport": {
+        "width": 320,
+        "height": 740
+      },
+      "layout": "matrix",
+      "font": "Inter",
+      "actual": [
+        {
+          "family": "Inter Black",
+          "custom": true
+        }
+      ],
+      "metrics": {
+        "family": "\"EA Bot Inter\", sans-serif",
+        "weight": "900",
+        "left": 0,
+        "right": 320,
+        "centre": 160,
+        "text": "SMC BLUEPRINT EA V3+",
+        "scroll": 320,
+        "width": 320,
+        "transform": "uppercase"
+      }
+    },
+    {
+      "viewport": {
+        "width": 320,
+        "height": 740
+      },
+      "layout": "matrix",
+      "font": "Roboto",
+      "actual": [
+        {
+          "family": "Roboto Black",
+          "custom": true
+        }
+      ],
+      "metrics": {
+        "family": "\"EA Bot Roboto\", sans-serif",
+        "weight": "900",
+        "left": 0,
+        "right": 320,
+        "centre": 160,
+        "text": "SMC BLUEPRINT EA V3+",
+        "scroll": 320,
+        "width": 320,
+        "transform": "uppercase"
+      }
+    },
+    {
+      "viewport": {
+        "width": 320,
+        "height": 740
+      },
+      "layout": "matrix",
+      "font": "Orbitron",
+      "actual": [
+        {
+          "family": "Orbitron Black",
+          "custom": true
+        }
+      ],
+      "metrics": {
+        "family": "\"EA Bot Orbitron\", sans-serif",
+        "weight": "900",
+        "left": 0,
+        "right": 320,
+        "centre": 160,
+        "text": "SMC BLUEPRINT EA V3+",
+        "scroll": 320,
+        "width": 320,
+        "transform": "uppercase"
+      }
+    },
+    {
+      "viewport": {
+        "width": 320,
+        "height": 740
+      },
+      "layout": "matrix",
+      "font": "Flipside BRK",
+      "actual": [
+        {
+          "family": "Flipside BRK",
+          "custom": true
+        }
+      ],
+      "metrics": {
+        "family": "\"EA Bot Flipside BRK\", sans-serif",
+        "weight": "400",
+        "left": 0,
+        "right": 320,
+        "centre": 160,
+        "text": "SMC BLUEPRINT EA V3+",
+        "scroll": 320,
+        "width": 320,
+        "transform": "uppercase"
+      }
+    },
+    {
+      "viewport": {
+        "width": 320,
+        "height": 740
+      },
+      "layout": "regular",
+      "font": "Inter",
+      "actual": [
+        {
+          "family": "Inter Black",
+          "custom": true
+        }
+      ],
+      "metrics": {
+        "family": "\"EA Bot Inter\", sans-serif",
+        "weight": "900",
+        "left": 24,
+        "right": 296,
+        "centre": 160,
+        "text": "SMC BLUEPRINT EA V3+",
+        "scroll": 272,
+        "width": 272,
+        "transform": "uppercase"
+      }
+    },
+    {
+      "viewport": {
+        "width": 320,
+        "height": 740
+      },
+      "layout": "regular",
+      "font": "Roboto",
+      "actual": [
+        {
+          "family": "Roboto Black",
+          "custom": true
+        }
+      ],
+      "metrics": {
+        "family": "\"EA Bot Roboto\", sans-serif",
+        "weight": "900",
+        "left": 24,
+        "right": 296,
+        "centre": 160,
+        "text": "SMC BLUEPRINT EA V3+",
+        "scroll": 272,
+        "width": 272,
+        "transform": "uppercase"
+      }
+    },
+    {
+      "viewport": {
+        "width": 320,
+        "height": 740
+      },
+      "layout": "regular",
+      "font": "Orbitron",
+      "actual": [
+        {
+          "family": "Orbitron Black",
+          "custom": true
+        }
+      ],
+      "metrics": {
+        "family": "\"EA Bot Orbitron\", sans-serif",
+        "weight": "900",
+        "left": 24,
+        "right": 296,
+        "centre": 160,
+        "text": "SMC BLUEPRINT EA V3+",
+        "scroll": 272,
+        "width": 272,
+        "transform": "uppercase"
+      }
+    },
+    {
+      "viewport": {
+        "width": 320,
+        "height": 740
+      },
+      "layout": "regular",
+      "font": "Flipside BRK",
+      "actual": [
+        {
+          "family": "Flipside BRK",
+          "custom": true
+        }
+      ],
+      "metrics": {
+        "family": "\"EA Bot Flipside BRK\", sans-serif",
+        "weight": "400",
+        "left": 24,
+        "right": 296,
+        "centre": 160,
+        "text": "SMC BLUEPRINT EA V3+",
+        "scroll": 272,
+        "width": 272,
+        "transform": "uppercase"
+      }
+    },
+    {
+      "viewport": {
+        "width": 320,
+        "height": 740
+      },
+      "layout": "s2tone",
+      "font": "Inter",
+      "actual": [
+        {
+          "family": "Inter Black",
+          "custom": true
+        }
+      ],
+      "metrics": {
+        "family": "\"EA Bot Inter\", sans-serif",
+        "weight": "900",
+        "left": 20,
+        "right": 300,
+        "centre": 160,
+        "text": "SMC BLUEPRINT EA V3+",
+        "scroll": 280,
+        "width": 280,
+        "transform": "uppercase"
+      }
+    },
+    {
+      "viewport": {
+        "width": 320,
+        "height": 740
+      },
+      "layout": "s2tone",
+      "font": "Roboto",
+      "actual": [
+        {
+          "family": "Roboto Black",
+          "custom": true
+        }
+      ],
+      "metrics": {
+        "family": "\"EA Bot Roboto\", sans-serif",
+        "weight": "900",
+        "left": 20,
+        "right": 300,
+        "centre": 160,
+        "text": "SMC BLUEPRINT EA V3+",
+        "scroll": 280,
+        "width": 280,
+        "transform": "uppercase"
+      }
+    },
+    {
+      "viewport": {
+        "width": 320,
+        "height": 740
+      },
+      "layout": "s2tone",
+      "font": "Orbitron",
+      "actual": [
+        {
+          "family": "Orbitron Black",
+          "custom": true
+        }
+      ],
+      "metrics": {
+        "family": "\"EA Bot Orbitron\", sans-serif",
+        "weight": "900",
+        "left": 20,
+        "right": 300,
+        "centre": 160,
+        "text": "SMC BLUEPRINT EA V3+",
+        "scroll": 280,
+        "width": 280,
+        "transform": "uppercase"
+      }
+    },
+    {
+      "viewport": {
+        "width": 320,
+        "height": 740
+      },
+      "layout": "s2tone",
+      "font": "Flipside BRK",
+      "actual": [
+        {
+          "family": "Flipside BRK",
+          "custom": true
+        }
+      ],
+      "metrics": {
+        "family": "\"EA Bot Flipside BRK\", sans-serif",
+        "weight": "400",
+        "left": 20,
+        "right": 300,
+        "centre": 160,
+        "text": "SMC BLUEPRINT EA V3+",
+        "scroll": 280,
+        "width": 280,
+        "transform": "uppercase"
+      }
+    },
+    {
+      "viewport": {
+        "width": 1280,
+        "height": 900
+      },
+      "layout": "matrix",
+      "font": "Inter",
+      "actual": [
+        {
+          "family": "Inter Black",
+          "custom": true
+        }
+      ],
+      "metrics": {
+        "family": "\"EA Bot Inter\", sans-serif",
+        "weight": "900",
+        "left": 425,
+        "right": 855,
+        "centre": 640,
+        "text": "SMC BLUEPRINT EA V3+",
+        "scroll": 430,
+        "width": 430,
+        "transform": "uppercase"
+      }
+    },
+    {
+      "viewport": {
+        "width": 1280,
+        "height": 900
+      },
+      "layout": "matrix",
+      "font": "Roboto",
+      "actual": [
+        {
+          "family": "Roboto Black",
+          "custom": true
+        }
+      ],
+      "metrics": {
+        "family": "\"EA Bot Roboto\", sans-serif",
+        "weight": "900",
+        "left": 425,
+        "right": 855,
+        "centre": 640,
+        "text": "SMC BLUEPRINT EA V3+",
+        "scroll": 430,
+        "width": 430,
+        "transform": "uppercase"
+      }
+    },
+    {
+      "viewport": {
+        "width": 1280,
+        "height": 900
+      },
+      "layout": "matrix",
+      "font": "Orbitron",
+      "actual": [
+        {
+          "family": "Orbitron Black",
+          "custom": true
+        }
+      ],
+      "metrics": {
+        "family": "\"EA Bot Orbitron\", sans-serif",
+        "weight": "900",
+        "left": 425,
+        "right": 855,
+        "centre": 640,
+        "text": "SMC BLUEPRINT EA V3+",
+        "scroll": 430,
+        "width": 430,
+        "transform": "uppercase"
+      }
+    },
+    {
+      "viewport": {
+        "width": 1280,
+        "height": 900
+      },
+      "layout": "matrix",
+      "font": "Flipside BRK",
+      "actual": [
+        {
+          "family": "Flipside BRK",
+          "custom": true
+        }
+      ],
+      "metrics": {
+        "family": "\"EA Bot Flipside BRK\", sans-serif",
+        "weight": "400",
+        "left": 425,
+        "right": 855,
+        "centre": 640,
+        "text": "SMC BLUEPRINT EA V3+",
+        "scroll": 430,
+        "width": 430,
+        "transform": "uppercase"
+      }
+    },
+    {
+      "viewport": {
+        "width": 1280,
+        "height": 900
+      },
+      "layout": "regular",
+      "font": "Inter",
+      "actual": [
+        {
+          "family": "Inter Black",
+          "custom": true
+        }
+      ],
+      "metrics": {
+        "family": "\"EA Bot Inter\", sans-serif",
+        "weight": "900",
+        "left": 449,
+        "right": 831,
+        "centre": 640,
+        "text": "SMC BLUEPRINT EA V3+",
+        "scroll": 382,
+        "width": 382,
+        "transform": "uppercase"
+      }
+    },
+    {
+      "viewport": {
+        "width": 1280,
+        "height": 900
+      },
+      "layout": "regular",
+      "font": "Roboto",
+      "actual": [
+        {
+          "family": "Roboto Black",
+          "custom": true
+        }
+      ],
+      "metrics": {
+        "family": "\"EA Bot Roboto\", sans-serif",
+        "weight": "900",
+        "left": 449,
+        "right": 831,
+        "centre": 640,
+        "text": "SMC BLUEPRINT EA V3+",
+        "scroll": 382,
+        "width": 382,
+        "transform": "uppercase"
+      }
+    },
+    {
+      "viewport": {
+        "width": 1280,
+        "height": 900
+      },
+      "layout": "regular",
+      "font": "Orbitron",
+      "actual": [
+        {
+          "family": "Orbitron Black",
+          "custom": true
+        }
+      ],
+      "metrics": {
+        "family": "\"EA Bot Orbitron\", sans-serif",
+        "weight": "900",
+        "left": 449,
+        "right": 831,
+        "centre": 640,
+        "text": "SMC BLUEPRINT EA V3+",
+        "scroll": 382,
+        "width": 382,
+        "transform": "uppercase"
+      }
+    },
+    {
+      "viewport": {
+        "width": 1280,
+        "height": 900
+      },
+      "layout": "regular",
+      "font": "Flipside BRK",
+      "actual": [
+        {
+          "family": "Flipside BRK",
+          "custom": true
+        }
+      ],
+      "metrics": {
+        "family": "\"EA Bot Flipside BRK\", sans-serif",
+        "weight": "400",
+        "left": 449,
+        "right": 831,
+        "centre": 640,
+        "text": "SMC BLUEPRINT EA V3+",
+        "scroll": 382,
+        "width": 382,
+        "transform": "uppercase"
+      }
+    },
+    {
+      "viewport": {
+        "width": 1280,
+        "height": 900
+      },
+      "layout": "s2tone",
+      "font": "Inter",
+      "actual": [
+        {
+          "family": "Inter Black",
+          "custom": true
+        }
+      ],
+      "metrics": {
+        "family": "\"EA Bot Inter\", sans-serif",
+        "weight": "900",
+        "left": 445,
+        "right": 835,
+        "centre": 640,
+        "text": "SMC BLUEPRINT EA V3+",
+        "scroll": 390,
+        "width": 390,
+        "transform": "uppercase"
+      }
+    },
+    {
+      "viewport": {
+        "width": 1280,
+        "height": 900
+      },
+      "layout": "s2tone",
+      "font": "Roboto",
+      "actual": [
+        {
+          "family": "Roboto Black",
+          "custom": true
+        }
+      ],
+      "metrics": {
+        "family": "\"EA Bot Roboto\", sans-serif",
+        "weight": "900",
+        "left": 445,
+        "right": 835,
+        "centre": 640,
+        "text": "SMC BLUEPRINT EA V3+",
+        "scroll": 390,
+        "width": 390,
+        "transform": "uppercase"
+      }
+    },
+    {
+      "viewport": {
+        "width": 1280,
+        "height": 900
+      },
+      "layout": "s2tone",
+      "font": "Orbitron",
+      "actual": [
+        {
+          "family": "Orbitron Black",
+          "custom": true
+        }
+      ],
+      "metrics": {
+        "family": "\"EA Bot Orbitron\", sans-serif",
+        "weight": "900",
+        "left": 445,
+        "right": 835,
+        "centre": 640,
+        "text": "SMC BLUEPRINT EA V3+",
+        "scroll": 390,
+        "width": 390,
+        "transform": "uppercase"
+      }
+    },
+    {
+      "viewport": {
+        "width": 1280,
+        "height": 900
+      },
+      "layout": "s2tone",
+      "font": "Flipside BRK",
+      "actual": [
+        {
+          "family": "Flipside BRK",
+          "custom": true
+        }
+      ],
+      "metrics": {
+        "family": "\"EA Bot Flipside BRK\", sans-serif",
+        "weight": "400",
+        "left": 445,
+        "right": 835,
+        "centre": 640,
+        "text": "SMC BLUEPRINT EA V3+",
+        "scroll": 390,
+        "width": 390,
+        "transform": "uppercase"
+      }
+    }
+  ],
+  "fontRequests": 78
+}
