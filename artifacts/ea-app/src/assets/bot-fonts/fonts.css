@@ -1,0 +1,179 @@
+/* Inter latin, authentic bundled Fontsource asset. */
+@font-face {
+ font-family: "EA Bot Inter";
+ font-style: normal;
+ font-weight: 600;
+ font-display: swap;
+ src: url("./inter/inter-latin-600-normal.woff2") format("woff2");
+ unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;
+}
+
+/* Inter latin, authentic bundled Fontsource asset. */
+@font-face {
+ font-family: "EA Bot Inter";
+ font-style: normal;
+ font-weight: 900;
+ font-display: swap;
+ src: url("./inter/inter-latin-900-normal.woff2") format("woff2");
+ unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;
+}
+
+/* Inter latin-ext, authentic bundled Fontsource asset. */
+@font-face {
+ font-family: "EA Bot Inter";
+ font-style: normal;
+ font-weight: 600;
+ font-display: swap;
+ src: url("./inter/inter-latin-ext-600-normal.woff2") format("woff2");
+ unicode-range: U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF;
+}
+
+/* Inter latin-ext, authentic bundled Fontsource asset. */
+@font-face {
+ font-family: "EA Bot Inter";
+ font-style: normal;
+ font-weight: 900;
+ font-display: swap;
+ src: url("./inter/inter-latin-ext-900-normal.woff2") format("woff2");
+ unicode-range: U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF;
+}
+
+/* Roboto latin, authentic bundled Fontsource asset. */
+@font-face {
+ font-family: "EA Bot Roboto";
+ font-style: normal;
+ font-weight: 600;
+ font-display: swap;
+ src: url("./roboto/roboto-latin-600-normal.woff2") format("woff2");
+ unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;
+}
+
+/* Roboto latin, authentic bundled Fontsource asset. */
+@font-face {
+ font-family: "EA Bot Roboto";
+ font-style: normal;
+ font-weight: 900;
+ font-display: swap;
+ src: url("./roboto/roboto-latin-900-normal.woff2") format("woff2");
+ unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;
+}
+
+/* Roboto latin-ext, authentic bundled Fontsource asset. */
+@font-face {
+ font-family: "EA Bot Roboto";
+ font-style: normal;
+ font-weight: 600;
+ font-display: swap;
+ src: url("./roboto/roboto-latin-ext-600-normal.woff2") format("woff2");
+ unicode-range: U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF;
+}
+
+/* Roboto latin-ext, authentic bundled Fontsource asset. */
+@font-face {
+ font-family: "EA Bot Roboto";
+ font-style: normal;
+ font-weight: 900;
+ font-display: swap;
+ src: url("./roboto/roboto-latin-ext-900-normal.woff2") format("woff2");
+ unicode-range: U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF;
+}
+
+/* Orbitron latin, authentic bundled Fontsource asset. */
+@font-face {
+ font-family: "EA Bot Orbitron";
+ font-style: normal;
+ font-weight: 600;
+ font-display: swap;
+ src: url("./orbitron/orbitron-latin-600-normal.woff2") format("woff2");
+ unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;
+}
+
+/* Orbitron latin, authentic bundled Fontsource asset. */
+@font-face {
+ font-family: "EA Bot Orbitron";
+ font-style: normal;
+ font-weight: 900;
+ font-display: swap;
+ src: url("./orbitron/orbitron-latin-900-normal.woff2") format("woff2");
+ unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;
+}
+
+/* Rajdhani latin, authentic bundled Fontsource asset. */
+@font-face {
+ font-family: "EA Bot Rajdhani";
+ font-style: normal;
+ font-weight: 600;
+ font-display: swap;
+ src: url("./rajdhani/rajdhani-latin-600-normal.woff2") format("woff2");
+ unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;
+}
+
+/* Rajdhani latin, authentic bundled Fontsource asset. */
+@font-face {
+ font-family: "EA Bot Rajdhani";
+ font-style: normal;
+ font-weight: 700;
+ font-display: swap;
+ src: url("./rajdhani/rajdhani-latin-700-normal.woff2") format("woff2");
+ unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;
+}
+
+/* Rajdhani latin-ext, authentic bundled Fontsource asset. */
+@font-face {
+ font-family: "EA Bot Rajdhani";
+ font-style: normal;
+ font-weight: 600;
+ font-display: swap;
+ src: url("./rajdhani/rajdhani-latin-ext-600-normal.woff2") format("woff2");
+ unicode-range: U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF;
+}
+
+/* Rajdhani latin-ext, authentic bundled Fontsource asset. */
+@font-face {
+ font-family: "EA Bot Rajdhani";
+ font-style: normal;
+ font-weight: 700;
+ font-display: swap;
+ src: url("./rajdhani/rajdhani-latin-ext-700-normal.woff2") format("woff2");
+ unicode-range: U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF;
+}
+
+/* Exo 2 latin, authentic bundled Fontsource asset. */
+@font-face {
+ font-family: "EA Bot Exo 2";
+ font-style: normal;
+ font-weight: 600;
+ font-display: swap;
+ src: url("./exo-2/exo-2-latin-600-normal.woff2") format("woff2");
+ unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;
+}
+
+/* Exo 2 latin, authentic bundled Fontsource asset. */
+@font-face {
+ font-family: "EA Bot Exo 2";
+ font-style: normal;
+ font-weight: 900;
+ font-display: swap;
+ src: url("./exo-2/exo-2-latin-900-normal.woff2") format("woff2");
+ unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;
+}
+
+/* Exo 2 latin-ext, authentic bundled Fontsource asset. */
+@font-face {
+ font-family: "EA Bot Exo 2";
+ font-style: normal;
+ font-weight: 600;
+ font-display: swap;
+ src: url("./exo-2/exo-2-latin-ext-600-normal.woff2") format("woff2");
+ unicode-range: U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF;
+}
+
+/* Exo 2 latin-ext, authentic bundled Fontsource asset. */
+@font-face {
+ font-family: "EA Bot Exo 2";
+ font-style: normal;
+ font-weight: 900;
+ font-display: swap;
+ src: url("./exo-2/exo-2-latin-ext-900-normal.woff2") format("woff2");
+ unicode-range: U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF;
+}

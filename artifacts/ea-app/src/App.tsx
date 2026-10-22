@@ -1,3 +1,4 @@
+import {useFontPreference} from "@/hooks/use-font-preference";
 import {useShapePreference} from "@/hooks/use-shape-preference";
 import TradingActivityMonitor from "@/components/TradingActivityMonitor";
 import { useState, useEffect } from "react";
@@ -37,6 +38,7 @@ function EACloudApp({ onReady }: { onReady: (ready: boolean) => void }) {
   const [showBg, setShowBg] = useState(true);
   const [accentColor, setAccentColor] = useState("#ef4444");
   const [shapeStyle, setShapeStyle] = useShapePreference(clientToken);
+  const [botFont, setBotFont] = useFontPreference(clientToken);
   const [mtConnected, setMtConnected] = useState(false);
 
   const [eaName, setEaName] = useState("EA Cloud Pro");
@@ -160,6 +162,7 @@ function EACloudApp({ onReady }: { onReady: (ready: boolean) => void }) {
     interfaceStyle, setInterfaceStyle,
     accentColor, setAccentColor,
     shapeStyle, setShapeStyle,
+    botFont, setBotFont,
     mtConnected, setMtConnected,
     eaName, eaTagline, eaSymbols, bgImageUrl,
     showBg, setShowBg,

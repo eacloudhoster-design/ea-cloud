@@ -1,3 +1,5 @@
+import {botFonts,botFontStyle,type BotFont} from "@/lib/font-preference";
+import "../assets/bot-fonts/fonts.css";
 import { useState } from "react";
 import {
   LayoutGrid, Circle, PlusCircle, Type, Pencil, LineChart, BarChart2,
@@ -47,7 +49,7 @@ const SHAPE_ICONS: Record<ShapeStyle, React.ReactNode> = {
 };
 
 export default function SettingsTab({ onOpenChartScanner }: SettingsTabProps) {
-  const { accentColor, setAccentColor, interfaceStyle, setInterfaceStyle, shapeStyle, setShapeStyle } = useApp();
+  const { accentColor, setAccentColor, interfaceStyle, setInterfaceStyle, shapeStyle, setShapeStyle, botFont="Inter", setBotFont } = useApp();
   const [open, setOpen] = useState<OpenSection>(null);
 
   const toggle = (section: OpenSection) => setOpen(prev => prev === section ? null : section);
@@ -157,14 +159,7 @@ export default function SettingsTab({ onOpenChartScanner }: SettingsTabProps) {
           onToggle={() => toggle("font")}
           accentColor={accentColor}
         >
-          <div className="mt-2 space-y-2">
-            {["Inter", "Roboto", "Orbitron", "Rajdhani", "Exo 2"].map(font => (
-              <button key={font} className="w-full px-4 py-3 rounded-2xl text-left active:scale-[0.98] transition-transform"
-                style={{ background: "rgba(15,15,15,0.8)", border: "1px solid rgba(255,255,255,0.1)" }}>
-                <p className="text-white font-semibold text-sm" style={{ fontFamily: font }}>{font}</p>
-              </button>
-            ))}
-          </div>
+          <FontChoices selected={botFont} onSelect={setBotFont} />
         </AccordionItem>
 
         {/* EA Manipulation */}
@@ -312,4 +307,8 @@ export function ShapeChoices({shapeStyle,onSelect,accentColor}:{shapeStyle:Shape
             })}
           </div>
   );
+}
+
+export function FontChoices({selected,onSelect}:{selected:BotFont;onSelect:(font:BotFont)=>void}){
+ return <div className="mt-2 space-y-2">{botFonts.map(font=><button key={font} type="button" aria-pressed={selected===font} onClick={()=>onSelect(font)} className="w-full px-4 py-3 rounded-2xl text-left active:scale-[0.98] transition-transform" style={{background:"rgba(15,15,15,0.8)",border:`1px solid ${selected===font?"#3b82f6":"rgba(255,255,255,0.1)"}`}}><p className="text-white font-semibold text-sm" style={{...botFontStyle(font),fontWeight:600}}>{font}</p></button>)}</div>;
 }
