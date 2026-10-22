@@ -1,3 +1,4 @@
+import { chartImageKind, decodeChartImage } from "./scanner-image";
 export { strategies } from "../../../../lib/api-zod/src/scanner-options";
 export type { ScannerRecord, ChartReport, FundamentalReport, FundamentalRequest, Strategy } from "../../../../lib/api-zod/src/scanner";
 
@@ -29,9 +30,10 @@ export async function scannerRequest<T>(path: string, token: string, signal: Abo
 // Bounded per-image preparation; no originals are stored or sent to third parties
 // until the client explicitly presses Analyse chart.
 export async function prepareChart(file: File): Promise<File> {
-  if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) throw new Error("Choose a JPEG, PNG or WebP image. Convert HEIC photos to JPEG first.");
   if (file.size > 10 * 1024 * 1024 || !file.size) throw new Error("Choose an image under 10 MB.");
-  const image = await createImageBitmap(file).catch(() => { throw new Error("This image could not be opened. Try another chart screenshot."); });
+  const kind = chartImageKind(new Uint8Array(await file.slice(0, 64).arrayBuffer()));
+  if (!kind) throw new Error("Choose a valid PNG, JPEG, WebP or supported HEIC chart image.");
+  const image = await decodeChartImage(file).catch(() => { throw new Error(kind === "heic" ? "This browser cannot decode HEIC. Export the photo as JPEG or PNG, or use a browser with HEIC support." : "This image could not be opened. Try another chart screenshot."); });
   try {
     if (!image.width || !image.height || image.width * image.height > 40_000_000) throw new Error("This image is too large. Crop the chart before uploading.");
     const scale = Math.min(1, 1600 / Math.max(image.width, image.height));
@@ -43,5 +45,5 @@ export async function prepareChart(file: File): Promise<File> {
     const blob = await new Promise<Blob>((resolve, reject) => canvas.toBlob(b => b ? resolve(b) : reject(new Error("Could not prepare chart.")), "image/jpeg", .88));
     if (blob.size > 2 * 1024 * 1024) throw new Error("The chart is still too large. Crop it and try again.");
     return new File([blob], "chart.jpg", { type: "image/jpeg" });
-  } finally { image.close(); }
+  } finally { if ("close" in image) image.close(); }
 }

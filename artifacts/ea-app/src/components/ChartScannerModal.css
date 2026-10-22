@@ -131,3 +131,24 @@
 .scanner-image-scan-label { position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); display:flex; flex-direction:column; align-items:center; gap:9px; color:#ff6157; font-size:13px; text-shadow:0 1px 8px #000; }
 @keyframes scanner-image-sweep { from { top:8%; } to { top:92%; } }
 .scanner-chart-preview > .scanner-preview-cancel { top:auto; bottom:10px; right:10px; display:inline-flex; align-items:center; justify-content:center; min-height:44px; padding:0 14px; color:#ffb6a8; border:1px solid #f07c655c; border-radius:25px; font-size:11px; background:#180a09db; }
+
+/* Mentor terminal: layered glass, readable over the existing mentor upload. */
+.scanner-header { gap:10px; min-height:82px; background:linear-gradient(120deg,#340c13d9,#110b10bf); box-shadow:inset 0 1px #ffffff10,0 10px 35px #0004; }
+.scanner-header h2 { min-width:0; flex:1; font-size:15px; line-height:1.35; letter-spacing:-.25px; white-space:normal; overflow-wrap:anywhere; }
+.scanner-header h2 > span { display:block; color:#e6938e; font-size:11px; letter-spacing:1.2px; text-transform:uppercase; font-weight:500; }
+.scanner-header-avatar { width:38px; height:38px; flex-shrink:0; }
+.scanner-mentor-fallback { display:grid; place-items:center; color:#ff9489; background:radial-gradient(circle at 30% 10%,#ac474c66,#140a10); border:1px solid #ef65567d; }
+.scanner-ready { padding:24px 18px 20px; border-style:solid; border-color:#f4776940; background:linear-gradient(130deg,#491e2138,#100b10a3); backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px); box-shadow:inset 0 1px #ffffff18,0 16px 50px #0004; }
+.scanner-orb { width:120px; height:120px; margin-bottom:17px; }
+.scanner-orb-avatar { width:78px; height:78px; border-radius:24px; object-fit:cover; border:1px solid #ff776d; box-shadow:0 0 30px #e83f3d48; }
+.scanner-orb-mark { bottom:12px; right:14px; }
+.scanner-ready h3 { margin-top:9px; font-size:26px; }
+.scanner-fundamentals,.scanner-trade-settings { background:linear-gradient(135deg,#1a1417b8,#0a080bc9); backdrop-filter:blur(18px); -webkit-backdrop-filter:blur(18px); box-shadow:inset 0 1px #ffffff10,0 12px 32px #0004; }
+.scanner-history-list > button { border-color:#e5786d29; background:linear-gradient(115deg,#3920257d,#0b0a0ebd); backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px); box-shadow:inset 0 1px #ffffff0d; }
+.scanner-history-list small { line-height:1.7; overflow-wrap:anywhere; }
+.scanner-scroll { padding-top:18px; }
+@media(max-width:360px) { .scanner-header { padding-inline:8px; gap:5px; } .scanner-header h2 { font-size:13px; } .scanner-scroll { padding-inline:14px; } .scanner-upload-actions { gap:7px; } }
+.scanner-orb > .scanner-orb-avatar { width:78px; height:78px; border-radius:24px; }
+.scanner-pending-analysis .scanner-orb { width:160px; height:160px; margin-bottom:16px; }
+.scanner-pending-analysis .scanner-orb > .scanner-orb-avatar { width:96px; height:96px; }
+.scanner-pending-analysis h3 { margin-top:14px; }
