@@ -1,5 +1,5 @@
 import type { ShapeStyle } from "@/context/AppContext";
-export const shapeOptions: readonly ShapeStyle[] = ["orbit", "cornerstone", "fortress", "neural"];
+export const shapeOptions: readonly ShapeStyle[] = ["orbit", "neural", "none"];
 export const isShapeStyle = (value: unknown): value is ShapeStyle => shapeOptions.includes(value as ShapeStyle);
 export function shapePreferenceKey(token: string | null): string | null {
   if (!token) return null;
