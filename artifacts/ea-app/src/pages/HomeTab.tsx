@@ -1,3 +1,4 @@
+import { useInterfaceSwipe } from "@/hooks/use-interface-swipe";
 import BotName from "@/components/BotName";
 import "@/components/S2toneActions.css";
 import RobotImageFrame from "@/components/RobotImageFrame";
@@ -22,12 +23,13 @@ function ChipIcon({ size = 24, color = "currentColor", style }: { size?: number;
 }
 
 interface HomeTabProps {
+  swipeEnabled?: boolean;
   onOpenChartScanner?: () => void;
 }
 
-export default function HomeTab({ onOpenChartScanner }: HomeTabProps) {
+export default function HomeTab({ onOpenChartScanner, swipeEnabled = true }: HomeTabProps) {
   const {
-    botRunning, setBotRunning, accentColor, interfaceStyle, shapeStyle,
+    botRunning, setBotRunning, accentColor, interfaceStyle, setInterfaceStyle, activeTab, shapeStyle,
     eaName, eaTagline, eaSymbols, bgImageUrl, showBg, setShowBg, clientToken,
   } = useApp();
   const [showRemoveConfirm, setShowRemoveConfirm] = useState(false);
@@ -35,6 +37,8 @@ export default function HomeTab({ onOpenChartScanner }: HomeTabProps) {
   const [showTrades, setShowTrades] = useState(false);
   const { executions, connected } = useTradeExecutions(clientToken);
   const hasLiveTrades = executions.length > 0;
+  const swipe = useInterfaceSwipe(interfaceStyle, setInterfaceStyle,
+    swipeEnabled && activeTab === "home" && !showQuotes && !showTrades && !showRemoveConfirm);
 
   const accentRgb = hexToRgb(accentColor);
 
@@ -53,7 +57,7 @@ export default function HomeTab({ onOpenChartScanner }: HomeTabProps) {
   };
 
   return (
-    <div className="absolute inset-0" style={{ background: "transparent", zIndex: 2 }}>
+    <div data-home-interface={interfaceStyle} className="absolute inset-0" style={{ background: "transparent", zIndex: 2 }}>
 
       {/* Accent glow — pinned, never scrolls */}
       <div
@@ -63,7 +67,10 @@ export default function HomeTab({ onOpenChartScanner }: HomeTabProps) {
 
       {/* ── Scrollable content ── */}
       <div
-        className="absolute inset-0 overflow-y-auto"
+        key={interfaceStyle}
+        {...swipe.handlers}
+        data-home-swipe-surface
+        className={`ea-home-swipe-surface absolute inset-0 overflow-y-auto ${swipe.direction ? `ea-home-swipe-${swipe.direction}` : ""}`}
         style={{ paddingBottom: 88, scrollbarWidth: "none", WebkitOverflowScrolling: "touch" } as React.CSSProperties}
       >
         {/* Regular and S2tone headers belong to the same scrolling content. */}
@@ -174,7 +181,7 @@ function S2ToneLayout({ shapeStyle, accentColor, botRunning, setBotRunning, eaNa
       </RobotImageFrame>
 
       {/* Bot name — large white bold, wraps naturally */}
-      <BotName primary
+      <BotName primary toggleBackground
         className="text-white font-black text-center tracking-tight leading-tight"
         style={{ fontSize: 40, textShadow: "0 2px 24px rgba(0,0,0,0.9)" }}
       >
@@ -299,7 +306,7 @@ function RegularLayout({ shapeStyle, accentColor, botRunning, setBotRunning, eaN
       </RobotImageFrame>
 
       {/* Bot name — tap to toggle bg */}
-      <button onClick={() => setShowBg(!showBg)} className="active:opacity-70 transition-opacity mb-3 z-10 px-4" style={{maxWidth:"100%"}}>
+      <button type="button" aria-label={showBg ? "Hide background image" : "Show background image"} aria-pressed={!showBg} onClick={() => setShowBg(!showBg)} className="active:opacity-70 transition-opacity mb-3 z-10 px-4" style={{maxWidth:"100%"}}>
         <BotName primary className="text-white font-black text-center tracking-tight" style={{ fontSize: 36, textShadow: "0 2px 20px rgba(0,0,0,0.9)" }}>
           {eaName.toUpperCase()}
         </BotName>
@@ -449,7 +456,7 @@ function MatrixLayout({ shapeStyle, accentColor, botRunning, setBotRunning, eaNa
       </div>
       )}
 
-      <BotName primary className="text-white font-black text-center tracking-tight mb-1 px-4" style={{ fontSize: 34, lineHeight: 1.0, textShadow: "0 2px 20px rgba(0,0,0,0.9)" }}>
+      <BotName primary toggleBackground className="text-white font-black text-center tracking-tight mb-1 px-4" style={{ fontSize: 34, lineHeight: 1.0, textShadow: "0 2px 20px rgba(0,0,0,0.9)" }}>
         {eaName.toUpperCase()}
       </BotName>
       {eaTagline && <p className="text-white/35 text-sm text-center mb-2 tracking-wide">{eaTagline}</p>}

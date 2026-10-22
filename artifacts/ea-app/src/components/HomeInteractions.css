@@ -1,0 +1,41 @@
+.ea-home-background {
+  transition: opacity 250ms ease;
+}
+.ea-home-swipe-surface {
+  touch-action: pan-y pinch-zoom;
+}
+.ea-home-swipe-next {
+  animation: ea-home-slide-next 250ms ease-out;
+}
+.ea-home-swipe-previous {
+  animation: ea-home-slide-previous 250ms ease-out;
+}
+@keyframes ea-home-slide-next {
+  from {
+    opacity: 0.45;
+    transform: translateX(40px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+@keyframes ea-home-slide-previous {
+  from {
+    opacity: 0.45;
+    transform: translateX(-40px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ea-home-background {
+    transition: none;
+  }
+  .ea-home-swipe-next,
+  .ea-home-swipe-previous {
+    animation: none;
+  }
+}

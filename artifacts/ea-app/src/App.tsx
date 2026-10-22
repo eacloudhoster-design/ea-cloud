@@ -1,8 +1,10 @@
+import {useHomePreferences} from "@/hooks/use-home-preferences";
+import "@/components/HomeInteractions.css";
 import {useFontPreference} from "@/hooks/use-font-preference";
 import {useShapePreference} from "@/hooks/use-shape-preference";
 import TradingActivityMonitor from "@/components/TradingActivityMonitor";
 import { useState, useEffect } from "react";
-import { AppContext, AppSettings, InterfaceStyle } from "@/context/AppContext";
+import { AppContext, AppSettings } from "@/context/AppContext";
 import HomeTab from "@/pages/HomeTab";
 import MetaTraderTab from "@/pages/MetaTraderTab";
 import SettingsTab from "@/pages/SettingsTab";
@@ -34,8 +36,7 @@ function EACloudApp({ onReady }: { onReady: (ready: boolean) => void }) {
   const [activeTab, setActiveTab] = useState<Tab>("home");
   const [showChartScanner, setShowChartScanner] = useState(false);
   const [botRunning, setBotRunning] = useState(true);
-  const [interfaceStyle, setInterfaceStyle] = useState<InterfaceStyle>("matrix");
-  const [showBg, setShowBg] = useState(true);
+  const { interfaceStyle, setInterfaceStyle, showBg, setShowBg } = useHomePreferences(clientToken);
   const [accentColor, setAccentColor] = useState("#ef4444");
   const [shapeStyle, setShapeStyle] = useShapePreference(clientToken);
   const [botFont, setBotFont] = useFontPreference(clientToken);
@@ -231,17 +232,16 @@ function EACloudApp({ onReady }: { onReady: (ready: boolean) => void }) {
         className="relative overflow-clip bg-black"
         style={{ height: "100dvh", maxWidth: 430, margin: "0 auto" }}
       >
-        {/* Background image — hidden when showBg is false */}
-        {showBg && (
-          <img
-            src={backgroundSrc}
-            alt=""
-            className="absolute inset-0 w-full h-full object-cover object-center pointer-events-none"
-            style={{ zIndex: 0, opacity: 1 }}
-          />
-        )}
+        {/* Fade only the full-screen image; profile images remain independent. */}
+        <img
+          src={backgroundSrc}
+          alt=""
+          data-home-background
+          className="ea-home-background absolute inset-0 w-full h-full object-cover object-center pointer-events-none"
+          style={{ zIndex: 0, opacity: showBg ? 1 : 0 }}
+        />
 
-        <HomeTab onOpenChartScanner={() => setShowChartScanner(true)} />
+        <HomeTab swipeEnabled={!showChartScanner} onOpenChartScanner={() => setShowChartScanner(true)} />
 
         <div
           className="absolute inset-0 z-20 transition-transform duration-300 ease-out"
