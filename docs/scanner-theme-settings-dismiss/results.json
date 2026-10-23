@@ -1,0 +1,212 @@
+[
+  {
+    "width": 390,
+    "interface": "Regular Interface",
+    "dismissed": true,
+    "preferencesUnchanged": true,
+    "noHomeClicks": true
+  },
+  {
+    "width": 390,
+    "interface": "S2tone_",
+    "dismissed": true,
+    "preferencesUnchanged": true,
+    "noHomeClicks": true
+  },
+  {
+    "width": 390,
+    "interface": "The Matrix Interface",
+    "dismissed": true,
+    "preferencesUnchanged": true,
+    "noHomeClicks": true
+  },
+  {
+    "width": 390,
+    "color": "#ef4444",
+    "styles": {
+      "primary": "color(srgb 0.950293 0.419053 0.419053)",
+      "selected": "color(srgb 0.954723 0.470827 0.470827)",
+      "orbit": "color(srgb 0.954234 0.465107 0.465107 / 0.2078)",
+      "glow": "color(srgb 0.946604 0.375933 0.375933 / 0.2824) 0px 0px 30px 0px, color(srgb 0.946604 0.375933 0.375933) 0px 0px 10px 0px inset",
+      "geometry": {
+        "x": 24,
+        "y": 100,
+        "width": 342,
+        "height": 345.875,
+        "top": 100,
+        "right": 366,
+        "bottom": 445.875,
+        "left": 24
+      },
+      "scanBeam": "linear-gradient(90deg, rgba(0, 0, 0, 0), color(srgb 0.950293 0.419053 0.419053), color(srgb 0.963827 0.577233 0.577233), color(srgb 0.950293 0.419053 0.419053), rgba(0, 0, 0, 0))"
+    }
+  },
+  {
+    "width": 390,
+    "color": "#22c55e",
+    "styles": {
+      "primary": "color(srgb 0.313427 0.819813 0.499827)",
+      "selected": "color(srgb 0.374613 0.835871 0.544402)",
+      "orbit": "color(srgb 0.367853 0.834097 0.539477 / 0.2078)",
+      "glow": "color(srgb 0.262467 0.806439 0.462702 / 0.2824) 0px 0px 30px 0px, color(srgb 0.262467 0.806439 0.462702) 0px 0px 10px 0px inset",
+      "geometry": {
+        "x": 24,
+        "y": 100,
+        "width": 342,
+        "height": 345.875,
+        "top": 100,
+        "right": 366,
+        "bottom": 445.875,
+        "left": 24
+      },
+      "scanBeam": "linear-gradient(90deg, rgba(0, 0, 0, 0), color(srgb 0.313427 0.819813 0.499827), color(srgb 0.500367 0.868874 0.636014), color(srgb 0.313427 0.819813 0.499827), rgba(0, 0, 0, 0))"
+    }
+  },
+  {
+    "width": 390,
+    "color": "#3b82f6",
+    "styles": {
+      "primary": "color(srgb 0.391093 0.611667 0.97204)",
+      "selected": "color(srgb 0.445358 0.646275 0.974532)",
+      "orbit": "color(srgb 0.439363 0.642451 0.974256 / 0.2078)",
+      "glow": "color(srgb 0.345898 0.582843 0.969965 / 0.2824) 0px 0px 30px 0px, color(srgb 0.345898 0.582843 0.969965) 0px 0px 10px 0px inset",
+      "geometry": {
+        "x": 24,
+        "y": 100,
+        "width": 342,
+        "height": 345.875,
+        "top": 100,
+        "right": 366,
+        "bottom": 445.875,
+        "left": 24
+      },
+      "scanBeam": "linear-gradient(90deg, rgba(0, 0, 0, 0), color(srgb 0.391093 0.611667 0.97204), color(srgb 0.556886 0.717402 0.979653), color(srgb 0.391093 0.611667 0.97204), rgba(0, 0, 0, 0))"
+    }
+  },
+  {
+    "width": 390,
+    "color": "#a855f7",
+    "styles": {
+      "primary": "color(srgb 0.72972 0.471867 0.975147)",
+      "selected": "color(srgb 0.753807 0.518933 0.977362)",
+      "orbit": "color(srgb 0.751146 0.513733 0.977117 / 0.2078)",
+      "glow": "color(srgb 0.709659 0.432667 0.973302 / 0.2824) 0px 0px 30px 0px, color(srgb 0.709659 0.432667 0.973302) 0px 0px 10px 0px inset",
+      "geometry": {
+        "x": 24,
+        "y": 100,
+        "width": 342,
+        "height": 345.875,
+        "top": 100,
+        "right": 366,
+        "bottom": 445.875,
+        "left": 24
+      },
+      "scanBeam": "linear-gradient(90deg, rgba(0, 0, 0, 0), color(srgb 0.72972 0.471867 0.975147), color(srgb 0.803312 0.615667 0.981914), color(srgb 0.72972 0.471867 0.975147), rgba(0, 0, 0, 0))"
+    }
+  },
+  {
+    "width": 320,
+    "interface": "Regular Interface",
+    "dismissed": true,
+    "preferencesUnchanged": true,
+    "noHomeClicks": true
+  },
+  {
+    "width": 320,
+    "interface": "S2tone_",
+    "dismissed": true,
+    "preferencesUnchanged": true,
+    "noHomeClicks": true
+  },
+  {
+    "width": 320,
+    "interface": "The Matrix Interface",
+    "dismissed": true,
+    "preferencesUnchanged": true,
+    "noHomeClicks": true
+  },
+  {
+    "width": 320,
+    "color": "#ef4444",
+    "styles": {
+      "primary": "color(srgb 0.950293 0.419053 0.419053)",
+      "selected": "color(srgb 0.954723 0.470827 0.470827)",
+      "orbit": "color(srgb 0.954234 0.465107 0.465107 / 0.2078)",
+      "glow": "color(srgb 0.946604 0.375933 0.375933 / 0.2824) 0px 0px 30px 0px, color(srgb 0.946604 0.375933 0.375933) 0px 0px 10px 0px inset",
+      "geometry": {
+        "x": 14,
+        "y": 100,
+        "width": 292,
+        "height": 345.875,
+        "top": 100,
+        "right": 306,
+        "bottom": 445.875,
+        "left": 14
+      },
+      "scanBeam": "linear-gradient(90deg, rgba(0, 0, 0, 0), color(srgb 0.950293 0.419053 0.419053), color(srgb 0.963827 0.577233 0.577233), color(srgb 0.950293 0.419053 0.419053), rgba(0, 0, 0, 0))"
+    }
+  },
+  {
+    "width": 320,
+    "color": "#22c55e",
+    "styles": {
+      "primary": "color(srgb 0.313427 0.819813 0.499827)",
+      "selected": "color(srgb 0.374613 0.835871 0.544402)",
+      "orbit": "color(srgb 0.367853 0.834097 0.539477 / 0.2078)",
+      "glow": "color(srgb 0.262467 0.806439 0.462702 / 0.2824) 0px 0px 30px 0px, color(srgb 0.262467 0.806439 0.462702) 0px 0px 10px 0px inset",
+      "geometry": {
+        "x": 14,
+        "y": 100,
+        "width": 292,
+        "height": 345.875,
+        "top": 100,
+        "right": 306,
+        "bottom": 445.875,
+        "left": 14
+      },
+      "scanBeam": "linear-gradient(90deg, rgba(0, 0, 0, 0), color(srgb 0.313427 0.819813 0.499827), color(srgb 0.500367 0.868874 0.636014), color(srgb 0.313427 0.819813 0.499827), rgba(0, 0, 0, 0))"
+    }
+  },
+  {
+    "width": 320,
+    "color": "#3b82f6",
+    "styles": {
+      "primary": "color(srgb 0.391093 0.611667 0.97204)",
+      "selected": "color(srgb 0.445358 0.646275 0.974532)",
+      "orbit": "color(srgb 0.439363 0.642451 0.974256 / 0.2078)",
+      "glow": "color(srgb 0.345898 0.582843 0.969965 / 0.2824) 0px 0px 30px 0px, color(srgb 0.345898 0.582843 0.969965) 0px 0px 10px 0px inset",
+      "geometry": {
+        "x": 14,
+        "y": 100,
+        "width": 292,
+        "height": 345.875,
+        "top": 100,
+        "right": 306,
+        "bottom": 445.875,
+        "left": 14
+      },
+      "scanBeam": "linear-gradient(90deg, rgba(0, 0, 0, 0), color(srgb 0.391093 0.611667 0.97204), color(srgb 0.556886 0.717402 0.979653), color(srgb 0.391093 0.611667 0.97204), rgba(0, 0, 0, 0))"
+    }
+  },
+  {
+    "width": 320,
+    "color": "#a855f7",
+    "styles": {
+      "primary": "color(srgb 0.72972 0.471867 0.975147)",
+      "selected": "color(srgb 0.753807 0.518933 0.977362)",
+      "orbit": "color(srgb 0.751146 0.513733 0.977117 / 0.2078)",
+      "glow": "color(srgb 0.709659 0.432667 0.973302 / 0.2824) 0px 0px 30px 0px, color(srgb 0.709659 0.432667 0.973302) 0px 0px 10px 0px inset",
+      "geometry": {
+        "x": 14,
+        "y": 100,
+        "width": 292,
+        "height": 345.875,
+        "top": 100,
+        "right": 306,
+        "bottom": 445.875,
+        "left": 14
+      },
+      "scanBeam": "linear-gradient(90deg, rgba(0, 0, 0, 0), color(srgb 0.72972 0.471867 0.975147), color(srgb 0.803312 0.615667 0.981914), color(srgb 0.72972 0.471867 0.975147), rgba(0, 0, 0, 0))"
+    }
+  }
+]
