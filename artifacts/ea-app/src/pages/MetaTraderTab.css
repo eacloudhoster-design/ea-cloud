@@ -17,12 +17,12 @@
 .mt5-background-shade::after { content: ''; position: absolute; inset: 0; background: #06070d; opacity: 0; transition: opacity .7s ease; }
 .mt5-screen:not([data-state="idle"]) .mt5-mentor-background { filter: blur(18px); transform: scale(1.09); opacity: .65; }
 .mt5-screen:not([data-state="idle"]) .mt5-background-shade::after { opacity: .35; }
-.mt5-content { position: relative; height: calc(100% - 75px - env(safe-area-inset-bottom)); overflow-y: auto; overscroll-behavior: contain; scroll-padding-block: 18px; padding: max(25px, env(safe-area-inset-top)) 28px 28px; scrollbar-width: none; transition: opacity .35s ease, filter .5s ease; }
+.mt5-content { position: relative; height: calc(100% - 75px - var(--ea-content-safe-bottom,env(safe-area-inset-bottom))); overflow-y: auto; overscroll-behavior: contain; scroll-padding-block: 18px; padding: max(25px, var(--ea-content-safe-top,env(safe-area-inset-top))) 28px 28px; scrollbar-width: none; transition: opacity .35s ease, filter .5s ease; }
 .mt5-screen:not([data-state="idle"]) .mt5-content { opacity: 0; filter: blur(8px); pointer-events: none; }
 .mt5-topline { display: flex; align-items: center; justify-content: space-between; gap: 16px; color: #e2e5ec; font-size: 9px; letter-spacing: 2.4px; }
 .mt5-topline > span { white-space: nowrap; font-weight: 650; }
 .mt5-mentor-name { color: #c2c5ce; font-size: 10px; letter-spacing: .2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.mt5-intro { padding: clamp(29px, 5vh, 44px) 0 28px; text-align: center; }
+.mt5-intro { padding: clamp(29px, calc(var(--ea-content-vh, 1vh) * 5), 44px) 0 28px; text-align: center; }
 .mt5-platform-logo { display: block; width: 58px; height: 58px; object-fit: contain; margin: 0 auto 18px; border-radius: 13px; box-shadow: 0 8px 24px #0005; }
 .mt5-intro h2 { font-family: "EA Bot Exo 2", Inter, sans-serif; font-size: clamp(24px,6.7vw,29px); font-weight: 900; letter-spacing: .15px; line-height: 1.2; color: #fff5f1; text-shadow: 0 2px 20px #0009,0 0 22px var(--mt5-glow); }
 .mt5-intro p { font-family: "EA Bot Inter", Inter, sans-serif; color: #e4e7ed; font-size: 11px; font-weight: 600; letter-spacing: .12px; line-height: 1.6; margin-top: 9px; text-shadow: 0 1px 7px #000b; }
@@ -51,9 +51,9 @@
 .mt5-saved-account small { display: block; font-size: 8px; margin-top: 5px; color: #9ca2b2; }
 .mt5-saved-account button { min-height: 44px; background: none; border: 0; color: var(--mt5-light); text-decoration: underline; cursor: pointer; }
 /* A full-screen presentation, with NO surrounding card: logo, spinner, title. */
-.mt5-connection-screen { position: absolute; inset: 0 0 calc(75px + env(safe-area-inset-bottom)); overflow-y: auto; display: grid; align-items: center; padding: 60px 24px; animation: mt5-screen-arrive .6s ease both; }
+.mt5-connection-screen { position: absolute; inset: 0 0 calc(75px + var(--ea-content-safe-bottom,env(safe-area-inset-bottom))); overflow-y: auto; display: grid; align-items: center; padding: 60px 24px; animation: mt5-screen-arrive .6s ease both; }
 .mt5-connection-content { text-align: center; width: 100%; max-width: 340px; margin: auto; }
-.mt5-modal-close { position: absolute; top: max(16px,env(safe-area-inset-top)); right: 16px; display: grid; place-items: center; width: 44px; height: 44px; border-radius: 50%; color: #d1d5df; background: #ffffff08; border: 0; cursor: pointer; }
+.mt5-modal-close { position: absolute; top: max(16px,var(--ea-content-safe-top,env(safe-area-inset-top))); right: 16px; display: grid; place-items: center; width: 44px; height: 44px; border-radius: 50%; color: #d1d5df; background: #ffffff08; border: 0; cursor: pointer; }
 .mt5-broker-stage { position: relative; width: clamp(132px,41vw,174px); aspect-ratio: 1; margin: 0 auto 32px; }
 .mt5-broker-stage::before { content: ''; position: absolute; inset: 10%; border-radius: 50%; background: var(--mt5-accent); opacity: .12; filter: blur(32px); }
 .mt5-broker-float { width: 100%; height: 100%; animation: mt5-float 5s ease-in-out 1.6s infinite; }
@@ -73,5 +73,9 @@
 @keyframes mt5-spinner { to { transform: rotate(360deg); } }
 @media (max-width:360px) { .mt5-content { padding-left: 22px; padding-right: 22px; } .mt5-intro h2 { font-size: 24px; } .mt5-result-actions button { padding-inline: 14px; } }
 @media (max-height:700px) { .mt5-topline { font-size: 8px; } .mt5-intro { padding: 21px 0; } .mt5-platform-logo { width: 48px; height: 48px; margin-bottom: 12px; } .mt5-form { gap: 15px; } .mt5-input-wrap { min-height: 54px; } .mt5-input-wrap input { height: 52px; } .mt5-availability-note { margin-top: 14px; } .mt5-saved-account { margin-top: 14px; } .mt5-broker-stage { width: 132px; margin-bottom: 26px; } }
-@media (max-height:640px) { .mt5-content { padding-top: max(18px,env(safe-area-inset-top)); } .mt5-intro { padding: 18px 0; } .mt5-intro p { display: none; } .mt5-form { gap: 13px; } .mt5-floating-field > label { margin-bottom: 6px; } .mt5-connect-button { min-height: 54px; margin-top: 5px; } }
+@media (max-height:640px) { .mt5-content { padding-top: max(18px,var(--ea-content-safe-top,env(safe-area-inset-top))); } .mt5-intro { padding: 18px 0; } .mt5-intro p { display: none; } .mt5-form { gap: 13px; } .mt5-floating-field > label { margin-bottom: 6px; } .mt5-connect-button { min-height: 54px; margin-top: 5px; } }
 @media (prefers-reduced-motion:reduce) { .mt5-screen *, .mt5-screen *::before, .mt5-screen *::after { animation: none !important; transition: none !important; } }
+
+@container ea-app (max-height:700px) { .mt5-topline { font-size: 8px; } .mt5-intro { padding: 21px 0; } .mt5-platform-logo { width: 48px; height: 48px; margin-bottom: 12px; } .mt5-form { gap: 15px; } .mt5-input-wrap { min-height: 54px; } .mt5-input-wrap input { height: 52px; } .mt5-availability-note { margin-top: 14px; } .mt5-saved-account { margin-top: 14px; } .mt5-broker-stage { width: 132px; margin-bottom: 26px; } }
+
+@container ea-app (max-height:640px) { .mt5-content { padding-top: max(18px,var(--ea-content-safe-top,env(safe-area-inset-top))); } .mt5-intro { padding: 18px 0; } .mt5-intro p { display: none; } .mt5-form { gap: 13px; } .mt5-floating-field > label { margin-bottom: 6px; } .mt5-connect-button { min-height: 54px; margin-top: 5px; } }

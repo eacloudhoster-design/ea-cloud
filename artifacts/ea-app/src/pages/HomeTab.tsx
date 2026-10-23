@@ -80,7 +80,7 @@ export default function HomeTab({ onOpenChartScanner, swipeEnabled = true, homeN
         {interfaceStyle !== "matrix" && (
           <div
             className="relative z-10 flex items-center justify-between px-4"
-            style={{ paddingTop: "max(16px, env(safe-area-inset-top))", paddingBottom: 8, background: "transparent" }}
+            style={{ paddingTop: "max(16px, var(--ea-content-safe-top,env(safe-area-inset-top)))", paddingBottom: 8, background: "transparent" }}
           >
             <div className="flex items-center gap-1.5 px-2 py-1 rounded-full" style={{ background: "rgba(0,0,0,0.4)", border: `1px solid ${botRunning ? "#22c55e55" : "#f59e0b55"}` }}>
               <span className="w-1.5 h-1.5 rounded-full" style={{ background: botRunning ? "#22c55e" : "#f59e0b" }} />
@@ -429,7 +429,7 @@ function MatrixLayout({ shapeStyle, accentColor, botRunning, setBotRunning, eaNa
     return () => { observer.disconnect(); name.style.removeProperty("transform"); };
   }, [shapeStyle]);
   return (
-    <div ref={layoutRef} className="relative z-10 flex flex-col items-center" style={{ minHeight: "calc(100dvh - 88px)", paddingBottom: 16 }}>
+    <div ref={layoutRef} className="relative z-10 flex flex-col items-center" style={{ minHeight: "calc(var(--ea-content-height, 100dvh) - 88px)", paddingBottom: 16 }}>
       <div className="w-full flex items-center justify-between px-4 pt-3 pb-4">
         <button className="w-9 h-9 rounded-full flex items-center justify-center active:scale-95 transition-transform" style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.12)" }}>
           <Menu size={16} className="text-white/60" />

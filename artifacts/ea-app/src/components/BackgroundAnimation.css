@@ -111,7 +111,7 @@
     opacity: 0.32;
   }
   100% {
-    transform: translateY(100dvh);
+    transform: translateY(var(--ea-content-height,100dvh));
     opacity: 0;
   }
 }

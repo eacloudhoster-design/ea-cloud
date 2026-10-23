@@ -1,0 +1,119 @@
+[
+  {
+    "screen": {
+      "width": 370,
+      "height": 800,
+      "top": 44,
+      "bottom": 34
+    },
+    "cases": 9,
+    "foregroundUnchanged": true,
+    "maxCoordinateDeltaCssPixels": 0,
+    "mt5GeometryUnchanged": true,
+    "backgroundBefore": {
+      "x": 0,
+      "y": 44,
+      "width": 370,
+      "height": 756
+    },
+    "backgroundAfter": {
+      "x": 0,
+      "y": 0,
+      "width": 370,
+      "height": 800
+    }
+  },
+  {
+    "screen": {
+      "width": 393,
+      "height": 852,
+      "top": 59,
+      "bottom": 34
+    },
+    "cases": 9,
+    "foregroundUnchanged": true,
+    "maxCoordinateDeltaCssPixels": 0,
+    "mt5GeometryUnchanged": true,
+    "backgroundBefore": {
+      "x": 0,
+      "y": 59,
+      "width": 393,
+      "height": 793
+    },
+    "backgroundAfter": {
+      "x": 0,
+      "y": 0,
+      "width": 393,
+      "height": 852
+    }
+  },
+  {
+    "screen": {
+      "width": 375,
+      "height": 667,
+      "top": 20
+    },
+    "cases": 9,
+    "foregroundUnchanged": true,
+    "maxCoordinateDeltaCssPixels": 0,
+    "mt5GeometryUnchanged": true,
+    "backgroundBefore": {
+      "x": 0,
+      "y": 20,
+      "width": 375,
+      "height": 647
+    },
+    "backgroundAfter": {
+      "x": 0,
+      "y": 0,
+      "width": 375,
+      "height": 667
+    }
+  },
+  {
+    "screen": {
+      "width": 390,
+      "height": 844,
+      "top": 0
+    },
+    "cases": 9,
+    "foregroundUnchanged": true,
+    "maxCoordinateDeltaCssPixels": 0,
+    "mt5GeometryUnchanged": true,
+    "backgroundBefore": {
+      "x": 0,
+      "y": 0,
+      "width": 390,
+      "height": 844
+    },
+    "backgroundAfter": {
+      "x": 0,
+      "y": 0,
+      "width": 390,
+      "height": 844
+    }
+  },
+  {
+    "screen": {
+      "width": 844,
+      "height": 390,
+      "top": 0
+    },
+    "cases": 9,
+    "foregroundUnchanged": true,
+    "maxCoordinateDeltaCssPixels": 0,
+    "mt5GeometryUnchanged": true,
+    "backgroundBefore": {
+      "x": 207,
+      "y": 0,
+      "width": 430,
+      "height": 390
+    },
+    "backgroundAfter": {
+      "x": 207,
+      "y": 0,
+      "width": 430,
+      "height": 390
+    }
+  }
+]

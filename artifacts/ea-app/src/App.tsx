@@ -220,8 +220,8 @@ function EACloudApp({ onReady }: { onReady: (ready: boolean) => void }) {
   return (
     <AppContext.Provider value={settings}>
       <div
-        className="relative overflow-clip bg-black"
-        style={{ height: "100dvh", maxWidth: 430, margin: "0 auto" }}
+        className="ea-app-viewport relative overflow-clip bg-black"
+        style={{ maxWidth: 430, margin: "0 auto" }}
       >
         {/* Fade only the full-screen image; profile images remain independent. */}
         <img
@@ -232,6 +232,7 @@ function EACloudApp({ onReady }: { onReady: (ready: boolean) => void }) {
           style={{ zIndex: 0, opacity: showBg ? 1 : 0 }}
         />
 
+        <div className="ea-app-content relative overflow-clip">
         <BackgroundAnimation effect={backgroundAnimation} color={accentColor} active={activeTab === "home"} />
 
         <div className="absolute inset-0 z-[2]" inert={activeTab !== "home" || settingsClosing}>
@@ -272,6 +273,7 @@ function EACloudApp({ onReady }: { onReady: (ready: boolean) => void }) {
             <ChartScannerModal onClose={() => setShowChartScanner(false)} onNavigate={tab => { navigate(tab); setShowChartScanner(false); }} />
           </div>
         )}
+        </div>
       </div>
     </AppContext.Provider>
   );
