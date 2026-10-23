@@ -1,0 +1,50 @@
+[
+  {
+    "style": "regular",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "passed": true
+  },
+  {
+    "style": "s2tone",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "passed": true
+  },
+  {
+    "style": "matrix",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "passed": true
+  },
+  {
+    "style": "regular",
+    "viewport": {
+      "width": 320,
+      "height": 568
+    },
+    "passed": true
+  },
+  {
+    "style": "s2tone",
+    "viewport": {
+      "width": 320,
+      "height": 568
+    },
+    "passed": true
+  },
+  {
+    "style": "matrix",
+    "viewport": {
+      "width": 320,
+      "height": 568
+    },
+    "passed": true
+  }
+]

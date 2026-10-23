@@ -9,6 +9,7 @@ import { useState, useEffect } from "react";
 import { AppContext, AppSettings } from "@/context/AppContext";
 import HomeTab from "@/pages/HomeTab";
 import MetaTraderTab from "@/pages/MetaTraderTab";
+import MetaTraderPopup from "@/components/MetaTraderPopup";
 import SettingsTab from "@/pages/SettingsTab";
 import BottomNav from "@/components/BottomNav";
 import ChartScannerModal from "@/components/ChartScannerModal";
@@ -249,13 +250,9 @@ function EACloudApp({ onReady }: { onReady: (ready: boolean) => void }) {
           />
         )}
 
-        <div
-          className="absolute inset-0 z-20 transition-transform duration-300 ease-out"
-          inert={activeTab !== "metatrader"}
-          style={{ transform: activeTab === "metatrader" ? "translateX(0)" : "translateX(100%)" }}
-        >
+        <MetaTraderPopup open={activeTab === "metatrader"} onClose={() => setActiveTab("home")}>
           <MetaTraderTab />
-        </div>
+        </MetaTraderPopup>
 
         <div
           className="absolute top-0 right-0 h-full z-30 transition-transform duration-300 ease-out"
@@ -265,7 +262,7 @@ function EACloudApp({ onReady }: { onReady: (ready: boolean) => void }) {
           <SettingsTab onOpenChartScanner={() => setShowChartScanner(true)} />
         </div>
 
-        <TradingActivityMonitor />
+        <div inert={activeTab === "metatrader"}><TradingActivityMonitor /></div>
         <BottomNav activeTab={activeTab} onTabChange={navigate} />
 
         {showChartScanner && (
