@@ -479,7 +479,7 @@ function MatrixLayout({ shapeStyle, accentColor, botRunning, setBotRunning, eaNa
       <BotName primary toggleBackground className="text-white font-black text-center tracking-tight mb-1 px-4" style={{ fontSize: 34, lineHeight: 1.0, textShadow: "0 2px 20px rgba(0,0,0,0.9)" }}>
         {eaName.toUpperCase()}
       </BotName>
-      {eaTagline && <p className="text-white/35 text-sm text-center mb-2 tracking-wide">{eaTagline}</p>}
+      {eaTagline && <p className="text-white/35 text-sm text-center mb-2 tracking-wide" style={{ visibility: shapeStyle === "none" ? "hidden" : undefined }}>{eaTagline}</p>}
 
       <div className="flex-1" style={{ minHeight: 32 }} />
       <div className="flex gap-2 mb-5 opacity-20">
