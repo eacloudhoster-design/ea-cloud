@@ -25,9 +25,10 @@
   position: absolute;
   top: calc(max(16px, var(--ea-content-safe-top)) + 42px);
   left: 20px;
-  width: 32px;
-  height: 32px;
-  z-index: 3;
+  width: 44px;
+  height: 44px;
+  z-index: 5;
+  pointer-events: none;
 }
 .mt5-popup-header button {
   position: absolute;
@@ -35,11 +36,13 @@
   top: 0;
   display: grid;
   place-items: center;
-  width: 32px;
-  height: 32px;
+  width: 44px;
+  height: 44px;
+  pointer-events: auto;
   border-radius: 50%;
   color: white;
-  background: #ffffff1a;
+  background: rgba(0, 0, 0, 0.45);
+  border: 1px solid #ffffff30;
 }
 .mt5-popup-header button:focus-visible {
   outline: 2px solid var(--mt5-popup-accent);
@@ -52,10 +55,28 @@
 /* Scroll behind the floating bar, with enough end space to expose every field. */
 .mt5-popup .mt5-content {
   height: 100%;
+  padding-top: max(16px, var(--ea-content-safe-top));
   padding-bottom: var(--ea-nav-clearance, 90px);
   scroll-padding-bottom: var(--ea-nav-clearance, 90px);
 }
 .mt5-popup .mt5-connection-screen {
+  top: 60px;
   bottom: 0;
   padding-bottom: calc(60px + var(--ea-nav-clearance, 90px));
+}
+
+/* Reserve only the close control, without a separate empty header row. */
+.mt5-popup .mt5-topline {
+  min-height: 32px;
+  padding-right: 34px;
+}
+.mt5-popup .mt5-intro p {
+  display: block;
+}
+.mt5-popup .mt5-floating-field > label {
+  font-family: "EA Bot Inter", Inter, sans-serif;
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+  line-height: 1.4;
 }
