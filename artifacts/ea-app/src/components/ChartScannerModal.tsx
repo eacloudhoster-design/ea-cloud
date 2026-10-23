@@ -1,5 +1,5 @@
 import { X, Camera, ImagePlus, Settings2, Globe2, History, ScanLine, ArrowUpRight, RotateCcw, ShieldCheck, LoaderCircle, Trash2 } from "lucide-react";
-import { useState, useEffect, useRef, useCallback, type ChangeEvent } from "react";
+import { useState, useEffect, useRef, useCallback, type CSSProperties, type ChangeEvent } from "react";
 import { useApp, type Tab } from "@/context/AppContext";
 import ScannerMentorMark from "./ScannerMentorMark";
 import { confidenceLabel } from "@/lib/scanner-report-view";
@@ -21,7 +21,7 @@ function ScannerOrb() {
 }
 
 export default function ChartScannerModal({ onClose, onNavigate }: ChartScannerModalProps) {
-  const { bgImageUrl, eaName, clientToken } = useApp();
+  const { bgImageUrl, eaName, clientToken, accentColor } = useApp();
   const [strategy, setStrategy] = useState<Strategy>("SMC");
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState("");
@@ -107,7 +107,7 @@ export default function ChartScannerModal({ onClose, onNavigate }: ChartScannerM
   const chart = result?.kind === "chart" ? result.report as ChartReport : null;
   const fundamental = result?.kind === "fundamental" ? result.report as FundamentalReport : null;
 
-  return <div ref={modal} className="scanner-screen" role="dialog" aria-modal="true" aria-labelledby="scanner-title" onKeyDown={event => {
+  return <div ref={modal} className="scanner-screen" style={{ "--scanner-accent": accentColor } as CSSProperties} role="dialog" aria-modal="true" aria-labelledby="scanner-title" onKeyDown={event => {
     if (event.key === "Escape") { event.preventDefault(); if (busy) cancel(); else onClose(); }
     if (event.key === "Tab") {
       const items = Array.from(event.currentTarget.querySelectorAll<HTMLElement>('button:not(:disabled),input:not(:disabled):not([type="file"]),select:not(:disabled),summary,a[href]')).filter(el => el.getClientRects().length);

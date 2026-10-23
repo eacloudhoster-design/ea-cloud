@@ -36,6 +36,16 @@ function EACloudApp({ onReady }: { onReady: (ready: boolean) => void }) {
   const [clientStatus, setClientStatus] = useState<"pending" | "rejected" | "approved">("pending");
 
   const [activeTab, setActiveTab] = useState<Tab>("home");
+  const [settingsClosing, setSettingsClosing] = useState(false);
+  const dismissSettings = () => {
+    setSettingsClosing(true);
+    setActiveTab("home");
+  };
+  useEffect(() => {
+    if (!settingsClosing) return;
+    const timer = window.setTimeout(() => setSettingsClosing(false), 300);
+    return () => window.clearTimeout(timer);
+  }, [settingsClosing]);
   const [showChartScanner, setShowChartScanner] = useState(false);
   const { botRunning, botStatusConfirmed, setBotRunning: persistBotRunning } = useBotStatus(clientToken, authStage === "app");
   const { interfaceStyle, setInterfaceStyle, showBg, setShowBg, backgroundAnimation, setBackgroundAnimation, accentColor, setAccentColor } = useHomePreferences(clientToken);
@@ -219,7 +229,19 @@ function EACloudApp({ onReady }: { onReady: (ready: boolean) => void }) {
 
         <BackgroundAnimation effect={backgroundAnimation} color={accentColor} active={activeTab === "home"} />
 
-        <HomeTab swipeEnabled={!showChartScanner} onOpenChartScanner={() => setShowChartScanner(true)} />
+        <div className="absolute inset-0 z-[2]" inert={activeTab !== "home" || settingsClosing}>
+          <HomeTab swipeEnabled={!showChartScanner} onOpenChartScanner={() => setShowChartScanner(true)} />
+        </div>
+
+        {!showChartScanner && (activeTab === "settings" || settingsClosing) && (
+          <button
+            type="button"
+            aria-label="Close Settings"
+            className="absolute top-0 left-0 z-[95] border-0 bg-transparent p-0"
+            style={{ width: "12%", bottom: 75, touchAction: "none" }}
+            onClick={event => { event.preventDefault(); event.stopPropagation(); dismissSettings(); }}
+          />
+        )}
 
         <div
           className="absolute inset-0 z-20 transition-transform duration-300 ease-out"
