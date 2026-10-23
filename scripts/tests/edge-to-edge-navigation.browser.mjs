@@ -6,7 +6,7 @@ const { chromium } = createRequire(import.meta.url)(
 );
 const origin = process.env.APP_ORIGIN || "http://127.0.0.1:5204";
 assert.ok(["localhost", "127.0.0.1"].includes(new URL(origin).hostname));
-const out = "work/edge-to-edge-navigation";
+const out = "work/compact-navigation";
 await mkdir(out, { recursive: true });
 const browser = await chromium.launch({
   executablePath: "/usr/bin/chromium",
@@ -97,8 +97,18 @@ try {
   assert.equal(dock.left,0);assert.equal(dock.right,0);assert.equal(dock.bottom,0);
   assert.equal(dock.radius,"22px 22px 0px 0px");
   const initial=await geometry(); assert.equal(initial.radius,"0px");
-  assert.ok(Math.abs(initial.bottom-screen.bottom)<1);
+  assert.ok(Math.abs(initial.bottom-Math.min(20,screen.bottom))<1);
   assert.ok(initial.blur.includes("12px"));
+  assert.equal(initial.h,60);
+  const sizes=await nav.evaluate(el=>({
+    dock:el.getBoundingClientRect().height,
+    buttons:[...el.querySelectorAll("button")].map(b=>b.getBoundingClientRect().height),
+    indicator:el.querySelector(".ea-glass-indicator").getBoundingClientRect().height,
+  }));
+  assert.equal(sizes.dock,60+Math.min(20,screen.bottom));
+  assert.ok(sizes.dock<66+screen.bottom);
+  assert.ok(sizes.buttons.every(h=>h===54),"existing button target size retained");
+  assert.equal(sizes.indicator,54,"existing oval height retained");
   assert.ok(initial.w>=Math.min(screen.width,430)-2*Math.max(4,screen.left||0)-1);
   for(const name of ["MetaTrader","Settings","Home"]) {
    await nav.getByRole("button",{name,exact:true}).tap();

@@ -1,6 +1,8 @@
 .ea-app-viewport {
-  --ea-nav-height: 66px;
-  --ea-nav-bottom: env(safe-area-inset-bottom, 0px);
+  --ea-nav-height: 60px;
+  /* Reserve the home-indicator zone without adding the entire 34px inset
+     below a separately padded control row. Smaller/zero insets stay intact. */
+  --ea-nav-bottom: min(20px, env(safe-area-inset-bottom, 0px));
   --ea-nav-clearance: calc(var(--ea-nav-height) + var(--ea-nav-bottom) + 12px);
 }
 .ea-glass-navigation {
@@ -26,7 +28,7 @@
   right: env(safe-area-inset-right, 0px);
   bottom: var(--ea-nav-bottom, 0px);
   height: var(--ea-nav-height, 66px);
-  padding: 5px 6px;
+  padding: 2px 6px;
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   align-items: stretch;
@@ -99,8 +101,8 @@
 .ea-glass-indicator {
   position: absolute;
   left: 6px;
-  top: 5px;
-  bottom: 5px;
+  top: 2px;
+  bottom: 2px;
   width: var(--glass-step, calc((100% - 12px) / 3));
   z-index: 1;
   border-radius: 999px;

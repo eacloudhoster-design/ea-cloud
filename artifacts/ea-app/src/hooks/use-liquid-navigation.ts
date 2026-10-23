@@ -129,7 +129,7 @@ export function useLiquidNavigation(
         node.style.setProperty("--lens-width", `${viewport.width}px`);
         node.style.setProperty("--lens-height", `${viewport.height}px`);
         node.style.setProperty("--lens-left", `${viewport.x - rect.x - 6}px`);
-        node.style.setProperty("--lens-top", `${viewport.y - rect.y - 5}px`);
+        node.style.setProperty("--lens-top", `${viewport.y - rect.y - parseFloat(getComputedStyle(node).paddingTop)}px`);
       }
       paint();
     };
