@@ -16,6 +16,10 @@
   top: var(--ea-status-inset);
   height: var(--ea-content-height);
 }
+/* Only MT5 extends its own artwork beneath the status-bar safe area. */
+.ea-app-content--mt5 {
+  overflow: visible;
+}
 .ea-home-background {
   width: 100%;
   height: 100%;

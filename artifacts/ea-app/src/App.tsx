@@ -233,7 +233,7 @@ function EACloudApp({ onReady }: { onReady: (ready: boolean) => void }) {
           style={{ zIndex: 0, opacity: showBg ? 1 : 0 }}
         />
 
-        <div className="ea-app-content relative overflow-clip">
+        <div className={`ea-app-content relative overflow-clip${activeTab === "metatrader" ? " ea-app-content--mt5" : ""}`}>
         <BackgroundAnimation effect={backgroundAnimation} color={accentColor} active={activeTab === "home"} />
 
         <div className="absolute inset-0 z-[2]" inert={activeTab !== "home" || settingsClosing}>
@@ -245,7 +245,7 @@ function EACloudApp({ onReady }: { onReady: (ready: boolean) => void }) {
             type="button"
             aria-label="Close Settings"
             className="absolute top-0 left-0 z-[95] border-0 bg-transparent p-0"
-            style={{ width: "12%", bottom: "max(75px, calc(62px + env(safe-area-inset-bottom, 0px)))", touchAction: "none" }}
+            style={{ width: "12%", bottom: "calc(var(--ea-nav-height, 66px) + var(--ea-nav-bottom, 4px))", touchAction: "none" }}
             onClick={event => { event.preventDefault(); event.stopPropagation(); dismissSettings(); }}
           />
         )}

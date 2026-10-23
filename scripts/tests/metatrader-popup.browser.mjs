@@ -106,8 +106,8 @@ try {
       await nav("MetaTrader").tap();
       await popup.waitFor();
       let rect = await popup.boundingBox();
-      assert(rect.y >= 20 && rect.y < 90);
-      assert(rect.y + rect.height <= viewport.height - 74);
+      assert.equal(rect.y, 0);
+      assert.equal(rect.height, viewport.height);
       assert.equal(
         await page.locator("[data-home-background]").getAttribute("src"),
         homeBefore,
@@ -116,7 +116,7 @@ try {
         await page
           .locator(".mt5-popup-backdrop")
           .evaluate((e) => getComputedStyle(e).backdropFilter),
-        "blur(4px)",
+        "none",
       );
       await page.locator("#mt5-login").fill("123456");
       await page.locator("#mt5-password").fill("fixture-only");
@@ -131,10 +131,9 @@ try {
       await page.screenshot({
         path: `work/metatrader-popup/${style}-${viewport.width}-open.png`,
       });
-      // Keep the touch well inside the exposed area: Chromium adjusts taps
-      // within a few pixels of the sheet boundary to its clickable header.
-      // On the taller viewport this also overlaps the inert robot circle.
-      await page.touchscreen.tap(35, Math.min(105, rect.y / 2));
+      // Fullscreen pages have no exposed outside-dismiss region; preserve Escape.
+      await page.locator("#mt5-login").focus();
+      await page.keyboard.press("Escape");
       await popup.waitFor({ state: "hidden" });
       assert.equal(
         await page
