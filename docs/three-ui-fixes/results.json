@@ -1,0 +1,172 @@
+[
+  {
+    "width": 390,
+    "interface": "regular",
+    "outsideTradeTap": true,
+    "xClose": true,
+    "liveFeed": true,
+    "homeDismissesSymbols": true,
+    "preferencesUnchanged": true,
+    "controlsInteractive": true
+  },
+  {
+    "width": 390,
+    "interface": "s2tone",
+    "outsideTradeTap": true,
+    "xClose": true,
+    "liveFeed": true,
+    "homeDismissesSymbols": true,
+    "preferencesUnchanged": true,
+    "controlsInteractive": true
+  },
+  {
+    "width": 390,
+    "interface": "matrix",
+    "outsideTradeTap": true,
+    "xClose": true,
+    "liveFeed": true,
+    "homeDismissesSymbols": true,
+    "preferencesUnchanged": true,
+    "controlsInteractive": true
+  },
+  {
+    "width": 390,
+    "colours": [
+      {
+        "color": "#ef4444",
+        "text": "SMC Blueprint EA V3+",
+        "image": "\"http://127.0.0.1:5194/fixture-robot.jpg\")",
+        "border": "color(srgb 0.957183 0.499573 0.499573 / 0.4667)",
+        "glow": "color(srgb 0.94267 0.329953 0.329953 / 0.2314) 0px 0px 35px 0px, color(srgb 0.979332 0.75844 0.75844 / 0.2196) 0px 1px 0px 0px inset",
+        "refresh": "color(srgb 0.962353 0.56 0.56)",
+        "off": "rgb(245, 193, 145)",
+        "robotStatus": "rgb(252, 141, 134)",
+        "gain": "rgb(68, 223, 162)"
+      },
+      {
+        "color": "#3b82f6",
+        "text": "SMC Blueprint EA V3+",
+        "image": "\"http://127.0.0.1:5194/fixture-robot.jpg\")",
+        "border": "color(srgb 0.475489 0.66549 0.975915 / 0.4667)",
+        "glow": "color(srgb 0.297705 0.552108 0.967752 / 0.2314) 0px 0px 35px 0px, color(srgb 0.746814 0.838529 0.988374 / 0.2196) 0px 1px 0px 0px inset",
+        "refresh": "color(srgb 0.538824 0.705882 0.978824)",
+        "off": "rgb(245, 193, 145)",
+        "robotStatus": "rgb(252, 141, 134)",
+        "gain": "rgb(68, 223, 162)"
+      },
+      {
+        "color": "#22c55e",
+        "text": "SMC Blueprint EA V3+",
+        "image": "\"http://127.0.0.1:5194/fixture-robot.jpg\")",
+        "border": "color(srgb 0.408587 0.844787 0.569151 / 0.4667)",
+        "glow": "color(srgb 0.208127 0.792178 0.423115 / 0.2314) 0px 0px 35px 0px, color(srgb 0.71452 0.925078 0.792026 / 0.2196) 0px 1px 0px 0px inset",
+        "refresh": "color(srgb 0.48 0.863529 0.621176)",
+        "off": "rgb(245, 193, 145)",
+        "robotStatus": "rgb(252, 141, 134)",
+        "gain": "rgb(68, 223, 162)"
+      },
+      {
+        "color": "#a855f7",
+        "text": "SMC Blueprint EA V3+",
+        "image": "\"http://127.0.0.1:5194/fixture-robot.jpg\")",
+        "border": "color(srgb 0.767181 0.545067 0.978591 / 0.4667)",
+        "glow": "color(srgb 0.688267 0.390867 0.971335 / 0.2314) 0px 0px 35px 0px, color(srgb 0.887616 0.7804 0.989666 / 0.2196) 0px 1px 0px 0px inset",
+        "refresh": "color(srgb 0.795294 0.6 0.981176)",
+        "off": "rgb(245, 193, 145)",
+        "robotStatus": "rgb(252, 141, 134)",
+        "gain": "rgb(68, 223, 162)"
+      }
+    ],
+    "geometryPreserved": true,
+    "drag": true,
+    "resize": true,
+    "pinch": true,
+    "refresh": true,
+    "semanticStatusPreserved": true
+  },
+  {
+    "width": 320,
+    "interface": "regular",
+    "outsideTradeTap": true,
+    "xClose": true,
+    "liveFeed": true,
+    "homeDismissesSymbols": true,
+    "preferencesUnchanged": true,
+    "controlsInteractive": true
+  },
+  {
+    "width": 320,
+    "interface": "s2tone",
+    "outsideTradeTap": true,
+    "xClose": true,
+    "liveFeed": true,
+    "homeDismissesSymbols": true,
+    "preferencesUnchanged": true,
+    "controlsInteractive": true
+  },
+  {
+    "width": 320,
+    "interface": "matrix",
+    "outsideTradeTap": true,
+    "xClose": true,
+    "liveFeed": true,
+    "homeDismissesSymbols": true,
+    "preferencesUnchanged": true,
+    "controlsInteractive": true
+  },
+  {
+    "width": 320,
+    "colours": [
+      {
+        "color": "#ef4444",
+        "text": "SMC Blueprint EA V3+",
+        "image": "\"http://127.0.0.1:5194/fixture-robot.jpg\")",
+        "border": "color(srgb 0.957183 0.499573 0.499573 / 0.4667)",
+        "glow": "color(srgb 0.94267 0.329953 0.329953 / 0.2314) 0px 0px 35px 0px, color(srgb 0.979332 0.75844 0.75844 / 0.2196) 0px 1px 0px 0px inset",
+        "refresh": "color(srgb 0.962353 0.56 0.56)",
+        "off": "rgb(245, 193, 145)",
+        "robotStatus": "rgb(252, 141, 134)",
+        "gain": "rgb(68, 223, 162)"
+      },
+      {
+        "color": "#3b82f6",
+        "text": "SMC Blueprint EA V3+",
+        "image": "\"http://127.0.0.1:5194/fixture-robot.jpg\")",
+        "border": "color(srgb 0.475489 0.66549 0.975915 / 0.4667)",
+        "glow": "color(srgb 0.297705 0.552108 0.967752 / 0.2314) 0px 0px 35px 0px, color(srgb 0.746814 0.838529 0.988374 / 0.2196) 0px 1px 0px 0px inset",
+        "refresh": "color(srgb 0.538824 0.705882 0.978824)",
+        "off": "rgb(245, 193, 145)",
+        "robotStatus": "rgb(252, 141, 134)",
+        "gain": "rgb(68, 223, 162)"
+      },
+      {
+        "color": "#22c55e",
+        "text": "SMC Blueprint EA V3+",
+        "image": "\"http://127.0.0.1:5194/fixture-robot.jpg\")",
+        "border": "color(srgb 0.408587 0.844787 0.569151 / 0.4667)",
+        "glow": "color(srgb 0.208127 0.792178 0.423115 / 0.2314) 0px 0px 35px 0px, color(srgb 0.71452 0.925078 0.792026 / 0.2196) 0px 1px 0px 0px inset",
+        "refresh": "color(srgb 0.48 0.863529 0.621176)",
+        "off": "rgb(245, 193, 145)",
+        "robotStatus": "rgb(252, 141, 134)",
+        "gain": "rgb(68, 223, 162)"
+      },
+      {
+        "color": "#a855f7",
+        "text": "SMC Blueprint EA V3+",
+        "image": "\"http://127.0.0.1:5194/fixture-robot.jpg\")",
+        "border": "color(srgb 0.767181 0.545067 0.978591 / 0.4667)",
+        "glow": "color(srgb 0.688267 0.390867 0.971335 / 0.2314) 0px 0px 35px 0px, color(srgb 0.887616 0.7804 0.989666 / 0.2196) 0px 1px 0px 0px inset",
+        "refresh": "color(srgb 0.795294 0.6 0.981176)",
+        "off": "rgb(245, 193, 145)",
+        "robotStatus": "rgb(252, 141, 134)",
+        "gain": "rgb(68, 223, 162)"
+      }
+    ],
+    "geometryPreserved": true,
+    "drag": true,
+    "resize": true,
+    "pinch": true,
+    "refresh": true,
+    "semanticStatusPreserved": true
+  }
+]

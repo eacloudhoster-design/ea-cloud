@@ -23,11 +23,12 @@ function ChipIcon({ size = 24, color = "currentColor", style }: { size?: number;
 }
 
 interface HomeTabProps {
+  homeNavigationRequest?: number;
   swipeEnabled?: boolean;
   onOpenChartScanner?: () => void;
 }
 
-export default function HomeTab({ onOpenChartScanner, swipeEnabled = true }: HomeTabProps) {
+export default function HomeTab({ onOpenChartScanner, swipeEnabled = true, homeNavigationRequest = 0 }: HomeTabProps) {
   const {
     botRunning, setBotRunning, accentColor, interfaceStyle, setInterfaceStyle, activeTab, shapeStyle,
     eaName, eaTagline, eaSymbols, bgImageUrl, showBg, setShowBg, clientToken,
@@ -35,6 +36,8 @@ export default function HomeTab({ onOpenChartScanner, swipeEnabled = true }: Hom
   const [showRemoveConfirm, setShowRemoveConfirm] = useState(false);
   const [showQuotes, setShowQuotes] = useState(false);
   const [showTrades, setShowTrades] = useState(false);
+  // Selecting an already-active Home tab must also dismiss its Quotes/Symbols view.
+  useLayoutEffect(() => { setShowQuotes(false); }, [homeNavigationRequest]);
   const { executions, connected } = useTradeExecutions(clientToken);
   const hasLiveTrades = executions.length > 0;
   const swipe = useInterfaceSwipe(interfaceStyle, setInterfaceStyle,
@@ -918,7 +921,12 @@ function TradesSheet({
   accentColor, executions, connected, onClose,
 }: { accentColor: string; executions: TradeExecution[]; connected: boolean; onClose: () => void }) {
   return (
-    <div className="absolute inset-0 z-40 flex flex-col" style={{ background: "rgba(0,0,0,0.75)", backdropFilter: "blur(4px)" }}>
+    <div data-copied-trades-backdrop className="absolute inset-0 z-40 flex flex-col" style={{ background: "rgba(0,0,0,0.75)", backdropFilter: "blur(4px)" }} onClick={event => {
+      if (event.target !== event.currentTarget) return;
+      event.preventDefault();
+      event.stopPropagation();
+      onClose();
+    }}>
       <div className="mt-auto rounded-t-3xl overflow-hidden flex flex-col" style={{ background: "#0a0a0a", border: `1px solid ${accentColor}44`, maxHeight: "78%" }}>
         {/* Header */}
         <div className="flex items-center justify-between px-5 pt-5 pb-3 flex-shrink-0">
