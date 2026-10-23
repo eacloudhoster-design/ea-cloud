@@ -1,0 +1,327 @@
+[
+  {
+    "test": {
+      "style": "regular",
+      "width": 393,
+      "height": 852,
+      "top": 59,
+      "bottom": 34,
+      "simulate": true,
+      "interactions": true
+    },
+    "deltaDown": 12,
+    "before": {
+      "x": 10,
+      "y": 756,
+      "width": 373,
+      "height": 62,
+      "bottom": 818
+    },
+    "after": {
+      "x": 8,
+      "y": 768,
+      "width": 377,
+      "height": 62,
+      "bottom": 830
+    },
+    "foregroundAndGlassStylesUnchanged": true,
+    "realIosStandalone": false
+  },
+  {
+    "test": {
+      "style": "s2tone",
+      "width": 393,
+      "height": 852,
+      "top": 59,
+      "bottom": 34,
+      "simulate": true,
+      "interactions": true
+    },
+    "deltaDown": 12,
+    "before": {
+      "x": 10,
+      "y": 756,
+      "width": 373,
+      "height": 62,
+      "bottom": 818
+    },
+    "after": {
+      "x": 8,
+      "y": 768,
+      "width": 377,
+      "height": 62,
+      "bottom": 830
+    },
+    "foregroundAndGlassStylesUnchanged": true,
+    "realIosStandalone": false
+  },
+  {
+    "test": {
+      "style": "matrix",
+      "width": 393,
+      "height": 852,
+      "top": 59,
+      "bottom": 34,
+      "simulate": true,
+      "interactions": true
+    },
+    "deltaDown": 12,
+    "before": {
+      "x": 10,
+      "y": 756,
+      "width": 373,
+      "height": 62,
+      "bottom": 818
+    },
+    "after": {
+      "x": 8,
+      "y": 768,
+      "width": 377,
+      "height": 62,
+      "bottom": 830
+    },
+    "foregroundAndGlassStylesUnchanged": true,
+    "realIosStandalone": false
+  },
+  {
+    "test": {
+      "style": "regular",
+      "width": 375,
+      "height": 667,
+      "top": 20,
+      "bottom": 0,
+      "simulate": true
+    },
+    "deltaDown": 0,
+    "before": {
+      "x": 10,
+      "y": 597,
+      "width": 355,
+      "height": 62,
+      "bottom": 659
+    },
+    "after": {
+      "x": 8,
+      "y": 597,
+      "width": 359,
+      "height": 62,
+      "bottom": 659
+    },
+    "foregroundAndGlassStylesUnchanged": true,
+    "realIosStandalone": false
+  },
+  {
+    "test": {
+      "style": "matrix",
+      "width": 390,
+      "height": 844,
+      "top": 44,
+      "bottom": 34,
+      "simulate": true
+    },
+    "deltaDown": 12,
+    "before": {
+      "x": 10,
+      "y": 748,
+      "width": 370,
+      "height": 62,
+      "bottom": 810
+    },
+    "after": {
+      "x": 8,
+      "y": 760,
+      "width": 374,
+      "height": 62,
+      "bottom": 822
+    },
+    "foregroundAndGlassStylesUnchanged": true,
+    "realIosStandalone": false
+  },
+  {
+    "test": {
+      "style": "s2tone",
+      "width": 430,
+      "height": 932,
+      "top": 59,
+      "bottom": 34,
+      "simulate": true
+    },
+    "deltaDown": 12,
+    "before": {
+      "x": 10,
+      "y": 836,
+      "width": 410,
+      "height": 62,
+      "bottom": 898
+    },
+    "after": {
+      "x": 8,
+      "y": 848,
+      "width": 414,
+      "height": 62,
+      "bottom": 910
+    },
+    "foregroundAndGlassStylesUnchanged": true,
+    "realIosStandalone": false
+  },
+  {
+    "test": {
+      "style": "regular",
+      "width": 440,
+      "height": 956,
+      "top": 62,
+      "bottom": 34,
+      "simulate": true
+    },
+    "deltaDown": 12,
+    "before": {
+      "x": 15,
+      "y": 860,
+      "width": 410,
+      "height": 62,
+      "bottom": 922
+    },
+    "after": {
+      "x": 8,
+      "y": 872,
+      "width": 424,
+      "height": 62,
+      "bottom": 934
+    },
+    "foregroundAndGlassStylesUnchanged": true,
+    "realIosStandalone": false
+  },
+  {
+    "test": {
+      "style": "matrix",
+      "width": 393,
+      "height": 852,
+      "top": 59,
+      "bottom": 21,
+      "simulate": true
+    },
+    "deltaDown": 1,
+    "before": {
+      "x": 10,
+      "y": 769,
+      "width": 373,
+      "height": 62,
+      "bottom": 831
+    },
+    "after": {
+      "x": 8,
+      "y": 770,
+      "width": 377,
+      "height": 62,
+      "bottom": 832
+    },
+    "foregroundAndGlassStylesUnchanged": true,
+    "realIosStandalone": false
+  },
+  {
+    "test": {
+      "style": "s2tone",
+      "width": 844,
+      "height": 390,
+      "bottom": 21,
+      "left": 44,
+      "right": 44,
+      "simulate": true
+    },
+    "deltaDown": 0,
+    "before": {
+      "x": 251,
+      "y": 307,
+      "width": 342,
+      "height": 62,
+      "bottom": 369
+    },
+    "after": {
+      "x": 251,
+      "y": 307,
+      "width": 342,
+      "height": 62,
+      "bottom": 369
+    },
+    "foregroundAndGlassStylesUnchanged": true,
+    "realIosStandalone": false
+  },
+  {
+    "test": {
+      "style": "regular",
+      "width": 1280,
+      "height": 900,
+      "bottom": 0,
+      "simulate": false
+    },
+    "deltaDown": 0,
+    "before": {
+      "x": 435,
+      "y": 830,
+      "width": 410,
+      "height": 62,
+      "bottom": 892
+    },
+    "after": {
+      "x": 435,
+      "y": 830,
+      "width": 410,
+      "height": 62,
+      "bottom": 892
+    },
+    "foregroundAndGlassStylesUnchanged": true,
+    "realIosStandalone": false
+  },
+  {
+    "test": {
+      "style": "regular",
+      "width": 390,
+      "height": 844,
+      "bottom": 34,
+      "simulate": false
+    },
+    "deltaDown": 0,
+    "before": {
+      "x": 10,
+      "y": 748,
+      "width": 370,
+      "height": 62,
+      "bottom": 810
+    },
+    "after": {
+      "x": 10,
+      "y": 748,
+      "width": 370,
+      "height": 62,
+      "bottom": 810
+    },
+    "foregroundAndGlassStylesUnchanged": true,
+    "realIosStandalone": false
+  },
+  {
+    "test": {
+      "style": "matrix",
+      "width": 393,
+      "height": 852,
+      "bottom": 34,
+      "simulate": false
+    },
+    "deltaDown": 0,
+    "before": {
+      "x": 10,
+      "y": 756,
+      "width": 373,
+      "height": 62,
+      "bottom": 818
+    },
+    "after": {
+      "x": 10,
+      "y": 756,
+      "width": 373,
+      "height": 62,
+      "bottom": 818
+    },
+    "foregroundAndGlassStylesUnchanged": true,
+    "realIosStandalone": false
+  }
+]

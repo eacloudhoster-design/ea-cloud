@@ -189,3 +189,27 @@
     transform: none !important;
   }
 }
+
+/* Compact iOS Home Screen windows only; browser/Android/desktop keep their offsets. */
+@supports (-webkit-touch-callout: none) {
+  @media (display-mode: standalone) and (max-width: 440px) {
+    .ea-glass-bar {
+      /* Account for the app's centred 430px cap on 440px iPhones. */
+      --ios-nav-gutter: max(
+        2px,
+        calc(8px - max(0px, calc((100vw - 430px) / 2)))
+      );
+      --ios-nav-safe-bottom: env(safe-area-inset-bottom, 0px);
+      left: max(var(--ios-nav-gutter), env(safe-area-inset-left, 0px));
+      right: max(var(--ios-nav-gutter), env(safe-area-inset-right, 0px));
+      /* Lower by 12px at a 34px inset; preserve clearance at smaller insets. */
+      bottom: max(
+        8px,
+        min(
+          var(--ios-nav-safe-bottom),
+          max(20px, calc(var(--ios-nav-safe-bottom) - 12px))
+        )
+      );
+    }
+  }
+}
