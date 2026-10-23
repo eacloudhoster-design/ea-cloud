@@ -2,6 +2,7 @@ import {
   useEffect,
   useLayoutEffect,
   useRef,
+  useState,
   type CSSProperties,
   type ReactNode,
 } from "react";
@@ -19,6 +20,13 @@ export default function MetaTraderPopup({
   children: ReactNode;
 }) {
   const { accentColor } = useApp();
+  // Retain the outgoing screen for the crossfade without remounting its form.
+  const [present, setPresent] = useState(open);
+  useEffect(() => {
+    if (open) { setPresent(true); return; }
+    const timer = window.setTimeout(() => setPresent(false), 240);
+    return () => window.clearTimeout(timer);
+  }, [open]);
   const closeButton = useRef<HTMLButtonElement>(null);
   const panel = useRef<HTMLElement>(null);
   useLayoutEffect(() => {
@@ -51,7 +59,8 @@ export default function MetaTraderPopup({
   return (
     <div
       className="mt5-popup-backdrop"
-      hidden={!open}
+      hidden={!open && !present}
+      data-open={open}
       inert={!open}
       style={{ "--mt5-popup-accent": accentColor } as CSSProperties}
       onClick={(event) => {
