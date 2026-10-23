@@ -406,7 +406,7 @@ function ThreeButtons({
 /* MATRIX layout                                                     */
 /* ══════════════════════════════════════════════════════════════════ */
 function MatrixLayout({ shapeStyle, accentColor, botRunning, setBotRunning, eaName, eaTagline, bgImageUrl, setShowQuotes, setShowRemoveConfirm, onOpenTrades, tradeCount = 0 }: any) {
-  const blue = "#1a6bff";
+  const theme = accentColor;
   const layoutRef = useRef<HTMLDivElement>(null);
   useLayoutEffect(() => {
     if (shapeStyle !== "none") return;
@@ -433,9 +433,9 @@ function MatrixLayout({ shapeStyle, accentColor, botRunning, setBotRunning, eaNa
         <button className="w-9 h-9 rounded-full flex items-center justify-center active:scale-95 transition-transform" style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.12)" }}>
           <Menu size={16} className="text-white/60" />
         </button>
-        <div className="flex items-center gap-2 px-4 py-2 rounded-full" style={{ background: "rgba(0,0,0,0.55)", border: `1px solid ${blue}55`, backdropFilter: "blur(10px)" }}>
-          <div className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: `${blue}22`, border: `1.5px solid ${blue}` }}>
-            <span className="text-[11px] font-black" style={{ color: blue }}>P</span>
+        <div className="flex items-center gap-2 px-4 py-2 rounded-full" style={{ background: "rgba(0,0,0,0.55)", border: `1px solid ${theme}55`, backdropFilter: "blur(10px)" }}>
+          <div className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: `${theme}22`, border: `1.5px solid ${theme}` }}>
+            <span className="text-[11px] font-black" style={{ color: theme }}>P</span>
           </div>
           <div className="text-left">
             <BotName as="p" className="text-white font-black text-[11px] leading-none tracking-widest">{eaName.toUpperCase()}</BotName>
@@ -451,7 +451,7 @@ function MatrixLayout({ shapeStyle, accentColor, botRunning, setBotRunning, eaNa
           {tradeCount > 0 && (
             <span
               className="absolute -top-0.5 -right-0.5 min-w-[16px] h-4 px-1 rounded-full flex items-center justify-center text-[9px] font-bold text-white"
-              style={{ background: blue }}
+              style={{ background: theme }}
             >
               {tradeCount > 9 ? "9+" : tradeCount}
             </span>
@@ -460,18 +460,18 @@ function MatrixLayout({ shapeStyle, accentColor, botRunning, setBotRunning, eaNa
       </div>
 
       <div className="flex gap-2 mb-5 opacity-30">
-        {[...Array(5)].map((_, i) => <div key={i} className="w-1 h-1 rounded-full bg-white" style={{ opacity: i === 2 ? 0.8 : 0.4 }} />)}
+        {[...Array(5)].map((_, i) => <div key={i} className="w-1 h-1 rounded-full bg-white" style={{ opacity: i === 2 ? 0.8 : 0.4, background: i === 2 ? theme : undefined }} />)}
       </div>
 
       {shapeStyle !== "none" && (
       <div className="relative flex items-center justify-center mb-6" style={{ width: 260, height: 260 }}>
-        <div className="absolute rounded-full pointer-events-none" style={{ inset: 0, border: "1px solid rgba(26,107,255,0.12)" }} />
-        <div className="absolute rounded-full pointer-events-none" style={{ inset: 16, border: "1px solid rgba(26,107,255,0.22)" }} />
-        <RobotImageFrame shape={shapeStyle} accent={accentColor} size={200} borderWidth={3} className="absolute rounded-full overflow-hidden flex items-center justify-center" style={{ inset: 30, background: bgImageUrl ? "transparent" : "rgba(240,245,255,0.96)", border: "3px solid rgba(190,215,255,0.9)", boxShadow: `0 0 40px ${blue}55, 0 0 80px ${blue}28` }}>
+        <div className="absolute rounded-full pointer-events-none" style={{ inset: 0, border: `1px solid ${theme}1f` }} />
+        <div className="absolute rounded-full pointer-events-none" style={{ inset: 16, border: `1px solid ${theme}38` }} />
+        <RobotImageFrame shape={shapeStyle} accent={accentColor} size={200} borderWidth={3} className="absolute rounded-full overflow-hidden flex items-center justify-center" style={{ inset: 30, background: bgImageUrl ? "transparent" : "rgba(240,245,255,0.96)", border: `3px solid color-mix(in srgb, ${theme} 25%, white 75%)`, boxShadow: `0 0 40px ${theme}55, 0 0 80px ${theme}28` }}>
           {bgImageUrl
             ? <img src={bgImageUrl} alt={eaName} className="w-full h-full object-cover" />
-            : <span className="font-black select-none" style={{ fontSize: 58, color: "transparent", WebkitTextStroke: `3px ${blue}`, lineHeight: 1 }}>P</span>}
-          {botRunning && <div className="absolute inset-0 rounded-full animate-ping" style={{ background: blue, opacity: 0.08 }} />}
+            : <span className="font-black select-none" style={{ fontSize: 58, color: "transparent", WebkitTextStroke: `3px ${theme}`, lineHeight: 1 }}>P</span>}
+          {botRunning && <div className="absolute inset-0 rounded-full animate-ping" style={{ background: theme, opacity: 0.08 }} />}
         </RobotImageFrame>
       </div>
       )}
@@ -486,7 +486,7 @@ function MatrixLayout({ shapeStyle, accentColor, botRunning, setBotRunning, eaNa
         {[...Array(5)].map((_, i) => <div key={i} className="w-1 h-1 rounded-full bg-white" />)}
       </div>
 
-      <div data-matrix-functions className="relative mx-4 w-[calc(100%-32px)] max-w-[340px] flex items-center justify-between px-6" style={{ height: 84, borderRadius: 9999, background: "rgba(6,6,20,0.75)", border: `1px solid ${blue}44`, backdropFilter: "blur(16px)" }}>
+      <div data-matrix-functions className="relative mx-4 w-[calc(100%-32px)] max-w-[340px] flex items-center justify-between px-6" style={{ height: 84, borderRadius: 9999, background: "rgba(6,6,20,0.75)", border: `1px solid ${theme}44`, backdropFilter: "blur(16px)" }}>
         <button onClick={() => setShowQuotes(true)} className="flex flex-col items-center gap-1 active:scale-95 transition-transform" style={{ minWidth: 56 }}>
           <TrendingUp size={22} className="text-white/65" />
           <span className="text-[10px] tracking-widest font-bold text-white/55">QUOTES</span>
@@ -494,7 +494,7 @@ function MatrixLayout({ shapeStyle, accentColor, botRunning, setBotRunning, eaNa
         <button
           onClick={() => setBotRunning(!botRunning)}
           className="absolute left-1/2 -translate-x-1/2 active:scale-95 transition-transform flex flex-col items-center justify-center gap-1"
-          style={{ width: 68, height: 68, borderRadius: 18, background: botRunning ? `radial-gradient(circle at 40% 35%, ${blue}ee 0%, #0a3cb0 100%)` : "radial-gradient(circle at 40% 35%, #1a1a3a 0%, #0a0a1e 100%)", border: `2px solid ${botRunning ? blue : blue + "44"}`, boxShadow: botRunning ? `0 0 22px ${blue}88, 0 6px 24px rgba(0,0,0,0.7)` : `0 0 10px ${blue}22, 0 6px 24px rgba(0,0,0,0.6)` }}
+          style={{ width: 68, height: 68, borderRadius: 18, background: botRunning ? `radial-gradient(circle at 40% 35%, ${theme}ee 0%, color-mix(in srgb, ${theme} 65%, black) 100%)` : "radial-gradient(circle at 40% 35%, #1a1a3a 0%, #0a0a1e 100%)", border: `2px solid ${botRunning ? theme : theme + "44"}`, boxShadow: botRunning ? `0 0 22px ${theme}88, 0 6px 24px rgba(0,0,0,0.7)` : `0 0 10px ${theme}22, 0 6px 24px rgba(0,0,0,0.6)` }}
         >
           {botRunning ? <div className="rounded-sm bg-white" style={{ width: 20, height: 20 }} /> : <Play size={22} className="text-white ml-0.5" />}
           <span className="text-[9px] font-black tracking-widest text-white/90">{botRunning ? "STOP" : "START"}</span>
@@ -507,7 +507,7 @@ function MatrixLayout({ shapeStyle, accentColor, botRunning, setBotRunning, eaNa
 
       <div className="mt-5 px-5 py-2.5 rounded-full" style={{ background: "rgba(0,0,0,0.45)", border: "1px solid rgba(255,255,255,0.12)", backdropFilter: "blur(8px)" }}>
         <span className="text-white/50 text-sm">Powered By&nbsp;</span>
-        <span className="font-bold text-sm" style={{ color: blue }}>EA Cloud</span>
+        <span className="font-bold text-sm" style={{ color: theme }}>EA Cloud</span>
       </div>
     </div>
   );

@@ -63,6 +63,7 @@ test("interface and background preferences survive storage, default safely and s
     interfaceStyle: "matrix",
     showBg: true,
     backgroundAnimation: "none",
+    accentColor: "#ef4444",
   });
   for (const interfaceStyle of ["regular", "matrix", "s2tone"])
     for (const showBg of [true, false])
@@ -78,6 +79,7 @@ test("interface and background preferences survive storage, default safely and s
             interfaceStyle,
             showBg,
             backgroundAnimation,
+            accentColor: "#ef4444",
           }),
           true,
         );
@@ -85,24 +87,28 @@ test("interface and background preferences survive storage, default safely and s
           interfaceStyle,
           showBg,
           backgroundAnimation,
+          accentColor: "#ef4444",
         });
       }
   assert.deepEqual(readHomePreferences(storage, other), {
     interfaceStyle: "matrix",
     showBg: true,
     backgroundAnimation: "none",
+    accentColor: "#ef4444",
   });
   data.set(key, "broken JSON");
   assert.deepEqual(readHomePreferences(storage, key), {
     interfaceStyle: "matrix",
     showBg: true,
     backgroundAnimation: "none",
+    accentColor: "#ef4444",
   });
   data.set(key, JSON.stringify({ interfaceStyle: "bogus", showBg: "false" }));
   assert.deepEqual(readHomePreferences(storage, key), {
     interfaceStyle: "matrix",
     showBg: true,
     backgroundAnimation: "none",
+    accentColor: "#ef4444",
   });
   assert.equal(
     saveHomePreferences(storage, key, {
@@ -123,6 +129,7 @@ test("interface and background preferences survive storage, default safely and s
     interfaceStyle: "matrix",
     showBg: true,
     backgroundAnimation: "none",
+    accentColor: "#ef4444",
   });
   assert.equal(
     saveHomePreferences(blocked, key, {
@@ -146,6 +153,7 @@ test("legacy home settings retain their values and default to no extra animation
     interfaceStyle: "s2tone",
     showBg: false,
     backgroundAnimation: "none",
+    accentColor: "#ef4444",
   });
   assert.equal(
     saveHomePreferences(
@@ -163,4 +171,63 @@ test("legacy home settings retain their values and default to no extra animation
     ),
     false,
   );
+});
+
+test("theme colours persist in existing appearance settings without resetting other choices", () => {
+  const values = new Map();
+  const storage = {
+    getItem: (k) => values.get(k),
+    setItem: (k, v) => values.set(k, v),
+  };
+  const key = homePreferenceKey(btoa("7:client:test"));
+  for (const accentColor of [
+    "#ef4444",
+    "#3b82f6",
+    "#22c55e",
+    "#a855f7",
+    "#f97316",
+    "#ec4899",
+    "#06b6d4",
+  ]) {
+    const value = {
+      interfaceStyle: "matrix",
+      showBg: false,
+      backgroundAnimation: "particles",
+      accentColor,
+    };
+    assert(saveHomePreferences(storage, key, value));
+    assert.deepEqual(readHomePreferences(storage, key), value);
+  }
+  for (const accentColor of [
+    "red",
+    "#fff",
+    "bad",
+    null,
+    "#000000;background:red",
+  ]) {
+    values.set(
+      key,
+      JSON.stringify({
+        interfaceStyle: "regular",
+        showBg: false,
+        backgroundAnimation: "glow",
+        accentColor,
+      }),
+    );
+    assert.deepEqual(readHomePreferences(storage, key), {
+      interfaceStyle: "regular",
+      showBg: false,
+      backgroundAnimation: "glow",
+      accentColor: "#ef4444",
+    });
+    assert.equal(
+      saveHomePreferences(storage, key, {
+        interfaceStyle: "matrix",
+        showBg: true,
+        backgroundAnimation: "none",
+        accentColor,
+      }),
+      false,
+    );
+  }
 });
