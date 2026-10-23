@@ -8,7 +8,7 @@ This PR adds a linked, base-aware client manifest with explicit `display: standa
 
 The root marketing page is not modified: the user confirmed installation directly from the client path. Its missing Apple metadata was investigated but is not established as the cause for this installation.
 
-This repairs an incomplete installation configuration. It is **not proof** that the reported black strip is fixed on the physical iPhone. The live HTML and build could not be inspected: the environment's outbound proxy rejected `https://ea-cloud-website.pages.dev` with `CONNECT tunnel failed, response 403`. There is no evidence here of the website itself returning 403. The iOS version was requested to investigate possible OS-specific behavior.
+This repairs an incomplete installation configuration. It is **not proof** that the reported black strip is fixed on the physical iPhone. The live HTML and build could not be inspected: the environment's outbound proxy rejected `https://ea-cloud-website.pages.dev` with `CONNECT tunnel failed, response 403`. There is no evidence here of the website itself returning 403. The user confirmed iOS 26.5.
 
 ## iOS behavior and limitations
 
@@ -18,7 +18,7 @@ https://developer.apple.com/library/archive/documentation/AppleApplications/Refe
 WebKit has reports of opaque Home Screen status-bar regions and reduced viewports despite previously working edge-to-edge configuration:
 https://bugs.webkit.org/show_bug.cgi?id=301994
 
-That report is a possible explanation, not a diagnosis of this device. If WebKit exposes a viewport that starts below a native opaque status-bar region, CSS cannot reliably paint outside the web view. Moving the foreground, using negative offsets, hiding the native status bar or inventing a universal CSS workaround would not satisfy this task.
+The user confirmed iOS 26.5. Comment 12 in that WebKit report describes an iOS 26.5.2 Home Screen installation with a 62px system-owned strip above the web view (screen height 874px, innerHeight/100dvh/visualViewport height 812px). The issue remains reopened. This is closely related version evidence, not a measurement of this user’s exact 26.5 device or proof of the same cause. Reinstallation and the manifest change are not guaranteed workarounds for that OS defect. If WebKit exposes a viewport that starts below a native opaque status-bar region, CSS cannot reliably paint outside the web view. Moving the foreground, using negative offsets, hiding the native status bar or inventing a universal CSS workaround would not satisfy this task.
 
 ## Build and layout verification
 
