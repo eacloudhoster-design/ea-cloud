@@ -144,7 +144,7 @@ try {
       }));
     const formDesign = await page
       .locator(
-        ".mt5-intro h2,.mt5-topline,.mt5-input-wrap,.mt5-input-wrap input,.mt5-connect-button",
+        ".mt5-intro h2,.mt5-topline,.mt5-floating-field > label,.mt5-input-wrap,.mt5-input-wrap input,.mt5-connect-button",
       )
       .evaluateAll((elements) =>
         elements.map((el) => {
@@ -357,6 +357,12 @@ try {
         old.formDesign,
         "Login typography/field design changed",
       );
+      for (const property of ["blur", "background", "border", "radius"])
+        assert.equal(
+          record.home[property],
+          old.home[property],
+          "Glass styling changed: " + property,
+        );
       assert.deepEqual(
         record.scannerBg,
         old.scannerBg,
