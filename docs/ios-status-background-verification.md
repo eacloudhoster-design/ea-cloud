@@ -1,31 +1,45 @@
-# iOS status-bar background: existing implementation and verification
+# iOS Home Screen launch configuration and status-bar background
 
-## Finding
+## Findings and change
 
-Current main already implements the requested edge-to-edge background. Commit `6b16f24` added `viewport-fit=cover` and `apple-mobile-web-app-status-bar-style=black-translucent`. The loaded mentor background is a direct child of `.ea-app-viewport`, absolutely covering that complete 100dvh container with `object-fit: cover; object-position: center`. Foreground content is separately offset by `env(safe-area-inset-top)` and keeps its safe-area-reduced height. No black top strip was reproduced with this build.
+The confirmed client URL is `https://ea-cloud-website.pages.dev/ea-app/`. The local source already uses `viewport-fit=cover`, `apple-mobile-web-app-capable=yes` and `black-translucent` (introduced in commit `6b16f24`). Its mentor background covers the full viewport at y=0; foreground content has a separate safe-area offset. It did not have a web app manifest, leaving installation/launch configuration entirely to legacy Apple metadata.
 
-No runtime source/layout changes are included in this PR. Changing main content padding or its offsets would risk moving the interface without fixing a demonstrated source problem. The reported installed-iPhone symptom remains unconfirmed; an old deployment, a different installed start URL or retained iOS launch settings are possibilities, not established causes. No new screenshot was attached to this request.
+This PR adds a linked, base-aware client manifest with explicit `display: standalone` and relative id/start URL/scope. The confirmed installation path resolves to `/ea-app/`; a separately built root-hosted client still resolves to its own base. Existing Apple icon metadata is retained, and the manifest references the existing favicon. No service worker, offline cache, theme-color or forced status-bar colour is introduced. No React, CSS, foreground geometry, navigation, artwork or trading behavior changes.
 
-## Safeguards and evidence
+The root marketing page is not modified: the user confirmed installation directly from the client path. Its missing Apple metadata was investigated but is not established as the cause for this installation.
 
-The production Pages verifier now rejects a client bundle without `viewport-fit=cover`, standalone capability or `black-translucent`. Regression tests remove each setting and confirm the build is rejected; the normal complete build passes.
+This repairs an incomplete installation configuration. It is **not proof** that the reported black strip is fixed on the physical iPhone. The live HTML and build could not be inspected: the environment's outbound proxy rejected `https://ea-cloud-website.pages.dev` with `CONNECT tunnel failed, response 403`. There is no evidence here of the website itself returning 403. The iOS version was requested to investigate possible OS-specific behavior.
 
-The browser test uses existing fixture artwork/account responses and the production build, never production accounts. All three interfaces are tested at top safe-area values 0/44/47/59px, including viewport resizing. It checks loaded image bounds exactly at x=0/y=0 through full viewport width/height, cover/center rendering, retained safe-area foreground positioning and identical foreground rectangles with the background layer visible/hidden. It does not add fake native status-bar icons to the app or screenshots.
+## iOS behavior and limitations
+
+Apple documents that `black-translucent` allows page content beneath the status bar:
+https://developer.apple.com/library/archive/documentation/AppleApplications/Reference/SafariHTMLRef/Articles/MetaTags.html
+
+WebKit has reports of opaque Home Screen status-bar regions and reduced viewports despite previously working edge-to-edge configuration:
+https://bugs.webkit.org/show_bug.cgi?id=301994
+
+That report is a possible explanation, not a diagnosis of this device. If WebKit exposes a viewport that starts below a native opaque status-bar region, CSS cannot reliably paint outside the web view. Moving the foreground, using negative offsets, hiding the native status bar or inventing a universal CSS workaround would not satisfy this task.
+
+## Build and layout verification
+
+The Pages verifier rejects missing/transformed translucent-status metadata, a missing/incorrectly based manifest, non-standalone display and launch URLs escaping the intended client scope. Regression tests cover those failures.
+
+The production-browser test uses fixture account/artwork responses, not production accounts. It loads and verifies the real manifest, then checks all three interfaces at top insets 0/44/47/59px and changing viewport sizes. Loaded background bounds remain x=0/y=0 through full width/height with cover/center rendering. The foreground keeps its safe-area bounds, and every recorded foreground rectangle remains identical with the background layer visible/hidden. No fake native status-bar icons are added.
 
 Commands:
 
-- `pnpm_config_verify_deps_before_run=false pnpm run build:pages`: passed (existing bundle-size warning).
-- `node --test scripts/tests/ios-background.test.mjs scripts/tests/pages.test.mjs`: 11 passed.
-- `APP_ORIGIN=http://127.0.0.1:5208 node scripts/tests/status-background.browser.mjs`: 12 passed.
+- `pnpm_config_verify_deps_before_run=false pnpm run build:pages`
+- `node --test scripts/tests/ios-background.test.mjs scripts/tests/pages.test.mjs`
+- `APP_ORIGIN=http://127.0.0.1:5209 node scripts/tests/status-background.browser.mjs`
 
-Screenshots/rectangle measurements: `work/ios-status-background/`. Native status-bar text/colour cannot be observed inside Chromium or the web page. Physical iPhone Home Screen PWA testing has not been performed, so this is verification of the existing implementation and build protection, not confirmation that the production iPhone symptom has been fixed.
+Local screenshots and geometry: `work/ios-status-background/`. Chromium checks document geometry and manifest delivery, not native iPhone status-bar rendering. Physical installed-PWA verification remains outstanding.
 
-## Deployment / iPhone follow-up
+## Deployment and reinstallation
 
-1. Confirm the deployed client URL is the intended `/ea-app/` app and serves the current build, not a different app or an older website bundle. The combined Pages build publishes the client at `/ea-app/`; `build-info.json` identifies its build commit.
-2. First fully close and reopen the installed app after refreshing the deployed client. No new runtime change from this PR is needed to obtain the existing background behavior; these settings are already on main.
-3. If the installation predates the status-bar metadata change, iOS can retain old launch/status-bar configuration. Remove the Home Screen shortcut/app and add the correct client URL again from Safari using Share → Add to Home Screen. Sign-in may be needed again and device-local appearance preferences may need restoring. This does not delete server accounts, licences, scans or database records. Do not clear website data or reset the database as a troubleshooting shortcut.
-4. On the actual installed iPhone app, verify white time/Wi-Fi/cellular/battery indicators over the robot artwork, no black strip, and unchanged foreground positions. `black-translucent` requests white native indicators where iOS supports it; a web page cannot draw or directly control those system indicators.
-5. If the strip remains, capture the exact installed URL, iOS version and screenshot and compare the deployed build before changing layout.
+After approval, publish the combined Pages build from this PR, including `/ea-app/index.html`, assets and `/ea-app/manifest.webmanifest`. Verify `build-info.json` and the linked manifest on the deployed site. No backend, database, migration or environment-variable changes are needed.
 
-No deployment has been performed. No backend, database, migration or environment changes are needed. This PR affects build validation/tests only and should remain unmerged until approval.
+Only after that deployment, if the installed app retains the old appearance, remove its Home Screen installation and re-add the exact `/ea-app/` URL using Safari → Share → Add to Home Screen. A close/reopen alone may retain old installation settings. Sign-in and device-local appearance preferences may need restoring; server accounts, licences, scans and database records are unaffected. Do not clear website data or reset the database.
+
+On the installed iPhone, verify white native time/Wi-Fi/cellular/battery indicators over the robot artwork and unchanged foreground positions. If the strip remains after a fresh installation, check the iOS version and actual safe-area/innerHeight/visualViewport values with Safari Web Inspector before further layout changes.
+
+No deployment or merge has been performed. Keep this PR in draft until the configuration change and native-device result are reviewed.

@@ -22,3 +22,21 @@ for (const [from, to, setting] of [
     } finally { rmSync(directory, { recursive: true, force: true }); }
   });
 }
+
+for (const failure of ["missing", "browser", "outside-scope"]) {
+  test(`build rejects ${failure} client manifest configuration`, () => {
+    const directory = mkdtempSync(join(tmpdir(), "ea-cloud-ios-manifest-"));
+    try {
+      cpSync(new URL("../../artifacts/ea-cloud/dist/", import.meta.url), directory, { recursive: true });
+      const path = join(directory, "ea-app/manifest.webmanifest");
+      if (failure === "missing") rmSync(path);
+      else {
+        const manifest = JSON.parse(readFileSync(path, "utf8"));
+        if (failure === "browser") manifest.display = "browser";
+        else manifest.start_url = "../";
+        writeFileSync(path, JSON.stringify(manifest));
+      }
+      assert.throws(() => verifyPagesBuild(directory), /PWA (manifest|launch configuration)/);
+    } finally { rmSync(directory, { recursive: true, force: true }); }
+  });
+}

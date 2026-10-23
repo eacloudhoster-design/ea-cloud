@@ -30,6 +30,17 @@ export function verifyPagesBuild(output) {
         if (!valid) throw new Error(`Missing iOS edge-to-edge configuration in ${entry}: ${setting}`);
       }
     }
+    if (name === "tradingApp") {
+      const manifestHref = html.match(/<link\b[^>]*rel="manifest"[^>]*href="([^"]+)"/i)?.[1];
+      const expected = `${prefix.replace(/assets\/$/, "")}manifest.webmanifest`;
+      if (manifestHref !== expected || !existsSync(join(output, expected))) {
+        throw new Error(`Missing or incorrectly based client PWA manifest in ${entry}`);
+      }
+      const manifest = JSON.parse(readFileSync(join(output, expected), "utf8"));
+      if (manifest.display !== "standalone" || manifest.start_url !== "./" || manifest.scope !== "./" || manifest.id !== "./") {
+        throw new Error("Invalid client PWA launch configuration");
+      }
+    }
     const scripts = [...html.matchAll(/<script\b[^>]*\bsrc="([^"]+)"/g)].map((match) => match[1]);
     const styles = [...html.matchAll(/<link\b[^>]*\bhref="([^"]+\.css)"/g)].map((match) => match[1]);
     if (!scripts.length || !styles.length) throw new Error(`Missing production JS/CSS in ${entry}`);

@@ -81,6 +81,14 @@ try {
   await page.evaluate(()=>document.fonts.ready);await page.waitForTimeout(600);
   assert.match(await page.locator('meta[name="viewport"]').getAttribute("content"),/viewport-fit=cover/);
   assert.equal(await page.locator('meta[name="apple-mobile-web-app-status-bar-style"]').getAttribute("content"),"black-translucent");
+  const manifestURL=await page.locator('link[rel="manifest"]').getAttribute("href");
+  assert.equal(manifestURL,"/ea-app/manifest.webmanifest");
+  const manifest=await page.evaluate(async url=>{
+    const response=await fetch(url);if(!response.ok)throw new Error("Manifest unavailable");
+    return response.json();
+  },manifestURL);
+  assert.equal(manifest.display,"standalone");
+  for (const key of ["id","start_url","scope"]) assert.equal(manifest[key],"./");
   const foreground=()=>page.locator(".ea-app-content").evaluate(el=>[el,...el.querySelectorAll('[data-home-interface], [data-home-interface] button, [data-home-interface] img, [data-bot-name], .trading-activity-trigger, .ea-glass-navigation, .ea-glass-navigation button')].map(node=>{
    const r=node.getBoundingClientRect();return {tag:node.tagName,aria:node.getAttribute("aria-label"),x:r.x,y:r.y,w:r.width,h:r.height};
   }));
