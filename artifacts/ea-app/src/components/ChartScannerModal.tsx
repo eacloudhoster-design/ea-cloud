@@ -160,8 +160,9 @@ export default function ChartScannerModal({ onClose, onNavigate }: ChartScannerM
       </section>
 
     </div>
-    <div className="scanner-navigation"><BottomNav activeTab="home" onTabChange={navigate} /></div>
     </div>
+    {/* Navigation must remain outside the content disabled by Trade Settings. */}
+    <div className="scanner-navigation"><BottomNav activeTab="home" onTabChange={navigate} /></div>
     {settingsOpen && <ScannerTradeSettings initial={tradeSettings} onClose={() => setSettingsOpen(false)} onConfirm={value => { setTradeSettings(value); setSettingsSaved(true); setSettingsOpen(false); }} />}
   </div>;
 }
