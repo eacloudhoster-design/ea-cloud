@@ -1,76 +1,71 @@
 import { TrendingUp, Home, Settings } from "lucide-react";
+import { type CSSProperties } from "react";
 import { Tab, useApp } from "@/context/AppContext";
+import {
+  navigationTabs,
+  useLiquidNavigation,
+} from "@/hooks/use-liquid-navigation";
+import "./BottomNav.css";
 
 interface BottomNavProps {
   activeTab: Tab;
   onTabChange: (tab: Tab) => void;
+  backgroundImage?: string;
 }
+const icons = [TrendingUp, Home, Settings];
+const labels = ["MetaTrader", "Home", "Settings"];
 
-export default function BottomNav({ activeTab, onTabChange }: BottomNavProps) {
+export default function BottomNav({
+  activeTab,
+  onTabChange,
+  backgroundImage,
+}: BottomNavProps) {
   const { accentColor } = useApp();
-
+  const motion = useLiquidNavigation(activeTab, onTabChange);
   return (
-    <div
-      className="absolute bottom-0 left-0 right-0 z-40 flex items-end justify-around"
-      style={{
-        height: 75,
-        background: "linear-gradient(to top, #000 70%, transparent)",
-        paddingBottom: 12,
-        paddingLeft: 8,
-        paddingRight: 8,
-      }}
+    <nav
+      className="ea-glass-navigation"
+      aria-label="Main navigation"
+      style={{ "--nav-accent": accentColor } as CSSProperties}
     >
-      <button
-        onClick={() => onTabChange("metatrader")}
-        className="flex flex-col items-center gap-1 flex-1 pb-1 transition-opacity active:opacity-60"
-      >
-        <TrendingUp
-          size={20}
-          style={{ color: activeTab === "metatrader" ? accentColor : "rgba(255,255,255,0.45)" }}
-        />
-        <span
-          className="text-[10px] font-semibold tracking-widest uppercase"
-          style={{ color: activeTab === "metatrader" ? accentColor : "rgba(255,255,255,0.45)" }}
-        >
-          MetaTrader
-        </span>
-      </button>
-
-      <button
-        onClick={() => onTabChange("home")}
-        className="flex flex-col items-center relative transition-transform active:scale-95"
-        style={{ marginTop: -28 }}
+      <div
+        className="ea-glass-bar"
+        ref={motion.bar}
+        onPointerDown={motion.pointerDown}
+        onPointerMove={motion.pointerMove}
+        onPointerUp={motion.pointerUp}
+        onPointerCancel={motion.pointerCancel}
+        onLostPointerCapture={motion.pointerCancel}
+        onContextMenu={(event) => event.preventDefault()}
       >
         <div
-          className="w-[62px] h-[62px] rounded-full flex flex-col items-center justify-center"
-          style={{
-            background: `radial-gradient(circle at center, ${accentColor}33 0%, ${accentColor}11 60%, #000 100%)`,
-            boxShadow: `0 0 20px ${accentColor}bb, 0 0 40px ${accentColor}44, inset 0 0 10px ${accentColor}33`,
-            border: `1.5px solid ${accentColor}cc`,
-          }}
+          ref={motion.glass}
+          className="ea-glass-indicator"
+          aria-hidden="true"
         >
-          <Home size={22} style={{ color: accentColor }} />
-          <span className="text-[9px] font-bold tracking-widest uppercase" style={{ color: accentColor, marginTop: 2 }}>
-            Home
-          </span>
+          {backgroundImage && (
+            <div className="ea-glass-lens">
+              <img src={backgroundImage} alt="" draggable={false} />
+            </div>
+          )}
+          <div className="ea-glass-reflection" />
         </div>
-      </button>
-
-      <button
-        onClick={() => onTabChange("settings")}
-        className="flex flex-col items-center gap-1 flex-1 pb-1 transition-opacity active:opacity-60"
-      >
-        <Settings
-          size={20}
-          style={{ color: activeTab === "settings" ? accentColor : "rgba(255,255,255,0.45)" }}
-        />
-        <span
-          className="text-[10px] font-semibold tracking-widest uppercase"
-          style={{ color: activeTab === "settings" ? accentColor : "rgba(255,255,255,0.45)" }}
-        >
-          Settings
-        </span>
-      </button>
-    </div>
+        {navigationTabs.map((tab, index) => {
+          const Icon = icons[index];
+          return (
+            <button
+              key={tab}
+              type="button"
+              data-nav-index={index}
+              aria-current={activeTab === tab ? "page" : undefined}
+              onClick={(event) => motion.click(event, tab)}
+            >
+              <Icon size={index === 1 ? 22 : 20} />
+              <span>{labels[index]}</span>
+            </button>
+          );
+        })}
+      </div>
+    </nav>
   );
 }

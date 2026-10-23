@@ -1,0 +1,226 @@
+{
+  "foregroundComparisons": 45,
+  "checks": [
+    {
+      "test": "unchanged foreground and full background",
+      "style": "regular",
+      "screen": {
+        "width": 390,
+        "height": 844
+      },
+      "shapes": 3,
+      "passed": true
+    },
+    {
+      "test": "unchanged foreground and full background",
+      "style": "s2tone",
+      "screen": {
+        "width": 390,
+        "height": 844
+      },
+      "shapes": 3,
+      "passed": true
+    },
+    {
+      "test": "unchanged foreground and full background",
+      "style": "matrix",
+      "screen": {
+        "width": 390,
+        "height": 844
+      },
+      "shapes": 3,
+      "passed": true
+    },
+    {
+      "test": "unchanged foreground and full background",
+      "style": "regular",
+      "screen": {
+        "width": 320,
+        "height": 568
+      },
+      "shapes": 3,
+      "passed": true
+    },
+    {
+      "test": "unchanged foreground and full background",
+      "style": "s2tone",
+      "screen": {
+        "width": 320,
+        "height": 568
+      },
+      "shapes": 3,
+      "passed": true
+    },
+    {
+      "test": "unchanged foreground and full background",
+      "style": "matrix",
+      "screen": {
+        "width": 320,
+        "height": 568
+      },
+      "shapes": 3,
+      "passed": true
+    },
+    {
+      "test": "unchanged foreground and full background",
+      "style": "regular",
+      "screen": {
+        "width": 844,
+        "height": 390
+      },
+      "shapes": 3,
+      "passed": true
+    },
+    {
+      "test": "unchanged foreground and full background",
+      "style": "s2tone",
+      "screen": {
+        "width": 844,
+        "height": 390
+      },
+      "shapes": 3,
+      "passed": true
+    },
+    {
+      "test": "unchanged foreground and full background",
+      "style": "matrix",
+      "screen": {
+        "width": 844,
+        "height": 390
+      },
+      "shapes": 3,
+      "passed": true
+    },
+    {
+      "test": "unchanged foreground and full background",
+      "style": "regular",
+      "screen": {
+        "width": 1280,
+        "height": 900
+      },
+      "shapes": 3,
+      "passed": true
+    },
+    {
+      "test": "unchanged foreground and full background",
+      "style": "s2tone",
+      "screen": {
+        "width": 1280,
+        "height": 900
+      },
+      "shapes": 3,
+      "passed": true
+    },
+    {
+      "test": "unchanged foreground and full background",
+      "style": "matrix",
+      "screen": {
+        "width": 1280,
+        "height": 900
+      },
+      "shapes": 3,
+      "passed": true
+    },
+    {
+      "test": "unchanged foreground and full background",
+      "style": "regular",
+      "screen": {
+        "width": 393,
+        "height": 852,
+        "top": 59,
+        "bottom": 34
+      },
+      "shapes": 3,
+      "passed": true
+    },
+    {
+      "test": "unchanged foreground and full background",
+      "style": "s2tone",
+      "screen": {
+        "width": 393,
+        "height": 852,
+        "top": 59,
+        "bottom": 34
+      },
+      "shapes": 3,
+      "passed": true
+    },
+    {
+      "test": "unchanged foreground and full background",
+      "style": "matrix",
+      "screen": {
+        "width": 393,
+        "height": 852,
+        "top": 59,
+        "bottom": 34
+      },
+      "shapes": 3,
+      "passed": true
+    },
+    {
+      "test": "touch, theme and keyboard navigation",
+      "style": "regular",
+      "passed": true
+    },
+    {
+      "test": "touch, theme and keyboard navigation",
+      "style": "s2tone",
+      "passed": true
+    },
+    {
+      "test": "touch, theme and keyboard navigation",
+      "style": "matrix",
+      "passed": true
+    },
+    {
+      "test": "exactly-once callbacks, cancellation, mouse, keyboard, reduced motion",
+      "passed": true
+    },
+    {
+      "test": "safe-area navigation not covered by Settings dismiss strip",
+      "style": "regular",
+      "passed": true
+    },
+    {
+      "test": "safe-area navigation not covered by Settings dismiss strip",
+      "style": "s2tone",
+      "passed": true
+    },
+    {
+      "test": "safe-area navigation not covered by Settings dismiss strip",
+      "style": "matrix",
+      "passed": true
+    }
+  ],
+  "regressions": {
+    "chartScannerTradeSettings": {
+      "passed": true,
+      "viewports": [
+        "390x844",
+        "320x568",
+        "1280x900"
+      ]
+    },
+    "floatingRobotWindow": {
+      "passed": true,
+      "viewports": [
+        "390x844",
+        "320x568",
+        "1280x900"
+      ],
+      "coverage": [
+        "drag",
+        "eight resize handles",
+        "pinch",
+        "internal scrolling",
+        "position persistence",
+        "viewport clamping"
+      ]
+    }
+  },
+  "typecheck": "passed",
+  "viteBuild": "passed; existing chunk-size warning",
+  "referenceVideo": "not available",
+  "physicalDevices": "not tested",
+  "productionDeployment": false
+}
