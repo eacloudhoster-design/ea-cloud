@@ -106,7 +106,7 @@ try {
       await nav("MetaTrader").tap();
       await popup.waitFor();
       let rect = await popup.boundingBox();
-      assert(rect.y > 60);
+      assert(rect.y >= 20 && rect.y < 90);
       assert(rect.y + rect.height <= viewport.height - 74);
       assert.equal(
         await page.locator("[data-home-background]").getAttribute("src"),

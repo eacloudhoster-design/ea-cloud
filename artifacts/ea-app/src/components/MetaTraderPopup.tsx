@@ -1,4 +1,10 @@
-import { useEffect, useRef, type CSSProperties, type ReactNode } from "react";
+import {
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  type CSSProperties,
+  type ReactNode,
+} from "react";
 import { X } from "lucide-react";
 import { useApp } from "@/context/AppContext";
 import "./MetaTraderPopup.css";
@@ -14,6 +20,14 @@ export default function MetaTraderPopup({
 }) {
   const { accentColor } = useApp();
   const closeButton = useRef<HTMLButtonElement>(null);
+  const panel = useRef<HTMLElement>(null);
+  useLayoutEffect(() => {
+    // The form stays mounted, but every opening must start with the full logo.
+    if (open) {
+      const content = panel.current?.querySelector<HTMLElement>(".mt5-content");
+      if (content) content.scrollTop = 0;
+    }
+  }, [open]);
   useEffect(() => {
     if (!open) return;
     const previous = document.activeElement;
@@ -55,13 +69,12 @@ export default function MetaTraderPopup({
         }
       }}
     >
-      {/* Same sheet surface, backdrop and immediate mount/unmount presentation
-          as Symbols' Configure Pair popup; keep MT5 mounted to retain form state. */}
+      {/* Keep MT5 mounted to retain form state; only its scroll resets on open. */}
       <section
+        ref={panel}
         className="mt5-popup"
         role="dialog"
         aria-label="MetaTrader 5"
-        onClick={(event) => event.stopPropagation()}
       >
         <header className="mt5-popup-header">
           <button
