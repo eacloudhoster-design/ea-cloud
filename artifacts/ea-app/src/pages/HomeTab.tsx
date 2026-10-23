@@ -408,6 +408,24 @@ function ThreeButtons({
 function MatrixLayout({ shapeStyle, accentColor, botRunning, setBotRunning, eaName, eaTagline, bgImageUrl, setShowQuotes, setShowRemoveConfirm, onOpenTrades, tradeCount = 0 }: any) {
   const theme = accentColor;
   const layoutRef = useRef<HTMLDivElement>(null);
+  const brandingBelowName = shapeStyle === "orbit" || shapeStyle === "neural";
+  useLayoutEffect(() => {
+    if (!brandingBelowName) return;
+    const layout = layoutRef.current;
+    const name = layout?.querySelector<HTMLElement>('[data-bot-name="primary"]');
+    const branding = layout?.querySelector<HTMLElement>('[data-matrix-branding]');
+    if (!layout || !name || !branding) return;
+    const positionBranding = () => {
+      // Move only the label visually; its original flow space keeps every other element fixed.
+      branding.style.transform = `translateY(${name.offsetTop + name.offsetHeight + 8 - branding.offsetTop}px)`;
+    };
+    positionBranding();
+    const observer = new ResizeObserver(positionBranding);
+    observer.observe(layout);
+    observer.observe(name);
+    observer.observe(branding);
+    return () => { observer.disconnect(); branding.style.removeProperty("transform"); };
+  }, [brandingBelowName]);
   useLayoutEffect(() => {
     if (shapeStyle !== "none") return;
     const layout = layoutRef.current;
@@ -479,7 +497,7 @@ function MatrixLayout({ shapeStyle, accentColor, botRunning, setBotRunning, eaNa
       <BotName primary toggleBackground className="text-white font-black text-center tracking-tight mb-1 px-4" style={{ fontSize: 34, lineHeight: 1.0, textShadow: "0 2px 20px rgba(0,0,0,0.9)" }}>
         {eaName.toUpperCase()}
       </BotName>
-      {eaTagline && <p className="text-white/35 text-sm text-center mb-2 tracking-wide" style={{ visibility: shapeStyle === "none" ? "hidden" : undefined }}>{eaTagline}</p>}
+      {eaTagline && <p className="text-white/35 text-sm text-center mb-2 tracking-wide" style={{ visibility: shapeStyle === "none" || brandingBelowName ? "hidden" : undefined }}>{eaTagline}</p>}
 
       <div className="flex-1" style={{ minHeight: 32 }} />
       <div className="flex gap-2 mb-5 opacity-20">
@@ -505,7 +523,7 @@ function MatrixLayout({ shapeStyle, accentColor, botRunning, setBotRunning, eaNa
         </button>
       </div>
 
-      <div className="mt-5 px-5 py-2.5 rounded-full" style={{ background: "rgba(0,0,0,0.45)", border: "1px solid rgba(255,255,255,0.12)", backdropFilter: "blur(8px)" }}>
+      <div data-matrix-branding className="mt-5 px-5 py-2.5 rounded-full" style={{ background: "rgba(0,0,0,0.45)", border: "1px solid rgba(255,255,255,0.12)", backdropFilter: "blur(8px)" }}>
         <span className="text-white/50 text-sm">Powered By&nbsp;</span>
         <span className="font-bold text-sm" style={{ color: theme }}>EA Cloud</span>
       </div>
