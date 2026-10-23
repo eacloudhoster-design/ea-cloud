@@ -1,0 +1,94 @@
+[
+  {
+    "outsideZoom": 5,
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "initial": {
+      "x": 53.40625,
+      "y": 112.5,
+      "width": 283.1875,
+      "height": 535
+    },
+    "persisted": {
+      "scale": 0.98870606195359,
+      "width": 336.1600610642206,
+      "height": 659.4669433230445,
+      "x": 49.8399389357794,
+      "y": 37.4000279596252
+    },
+    "rotated": {
+      "x": 4,
+      "y": 4,
+      "width": 336.15625,
+      "height": 276.828125
+    },
+    "allEightHandles": true,
+    "pinch": true,
+    "nonBlockingAllInterfaces": true,
+    "refresh": true,
+    "circleUnchanged": true
+  },
+  {
+    "outsideZoom": 5,
+    "viewport": {
+      "width": 320,
+      "height": 568
+    },
+    "initial": {
+      "x": 30,
+      "y": 48.5,
+      "width": 260,
+      "height": 387
+    },
+    "persisted": {
+      "scale": 1.0168889686544105,
+      "width": 274.5600215366908,
+      "height": 433.19470064677887,
+      "x": 41.43997846330922,
+      "y": 37.400012942996256
+    },
+    "rotated": {
+      "x": 4,
+      "y": 4,
+      "width": 274.546875,
+      "height": 284.71875
+    },
+    "allEightHandles": true,
+    "pinch": true,
+    "nonBlockingAllInterfaces": true,
+    "refresh": true,
+    "circleUnchanged": true
+  },
+  {
+    "viewport": {
+      "width": 1280,
+      "height": 900
+    },
+    "initial": {
+      "x": 521.8125,
+      "y": 289,
+      "width": 315.1875,
+      "height": 511
+    },
+    "persisted": {
+      "scale": 1,
+      "width": 410,
+      "height": 763,
+      "x": 16,
+      "y": 43
+    },
+    "rotated": {
+      "x": 4,
+      "y": 4,
+      "width": 352,
+      "height": 280
+    },
+    "allEightHandles": true,
+    "pinch": false,
+    "nonBlockingAllInterfaces": true,
+    "refresh": true,
+    "circleUnchanged": true
+  }
+]
