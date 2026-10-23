@@ -1,18 +1,23 @@
+.ea-app-viewport {
+  --ea-nav-height: 66px;
+  --ea-nav-bottom: max(4px, env(safe-area-inset-bottom, 0px));
+  --ea-nav-clearance: calc(var(--ea-nav-height) + var(--ea-nav-bottom) + 12px);
+}
 .ea-glass-navigation {
   position: absolute;
   bottom: 0;
   left: 0;
   right: 0;
   z-index: 40;
-  height: 75px;
+  height: calc(var(--ea-nav-height, 66px) + var(--ea-nav-bottom, 4px));
   pointer-events: none;
 }
 .ea-glass-bar {
   position: absolute;
   left: max(10px, env(safe-area-inset-left, 0px));
   right: max(10px, env(safe-area-inset-right, 0px));
-  bottom: max(8px, env(safe-area-inset-bottom, 0px));
-  height: 62px;
+  bottom: var(--ea-nav-bottom, 4px);
+  height: var(--ea-nav-height, 66px);
   padding: 5px 6px;
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));

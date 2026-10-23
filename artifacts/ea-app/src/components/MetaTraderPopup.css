@@ -1,13 +1,11 @@
-/* Match the existing Symbols Configure Pair sheet, leaving navigation exposed. */
+/* Reuse the mounted MT5 host as a full-viewport page, retaining close/focus logic. */
 .mt5-popup-backdrop {
   position: absolute;
-  inset: 0 0 75px;
+  inset: calc(-1 * var(--ea-status-inset, 0px)) 0 0;
+  --ea-content-safe-top: var(--ea-status-inset, 0px);
   z-index: 35;
   display: flex;
-  align-items: flex-end;
-  background: rgba(0, 0, 0, 0.7);
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
+  background: transparent;
 }
 .mt5-popup-backdrop[hidden] {
   display: none;
@@ -17,21 +15,24 @@
   display: flex;
   flex-direction: column;
   width: 100%;
-  height: 78%;
+  height: 100%;
   overflow: hidden;
-  border-radius: 24px 24px 0 0;
-  background: #0a0a0a;
-  border: 1px solid color-mix(in srgb, var(--mt5-popup-accent) 27%, transparent);
+  border-radius: 0;
+  background: transparent;
+  border: 0;
 }
 .mt5-popup-header {
-  position: relative;
-  flex-shrink: 0;
-  height: 44px;
+  position: absolute;
+  top: calc(max(16px, var(--ea-content-safe-top)) + 42px);
+  left: 20px;
+  width: 32px;
+  height: 32px;
+  z-index: 3;
 }
 .mt5-popup-header button {
   position: absolute;
-  right: 20px;
-  top: 6px;
+  left: 0;
+  top: 0;
   display: grid;
   place-items: center;
   width: 32px;
@@ -48,10 +49,13 @@
   flex: 1;
   min-height: 0;
 }
-/* The sheet already ends above navigation: remove only the old page reservation. */
+/* Scroll behind the floating bar, with enough end space to expose every field. */
 .mt5-popup .mt5-content {
   height: 100%;
+  padding-bottom: var(--ea-nav-clearance, 90px);
+  scroll-padding-bottom: var(--ea-nav-clearance, 90px);
 }
 .mt5-popup .mt5-connection-screen {
   bottom: 0;
+  padding-bottom: calc(60px + var(--ea-nav-clearance, 90px));
 }
