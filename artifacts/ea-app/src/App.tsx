@@ -1,3 +1,4 @@
+import { usePwaBackground } from "@/hooks/use-pwa-background";
 import { useBotStatus } from "@/hooks/use-bot-status";
 import BackgroundAnimation from "@/components/BackgroundAnimation";
 import {useHomePreferences} from "@/hooks/use-home-preferences";
@@ -163,6 +164,7 @@ function EACloudApp({ onReady }: { onReady: (ready: boolean) => void }) {
   };
 
   const backgroundSrc = bgImageUrl || robotBg;
+  usePwaBackground(backgroundSrc, authStage === "app" && brandingReady && showBg);
 
   const initializing = authStage === "loading" || (authStage === "app" && !brandingReady && !loadError);
   useEffect(() => { onReady(!initializing); }, [initializing, onReady]);
@@ -229,7 +231,7 @@ function EACloudApp({ onReady }: { onReady: (ready: boolean) => void }) {
           src={backgroundSrc}
           alt=""
           data-home-background
-          className="ea-home-background absolute inset-0 w-full h-full object-cover object-center pointer-events-none"
+          className="ea-home-background pointer-events-none"
           style={{ zIndex: 0, opacity: showBg ? 1 : 0 }}
         />
 
