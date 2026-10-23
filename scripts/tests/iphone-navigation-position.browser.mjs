@@ -264,13 +264,13 @@ try {
     });
     let delta = 0;
     if (test.simulate && test.width <= 440) {
-      delta = test.bottom >= 32 ? 12 : test.bottom === 21 ? 1 : 0;
+      delta = test.bottom >= 32 ? 12 : test.bottom === 21 ? 1 : test.bottom === 0 ? -4 : 0;
       assert(Math.abs(after.bar.y - before.bar.y - delta) < 0.1);
       assert(Math.abs(after.bar.x - 8) < 0.1);
       assert(Math.abs(test.width - after.bar.x - after.bar.width - 8) < 0.1);
       if (test.bottom >= 20) assert(test.height - after.bar.bottom >= 20);
     } else assert.deepEqual(after.bar, before.bar);
-    assert.equal(after.bar.height, 62);
+    assert.equal(after.bar.height, 66);
     assert(Math.abs(after.bar.x + after.bar.width / 2 - test.width / 2) < 0.1);
     const centers = after.buttons.map((b) => b.rect.x + b.rect.width / 2);
     assert(Math.abs(centers[1] - centers[0] - (centers[2] - centers[1])) < 0.1);

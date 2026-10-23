@@ -28,7 +28,8 @@
    and max(4px, safe-area-inset-bottom) bottom spacing (previously max(8px,...)).
    The latest code already used the requested 10px side margins; these are
    preserved, with larger landscape safe insets taking precedence. This
-   already matches the requested 10–14px target.
+   already matches the requested 10–14px target in normal browser mode.
+   Latest main #50's compact iOS standalone gutter/bottom overrides are retained.
    Shared CSS clearance also prevents form content or the Settings dismiss
    target from covering navigation. No new navigation implementation was added.
 
@@ -55,6 +56,10 @@ components/MetaTraderPopup.css, all under artifacts/ea-app/src.
   expects the removed text "Awaiting status". This same failure was reproduced
   by bundling baseline Git source, independent of these layout changes.
   The unrelated monitor and its assertion are untouched.
+- Main #50's explicitly simulated compact iOS standalone geometry/interaction
+  checks are retained, with expectations updated for the 66px bar and 4px base
+  gap. They inject the exact scoped CSS declarations in Chromium and do not
+  constitute native iOS testing.
 - Physical iOS Safari, installed iOS PWA, real keyboard behaviour and physical
   Android hardware were unavailable. Safe-area/short-viewport emulation is not
   a claim of native-device testing.
