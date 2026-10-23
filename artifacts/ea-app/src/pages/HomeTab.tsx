@@ -240,26 +240,6 @@ function S2ToneLayout({ shapeStyle, accentColor, botRunning, setBotRunning, eaNa
           <BotName as="p" className="text-white font-black leading-tight" style={{ fontSize: 22 }}>
             {eaName.toUpperCase()}
           </BotName>
-          {/* Small avatar circle — green tinted like reference */}
-          <div
-            className="mt-4 flex-shrink-0 overflow-hidden"
-            style={{
-              width: 56,
-              height: 56,
-              borderRadius: "50%",
-              background: bgImageUrl
-                ? "transparent"
-                : "radial-gradient(circle at 38% 35%, rgba(0,100,20,0.95) 0%, rgba(0,50,10,1) 70%)",
-              border: "1.5px solid rgba(0,160,40,0.55)",
-              boxShadow: "0 0 12px rgba(0,160,40,0.35)",
-              position: "relative",
-              overflow: "hidden",
-            }}
-          >
-            {bgImageUrl && (
-              <img src={bgImageUrl} alt="" className="w-full h-full object-cover absolute inset-0" />
-            )}
-          </div>
         </div>
       </div>
     </div>
