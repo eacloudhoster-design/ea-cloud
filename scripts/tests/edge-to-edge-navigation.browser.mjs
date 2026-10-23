@@ -6,7 +6,7 @@ const { chromium } = createRequire(import.meta.url)(
 );
 const origin = process.env.APP_ORIGIN || "http://127.0.0.1:5204";
 assert.ok(["localhost", "127.0.0.1"].includes(new URL(origin).hostname));
-const out = "work/rectangular-navigation";
+const out = "work/edge-to-edge-navigation";
 await mkdir(out, { recursive: true });
 const browser = await chromium.launch({
   executablePath: "/usr/bin/chromium",
@@ -72,13 +72,13 @@ async function fixture(context, style = "regular", shape = "orbit") {
   });
 }
 const cases = [
- {width:320,height:568,bottom:0}, {width:390,height:844,bottom:0},
+ {width:355,height:768,bottom:18,scale:2}, {width:320,height:568,bottom:0}, {width:390,height:844,bottom:0},
  {width:393,height:852,bottom:34}, {width:430,height:932,bottom:34},
  {width:844,height:390,bottom:21,left:44,right:44}
 ];
 try {
  for (const screen of (process.env.NAV_INTERACTIONS_ONLY ? [] : cases)) for (const style of ["regular","matrix","s2tone"]) {
-  const context = await browser.newContext({viewport:screen,isMobile:true,hasTouch:true});
+  const context = await browser.newContext({viewport:{width:screen.width,height:screen.height},deviceScaleFactor:screen.scale||1,isMobile:true,hasTouch:true});
   await fixture(context,style);
   const page = await context.newPage(); const errors=[]; page.on("pageerror",e=>errors.push(e.message));
   const cdp=await context.newCDPSession(page);
@@ -88,10 +88,16 @@ try {
   const nav=page.locator(".ea-app-content > .ea-glass-navigation");
   const geometry=()=>nav.locator(".ea-glass-bar").evaluate(el=>{
    const r=el.getBoundingClientRect(),s=getComputedStyle(el);
-   return {x:r.x,y:r.y,w:r.width,h:r.height,bottom:innerHeight-r.bottom,radius:s.borderRadius,blur:s.backdropFilter};
+   return {x:r.x,y:r.y,w:r.width,h:r.height,bottom:innerHeight-r.bottom,radius:s.borderRadius,blur:getComputedStyle(el.parentElement).backdropFilter};
   });
-  const initial=await geometry(); assert.equal(initial.radius,"18px");
-  assert.ok(Math.abs(initial.bottom-Math.max(2,screen.bottom))<1);
+  const dock=await nav.evaluate(el=>{
+   const r=el.getBoundingClientRect(),app=el.closest(".ea-app-viewport").getBoundingClientRect();
+   return {left:r.left-app.left,right:app.right-r.right,bottom:innerHeight-r.bottom,radius:getComputedStyle(el).borderRadius};
+  });
+  assert.equal(dock.left,0);assert.equal(dock.right,0);assert.equal(dock.bottom,0);
+  assert.equal(dock.radius,"22px 22px 0px 0px");
+  const initial=await geometry(); assert.equal(initial.radius,"0px");
+  assert.ok(Math.abs(initial.bottom-screen.bottom)<1);
   assert.ok(initial.blur.includes("12px"));
   assert.ok(initial.w>=Math.min(screen.width,430)-2*Math.max(4,screen.left||0)-1);
   for(const name of ["MetaTrader","Settings","Home"]) {
@@ -103,9 +109,9 @@ try {
     const a=el.getBoundingClientRect(),b=el.parentElement.getBoundingClientRect();
     return {left:a.left-b.left,right:b.right-a.right,radius:getComputedStyle(el).borderRadius};
    });
-   assert.equal(rects.radius,"12px");assert.ok(rects.left>=0&&rects.right>=-1);
+   assert.equal(rects.radius,"999px");assert.ok(rects.left>=0&&rects.right>=-1);
    if(name==="MetaTrader")assert.equal(await page.locator(".mt5-popup-backdrop").evaluate(el=>getComputedStyle(el).opacity),"1");
-   if(screen.width===393)await page.screenshot({path:`${out}/${style}-${name}.png`});
+   if(screen.width===393 || screen.width===355)await page.screenshot({path:`${out}/${screen.width}-${style}-${name}.png`});
   }
   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);
   assert.deepEqual(errors,[]); results.push({screen,style,geometry:initial}); await context.close();
