@@ -3,56 +3,50 @@ import eaLogo from "../../../ea-cloud/public/ea-cloud-logo.jpeg?url";
 import "./StartupSplash.css";
 
 export const STARTUP_DURATION_MS = 2000;
+const CROSSFADE_MS = 500;
+// Clockwise, in the original artwork's coordinates. The lower edge follows the
+// robot where it interrupts the cloud's baseline, closing the actual silhouette.
+const CLOUD_OUTLINE = "M626 180 C711 180 787 230 819 308 C873 308 919 346 934 399 C1007 398 1064 449 1073 520 C1141 528 1194 587 1194 658 C1194 734 1135 796 1060 796 H782 L701 825 L620 833 L541 825 L462 796 H190 C113 796 52 736 52 660 C52 605 87 556 140 537 C158 483 204 447 261 443 C279 365 345 308 427 308 C461 231 539 180 626 180 Z";
 
-/** A one-shot presentation layer. App initialization continues underneath it. */
+/** Initialization continues underneath the splash; readiness finishes its trace. */
 export default function StartupSplash({ ready, children }: { ready: boolean; children: ReactNode }) {
   const imageRef = useRef<HTMLImageElement>(null);
   const [started, setStarted] = useState(false);
-  const [assetFailed, setAssetFailed] = useState(false);
-  const [elapsed, setElapsed] = useState(false);
-  const [dismissed, setDismissed] = useState(false);
+  const [phase, setPhase] = useState<"tracing" | "glowing" | "fading" | "done">("tracing");
+  const readyRef = useRef(ready);
+  readyRef.current = ready;
 
   useEffect(() => {
     let cancelled = false;
     const image = imageRef.current!;
-    // A cold asset must not consume the two-second cinematic clock.
-    image.decode().then(() => {
+    image.decode().then(() => { if (!cancelled) setStarted(true); }).catch(() => {
+      // Never trap a usable app behind an unavailable presentation asset.
       if (!cancelled) setStarted(true);
-    }).catch(() => { if (!cancelled) setAssetFailed(true); });
+    });
     return () => { cancelled = true; };
   }, []);
-  useEffect(() => {
-    if (elapsed && ready) setDismissed(true);
-  }, [elapsed, ready]);
 
+  useEffect(() => {
+    if (phase !== "glowing" && phase !== "fading") return;
+    const timer = window.setTimeout(() => setPhase(phase === "glowing" ? "fading" : "done"), phase === "glowing" ? 240 : CROSSFADE_MS);
+    return () => window.clearTimeout(timer);
+  }, [phase]);
+
+  const revealing = phase === "fading" || phase === "done";
   return <>
-    <div inert={!dismissed} aria-hidden={!dismissed} style={ready || dismissed ? undefined : { visibility: "hidden" }}>
+    <div className="ea-startup-home" data-visible={revealing} inert={!revealing} aria-hidden={!revealing}>
       {children}
     </div>
-    {!dismissed && <div className="ea-startup" data-ready={ready} data-elapsed={elapsed} data-started={started}
+    {phase !== "done" && <div className="ea-startup" data-ready={ready} data-started={started} data-phase={phase}
       style={{ "--ea-startup-duration": `${STARTUP_DURATION_MS}ms` } as CSSProperties}
-      onAnimationEnd={event => {
-        if (event.target === event.currentTarget && event.animationName === "ea-launch") setElapsed(true);
-      }}
-      role="status" aria-label={elapsed ? "Preparing EA Cloud" : "Starting EA Cloud"}>
-      {assetFailed && <button className="ea-startup-retry" onClick={() => window.location.reload()}>Retry startup</button>}
-      <div className="ea-startup-scene" aria-hidden="true">
-        <div className="ea-startup-mark">
-          <img ref={imageRef} src={eaLogo} alt="" decoding="sync" fetchPriority="high" />
-          {/* Overlays follow the original image's cloud contour and circuit traces. */}
-          <svg viewBox="0 150 1254 690" className="ea-startup-energy" fill="none">
-            <g className="ea-startup-eyes">
-              <path d="M403 507 L551 602 L452 567 Z" />
-              <path d="M834 507 L688 602 L785 567 Z" />
-            </g>
-            <path className="ea-startup-edge" pathLength="1" d="M463 800H190C35 800 0 590 139 537Q174 446 260 443Q291 307 426 309C500 133 733 133 817 308Q905 310 935 400Q1054 398 1072 519C1238 541 1247 794 1070 798H775" />
-            <g className="ea-startup-circuits">
-              <path pathLength="1" d="M168 661H266L308 700H384 M174 703H192L212 694H263L304 727H403 M247 743H418" />
-              <path pathLength="1" d="M1073 661H977L934 701H856 M1068 703H1048L1035 694H978L936 727H835 M993 743H817" />
-            </g>
-          </svg>
-          <div className="ea-startup-reflection"><div className="ea-startup-sweep" /></div>
-        </div>
+      role="status" aria-label="Starting EA Cloud">
+      <div className="ea-startup-mark" aria-hidden="true">
+        <img ref={imageRef} src={eaLogo} alt="" decoding="sync" fetchPriority="high" />
+        <svg viewBox="0 0 1254 1254" className="ea-startup-energy" fill="none">
+          <path className="ea-startup-edge" pathLength="1" d={CLOUD_OUTLINE}
+            onAnimationIteration={() => { if (readyRef.current) setPhase("glowing"); }} />
+          <path className="ea-startup-tip" pathLength="1" d={CLOUD_OUTLINE} />
+        </svg>
       </div>
     </div>}
   </>;
