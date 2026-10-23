@@ -36,6 +36,11 @@ function EACloudApp({ onReady }: { onReady: (ready: boolean) => void }) {
   const [clientStatus, setClientStatus] = useState<"pending" | "rejected" | "approved">("pending");
 
   const [activeTab, setActiveTab] = useState<Tab>("home");
+  const [homeNavigationRequest, setHomeNavigationRequest] = useState(0);
+  const navigate = (tab: Tab) => {
+    if (tab === "home") setHomeNavigationRequest(value => value + 1);
+    setActiveTab(tab);
+  };
   const [settingsClosing, setSettingsClosing] = useState(false);
   const dismissSettings = () => {
     setSettingsClosing(true);
@@ -230,7 +235,7 @@ function EACloudApp({ onReady }: { onReady: (ready: boolean) => void }) {
         <BackgroundAnimation effect={backgroundAnimation} color={accentColor} active={activeTab === "home"} />
 
         <div className="absolute inset-0 z-[2]" inert={activeTab !== "home" || settingsClosing}>
-          <HomeTab swipeEnabled={!showChartScanner} onOpenChartScanner={() => setShowChartScanner(true)} />
+          <HomeTab homeNavigationRequest={homeNavigationRequest} swipeEnabled={!showChartScanner} onOpenChartScanner={() => setShowChartScanner(true)} />
         </div>
 
         {!showChartScanner && (activeTab === "settings" || settingsClosing) && (
@@ -260,11 +265,11 @@ function EACloudApp({ onReady }: { onReady: (ready: boolean) => void }) {
         </div>
 
         <TradingActivityMonitor />
-        <BottomNav activeTab={activeTab} onTabChange={setActiveTab} />
+        <BottomNav activeTab={activeTab} onTabChange={navigate} />
 
         {showChartScanner && (
           <div className="absolute inset-0 z-50">
-            <ChartScannerModal onClose={() => setShowChartScanner(false)} onNavigate={tab => { setActiveTab(tab); setShowChartScanner(false); }} />
+            <ChartScannerModal onClose={() => setShowChartScanner(false)} onNavigate={tab => { navigate(tab); setShowChartScanner(false); }} />
           </div>
         )}
       </div>
