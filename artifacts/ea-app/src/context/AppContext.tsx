@@ -9,6 +9,7 @@ export type ShapeStyle = "orbit" | "neural" | "none";
 export interface AppSettings {
   activeTab: Tab;
   botRunning: boolean;
+  botStatusConfirmed: boolean;
   setBotRunning: (v: boolean) => void;
   interfaceStyle: InterfaceStyle;
   setInterfaceStyle: (v: InterfaceStyle) => void;
@@ -34,6 +35,7 @@ export interface AppSettings {
 export const AppContext = createContext<AppSettings>({
   activeTab: "home",
   botRunning: true,
+  botStatusConfirmed: false,
   setBotRunning: () => {},
   interfaceStyle: "matrix",
   setInterfaceStyle: () => {},

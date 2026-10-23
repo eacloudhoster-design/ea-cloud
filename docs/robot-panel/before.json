@@ -1,0 +1,47 @@
+[
+  {
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "box": {
+      "x": 18,
+      "y": 41,
+      "width": 354,
+      "height": 678
+    },
+    "image": "linear-gradient(0deg, rgb(21, 2, 4) 3%, rgba(21, 2, 4, 0.333) 75%), url(\"http://127.0.0.1:5190/fixture-robot.jpg\")",
+    "allInformationPresent": true,
+    "errors": []
+  },
+  {
+    "viewport": {
+      "width": 320,
+      "height": 568
+    },
+    "box": {
+      "x": 18,
+      "y": 16,
+      "width": 284,
+      "height": 452
+    },
+    "image": "linear-gradient(0deg, rgb(21, 2, 4) 3%, rgba(21, 2, 4, 0.333) 75%), url(\"http://127.0.0.1:5190/fixture-robot.jpg\")",
+    "allInformationPresent": true,
+    "errors": []
+  },
+  {
+    "viewport": {
+      "width": 1280,
+      "height": 900
+    },
+    "box": {
+      "x": 443,
+      "y": 122,
+      "width": 394,
+      "height": 678
+    },
+    "image": "linear-gradient(0deg, rgb(21, 2, 4) 3%, rgba(21, 2, 4, 0.333) 75%), url(\"http://127.0.0.1:5190/fixture-robot.jpg\")",
+    "allInformationPresent": true,
+    "errors": []
+  }
+]

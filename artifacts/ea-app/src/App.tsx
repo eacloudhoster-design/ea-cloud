@@ -1,3 +1,4 @@
+import { useBotStatus } from "@/hooks/use-bot-status";
 import BackgroundAnimation from "@/components/BackgroundAnimation";
 import {useHomePreferences} from "@/hooks/use-home-preferences";
 import "@/components/HomeInteractions.css";
@@ -36,7 +37,7 @@ function EACloudApp({ onReady }: { onReady: (ready: boolean) => void }) {
 
   const [activeTab, setActiveTab] = useState<Tab>("home");
   const [showChartScanner, setShowChartScanner] = useState(false);
-  const [botRunning, setBotRunning] = useState(true);
+  const { botRunning, botStatusConfirmed, setBotRunning: persistBotRunning } = useBotStatus(clientToken, authStage === "app");
   const { interfaceStyle, setInterfaceStyle, showBg, setShowBg, backgroundAnimation, setBackgroundAnimation, accentColor, setAccentColor } = useHomePreferences(clientToken);
   const [shapeStyle, setShapeStyle] = useShapePreference(clientToken);
   const [botFont, setBotFont] = useFontPreference(clientToken);
@@ -89,31 +90,6 @@ function EACloudApp({ onReady }: { onReady: (ready: boolean) => void }) {
     return () => { cancelled = true; };
   }, [authStage, clientToken, brandingAttempt]);
 
-  // Load persisted copy-trading on/off state so the START/STOP control reflects
-  // the database (survives logout, app restart, server restart, VPS restart).
-  useEffect(() => {
-    if (authStage !== "app" || !clientToken) return;
-    fetch("/api/app/trading-controls", { headers: { Authorization: `Bearer ${clientToken}` } })
-      .then(r => r.ok ? r.json() : null)
-      .then(data => { if (data && typeof data.copyingEnabled === "boolean") setBotRunning(data.copyingEnabled); })
-      .catch(() => {});
-  }, [authStage, clientToken]);
-
-  // START/STOP — update the UI optimistically, persist immediately, and roll back
-  // if the write fails so the control can never show a state the server rejected.
-  const persistBotRunning = (v: boolean) => {
-    const prev = botRunning;
-    setBotRunning(v);
-    if (!clientToken) return;
-    fetch("/api/app/trading-controls", {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${clientToken}` },
-      body: JSON.stringify({ copyingEnabled: v }),
-    })
-      .then(r => { if (!r.ok) setBotRunning(prev); })
-      .catch(() => setBotRunning(prev));
-  };
-
   const validateToken = async (token: string) => {
     try {
       setAuthStage("loading");
@@ -159,7 +135,7 @@ function EACloudApp({ onReady }: { onReady: (ready: boolean) => void }) {
 
   const settings: AppSettings = {
     activeTab,
-    botRunning, setBotRunning: persistBotRunning,
+    botRunning, botStatusConfirmed, setBotRunning: persistBotRunning,
     interfaceStyle, setInterfaceStyle,
     accentColor, setAccentColor,
     shapeStyle, setShapeStyle,

@@ -1,0 +1,83 @@
+[
+  {
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "box": {
+      "x": 53.40625,
+      "y": 112.5,
+      "width": 283.1875,
+      "height": 535
+    },
+    "image": "linear-gradient(0deg, rgb(21, 2, 4) 3%, rgba(21, 2, 4, 0.333) 75%), url(\"http://127.0.0.1:5190/fixture-robot.jpg\")",
+    "allInformationPresent": true,
+    "dragging": "touch",
+    "boundsAndResizePassed": true,
+    "releaseAndReopenPositionPreserved": true,
+    "scrollAndSelectionPassed": true,
+    "closeAndRefreshPassed": true,
+    "keyboardFocusPassed": true,
+    "confirmedStartStopPassed": true,
+    "rejectedAndPendingStartNotGreen": true,
+    "rapidCommandsOrdered": true,
+    "unknownStatusNotGreen": true,
+    "themeIndependentStatusColours": true,
+    "circlePreserved": true,
+    "errors": []
+  },
+  {
+    "viewport": {
+      "width": 320,
+      "height": 568
+    },
+    "box": {
+      "x": 30,
+      "y": 48.5,
+      "width": 260,
+      "height": 387
+    },
+    "image": "linear-gradient(0deg, rgb(21, 2, 4) 3%, rgba(21, 2, 4, 0.333) 75%), url(\"http://127.0.0.1:5190/fixture-robot.jpg\")",
+    "allInformationPresent": true,
+    "dragging": "touch",
+    "boundsAndResizePassed": true,
+    "releaseAndReopenPositionPreserved": true,
+    "scrollAndSelectionPassed": true,
+    "closeAndRefreshPassed": true,
+    "keyboardFocusPassed": true,
+    "confirmedStartStopPassed": true,
+    "rejectedAndPendingStartNotGreen": true,
+    "rapidCommandsOrdered": true,
+    "unknownStatusNotGreen": true,
+    "themeIndependentStatusColours": true,
+    "circlePreserved": true,
+    "errors": []
+  },
+  {
+    "viewport": {
+      "width": 1280,
+      "height": 900
+    },
+    "box": {
+      "x": 521.8125,
+      "y": 289,
+      "width": 315.1875,
+      "height": 511
+    },
+    "image": "linear-gradient(0deg, rgb(21, 2, 4) 3%, rgba(21, 2, 4, 0.333) 75%), url(\"http://127.0.0.1:5190/fixture-robot.jpg\")",
+    "allInformationPresent": true,
+    "dragging": "mouse",
+    "boundsAndResizePassed": true,
+    "releaseAndReopenPositionPreserved": true,
+    "scrollAndSelectionPassed": true,
+    "closeAndRefreshPassed": true,
+    "keyboardFocusPassed": true,
+    "confirmedStartStopPassed": true,
+    "rejectedAndPendingStartNotGreen": true,
+    "rapidCommandsOrdered": true,
+    "unknownStatusNotGreen": true,
+    "themeIndependentStatusColours": true,
+    "circlePreserved": true,
+    "errors": []
+  }
+]
