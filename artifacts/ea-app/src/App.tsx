@@ -236,7 +236,7 @@ function EACloudApp({ onReady }: { onReady: (ready: boolean) => void }) {
         <div className={`ea-app-content relative overflow-clip${activeTab === "metatrader" ? " ea-app-content--mt5" : ""}`}>
         <BackgroundAnimation effect={backgroundAnimation} color={accentColor} active={activeTab === "home"} />
 
-        <div className="absolute inset-0 z-[2]" inert={activeTab !== "home" || settingsClosing}>
+        <div className="ea-nav-screen absolute inset-0 z-[2]" style={{ opacity: activeTab === "home" ? 1 : 0 }} inert={activeTab !== "home" || settingsClosing}>
           <HomeTab homeNavigationRequest={homeNavigationRequest} swipeEnabled={!showChartScanner} onOpenChartScanner={() => setShowChartScanner(true)} />
         </div>
 
@@ -255,9 +255,9 @@ function EACloudApp({ onReady }: { onReady: (ready: boolean) => void }) {
         </MetaTraderPopup>
 
         <div
-          className="absolute top-0 right-0 h-full z-30 transition-transform duration-300 ease-out"
+          className="ea-nav-screen absolute top-0 right-0 h-full z-30"
           inert={activeTab !== "settings"}
-          style={{ width: "88%", transform: activeTab === "settings" ? "translateX(0)" : "translateX(100%)" }}
+          style={{ width: "88%", opacity: activeTab === "settings" ? 1 : 0, pointerEvents: activeTab === "settings" ? "auto" : "none" }}
         >
           <SettingsTab onOpenChartScanner={() => setShowChartScanner(true)} />
         </div>
