@@ -1,0 +1,8 @@
+# Revalidate installation metadata; fingerprinted JS/CSS keep their normal cache policy.
+/ea-app/
+  Cache-Control: no-cache
+/ea-app/index.html
+  Cache-Control: no-cache
+/ea-app/manifest.webmanifest
+  Cache-Control: no-cache
+  Content-Type: application/manifest+json; charset=utf-8

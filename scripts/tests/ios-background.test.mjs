@@ -40,3 +40,11 @@ for (const failure of ["missing", "browser", "outside-scope"]) {
     } finally { rmSync(directory, { recursive: true, force: true }); }
   });
 }
+
+test("client installation metadata revalidates without changing asset or API caching", () => {
+  const headers = readFileSync(new URL("../../artifacts/ea-cloud/dist/_headers", import.meta.url), "utf8");
+  const routes = headers.split("\n").filter(line => line.startsWith("/"));
+  assert.deepEqual(routes, ["/ea-app/", "/ea-app/index.html", "/ea-app/manifest.webmanifest"]);
+  assert.equal((headers.match(/Cache-Control: no-cache/g) || []).length, 3);
+  assert.match(headers, /Content-Type: application\/manifest\+json/);
+});

@@ -1,12 +1,12 @@
 import assert from "node:assert/strict";
-import { mkdir, writeFile } from "node:fs/promises";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { createRequire } from "node:module";
 const { chromium } = createRequire(import.meta.url)(
   process.env.PLAYWRIGHT_MODULE || "playwright",
 );
 const origin = process.env.APP_ORIGIN || "http://127.0.0.1:5204";
 assert.ok(["localhost", "127.0.0.1"].includes(new URL(origin).hostname));
-const out = "work/ios-status-background";
+const out = process.env.PWA_OUTPUT || "work/pwa-canvas";
 await mkdir(out, { recursive: true });
 const browser = await chromium.launch({
   executablePath: "/usr/bin/chromium",
@@ -71,10 +71,27 @@ async function fixture(context, style = "regular", shape = "orbit") {
     });
   });
 }
+const baseline = process.env.PWA_BASELINE ? JSON.parse(await readFile(process.env.PWA_BASELINE, "utf8")) : [];
 try {
+ for (const mode of (process.env.PWA_MODES || "browser,legacy,modern").split(","))
  for (const style of ["regular","matrix","s2tone"]) {
   const context=await browser.newContext({viewport:{width:393,height:852},isMobile:true,hasTouch:true});
-  await fixture(context,style);const page=await context.newPage();const errors=[];page.on("pageerror",e=>errors.push(e.message));
+  await fixture(context,style);
+  await context.addInitScript(mode => {
+    // A safe persisted drag position avoids resize-clamping event races while
+    // comparing the same user preference between baseline and changed builds.
+    localStorage.setItem("ea-cloud:floating-robot-position",JSON.stringify({x:200,y:200}));
+    if (mode === "legacy") Object.defineProperty(navigator, "standalone", {value:true});
+    if (mode === "modern") {
+      const original=window.matchMedia.bind(window);
+      window.matchMedia=query=>{
+        const media=original(query);
+        if(query === "(display-mode: standalone)") Object.defineProperty(media,"matches",{get:()=>true});
+        return media;
+      };
+    }
+  },mode);
+  const page=await context.newPage();const errors=[];page.on("pageerror",e=>errors.push(e.message));
   const cdp=await context.newCDPSession(page);
   await cdp.send("Emulation.setSafeAreaInsetsOverride",{insets:{top:59,bottom:34,left:0,right:0}});
   await page.goto(origin+"/ea-app/");await page.locator(".ea-startup").waitFor({state:"detached"});
@@ -103,14 +120,38 @@ try {
    assert.equal(background.fit,"cover");assert.equal(background.position,"50% 50%");assert.ok(background.loaded);assert.equal(background.opacity,"1");
    assert.equal(await page.locator(".ea-app-content").evaluate(el=>el.getBoundingClientRect().top),screen.top);
    const before=await foreground();
+   const original=baseline.find(item=>item.style===style&&item.screen.width===screen.width&&item.screen.height===screen.height);
+   if (original) assert.deepEqual(before,original.foreground,"foreground matches baseline");
+   else {
+     assert.equal(mode,"browser");
+     baseline.push({style,screen,foreground:before});
+   }
+   const canvas=await page.evaluate(()=>({
+     image:getComputedStyle(document.documentElement).backgroundImage,
+     body:getComputedStyle(document.body).backgroundColor,
+     enabled:document.documentElement.hasAttribute("data-ea-pwa-background"),
+   }));
+   assert.equal(canvas.enabled,mode!=="browser");
+   if(mode!=="browser") {assert.ok(canvas.image.includes("fixture-robot.jpg"));assert.equal(canvas.body,"rgba(0, 0, 0, 0)");}
+   else {assert.equal(canvas.image,"none");assert.equal(canvas.body,"rgb(0, 0, 0)");}
    // Temporarily mask only the background in this browser fixture; every
    // foreground rectangle must remain identical with/without that image layer.
    await page.locator('[data-home-background]').evaluate(el=>el.style.visibility="hidden");
    assert.deepEqual(await foreground(),before);
    await page.locator('[data-home-background]').evaluate(el=>el.style.removeProperty("visibility"));
-   if(screen.width===393)await page.screenshot({path:`${out}/${style}-top59.png`});
-   results.push({style,screen,background,foreground:before});
+   if(screen.width===393)await page.screenshot({path:`${out}/${mode}-${style}-top59.png`});
+   results.push({mode,style,screen,background,foreground:before});
   }
+  const rects=()=>foreground().then(items=>items.map(({x,y,w,h})=>({x,y,w,h})));
+  const visibleRects=await rects();
+  await page.getByRole("button",{name:"Hide background image",exact:true}).evaluate(el=>el.click());
+  await page.waitForTimeout(280);
+  assert.equal(await page.locator("html").getAttribute("data-ea-pwa-background"),null);
+  assert.deepEqual(await rects(),visibleRects);
+  await page.getByRole("button",{name:"Show background image",exact:true}).evaluate(el=>el.click());
+  await page.waitForTimeout(280);
+  assert.equal(await page.locator("html").getAttribute("data-ea-pwa-background"),mode==="browser"?null:"");
+  assert.deepEqual(await rects(),visibleRects);
   assert.deepEqual(errors,[]);await context.close();
  }
  await writeFile(`${out}/results.json`,JSON.stringify(results,null,2));
