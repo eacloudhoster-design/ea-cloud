@@ -12,23 +12,23 @@ try{
  for(const name of ['Mentor Alpha','Mentor Beta']){
   const spoken=[],writes=[];let connected=false,running=false,failBot=false,scanFail=false,executions=[];
   const context=await browser.newContext({viewport:{width:390,height:844},hasTouch:true,isMobile:true});
-  await context.addInitScript(()=>{
+  await context.addInitScript((blocked)=>{
    localStorage.setItem('appClientToken',btoa('7:client:fixture'));
    localStorage.setItem('ea-cloud:client:7:voice',JSON.stringify({enabled:false,provider:'neural'}));
    localStorage.setItem('ea-cloud:client:7:home-appearance',JSON.stringify({interfaceStyle:'regular',accentColor:'#00c9ed',showBg:true,backgroundAnimation:'none'}));
-   window.__speech={calls:[],active:0,max:0,blocked:true};
+   window.__speech={calls:[],attempts:[],active:0,max:0,blocked};
    window.SpeechSynthesisUtterance=class{constructor(text){this.text=text;}};
    let current=null,timer=null;const listeners=new EventTarget();
    Object.defineProperty(window,'speechSynthesis',{configurable:true,value:{
     getVoices(){return [{name:'Samantha',lang:'en-US',localService:true}];},
     addEventListener:listeners.addEventListener.bind(listeners),removeEventListener:listeners.removeEventListener.bind(listeners),
     get speaking(){return !!current;},resume(){},
-    speak(u){if(window.__speech.blocked){window.__speech.blocked=false;u.onerror?.({error:'not-allowed'});return;}
+    speak(u){window.__speech.attempts.push({text:u.text,splash:!!document.querySelector('.ea-startup')});if(window.__speech.blocked){window.__speech.blocked=false;u.onerror?.({error:'not-allowed'});return;}
      current=u;window.__speech.active++;window.__speech.max=Math.max(window.__speech.max,window.__speech.active);window.__speech.calls.push({text:u.text,at:performance.now(),rate:u.rate});u.onstart?.();timer=setTimeout(()=>{current=null;window.__speech.active--;u.onend?.();},15);},
     cancel(){clearTimeout(timer);if(current){window.__speech.active--;current=null;}}
    }});
    window.SpeechRecognition=class{constructor(){throw Error('Microphone must never be used');}};
-  });
+  },name==='Mentor Alpha');
   const sockets=[];await context.routeWebSocket('**/api/ws?*',socket=>sockets.push(socket));
   await context.route('https://fonts.**',r=>r.abort());
   await context.route('**/voice-image-*.jpg',r=>r.fulfill({body:image,contentType:'image/jpeg'}));
@@ -46,9 +46,9 @@ try{
    await route.fulfill({json});
   });
   const page=await context.newPage();page.setDefaultTimeout(15000);const errors=[];page.on('pageerror',e=>errors.push(e.message));
-  await page.goto(origin+'/ea-app/');await page.locator('.ea-startup').waitFor({state:'detached'});
+  await page.goto(origin+'/ea-app/');await page.locator('.ea-startup').waitFor({state:'visible'});assert.equal(await page.evaluate(()=>window.__speech.attempts.length),0,'no voice before splash finishes');await page.locator('.ea-startup').waitFor({state:'detached'});await page.waitForFunction(()=>window.__speech.attempts.length>0);assert.ok((await page.evaluate(()=>window.__speech.attempts)).every(attempt=>!attempt.splash));
   const speech=()=>page.evaluate(()=>window.__speech.calls);
-  assert.equal((await speech()).length,0,'browser restriction respected');
+  assert.equal((await speech()).length,name==='Mentor Alpha'?0:1,'automatic welcome wherever permitted; blocked browsers await gesture');
   const nav=page.locator('.ea-app-content > .ea-glass-navigation');const originalNav=await nav.boundingBox();
   await nav.getByRole('button',{name:'Settings',exact:true}).tap();await page.waitForTimeout(80);
   assert.equal((await speech()).filter(t=>t.text===`Welcome to ${name}.`).length,1,'earliest existing gesture unlocks welcome');
@@ -68,10 +68,17 @@ try{
   await page.waitForTimeout(750);await page.locator('.ea-nav-screen').first().locator('button').filter({has:page.locator('svg.lucide-chevron-left')}).click();
   await nav.getByRole('button',{name:'Settings',exact:true}).tap();await page.getByRole('button',{name:'EA Manipulation',exact:true}).tap();
   const prior=(await speech()).length;for(const mode of ['BEAST','AGGRESSIVE','ULTIMATE'])await page.getByRole('button',{name:`${mode} visual mode`}).tap();await page.waitForTimeout(400);assert.match((await speech()).slice(prior).filter(t=>/mode activated/.test(t.text)).at(-1).text,/Ultimate mode activated/);
-  await page.getByRole('button',{name:'Chart Scanner',exact:true}).click();const scanner=page.getByRole('dialog',{name:new RegExp(name+' Chart Scanner')});await scanner.locator('input[type=file]').first().setInputFiles({name:'chart.jpg',mimeType:'image/jpeg',buffer:image});await scanner.getByRole('button',{name:'Analyse chart'}).click();await page.waitForTimeout(120);assert.ok((await speech()).some(t=>/gold sell directional bias/.test(t.text)));assert.ok((await speech()).some(t=>t.text==='Chart analysis started.'));
+  await nav.getByRole('button',{name:'MetaTrader',exact:true}).tap();await page.locator('#mt5-login').fill('123456');await page.locator('#mt5-password').fill('private-password');await page.locator('#mt5-server').fill('Exness-MT5Real1');await page.getByRole('button',{name:'Connect MT5',exact:true}).click();
+  await page.waitForFunction(()=>window.__speech.calls.some(call=>call.text==='Connecting to Exness MT5 Real 1.'));await page.waitForFunction(()=>window.__speech.calls.some(call=>/account remains unverified/.test(call.text)));assert.ok(!(await speech()).some(call=>/connected successfully|private-password/.test(call.text)));
+  // Synthetic outcomes exercise narration only, not real MT5 auth or execution.
+  for(const status of ['backend-unreachable','authentication-failed']){await page.evaluate(status=>window.dispatchEvent(new CustomEvent('ea:assistant',{detail:{type:'mt5-result',outcome:{status}}})),status);await page.waitForTimeout(50);}
+  assert.ok((await speech()).some(call=>call.text==='Connection failed. Backend unreachable.'));assert.ok((await speech()).some(call=>/check your account credentials/.test(call.text)));
+  await page.evaluate(()=>window.dispatchEvent(new CustomEvent('ea:assistant',{detail:{type:'mt5-result',outcome:{status:'connected',verified:false}}})));await page.waitForTimeout(50);assert.ok(!(await speech()).some(call=>/connected successfully/.test(call.text)));
+  await nav.getByRole('button',{name:'Settings',exact:true}).tap();
+  await page.getByRole('button',{name:'Chart Scanner',exact:true}).click();const scanner=page.getByRole('dialog',{name:new RegExp(name+' Chart Scanner')});await scanner.locator('input[type=file]').first().setInputFiles({name:'chart.jpg',mimeType:'image/jpeg',buffer:image});await scanner.getByRole('button',{name:'Analyse chart'}).click();await page.waitForTimeout(120);assert.ok((await speech()).some(t=>/gold sell setup detected.*Entry at 2,750\.25.*Stop loss at 2,760\.5.*Take profit at 2,730/.test(t.text)));assert.ok((await speech()).some(t=>t.text==='Chart analysis started.'));
   assert.deepEqual(await nav.boundingBox(),originalNav);assert.equal(await page.evaluate(()=>window.__speech.max),1);assert.equal((await speech()).filter(t=>t.text===`Welcome to ${name}.`).length,1);
-  await page.reload();await page.locator('.ea-startup').waitFor({state:'detached'});await page.tap('body');await page.waitForTimeout(80);assert.equal((await speech()).filter(t=>t.text===`Welcome to ${name}.`).length,1,'new launch welcomes once');
+  await page.reload();await page.locator('.ea-startup').waitFor({state:'detached'});await page.tap('body');await page.waitForTimeout(80);assert.equal((await speech()).filter(t=>t.text===`Welcome to ${name}.`).length,1,'new launch welcomes once');assert.ok((await page.evaluate(()=>window.__speech.attempts)).every(attempt=>!attempt.splash));
   assert.deepEqual(errors,[]);results.push({name,announcements:await speech(),writes});await page.screenshot({path:`work/announcement-tests/${name.replaceAll(' ','-')}.png`});await context.close();
  }
- await writeFile('work/announcement-tests/browser-results.json',JSON.stringify(results,null,2));console.log('PASS automatic native welcome, gesture retry, no chatbot/microphone/cloud calls, saved Start/Stop/symbol, actual scanner, WebSocket execution/error/dedup, rapid modes, reopening and navigation bounds');
+ await writeFile('work/announcement-tests/browser-results.json',JSON.stringify(results,null,2));console.log('PASS automatic native welcome, gesture retry, no chatbot/microphone/cloud calls, saved Start/Stop/symbol, actual scanner price narration, honest MT5 preview and outcome categories, WebSocket execution/error/dedup, rapid modes, reopening and navigation bounds');
 }finally{await browser.close();}

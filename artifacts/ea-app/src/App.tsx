@@ -9,7 +9,7 @@ import "@/components/HomeInteractions.css";
 import {useFontPreference} from "@/hooks/use-font-preference";
 import {useShapePreference} from "@/hooks/use-shape-preference";
 import TradingActivityMonitor from "@/components/TradingActivityMonitor";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { AppContext, AppSettings } from "@/context/AppContext";
 import HomeTab from "@/pages/HomeTab";
 import MetaTraderTab from "@/pages/MetaTraderTab";
@@ -29,10 +29,12 @@ type AuthStage = "loading" | "error" | "access" | "pending" | "rejected" | "acti
 
 export default function App() {
   const [ready, setReady] = useState(false);
-  return <StartupSplash ready={ready}><EACloudApp onReady={setReady} /></StartupSplash>;
+  const [startupComplete, setStartupComplete] = useState(false);
+  const finishStartup = useCallback(() => setStartupComplete(true), []);
+  return <StartupSplash ready={ready} onComplete={finishStartup}><EACloudApp onReady={setReady} startupComplete={startupComplete} /></StartupSplash>;
 }
 
-function EACloudApp({ onReady }: { onReady: (ready: boolean) => void }) {
+function EACloudApp({ onReady, startupComplete }: { onReady: (ready: boolean) => void; startupComplete: boolean }) {
   const [authStage, setAuthStage] = useState<AuthStage>("loading");
   const [loadError, setLoadError] = useState("");
   const [brandingReady, setBrandingReady] = useState(false);
@@ -158,7 +160,7 @@ function EACloudApp({ onReady }: { onReady: (ready: boolean) => void }) {
 
   const visualModes = useVisualModes(clientToken,authStage === "app" && brandingReady,mentorImageUrl,mentorId);
   const bgImageUrl = visualModes.displayImage;
-  useVoiceAnnouncements(clientToken,authStage === "app" && brandingReady,eaName,visualModes);
+  useVoiceAnnouncements(clientToken,authStage === "app" && brandingReady && startupComplete,eaName,visualModes);
 
   const settings: AppSettings = {
     visualModes,

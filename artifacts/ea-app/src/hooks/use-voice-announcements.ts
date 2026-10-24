@@ -2,7 +2,7 @@ import { useEffect, useRef } from "react";
 import type { VisualModes } from "./use-visual-modes";
 import { VoiceAnnouncementService } from "@/lib/voice-announcement-service";
 import { cleanText, modeNames, speakSymbol } from "@/lib/assistant-text";
-import { scannerAnnouncement, tradeAnnouncement } from "@/lib/voice-announcement-text";
+import { scannerAnnouncement, tradeAnnouncement, mt5AttemptAnnouncement, mt5ResultAnnouncement } from "@/lib/voice-announcement-text";
 import type { AssistantEvent } from "@/lib/assistant-events";
 /** Automatic, non-conversational announcements. Never reads an API to generate speech. */
 export function useVoiceAnnouncements(token: string | null, ready: boolean, botName: string, modes: VisualModes) {
@@ -18,24 +18,34 @@ export function useVoiceAnnouncements(token: string | null, ready: boolean, botN
     welcome.current = false;
     lastMode.current = null;
     const greet = () => {
-      if (welcome.current || !context.current.ready || !context.current.botName) return;
+      if (welcome.current || !context.current.ready) return;
       welcome.current = true;
-      voice.announce(`Welcome to ${cleanText(context.current.botName, 120)}.`, "welcome", 1);
+      voice.announce(`Welcome to ${(cleanText(context.current.botName, 120) || "EA Cloud Pro")}.`, "welcome", 1);
     };
     const gesture = () => { greet(); voice.unlock(); };
     const visibility = () => { if (document.hidden) voice.suspend(); else voice.foreground(); };
     const leave = () => voice.suspend();
     const show = (event: PageTransitionEvent) => {
       voice.foreground();
-      if (event.persisted) { welcome.current = false; greet(); }
+      if (event.persisted) greet();
     };
+    let mt5Attempt = 0;
     const handler = (event: Event) => {
       if (!context.current.ready || document.hidden) return;
       const detail = (event as CustomEvent<AssistantEvent>).detail;
       if (!detail) return;
       if (detail.type === "bot-request") voice.discard("bot");
-      if (detail.type === "bot-saved") voice.announce(`${cleanText(context.current.botName,120)} ${detail.enabled ? "activated" : "deactivated"}.`, `bot-${detail.enabled}-${Date.now()}`, 3, "bot");
+      if (detail.type === "bot-saved") voice.announce(`${(cleanText(context.current.botName,120) || "EA Cloud Pro")} ${detail.enabled ? "activated" : "deactivated"}.`, `bot-${detail.enabled}-${Date.now()}`, 3, "bot");
       if (detail.type === "bot-failed") voice.announce(`Bot ${detail.enabled ? "activation" : "deactivation"} failed.`, `bot-failed-${detail.enabled}-${Date.now()}`, 3, "bot");
+      if (detail.type === "mt5-start") {
+        mt5Attempt++;
+        voice.announce(mt5AttemptAnnouncement(detail.broker, detail.server), `mt5-start-${mt5Attempt}`, 2, "mt5");
+      }
+      if (detail.type === "mt5-unverified" || detail.type === "mt5-result") {
+        const outcome = detail.type === "mt5-unverified" ? {status:"unverified" as const} : detail.outcome;
+        const text = mt5ResultAnnouncement(outcome);
+        if (text) voice.announce(text, `mt5-result-${mt5Attempt}-${outcome.status}`, outcome.status === "unverified" ? 2 : 3, "mt5");
+      }
       if (detail.type === "symbol-saved") voice.announce(`${speakSymbol(detail.symbol)} configured.`, `symbol-${detail.symbol}-${Date.now()}`, 2, "symbol");
       if (detail.type === "scan-start") voice.announce(detail.kind === "fundamental" ? "Fundamental analysis started." : "Chart analysis started.", `scan-start-${Date.now()}`, 2, "scan");
       if (detail.type === "scan-complete") {
