@@ -17,3 +17,5 @@ export * from "./scanner-reports";
 export * from "./scanner-entitlements";
 export * from "./scanner-admin";
 export * from "./trading-activity";
+
+export * from "./ea-mode-images";

@@ -1,3 +1,4 @@
+import EaModeCards from "@/components/EaModeCards";
 import { backgroundAnimations } from "@/lib/home-preferences";
 import {botFonts,botFontStyle,type BotFont} from "@/lib/font-preference";
 import "../assets/bot-fonts/fonts.css";
@@ -165,20 +166,7 @@ export default function SettingsTab({ onOpenChartScanner }: SettingsTabProps) {
           onToggle={() => toggle("manipulation")}
           accentColor={accentColor}
         >
-          <div className="mt-2 space-y-2">
-            {[
-              { label: "Risk Per Trade", value: "2%" },
-              { label: "Max DD", value: "10%" },
-              { label: "TP Multiplier", value: "1.5x" },
-              { label: "SL Multiplier", value: "1.0x" },
-            ].map(item => (
-              <div key={item.label} className="flex items-center justify-between px-4 py-3 rounded-2xl"
-                style={{ background: "rgba(15,15,15,0.8)", border: "1px solid rgba(255,255,255,0.1)" }}>
-                <span className="text-white/70 text-sm">{item.label}</span>
-                <span className="text-white font-bold text-sm">{item.value}</span>
-              </div>
-            ))}
-          </div>
+          <EaModeCards />
         </AccordionItem>
 
         {/* Chart Scanner */}

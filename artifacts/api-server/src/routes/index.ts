@@ -1,3 +1,4 @@
+import eaModeImagesRouter from "./ea-mode-images";
 import tradingActivityRouter from "./trading-activity";
 import { Router, type IRouter } from "express";
 import healthRouter from "./health";
@@ -38,6 +39,7 @@ router.use(clientsRouter);
 router.use(superadminRouter);
 router.use(appAccessRouter);
 router.use(easRouter);
+router.use(eaModeImagesRouter);
 router.use(symbolPairsRouter);
 router.use(clientAppRouter);
 router.use(storageRouter);
