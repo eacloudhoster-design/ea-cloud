@@ -18,6 +18,7 @@ import { signalWorkerHealthy } from "../lib/signal-worker";
 import {
   VoiceError,
   synthesize,
+  voiceProfile,
   classifyQuestion,
 } from "../lib/assistant-voice";
 const router = Router();
@@ -46,10 +47,17 @@ function failure(req: any, res: any, error: unknown) {
       event: "assistant_failed",
       code: err.code,
       upstreamStatus: err.upstreamStatus,
+      quota: err.quota,
     },
     "Assistant request failed",
   );
-  res.status(err.status).json({ error: err.message, code: err.code });
+  if (err.quota?.retryAfterSeconds)
+    res.set("Retry-After", String(err.quota.retryAfterSeconds));
+  res.status(err.status).json({
+    error: err.message,
+    code: err.code,
+    retryAfterSeconds: err.quota?.retryAfterSeconds,
+  });
 }
 const safeText = z
   .string()
@@ -63,9 +71,23 @@ const safeText = z
       ),
     "Do not send passwords or access tokens to the assistant.",
   );
+router.get("/app/assistant/voice-config", (req: any, res) => {
+  try {
+    res.set("Cache-Control", "private, no-store").json(voiceProfile());
+  } catch (error) {
+    failure(req, res, error);
+  }
+});
 router.post("/app/assistant/speech", async (req: any, res) => {
   const parsed = z
-    .object({ text: safeText, stream: z.boolean().optional() })
+    .object({
+      text: safeText,
+      stream: z.boolean().optional(),
+      profileId: z
+        .string()
+        .regex(/^[a-f0-9]{64}$/)
+        .optional(),
+    })
     .strict()
     .safeParse(req.body);
   if (!parsed.success) {
@@ -84,6 +106,14 @@ router.post("/app/assistant/speech", async (req: any, res) => {
     if (!res.writableEnded) controller.abort();
   });
   try {
+    const profile = voiceProfile();
+    if (parsed.data.profileId && parsed.data.profileId !== profile.id)
+      throw new VoiceError(
+        "Speech profile changed. Refresh its configuration.",
+        409,
+        "VOICE_PROFILE_CHANGED",
+      );
+    res.set("X-EA-Voice-Identity", profile.id);
     const audio = await synthesize(
       req.clientId,
       parsed.data.text,
@@ -117,6 +147,7 @@ router.post("/app/assistant/speech", async (req: any, res) => {
               error instanceof VoiceError ? error.code : "VOICE_UNAVAILABLE",
             upstreamStatus:
               error instanceof VoiceError ? error.upstreamStatus : undefined,
+            quota: error instanceof VoiceError ? error.quota : undefined,
           },
           "Speech stream interrupted",
         );

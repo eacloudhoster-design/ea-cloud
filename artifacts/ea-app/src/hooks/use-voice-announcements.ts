@@ -70,6 +70,8 @@ export function useVoiceAnnouncements(token: string | null, ready: boolean, botN
     document.addEventListener("visibilitychange", visibility);
     window.addEventListener("pagehide", leave);
     window.addEventListener("pageshow", show);
+    const online=()=>{if(!document.hidden)voice.foreground();};
+    window.addEventListener("online",online);
     greet();
     voice.preload([
       `Welcome to ${(cleanText(context.current.botName,120) || "EA Cloud Pro")}.`,
@@ -89,6 +91,7 @@ export function useVoiceAnnouncements(token: string | null, ready: boolean, botN
       document.removeEventListener("visibilitychange", visibility);
       window.removeEventListener("pagehide", leave);
       window.removeEventListener("pageshow", show);
+      window.removeEventListener("online",online);
     };
   }, [token, preloadReady]);
   useEffect(() => { if (ready) greetNow.current(); }, [ready, token]);

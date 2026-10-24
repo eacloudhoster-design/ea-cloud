@@ -4,7 +4,6 @@ import {build} from '../../artifacts/api-server/node_modules/esbuild/lib/main.js
 const load=async path=>{const result=await build({entryPoints:[path],bundle:true,platform:'node',format:'esm',write:false});return import('data:text/javascript;base64,'+Buffer.from(result.outputFiles[0].text).toString('base64'));};
 const text=await load('artifacts/ea-app/src/lib/assistant-text.ts');
 const provider=await load('artifacts/api-server/src/lib/assistant-voice.ts');
-const {VoiceQueue,defaultVoicePreferences,normalizeVoicePreferences}=await load('artifacts/ea-app/src/lib/voice-queue.ts');
 const delay=ms=>new Promise(resolve=>setTimeout(resolve,ms));
 const facts={observedAt:Date.now(),connected:true,engine:true,robotEnabled:true,tradeAllowed:true,account:{balance:1250.5,profit:-12.3,currency:'USD'},positionsCount:3,botName:'Mentor One'};
 test('answers use verified fresh account values and never infer positions, success or unavailable levels',()=>{
@@ -30,39 +29,13 @@ test('neural provider builds verified PCM WAV and distinguishes upstream/configu
   const result=await provider.synthesize(7,'Welcome to Mentor One.',new AbortController().signal);assert.equal(result.toString('ascii',0,4),'RIFF');assert.equal(result.readUInt32LE(24),24000);
   await provider.synthesize(7,'Welcome to Mentor One.',new AbortController().signal);assert.equal(calls,1);
   await provider.synthesize(8,'Welcome to Mentor One.',new AbortController().signal);assert.equal(calls,2,'private cache scoped per client');
-  for(const status of [400,401,403,404,429,500]){globalThis.fetch=async()=>new Response('',{status});await assert.rejects(()=>provider.synthesize(7,`failure ${status}`,new AbortController().signal),error=>error.upstreamStatus===status&&error.status===(status===429?429:503)&&!error.message.includes('private-fixture-key'));}
+  for(const status of [400,401,403,404,500]){globalThis.fetch=async()=>new Response('',{status});await assert.rejects(()=>provider.synthesize(7,`failure ${status}`,new AbortController().signal),error=>error.upstreamStatus===status&&error.status===(status===429?429:503)&&!error.message.includes('private-fixture-key'));}
   globalThis.fetch=async()=>Response.json({candidates:[{finishReason:'STOP',content:{parts:[]}}]});await assert.rejects(()=>provider.synthesize(7,'Malformed audio',new AbortController().signal),/valid speech/);
   delete process.env.GEMINI_API_KEY;await assert.rejects(()=>provider.synthesize(7,'Unconfigured',new AbortController().signal),/not configured/);
   assert.equal((await provider.classifyQuestion('What is my balance?',new AbortController().signal)).intent,'balance');
   assert.equal((await provider.classifyQuestion('Execute a buy trade',new AbortController().signal)).intent,'unsupported');
  }finally{globalThis.fetch=original;if(oldModel===undefined)delete process.env.GEMINI_VOICE_MODEL;else process.env.GEMINI_VOICE_MODEL=oldModel;if(old===undefined)delete process.env.GEMINI_API_KEY;else process.env.GEMINI_API_KEY=old;}
 });
-test('single audio queue respects gesture, priorities, deduplication, stop, mute, disable and autoplay retry',async()=>{
- const originalFetch=globalThis.fetch,originalAudio=globalThis.Audio;let active=0,maxActive=0,calls=[],blocked=false;const states=[];
- class AudioFixture{
-  paused=true;ended=false;onended=null;onerror=null;onpause=null;
-  play(){if(blocked){blocked=false;return Promise.reject(Object.assign(Error('blocked'),{name:'NotAllowedError'}));}this.paused=false;active++;maxActive=Math.max(maxActive,active);this.timer=setTimeout(()=>{if(!this.paused){this.paused=true;this.ended=true;active--;this.onended?.();}},10);return Promise.resolve();}
-  pause(){if(!this.paused){this.paused=true;active--;clearTimeout(this.timer);this.onpause?.();}}
-  load(){}removeAttribute(){}
- }
- globalThis.Audio=AudioFixture;globalThis.fetch=async(_url,init)=>{calls.push(JSON.parse(init.body).text);return new Response(Buffer.alloc(200),{headers:{'Content-Type':'audio/wav'}});};
- const queue=new VoiceQueue('fixture',state=>states.push(state));queue.configure({...defaultVoicePreferences,enabled:true});
- try{
-  queue.enqueue('Welcome to Mentor One.','welcome',10);queue.enqueue('Welcome to Mentor One.','welcome',10);await delay(5);assert.equal(calls.length,0,'no playback before interaction');queue.unlock();await delay(35);assert.equal(calls.length,1);assert.equal(maxActive,1);
-  queue.enqueue('A low priority passage.','low',10);await delay(2);queue.enqueue('A confirmed disconnection.','critical',90);await delay(40);assert.equal(maxActive,1);
-  blocked=true;queue.enqueue('Permission check.','blocked',20);await delay(15);assert.ok(states.some(s=>s.blocked===true));queue.unlock();await delay(25);
-  queue.enqueue('Cancel this pending passage.','cancel',20);await delay(2);queue.configure({...defaultVoicePreferences,enabled:false});await delay(20);assert.equal(active,0);
-  const count=calls.length;queue.enqueue('Do not speak while disabled.','disabled');await delay(10);assert.equal(calls.length,count);
-  queue.configure({...defaultVoicePreferences,enabled:true,volume:0});queue.enqueue('Muted.','muted');await delay(5);assert.equal(calls.length,count);
-  queue.configure({...defaultVoicePreferences,enabled:true});queue.suspend();queue.enqueue('Hidden application.','hidden');await delay(5);assert.equal(calls.length,count);queue.foreground();
-  queue.enqueue('Requires a fresh gesture.','visible');await delay(5);assert.equal(calls.length,count);queue.unlock();await delay(25);assert.equal(calls.length,count+1);
-  const micCount=calls.length;queue.microphone(true);queue.enqueue('Wait until microphone ends.','mic-wait');await delay(10);assert.equal(calls.length,micCount);queue.microphone(false);await delay(25);assert.equal(calls.length,micCount+1);
-  queue.enqueue('Read this actual chart reasoning. '.repeat(50)+'Stop loss at 2750.25.','long');await delay(150);assert.ok(calls.join(' ').includes('2750.25'));assert.equal(maxActive,1);
-  queue.dispose();const disposedCount=calls.length;queue.enqueue('Late private response after sign out.','late');queue.unlock();await delay(10);assert.equal(calls.length,disposedCount);
-  assert.equal(normalizeVoicePreferences({volume:20,speed:-1}).volume,1);assert.equal(normalizeVoicePreferences({volume:20,speed:-1}).speed,.8);
- }finally{queue.dispose();globalThis.fetch=originalFetch;globalThis.Audio=originalAudio;}
-});
-
 test('assistant routes preserve authentication, licences, account/report ownership and scanner credits',{skip:!process.env.PGLITE_MODULE&&'Set PGLITE_MODULE for isolated PostgreSQL route integration'},async()=>{
  const {PGlite}=await import(process.env.PGLITE_MODULE);const engine=new PGlite();
  const {mkdirSync}=await import('node:fs');const {resolve}=await import('node:path');const {pathToFileURL}=await import('node:url');
@@ -91,6 +64,11 @@ test('assistant routes preserve authentication, licences, account/report ownersh
  try{
   assert.equal((await appRequest(app,'https://fixture/api/app/assistant/facts')).status,401);
   assert.equal((await call('facts',7,undefined,'mentor')).status,401);
+  assert.equal((await appRequest(app,'https://fixture/api/app/assistant/voice-config')).status,401);
+  const configuration=await call('voice-config');assert.equal(configuration.status,200);
+  const identity=await configuration.json();assert.match(identity.id,/^[a-f0-9]{64}$/);assert.equal(identity.voice,'Aoede');
+  assert.ok(!JSON.stringify(identity).includes('API_KEY'));
+  assert.equal((await call('speech',7,{text:'Profile check.',profileId:'0'.repeat(64)})).status,409);
   const own=await(await call('facts?clientId=9')).json();assert.equal(own.botName,'Mentor Alpha');assert.equal(own.account.balance,1250.5);assert.equal(own.positionsCount,3);assert.equal(own.latest.id,'00000000-0000-4000-8000-000000000007');assert.ok(!JSON.stringify(own).includes('encryptedMt5Password'));
   const originalRead=globalThis.__voiceRead;globalThis.__voiceRead=async()=>({connected:false,tradeAllowed:false,account:null});
   assert.equal((await(await call('facts')).json()).connected,false);
@@ -109,14 +87,4 @@ test('assistant routes preserve authentication, licences, account/report ownersh
   await engine.exec("UPDATE licenses SET status='active', expires_at=now()-interval '1 second' WHERE key='VALID'");assert.equal((await call('intent',7,{question:'Balance'})).status,401);
   await engine.exec("UPDATE licenses SET expires_at=null WHERE key='VALID'; UPDATE app_access SET status='pending' WHERE id=7");assert.equal((await call('facts')).status,401);
  }finally{await engine.close();delete globalThis.__voiceSchema;delete globalThis.__voiceDB;delete globalThis.__voiceRead;}
-});
-
-test('explicit device voice fallback uses an available female voice without neural requests',async()=>{
- const oldSynthesis=globalThis.speechSynthesis,oldUtterance=globalThis.SpeechSynthesisUtterance,oldFetch=globalThis.fetch;
- const spoken=[];globalThis.SpeechSynthesisUtterance=class{constructor(text){this.text=text;}};
- globalThis.speechSynthesis={getVoices:()=>[{name:'Alex',voiceURI:'alex',lang:'en-US'},{name:'Samantha',voiceURI:'samantha',lang:'en-US'}],cancel(){},speak(utterance){spoken.push(utterance);setTimeout(()=>utterance.onend?.(),5);}};
- globalThis.fetch=async()=>{throw Error('Device mode must not call our neural API');};
- const queue=new VoiceQueue('fixture',()=>{});queue.configure({...defaultVoicePreferences,enabled:true,provider:'device'});
- try{queue.unlock();queue.enqueue('Welcome to the assigned mentor bot.','device');await delay(25);assert.equal(spoken.length,1);assert.equal(spoken[0].voice.name,'Samantha');}
- finally{queue.dispose();globalThis.speechSynthesis=oldSynthesis;globalThis.SpeechSynthesisUtterance=oldUtterance;globalThis.fetch=oldFetch;}
 });

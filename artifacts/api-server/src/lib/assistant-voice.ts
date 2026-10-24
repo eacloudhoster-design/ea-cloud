@@ -1,4 +1,7 @@
 import { createHash } from "node:crypto";
+import { readFile, writeFile, mkdir } from "node:fs/promises";
+import { resolve, join } from "node:path";
+import { isCommonNaturalAnnouncement } from "../../../../lib/api-zod/src/voice-announcements";
 
 export class VoiceError extends Error {
   constructor(
@@ -6,8 +9,135 @@ export class VoiceError extends Error {
     public status = 503,
     public code = "VOICE_UNAVAILABLE",
     public upstreamStatus?: number,
+    public quota?: ReturnType<typeof quotaDetails>,
   ) {
     super(message);
+  }
+}
+export function quotaDetails(raw: any) {
+  const details = Array.isArray(raw?.error?.details) ? raw.error.details : [];
+  const safe = (value: unknown) =>
+    typeof value === "string" && /^[a-zA-Z0-9_./:-]{1,180}$/.test(value)
+      ? value
+      : undefined;
+  const violations = details
+    .filter(
+      (item: any) =>
+        typeof item?.["@type"] === "string" &&
+        /[./]QuotaFailure$/.test(item["@type"]),
+    )
+    .flatMap((item: any) =>
+      Array.isArray(item.violations) ? item.violations : [],
+    )
+    .slice(0, 4)
+    .map((item: any) => ({
+      metric: safe(item.quotaMetric),
+      limit: safe(item.quotaId),
+      value: /^(?:\d+)$/.test(String(item.quotaValue))
+        ? String(item.quotaValue).slice(0, 20)
+        : undefined,
+      model: safe(item.quotaDimensions?.model),
+    }));
+  const retry = details.find(
+    (item: any) =>
+      typeof item?.["@type"] === "string" &&
+      /[./]RetryInfo$/.test(item["@type"]),
+  )?.retryDelay;
+  const seconds =
+    typeof retry === "string" && /^\d+(?:\.\d+)?s$/.test(retry)
+      ? Number(retry.slice(0, -1))
+      : Number(retry?.seconds);
+  return {
+    violations,
+    retryAfterSeconds:
+      Number.isFinite(seconds) && seconds >= 0
+        ? Math.min(86400, Math.ceil(seconds))
+        : undefined,
+  };
+}
+async function providerFailure(response: Response) {
+  const quota =
+    response.status === 429
+      ? quotaDetails(await response.json().catch(() => ({})))
+      : undefined;
+  if (quota && !quota.retryAfterSeconds) {
+    const header = Number(response.headers.get("Retry-After"));
+    if (Number.isFinite(header) && header > 0)
+      quota.retryAfterSeconds = Math.min(86400, Math.ceil(header));
+  }
+  return new VoiceError(
+    response.status === 429
+      ? "Natural speech quota is temporarily unavailable."
+      : "The speech provider rejected the request.",
+    response.status === 429 ? 429 : 503,
+    "VOICE_PROVIDER",
+    response.status,
+    quota,
+  );
+}
+const quotaCooldowns = new Map<
+  string,
+  { until: number; quota: ReturnType<typeof quotaDetails> | undefined }
+>();
+function recordQuota(id: string, error: unknown) {
+  if (error instanceof VoiceError && error.upstreamStatus === 429) {
+    const long = error.quota?.violations.some(
+      (item: { value?: string; metric?: string; limit?: string }) =>
+        item.value === "0" ||
+        /per.?day|daily/i.test(item.metric || "") ||
+        /per.?day|daily/i.test(item.limit || ""),
+    );
+    const seconds = Math.max(
+      long ? 3600 : 60,
+      error.quota?.retryAfterSeconds || 0,
+    );
+    quotaCooldowns.set(id, {
+      until: Date.now() + seconds * 1000,
+      quota: {
+        violations: error.quota?.violations || [],
+        retryAfterSeconds: seconds,
+      },
+    });
+  }
+}
+async function recordedCommonClip(
+  profileId: string,
+  text: string,
+): Promise<Buffer | null> {
+  if (!isCommonNaturalAnnouncement(text)) return null;
+  const hash = createHash("sha256").update(text).digest("hex");
+  const roots = [
+    process.env.VOICE_AUDIO_CACHE_DIR,
+    ...(process.env.VOICE_ASSETS_DIR
+      ? [process.env.VOICE_ASSETS_DIR]
+      : [
+          resolve(process.cwd(), "artifacts/ea-app/public/natural-voice"),
+          resolve(process.cwd(), "../ea-app/public/natural-voice"),
+        ]),
+  ].filter(Boolean) as string[];
+  for (const root of roots)
+    try {
+      const wav = await readFile(join(root, profileId, `${hash}.wav`));
+      decodeSpeechPart(wav.toString("base64"), "audio/wav");
+      return wav;
+    } catch {
+      /* Missing/corrupt assets must never be spoken. */
+    }
+  return null;
+}
+async function saveCommonClip(profileId: string, text: string, wav: Buffer) {
+  const root = process.env.VOICE_AUDIO_CACHE_DIR;
+  if (!root || !isCommonNaturalAnnouncement(text)) return;
+  const folder = join(root, profileId),
+    hash = createHash("sha256").update(text).digest("hex");
+  try {
+    await mkdir(folder, { recursive: true, mode: 0o700 });
+    await writeFile(join(folder, `${hash}.wav`), wav, {
+      mode: 0o600,
+      flag: "wx",
+    });
+  } catch {
+    /* Optional storage cannot break speech. */
   }
 }
 const modelId = (value: string) => {
@@ -52,15 +182,7 @@ async function generate(
       "VOICE_NETWORK",
     );
   }
-  if (!response.ok)
-    throw new VoiceError(
-      response.status === 429
-        ? "Neural voice quota reached. Try again later."
-        : "The assistant provider rejected the request. Check model availability and project access.",
-      response.status === 429 ? 429 : 503,
-      "VOICE_PROVIDER",
-      response.status,
-    );
+  if (!response.ok) throw await providerFailure(response);
   const raw = await response.text();
   if (raw.length > 8_000_000)
     throw new VoiceError(
@@ -105,6 +227,95 @@ export function pcmToWav(pcm: Buffer, rate = 24000) {
 }
 export const announcementDelivery =
   "Speak with a beautiful, natural, smooth adult feminine voice, perceived as approximately 25 to 35, with a natural feminine mid-range pitch. Your delivery should be warm, intelligent, elegant, confident and slightly futuristic. Sound like a real human speaking naturally, with subtle variations in intonation and rhythm. Use clear internationally understandable English, natural pauses and a comfortable conversational speaking speed. Maintain a sophisticated, premium AI-system personality. Avoid robotic speech, monotone delivery, artificial emphasis, exaggerated excitement or metallic vocal effects. Deliver announcements naturally, as if speaking directly to the listener.";
+/** Public, non-secret configuration fingerprint. Changes invalidate stored clips. */
+export function voiceProfile() {
+  const model = modelId(
+    process.env.GEMINI_VOICE_MODEL?.trim() || "gemini-3.8-flash-tts",
+  );
+  const voice = process.env.GEMINI_VOICE_NAME?.trim() || "Aoede";
+  if (!/tts/.test(model) || !/^[a-zA-Z]{2,40}$/.test(voice))
+    throw new VoiceError(
+      "Invalid speech model or voice configuration.",
+      503,
+      "VOICE_CONFIGURATION",
+    );
+  const id = createHash("sha256")
+    .update(
+      JSON.stringify({
+        model,
+        voice,
+        delivery: announcementDelivery,
+        format: "s16le-24000-mono",
+        protocol: 2,
+      }),
+    )
+    .digest("hex");
+  return {
+    id,
+    model,
+    voice,
+    configured: Boolean(process.env.GEMINI_API_KEY?.trim()),
+  };
+}
+function decodeSpeechPart(
+  data: unknown,
+  mime: unknown,
+  rate?: number,
+  channels?: number,
+): Buffer {
+  if (
+    typeof data !== "string" ||
+    !data.length ||
+    data.length % 4 ||
+    !/^[a-zA-Z0-9+/]*={0,2}$/.test(data) ||
+    typeof mime !== "string"
+  )
+    throw new VoiceError("Invalid speech payload.", 502, "VOICE_AUDIO");
+  const buffer = Buffer.from(data, "base64");
+  if (
+    !buffer.length ||
+    buffer.length > 4_000_044 ||
+    (channels != null && channels !== 1) ||
+    (rate != null && rate !== 24000)
+  )
+    throw new VoiceError("Unsupported speech encoding.", 502, "VOICE_AUDIO");
+  if (/^audio\/(?:L16|pcm)(?:;|$)/i.test(mime)) {
+    const declared = Number(/rate=(\d+)/i.exec(mime)?.[1] || 24000);
+    if (declared !== 24000 || buffer.length % 2)
+      throw new VoiceError("Unsupported speech rate.", 502, "VOICE_AUDIO");
+    return buffer;
+  }
+  if (/^audio\/wav(?:;|$)/i.test(mime)) {
+    if (
+      buffer.length < 44 ||
+      buffer.toString("ascii", 0, 4) !== "RIFF" ||
+      buffer.toString("ascii", 8, 12) !== "WAVE"
+    )
+      throw new VoiceError("Invalid speech WAV.", 502, "VOICE_AUDIO");
+    let offset = 12,
+      pcm: Buffer | null = null,
+      valid = false;
+    while (offset + 8 <= buffer.length) {
+      const type = buffer.toString("ascii", offset, offset + 4),
+        size = buffer.readUInt32LE(offset + 4);
+      offset += 8;
+      if (offset + size > buffer.length)
+        throw new VoiceError("Truncated speech WAV.", 502, "VOICE_AUDIO");
+      if (type === "fmt " && size >= 16)
+        valid =
+          buffer.readUInt16LE(offset) === 1 &&
+          buffer.readUInt16LE(offset + 2) === 1 &&
+          buffer.readUInt32LE(offset + 4) === 24000 &&
+          buffer.readUInt16LE(offset + 14) === 16;
+      if (type === "data") pcm = buffer.subarray(offset, offset + size);
+      offset += size + (size % 2);
+    }
+    if (!valid || !pcm?.length || pcm.length % 2)
+      throw new VoiceError("Unsupported speech WAV.", 502, "VOICE_AUDIO");
+    return pcm;
+  }
+  throw new VoiceError("Unsupported speech MIME type.", 502, "VOICE_AUDIO");
+}
 const voiceCacheTtl = 24 * 60 * 60 * 1000;
 const cache = new Map<string, { at: number; audio: Buffer }>();
 let bytes = 0;
@@ -143,13 +354,7 @@ async function streamSpeech(
       "VOICE_NETWORK",
     );
   });
-  if (!response.ok)
-    throw new VoiceError(
-      "The speech provider rejected the request.",
-      response.status === 429 ? 429 : 503,
-      "VOICE_PROVIDER",
-      response.status,
-    );
+  if (!response.ok) throw await providerFailure(response);
   if (
     !response.body ||
     !response.headers.get("content-type")?.includes("text/event-stream")
@@ -180,7 +385,15 @@ async function streamSpeech(
       event.event_type === "interaction.error"
     )
       throw new VoiceError("Speech generation failed.", 502, "VOICE_PROVIDER");
-    if (event.event_type === "interaction.complete") completed = true;
+    if (event.event_type === "interaction.completed") {
+      if (event.interaction?.status !== "completed")
+        throw new VoiceError(
+          "Speech interaction failed or was incomplete.",
+          502,
+          "VOICE_AUDIO",
+        );
+      completed = true;
+    }
     if (event.event_type !== "step.delta" || event.delta?.type !== "audio")
       return;
     if (
@@ -189,6 +402,15 @@ async function streamSpeech(
     )
       throw new VoiceError(
         "Invalid streamed speech encoding.",
+        502,
+        "VOICE_AUDIO",
+      );
+    if (
+      (event.delta.sample_rate != null && event.delta.sample_rate !== 24000) ||
+      (event.delta.channels != null && event.delta.channels !== 1)
+    )
+      throw new VoiceError(
+        "Unsupported streamed speech rate.",
         502,
         "VOICE_AUDIO",
       );
@@ -239,16 +461,13 @@ async function streamSpeech(
     await reader.cancel().catch(() => {});
   }
 }
-export async function synthesize(
+async function synthesizeRaw(
   clientId: number,
   text: string,
   signal: AbortSignal,
   onChunk?: (pcm: Buffer) => void,
 ) {
-  const model = modelId(
-    process.env.GEMINI_VOICE_MODEL?.trim() || "gemini-3.8-flash-tts",
-  );
-  const voice = process.env.GEMINI_VOICE_NAME?.trim() || "Aoede";
+  const { model, voice, id: profileId } = voiceProfile();
   if (!/^[a-zA-Z]{2,40}$/.test(voice))
     throw new VoiceError(
       "Invalid configured voice.",
@@ -256,7 +475,9 @@ export async function synthesize(
       "VOICE_CONFIGURATION",
     );
   const key = createHash("sha256")
-    .update(`${clientId}:${model}:${voice}:${announcementDelivery}:${text}`)
+    .update(
+      `${isCommonNaturalAnnouncement(text) ? "common" : clientId}:${profileId}:${text}`,
+    )
     .digest("hex");
   const hit = cache.get(key);
   if (hit && Date.now() - hit.at < voiceCacheTtl) {
@@ -267,6 +488,23 @@ export async function synthesize(
     bytes -= hit.audio.length;
     cache.delete(key);
   }
+  const recording = await recordedCommonClip(profileId, text);
+  if (recording) {
+    if (onChunk) onChunk(recording.subarray(44));
+    return recording;
+  }
+  const cooldown = quotaCooldowns.get(profileId);
+  if (cooldown && cooldown.until > Date.now())
+    throw new VoiceError(
+      "Natural speech quota is cooling down.",
+      429,
+      "VOICE_QUOTA_COOLDOWN",
+      429,
+      {
+        violations: cooldown.quota?.violations || [],
+        retryAfterSeconds: Math.ceil((cooldown.until - Date.now()) / 1000),
+      },
+    );
   const modern = /^gemini-3\.8-(?:flash|flash-lite)-tts$/.test(model);
   const modernBody = {
     model,
@@ -295,7 +533,7 @@ export async function synthesize(
       mime_type: "audio/l16",
       sample_rate: 24000,
     },
-    generation_config: { speech_config: [{ voice }] },
+    generation_config: { structured_speech_config: [{ voice }] },
   };
   const streamed =
     modern && onChunk ? await streamSpeech(modernBody, signal, onChunk) : null;
@@ -327,29 +565,46 @@ export async function synthesize(
         modern,
       );
   const candidate = data?.candidates?.[0];
-  const part = modern
-    ? { data: data?.output_audio?.data, mimeType: "audio/L16;rate=24000" }
-    : candidate?.content?.parts?.find((p: any) => p.inlineData?.data)
-        ?.inlineData;
-  if (
-    !streamed &&
-    ((modern
-      ? data.status !== "completed" ||
-        (data?.output_audio?.mime_type &&
-          !/^audio\/(?:L16|pcm)(?:;|$)/i.test(data?.output_audio.mime_type))
-      : candidate?.finishReason !== "STOP") ||
-      !part ||
-      typeof part.data !== "string" ||
-      !/^audio\/(?:L16|pcm)(?:;|$)/i.test(part.mimeType || "") ||
-      !/^[a-zA-Z0-9+/]*={0,2}$/.test(part.data))
-  )
-    throw new VoiceError(
-      "The provider did not return valid speech audio.",
-      502,
-      "VOICE_AUDIO",
+  let audio: Buffer;
+  if (streamed) audio = streamed;
+  else if (modern) {
+    if (data?.status !== "completed" || !Array.isArray(data.steps))
+      throw new VoiceError(
+        "Speech interaction did not complete.",
+        502,
+        "VOICE_AUDIO",
+      );
+    const parts = data.steps
+      .filter((step: any) => step.type === "model_output")
+      .flatMap((step: any) => (Array.isArray(step.content) ? step.content : []))
+      .filter((part: any) => part.type === "audio");
+    if (!parts.length)
+      throw new VoiceError(
+        "The provider returned no speech audio.",
+        502,
+        "VOICE_AUDIO",
+      );
+    const pcm = parts.map((part: any) =>
+      decodeSpeechPart(
+        part.data,
+        part.mime_type,
+        part.sample_rate,
+        part.channels,
+      ),
     );
-  const rate = Number(/rate=(\d+)/.exec(part.mimeType)?.[1] || 24000);
-  const audio = streamed || pcmToWav(Buffer.from(part.data, "base64"), rate);
+    audio = pcmToWav(Buffer.concat(pcm));
+  } else {
+    const part = candidate?.content?.parts?.find(
+      (part: any) => part.inlineData?.data,
+    )?.inlineData;
+    if (candidate?.finishReason !== "STOP" || !part)
+      throw new VoiceError(
+        "The provider did not return valid speech audio.",
+        502,
+        "VOICE_AUDIO",
+      );
+    audio = pcmToWav(decodeSpeechPart(part.data, part.mimeType));
+  }
   if (onChunk && !modern) onChunk(audio.subarray(44));
   while (
     cache.size &&
@@ -359,9 +614,79 @@ export async function synthesize(
     bytes -= cache.get(oldest)!.audio.length;
     cache.delete(oldest);
   }
+  await saveCommonClip(profileId, text, audio);
   cache.set(key, { at: Date.now(), audio });
   bytes += audio.length;
   return audio;
+}
+const pendingSpeech = new Map<
+  string,
+  {
+    promise: Promise<Buffer>;
+    controller: AbortController;
+    waiters: number;
+    done: boolean;
+  }
+>();
+export async function synthesize(
+  clientId: number,
+  text: string,
+  signal: AbortSignal,
+  onChunk?: (pcm: Buffer) => void,
+): Promise<Buffer> {
+  if (signal.aborted)
+    return Promise.reject(new DOMException("Cancelled", "AbortError"));
+  if (onChunk) {
+    try {
+      return await synthesizeRaw(clientId, text, signal, onChunk);
+    } catch (error) {
+      recordQuota(voiceProfile().id, error);
+      throw error;
+    }
+  }
+  const profile = voiceProfile();
+  const key = `${isCommonNaturalAnnouncement(text) ? "common" : clientId}:${profile.id}:${createHash("sha256").update(text).digest("hex")}`;
+  let pending = pendingSpeech.get(key);
+  if (!pending) {
+    const controller = new AbortController();
+    const item = {
+      promise: null as unknown as Promise<Buffer>,
+      controller,
+      waiters: 0,
+      done: false,
+    };
+    item.promise = synthesizeRaw(clientId, text, controller.signal)
+      .catch((error) => {
+        recordQuota(profile.id, error);
+        throw error;
+      })
+      .finally(() => {
+        item.done = true;
+        pendingSpeech.delete(key);
+      });
+    pendingSpeech.set(key, item);
+    pending = item;
+  }
+  const item = pending;
+  item.waiters++;
+  return new Promise((resolve, reject) => {
+    let finished = false;
+    const finish = (error: unknown, result?: Buffer) => {
+      if (finished) return;
+      finished = true;
+      signal.removeEventListener("abort", abort);
+      item.waiters--;
+      if (!item.waiters && !item.done) item.controller.abort();
+      if (error) reject(error);
+      else resolve(result!);
+    };
+    const abort = () => finish(new DOMException("Cancelled", "AbortError"));
+    signal.addEventListener("abort", abort, { once: true });
+    item.promise.then(
+      (audio) => finish(null, audio),
+      (error) => finish(error),
+    );
+  });
 }
 export const intents = [
   "balance",

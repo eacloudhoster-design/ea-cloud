@@ -1,3 +1,7 @@
+# Current implementation
+
+See [natural-only-voice.md](natural-only-voice.md) for the current natural-only announcement path, persistent caching, quota diagnostics and deployment steps. Descriptions of browser speech fallback or client streaming below are historical and superseded.
+
 # Neural announcement upgrade (current behaviour)
 
 This section supersedes the historical native-only implementation notes below. The existing announcement hook, queue, priorities, triggers and truthful event formatters remain in place; only audio generation/playback and preloading change. No listening, conversation, intent request or trading action is introduced.

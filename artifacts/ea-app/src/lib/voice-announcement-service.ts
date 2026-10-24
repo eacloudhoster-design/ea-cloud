@@ -1,22 +1,5 @@
 import { AnnouncementAudio } from "./announcement-audio";
 import { cleanText, speechChunks } from "./assistant-text";
-/** Prefer installed enhanced/natural English voices; never wait for a cloud provider. */
-export function selectAnnouncementVoice(voices: SpeechSynthesisVoice[]) {
-  const score = (voice: SpeechSynthesisVoice) =>
-    (/Premium|Enhanced|Natural|Neural/i.test(voice.name) ? 100 : 0) +
-    (/Samantha|Karen|Moira|Tessa|Victoria|Serena|Zira|Aria|Jenny|Sonia|Ava|Emma/i.test(
-      voice.name,
-    )
-      ? 20
-      : 0) +
-    (voice.localService ? 10 : 0) +
-    (voice.default ? 1 : 0);
-  return (
-    voices
-      .filter((v) => /^en(?:-|_|$)/i.test(v.lang))
-      .sort((a, b) => score(b) - score(a))[0] || null
-  );
-}
 export const AnnouncementPriority = { LOW: 1, MEDIUM: 2, HIGH: 3 } as const;
 type Job = {
   text: string;
@@ -25,55 +8,52 @@ type Job = {
   priority: number;
   at: number;
 };
-/** One announcement queue/player per signed-in app session. Never listens. */
+/** The sole automatic announcer. It never uses device-generated speech. */
 export class VoiceAnnouncementService {
   private audio: AnnouncementAudio | null = null;
-  private request: AbortController | null = null;
-  private neuralPlaying = false;
   private queue: Job[] = [];
-  private seen = new Map<string, number>();
-  private voice: SpeechSynthesisVoice | null = null;
+  private seen = new Set<string>();
   private current: Job | null = null;
-  private utterance: SpeechSynthesisUtterance | null = null;
+  private request: AbortController | null = null;
   private timer?: ReturnType<typeof setTimeout>;
-  private disposed = false;
   private suspended = false;
+  private disposed = false;
   private blocked = false;
   private generation = 0;
-  private synth =
-    typeof window !== "undefined" ? window.speechSynthesis : undefined;
-  private selectVoice = () => {
-    const voices = this.synth?.getVoices() || [];
-    this.voice = selectAnnouncementVoice(voices);
-  };
   constructor(token?: string) {
-    if (token) {
+    if (token)
       try {
         this.audio = new AnnouncementAudio(token);
       } catch {
-        /* Device fallback. */
+        /* Unsupported playback stays silent. */
       }
-    }
-    this.selectVoice();
-    this.synth?.addEventListener("voiceschanged", this.selectVoice);
   }
   preload(texts: string[]) {
     void this.audio?.preload(
       texts.map((t) => cleanText(t, 700)).filter(Boolean),
     );
   }
+  private fresh(job: Job) {
+    return (
+      Date.now() - job.at <
+      (job.key === "welcome"
+        ? 120000
+        : job.priority === 3 || job.group === "scan"
+          ? 60000
+          : 20000)
+    );
+  }
   announce(text: string, key: string, priority = 1, group?: string) {
-    if (this.disposed || this.suspended || (!this.synth && !this.audio)) return;
+    if (this.disposed || this.suspended || !this.audio) return;
     text = cleanText(text, 800);
-    if (!text) return;
-    const now = Date.now();
-    if (this.seen.has(key)) return;
-    this.seen.set(key, now);
-    if (this.seen.size > 200) this.seen.delete(this.seen.keys().next().value!);
+    if (group === "bot" || group === "symbol" || group === "mt5")
+      this.audio.register(text);
+    if (!text || this.seen.has(key)) return;
+    this.seen.add(key);
+    if (this.seen.size > 200)
+      this.seen.delete(this.seen.values().next().value!);
     this.queue = this.queue.filter(
-      (j) =>
-        (!group || j.group !== group) &&
-        (j.key === "welcome" || now - j.at < 20000),
+      (job) => (!group || job.group !== group) && this.fresh(job),
     );
     if (
       this.current &&
@@ -81,7 +61,7 @@ export class VoiceAnnouncementService {
         (group && group === this.current.group))
     )
       this.cancelCurrent();
-    this.queue.push({ text, key, group, priority, at: now });
+    this.queue.push({ text, key, priority, group, at: Date.now() });
     this.queue.sort((a, b) => b.priority - a.priority);
     this.queue = this.queue.slice(0, 8);
     this.drain();
@@ -93,63 +73,48 @@ export class VoiceAnnouncementService {
       this.drain();
     }
   }
-  /** Called from existing gestures, never from a dedicated activation control. */
+  /** Resume only in existing permitted gestures; never use another speech engine. */
   unlock() {
-    if (this.disposed || this.suspended) return;
-    this.blocked = false;
-    // Some WebKit versions leave a blocked utterance pending without an error.
-    if (this.audio) {
-      void this.audio
-        .unlock()
-        .then(() => {
+    if (this.disposed || this.suspended || !this.audio) return;
+    void this.audio
+      .unlock()
+      .then(() => {
+        if (!this.disposed && !this.suspended) {
           this.blocked = false;
           this.drain();
-        })
-        .catch(() => {
-          this.blocked = true;
-        });
-    }
-    if (
-      this.current &&
-      !this.request &&
-      !this.neuralPlaying &&
-      !this.synth?.speaking
-    ) {
-      const job = this.current;
-      this.cancelCurrent();
-      this.queue.unshift(job);
-    }
-    this.synth?.resume();
-    this.drain();
+        }
+      })
+      .catch(() => {
+        this.blocked = true;
+      });
   }
   private cancelCurrent() {
     this.generation++;
     this.request?.abort();
     this.request = null;
-    this.audio?.stop();
-    this.neuralPlaying = false;
     clearTimeout(this.timer);
-    if (this.utterance) this.utterance.onend = this.utterance.onerror = null;
+    this.audio?.stop();
     this.current = null;
-    this.utterance = null;
-    this.synth?.cancel();
   }
   suspend() {
     this.suspended = true;
-    // Keep an unheard autoplay-blocked welcome for the earliest permitted gesture.
-    // All stale trading/mode work is still discarded when the app is hidden.
-    this.queue = this.queue.filter((job) => job.key === "welcome");
+    this.queue = this.queue.filter(
+      (job) => job.key === "welcome" && this.fresh(job),
+    );
     if (
       this.current?.key === "welcome" &&
       !this.audio?.playing &&
-      !this.synth?.speaking
+      this.fresh(this.current)
     )
       this.queue.unshift(this.current);
     this.cancelCurrent();
     this.audio?.suspend();
   }
   foreground() {
+    this.audio?.recover();
     this.suspended = false;
+    this.blocked = false;
+    this.drain();
   }
   dispose() {
     this.disposed = true;
@@ -157,108 +122,66 @@ export class VoiceAnnouncementService {
     this.queue = [];
     this.seen.clear();
     this.audio?.dispose();
-    this.synth?.removeEventListener("voiceschanged", this.selectVoice);
   }
   private drain() {
-    if (this.current || this.disposed || this.suspended || this.blocked) return;
-    const now = Date.now();
-    this.queue = this.queue.filter(
-      (j) =>
-        j.key === "welcome" || now - j.at < (j.priority === 3 ? 60000 : 20000),
-    );
+    if (
+      this.current ||
+      this.disposed ||
+      this.suspended ||
+      this.blocked ||
+      !this.audio
+    )
+      return;
+    this.queue = this.queue.filter((job) => this.fresh(job));
     const job = this.queue.shift();
     if (!job) return;
-    const generation = ++this.generation;
+    const generation = ++this.generation,
+      controller = (this.request = new AbortController());
     this.current = job;
-    if (this.audio) {
-      const controller = (this.request = new AbortController());
-      const chunks = speechChunks(job.text);
-      this.timer = setTimeout(
-        () => {
-          controller.abort();
-        },
-        Math.max(20000, Math.min(90000, job.text.length * 100)),
-      );
-      void (async () => {
-        for (const chunk of chunks) {
-          if (controller.signal.aborted || generation !== this.generation)
-            return;
-          this.neuralPlaying = this.audio!.running;
-          await this.audio!.play(chunk, controller.signal);
-        }
-      })()
-        .then(() => {
-          if (generation !== this.generation || this.disposed) return;
-          clearTimeout(this.timer);
-          this.current = null;
-          this.request = null;
-          this.neuralPlaying = false;
-          this.drain();
-        })
-        .catch((error) => {
-          if (generation !== this.generation || this.disposed) return;
-          clearTimeout(this.timer);
-          this.request = null;
-          this.neuralPlaying = false;
-          if (controller.signal.aborted) {
-            this.current = null;
-            this.drain();
-          } else if (error?.name === "NotAllowedError") {
-            this.current = null;
-            this.blocked = true;
-            this.queue.unshift(job);
-          } else if (error?.name === "PartialSpeechError") {
-            this.current = null;
-            this.drain();
-          } else this.speakDevice(job, generation);
-        });
-      return;
-    }
-    this.speakDevice(job, generation);
-  }
-  private speakDevice(job: Job, generation: number) {
-    if (!this.synth || typeof SpeechSynthesisUtterance === "undefined") {
-      this.current = null;
-      this.drain();
-      return;
-    }
-    const utterance = (this.utterance = new SpeechSynthesisUtterance(job.text));
-    utterance.voice = this.voice;
-    utterance.lang = this.voice?.lang || "en-US";
-    utterance.rate = 1.04;
-    utterance.pitch = 1;
-    utterance.volume = 1;
-    const finish = (blocked = false) => {
-      if (generation !== this.generation || this.disposed) return;
-      clearTimeout(this.timer);
-      utterance.onend = utterance.onerror = null;
-      this.current = null;
-      this.utterance = null;
-      this.blocked = blocked;
-      if (blocked) this.queue.unshift(job);
-      else this.drain();
-    };
-    utterance.onend = () => finish();
-    utterance.onerror = (event) => finish(event.error === "not-allowed");
-    let started = false;
-    utterance.onstart = () => {
-      started = true;
-    };
-    // Bound a silent WebKit stall. A subsequent real gesture may retry welcome.
     this.timer = setTimeout(
-      () => {
-        this.cancelCurrent();
-        if (!started) {
+      () => controller.abort(),
+      job.key === "welcome"
+        ? 60000
+        : job.priority === 3 || job.group === "scan"
+          ? 60000
+          : 20000,
+    );
+    void (async () => {
+      if (!this.audio!.running)
+        throw new DOMException(
+          "Audio requires a user gesture.",
+          "NotAllowedError",
+        );
+      for (const chunk of speechChunks(job.text)) {
+        await this.audio!.prepare(chunk, controller.signal);
+        if (
+          controller.signal.aborted ||
+          generation !== this.generation ||
+          !this.fresh(job)
+        )
+          return;
+        await this.audio!.play(chunk, controller.signal);
+      }
+    })()
+      .catch((error) => {
+        if (generation !== this.generation || this.disposed) return;
+        if (
+          !controller.signal.aborted &&
+          error?.name === "NotAllowedError" &&
+          this.fresh(job)
+        ) {
           this.blocked = true;
           this.queue.unshift(job);
-        } else this.drain();
-      },
-      Math.max(20000, Math.min(60000, job.text.length * 80)),
-    );
-    try {
-      this.synth.speak(utterance);
-    } catch {
-      finish(true);
-    }
+        }
+        // Provider/quota/encoding failures stay silent. The transport applies bounded
+        // retries/cooldown and continues serving exact cached natural recordings.
+      })
+      .finally(() => {
+        if (generation !== this.generation || this.disposed) return;
+        clearTimeout(this.timer);
+        this.request = null;
+        this.current = null;
+        this.drain();
+      });
   }
 }
