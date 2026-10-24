@@ -69,6 +69,7 @@ export default function SettingsTab({ onOpenChartScanner }: SettingsTabProps) {
       </div>
 
       <div className="flex-1 overflow-y-auto px-4 space-y-3 pb-4">
+        <p className="text-xs text-white/60">Announcements use an AI-generated voice.</p>
 
         {/* Select Main Interface */}
         <AccordionItem

@@ -64,13 +64,21 @@ const safeText = z
     "Do not send passwords or access tokens to the assistant.",
   );
 router.post("/app/assistant/speech", async (req: any, res) => {
-  const parsed = z.object({ text: safeText }).strict().safeParse(req.body);
+  const parsed = z
+    .object({ text: safeText, stream: z.boolean().optional() })
+    .strict()
+    .safeParse(req.body);
   if (!parsed.success) {
     res
       .status(400)
       .json({ error: "Provide a short spoken passage without credentials." });
     return;
   }
+  const streaming =
+    parsed.data.stream &&
+    /^gemini-3\.8-(?:flash|flash-lite)-tts$/.test(
+      process.env.GEMINI_VOICE_MODEL?.trim() || "gemini-3.8-flash-tts",
+    );
   const controller = new AbortController();
   res.on("close", () => {
     if (!res.writableEnded) controller.abort();
@@ -80,12 +88,41 @@ router.post("/app/assistant/speech", async (req: any, res) => {
       req.clientId,
       parsed.data.text,
       controller.signal,
+      streaming
+        ? (pcm) => {
+            if (!controller.signal.aborted) {
+              if (!res.headersSent) {
+                res.set("Cache-Control", "private, no-store");
+                res.type("audio/L16;rate=24000;channels=1");
+              }
+              res.write(pcm);
+            }
+          }
+        : undefined,
     );
     if (!controller.signal.aborted) {
-      res.type("audio/wav").send(audio);
+      if (streaming) res.end();
+      else {
+        res.set("Cache-Control", "private, no-store");
+        res.type("audio/wav").send(audio);
+      }
     }
   } catch (error) {
-    if (!controller.signal.aborted) failure(req, res, error);
+    if (!controller.signal.aborted) {
+      if (res.headersSent) {
+        req.log?.warn(
+          {
+            event: "voice_stream_failed",
+            code:
+              error instanceof VoiceError ? error.code : "VOICE_UNAVAILABLE",
+            upstreamStatus:
+              error instanceof VoiceError ? error.upstreamStatus : undefined,
+          },
+          "Speech stream interrupted",
+        );
+        res.destroy();
+      } else failure(req, res, error);
+    }
   }
 });
 router.post("/app/assistant/intent", async (req: any, res) => {
