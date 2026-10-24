@@ -72,7 +72,7 @@ router.patch("/app/trading-controls", requireClientAuth, async (req: any, res) =
       const [settings]=existing?await tx.update(clientSettingsTable).set(updates).where(eq(clientSettingsTable.clientId,req.clientId)).returning():await tx.insert(clientSettingsTable).values({clientId:req.clientId,...updates}).returning();
       return {settings,changed:typeof copyingEnabled==="boolean"&&existing?.copyingEnabled!==settings.copyingEnabled};
     });
-    if(changed)await queueBotPush(req.clientId,settings.copyingEnabled?'started':'stopped');
+    if(changed)await queueBotPush(req.clientId,settings.copyingEnabled?'started':'stopped',req.log,settings.updatedAt?.toISOString());
 
     // Never expose the encrypted password in API responses.
     const { encryptedMt5Password: _omit, ...safe } = settings;

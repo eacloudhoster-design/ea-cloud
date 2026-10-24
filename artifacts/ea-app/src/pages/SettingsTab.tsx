@@ -64,7 +64,7 @@ export default function SettingsTab({ onOpenChartScanner }: SettingsTabProps) {
           Settings
         </h1>
         <button
-          aria-label="Enable or disable push notifications"
+          aria-label="Enable or repair push notifications"
           onClick={()=>{if(clientToken)void toggleWebPush(clientToken);}}
           className="w-10 h-10 rounded-full flex items-center justify-center"
           style={{ background: `${accentColor}33`, border: `1px solid ${accentColor}77` }}

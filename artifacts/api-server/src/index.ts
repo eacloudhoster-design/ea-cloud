@@ -6,7 +6,7 @@ import { logger } from "./lib/logger";
 import { db, brokerServersTable } from "@workspace/db";
 import { backfillApiKeys, backfillEncryptedKeys } from "./lib/api-key";
 import { expireStaleAccounts } from "./routes/mt5-validation";
-import { reconcileOnStartup, startWorker } from "./lib/signal-worker";
+import { reconcileOnStartup, startWorker, signalWorkerHealthy } from "./lib/signal-worker";
 
 async function seedBrokerServers() {
   try {
@@ -70,7 +70,7 @@ createWsServer(server);
 // opening and the deploy failing its readiness probe.
 server.listen(port, () => {
   logger.info({ port }, "Server listening");
-  startPushWorker(logger);
+  startPushWorker(logger,signalWorkerHealthy);
   void runStartupTasks();
 });
 

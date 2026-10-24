@@ -1,5 +1,7 @@
 # Free local voice and Web Push (PR #70)
 
+Push-only follow-up: see [web-push-completion.md](web-push-completion.md) for current secure enrollment, diagnostics, delivery retries and approved migration steps. The Kokoro voice sections below are unchanged.
+
 This supersedes the Gemini runtime and asset-generation instructions in `natural-only-voice.md`. Nothing is merged or deployed automatically. Existing Render Gemini variables are left unchanged because the scanner and compatibility APIs still use them; the announcement client no longer calls Gemini or any speech API.
 
 ## Voice and recordings

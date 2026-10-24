@@ -1,3 +1,4 @@
+import {usePushNotifications} from "@/hooks/use-push-notifications";
 import {useVoiceAnnouncements} from "@/hooks/use-voice-announcements";
 import ModeImage from "@/components/ModeImage";
 import { useVisualModes } from "@/hooks/use-visual-modes";
@@ -191,6 +192,17 @@ function EACloudApp({ onReady, startupComplete }: { onReady: (ready: boolean) =>
   const visualModes = useVisualModes(clientToken,authStage === "app" && brandingReady,mentorImageUrl,mentorId);
   const bgImageUrl = visualModes.displayImage;
   const [shapeStyle,setShapeStyle,restoreShape] = useShapePreference(clientToken,{bot:`mentor:${mentorId}:ea:${visualModes.ea?.id ?? "default"}`,interfaceStyle},mentorShape);
+  useEffect(()=>{
+    if(authStage!=="app"||!clientToken)return;
+    const open=(tab:string)=>{if(tab!=="home"&&tab!=="metatrader")return;setShowChartScanner(false);setSettingsClosing(false);setActiveTab(tab);requestAnimationFrame(()=>window.dispatchEvent(new Event("ea:open-trading-activity")));};
+    const message=(event:Event)=>{const data=(event as CustomEvent).detail;if(data?.activity===true)open(data.tab);};
+    window.addEventListener("ea:push-navigate",message);
+    const url=new URL(location.href);if(url.searchParams.get("activity")==="1"){
+      open(url.searchParams.get("tab")||"home");url.searchParams.delete("activity");url.searchParams.delete("tab");history.replaceState(history.state,"",url);
+    }
+    return()=>window.removeEventListener("ea:push-navigate",message);
+  },[authStage,clientToken]);
+  usePushNotifications(clientToken,authStage === "app");
   useVoiceAnnouncements(clientToken,authStage === "app" && brandingReady && startupComplete,eaName,visualModes,authStage === "app" && brandingReady);
 
   const settings: AppSettings = {

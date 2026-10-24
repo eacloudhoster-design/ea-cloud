@@ -1,3 +1,4 @@
+import {issuePushSession} from "../lib/push-session";
 import { requireAppSession } from "../middlewares/app-session";
 import { resolveAppSessionAccess } from "../lib/app-session-access";
 import { Router } from "express";
@@ -94,6 +95,7 @@ router.post("/app/register", async (req, res) => {
     }).returning();
 
     const token = makeToken(client.id);
+    issuePushSession(res,client.id,token);
     res.status(201).json({ client: toClientDto(client), token });
   } catch (err) {
     req.log.error({ err }, "AppRegister error");
@@ -125,6 +127,7 @@ router.post(["/app/login", "/app/login-by-email"], async (req, res) => {
       }
     }
     const token = makeToken(client.id);
+    issuePushSession(res,client.id,token);
     res.json({ client: toClientDto(verified), token, sessionAccess });
   } catch (err) {
     req.log.error({ err }, "AppLogin error");
