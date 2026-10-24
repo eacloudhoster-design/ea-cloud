@@ -11,6 +11,7 @@ export async function verifyModeBrowser(app,engine){
  assert.ok(['localhost','127.0.0.1'].includes(new URL(origin).hostname));
  const output='work/ea-mode-tests';await mkdir(output,{recursive:true});
  const picture=await readFile('artifacts/ea-cloud/public/default-robot.jpg');
+ const pictures=await Promise.all(['artifacts/ea-cloud/public/default-robot.jpg','artifacts/ea-app/public/apple-touch-icon.jpeg','artifacts/ea-cloud/public/ea-cloud-logo.jpeg','artifacts/ea-cloud/public/opengraph.jpg'].map(path=>readFile(path)));
  const bucket=new Map();const mutations=[];const nativeFetch=globalThis.fetch;
  globalThis.fetch=async(input,init)=>{
   if(new URL(typeof input==='string'?input:input instanceof URL?input.href:input.url).host==='backend.fixture')return Response.json({id:5,role:'mentor',status:'approved'});
@@ -35,7 +36,10 @@ export async function verifyModeBrowser(app,engine){
    else if(path==='/api/auth/me'||path==='/api/profile')response=Response.json({id:5,role:'mentor',status:'approved',email:'mentor@example.invalid',backgroundImageUrl:'https://images.example/legacy.png'});
    else if(path==='/api/eas')response=Response.json([11,12].map(id=>({id,name:id===11?'EA One':'EA Two',symbol:'XAUUSD',lotSize:'0.01',riskLevel:'medium',isActive:true})));
    else if(path==='/api/app/me')response=Response.json({id:7,status:'approved',licenseKey:'VALID'});
-   else if(path==='/api/app/dashboard')response=Response.json({mentor:{robotName:'EA One',backgroundImageUrl:'https://images.example/legacy.png'},eas:[]});
+   else if(path==='/api/app/dashboard'){
+     const other=request.headers().authorization?.includes(Buffer.from('9:client:fixture').toString('base64'));
+     response=Response.json({mentor:{id:other?6:5,robotName:other?'Other mentor':'EA One',backgroundImageUrl:other?null:'https://images.example/legacy.png'},eas:[]});
+   }
    else if(path.endsWith('/trading-controls'))response=Response.json({copyingEnabled:false});
    else if(path.endsWith('/activity/snapshot'))response=Response.json({connected:false,robotEnabled:false,account:null,symbols:[]});
    else response=Response.json([]);
@@ -49,13 +53,13 @@ export async function verifyModeBrowser(app,engine){
   await portal.getByRole('button',{name:'Manage four mode images',exact:true}).click();
   const dialog=portal.getByRole('dialog');await dialog.getByRole('button',{name:'Save artwork',exact:true}).waitFor();
   await portal.waitForFunction(()=>[...document.querySelectorAll('button')].some(b=>b.textContent==='Save artwork'&&!b.disabled));
-  for(const name of ['NORMAL','BEAST','AGGRESSIVE','ULTIMATE']){
-   await dialog.getByLabel(`Upload ${name} image`,{exact:true}).setInputFiles({name:name+'.jpg',mimeType:'image/jpeg',buffer:picture});
+  for(const [index,name] of ['NORMAL','BEAST','AGGRESSIVE','ULTIMATE'].entries()){
+   await dialog.getByLabel(`Upload ${name} image`,{exact:true}).setInputFiles({name:name+'.jpg',mimeType:'image/jpeg',buffer:pictures[index]});
    await portal.waitForFunction(()=>[...document.querySelectorAll('button')].some(b=>b.textContent==='Save artwork'&&!b.disabled));
   }
   assert.equal(await dialog.getByRole('alert').count(),0);
   assert.equal(bucket.size,4);
-  for(const value of bucket.values())assert.deepEqual(Buffer.from(value.bytes),picture);
+  for(const [index,value] of [...bucket.values()].entries())assert.deepEqual(Buffer.from(value.bytes),pictures[index]);
   await dialog.getByRole('button',{name:'Save artwork',exact:true}).click();
   await dialog.getByRole('status').filter({hasText:'Artwork saved'}).waitFor();
   const saved=(await engine.query('SELECT * FROM ea_mode_images WHERE ea_id=11')).rows[0];
@@ -72,16 +76,36 @@ export async function verifyModeBrowser(app,engine){
   const page=await client.newPage();await page.goto(origin+'/ea-app/');await page.locator('.ea-startup').waitFor({state:'detached'});
   const nav=page.locator('.ea-app-content > .ea-glass-navigation');await nav.getByRole('button',{name:'Settings',exact:true}).tap();
   await page.getByRole('button',{name:'EA Manipulation',exact:true}).tap();await page.locator('.ea-mode-card').first().waitFor();
-  const originalBackground=await page.locator('[data-home-background]').getAttribute('src');const originalNav=await nav.boundingBox();
+  const originalNav=await nav.boundingBox();
+  const assertArtwork=async expected=>{
+    await page.waitForFunction(url=>{
+      const background=document.querySelector('[data-home-background]');
+      const portrait=document.querySelector('.robot-image-frame img');
+      const circle=document.querySelector('.trading-activity-trigger img');
+      return [background,portrait,circle].every(img=>img&&img.getAttribute('src')===url&&img.complete&&img.naturalWidth>0);
+    },expected);
+  };
+  await assertArtwork(saved.normal);
   assert.equal(await page.getByRole('button',{name:'NORMAL visual mode'}).getAttribute('aria-pressed'),'true');
   for(const [index,name] of ['NORMAL','BEAST','AGGRESSIVE','ULTIMATE'].entries())assert.equal(await page.locator('.ea-mode-card img').nth(index).getAttribute('src'),saved[name.toLowerCase()]);
   const before=mutations.length;
-  for(const name of ['BEAST','AGGRESSIVE','ULTIMATE','NORMAL','BEAST']){
+  for(const name of ['NORMAL','BEAST','AGGRESSIVE','ULTIMATE','NORMAL','BEAST']){
    await page.getByRole('button',{name:`${name} visual mode`}).tap();
    assert.equal(await page.locator('.ea-mode-card[aria-pressed=true]').count(),1);
+   await assertArtwork(saved[name.toLowerCase()]);
   }
+  await client.route('https://images.example/missing.jpg',r=>r.fulfill({status:404,body:'missing'}));
+  await engine.query('UPDATE ea_mode_images SET ultimate=$1 WHERE ea_id=11',['https://images.example/missing.jpg']);
+  await page.getByRole('button',{name:'ULTIMATE visual mode'}).tap();
+  await page.evaluate(()=>window.dispatchEvent(new Event('focus')));
+  await page.waitForFunction(()=>document.querySelectorAll('.ea-mode-card img')[3]?.getAttribute('src')==='https://images.example/missing.jpg');
+  await assertArtwork(saved.normal);
+  assert.equal(await page.getByRole('button',{name:'ULTIMATE visual mode'}).getAttribute('aria-pressed'),'true');
+  await engine.query('UPDATE ea_mode_images SET ultimate=$1 WHERE ea_id=11',[saved.ultimate]);
+  await page.evaluate(()=>window.dispatchEvent(new Event('focus')));await assertArtwork(saved.ultimate);
+  await page.getByRole('button',{name:'BEAST visual mode'}).tap();await assertArtwork(saved.beast);
   assert.equal(mutations.length,before,'mode selection sends no API writes');
-  assert.equal(await page.locator('[data-home-background]').getAttribute('src'),originalBackground);
+  await assertArtwork(saved.beast);
   assert.deepEqual(await nav.boundingBox(),originalNav);
   await nav.getByRole('button',{name:'Home',exact:true}).tap();await nav.getByRole('button',{name:'Settings',exact:true}).tap();
   assert.equal(await page.getByRole('button',{name:'BEAST visual mode'}).getAttribute('aria-pressed'),'true');
@@ -90,6 +114,8 @@ export async function verifyModeBrowser(app,engine){
   await page.getByLabel('EA artwork',{exact:true}).selectOption('12');
   assert.equal(await page.getByRole('button',{name:'NORMAL visual mode'}).getAttribute('aria-pressed'),'true');
   assert.equal(await page.locator('.ea-mode-card img').count(),1);
+  await assertArtwork('https://images.example/legacy.png');
+  await page.getByRole('button',{name:'ULTIMATE visual mode'}).tap();await assertArtwork('https://images.example/legacy.png');
   await page.getByLabel('EA artwork',{exact:true}).selectOption('11');
   assert.equal(await page.getByRole('button',{name:'BEAST visual mode'}).getAttribute('aria-pressed'),'true');
   await portal.getByLabel('Upload BEAST image',{exact:true}).setInputFiles({name:'replacement.jpg',mimeType:'image/jpeg',buffer:picture});
@@ -98,7 +124,23 @@ export async function verifyModeBrowser(app,engine){
   await portal.getByRole('status').filter({hasText:'Artwork saved'}).waitFor();
   await page.evaluate(()=>window.dispatchEvent(new Event('focus')));
   await page.waitForFunction(old=>document.querySelectorAll('.ea-mode-card img')[1]?.getAttribute('src')!==old,saved.beast);
+  const replacement=(await engine.query('SELECT beast FROM ea_mode_images WHERE ea_id=11')).rows[0].beast;
+  await assertArtwork(replacement);
   assert.equal(await page.getByRole('button',{name:'BEAST visual mode'}).getAttribute('aria-pressed'),'true');
+  let releaseSlow;
+  const slow=new Promise(resolve=>{releaseSlow=resolve;});
+  await client.route('https://images.example/slow.jpg',async route=>{await slow;await route.fulfill({body:picture,contentType:'image/jpeg'});});
+  await engine.query('UPDATE ea_mode_images SET beast=$1 WHERE ea_id=11',['https://images.example/slow.jpg']);
+  await page.evaluate(()=>window.dispatchEvent(new Event('focus')));
+  await page.waitForFunction(()=>document.querySelectorAll('.ea-mode-card img')[1]?.getAttribute('src')==='https://images.example/slow.jpg');
+  await page.getByRole('button',{name:'AGGRESSIVE visual mode'}).tap();await assertArtwork(saved.aggressive);
+  releaseSlow();
+  await page.waitForFunction(()=>document.querySelectorAll('.ea-mode-card img')[1]?.complete);
+  await page.waitForTimeout(200);await assertArtwork(saved.aggressive);
+  await engine.query('UPDATE ea_mode_images SET beast=$1 WHERE ea_id=11',[replacement]);
+  await page.evaluate(()=>window.dispatchEvent(new Event('focus')));
+  await page.waitForFunction(url=>document.querySelectorAll('.ea-mode-card img')[1]?.getAttribute('src')===url,replacement);
+  await page.getByRole('button',{name:'BEAST visual mode'}).tap();await assertArtwork(replacement);
   await page.evaluate(()=>localStorage.setItem('appClientToken',btoa('9:client:fixture')));
   await page.reload();await page.locator('.ea-startup').waitFor({state:'detached'});await nav.getByRole('button',{name:'Settings',exact:true}).tap();await page.getByRole('button',{name:'EA Manipulation',exact:true}).tap();
   await page.getByRole('group',{name:'Other mentor visual modes'}).waitFor();
@@ -108,6 +150,37 @@ export async function verifyModeBrowser(app,engine){
   await page.reload();await page.locator('.ea-startup').waitFor({state:'detached'});await nav.getByRole('button',{name:'Settings',exact:true}).tap();await page.getByRole('button',{name:'EA Manipulation',exact:true}).tap();
   assert.equal(await page.getByRole('button',{name:'BEAST visual mode'}).getAttribute('aria-pressed'),'true');
   assert.ok(mutations.every(item=>item.path.endsWith('/mode-images')||item.path.startsWith('/api/storage/')),'no trading writes in entire flow');
+  await assertArtwork(replacement);
+  const modeSources={normal:saved.normal,beast:replacement,aggressive:saved.aggressive,ultimate:saved.ultimate};
+  for(const style of ['regular','matrix','s2tone'])for(const shape of ['orbit','neural']){
+    await page.evaluate(({style,shape})=>{
+      const key='ea-cloud:client:7:home-appearance';const prefs=JSON.parse(localStorage.getItem(key)||'{}');
+      localStorage.setItem(key,JSON.stringify({...prefs,interfaceStyle:style}));localStorage.setItem('ea-cloud:client:7:robot-shape',shape);
+    },{style,shape});
+    await page.reload();await page.locator('.ea-startup').waitFor({state:'detached'});
+    await assertArtwork(replacement);
+    await nav.getByRole('button',{name:'Settings',exact:true}).tap();await page.getByRole('button',{name:'EA Manipulation',exact:true}).tap();
+    const geometry=()=>page.locator('.robot-image-frame,.trading-activity-trigger,.ea-app-content > .ea-glass-navigation').evaluateAll(nodes=>nodes.map(el=>{const r=el.getBoundingClientRect();return {x:r.x,y:r.y,w:r.width,h:r.height};}));
+    const boxes=await geometry();
+    for(const name of ['NORMAL','BEAST','AGGRESSIVE','ULTIMATE']){
+      await page.getByRole('button',{name:`${name} visual mode`}).tap();await assertArtwork(modeSources[name.toLowerCase()]);
+      assert.deepEqual(await geometry(),boxes,'image containers and navigation stay fixed');
+    }
+    await page.screenshot({path:`${output}/dynamic-${style}-${shape}.png`});
+    await nav.getByRole('button',{name:'Home',exact:true}).tap();await page.waitForTimeout(250);
+    await assertArtwork(modeSources.ultimate);await page.screenshot({path:`${output}/dynamic-home-${style}-${shape}.png`});
+    await nav.getByRole('button',{name:'Settings',exact:true}).tap();
+    await page.getByRole('button',{name:'BEAST visual mode'}).tap();await assertArtwork(replacement);
+  }
+  await nav.getByRole('button',{name:'Home',exact:true}).tap();
+  await page.getByRole('button',{name:'Hide background image',exact:true}).click();
+  await nav.getByRole('button',{name:'Settings',exact:true}).tap();
+  await page.getByRole('button',{name:'AGGRESSIVE visual mode'}).tap();await assertArtwork(saved.aggressive);
+  assert.equal(await page.locator('[data-home-background]').evaluate(el=>el.style.opacity),'0');
+  await nav.getByRole('button',{name:'Home',exact:true}).tap();
+  await page.getByRole('button',{name:'Show background image',exact:true}).click();
+  await nav.getByRole('button',{name:'Settings',exact:true}).tap();await assertArtwork(saved.aggressive);
+  assert.equal(await page.locator('[data-home-background]').evaluate(el=>el.style.opacity),'1');
   const layout=[];
   for(const width of [320,355,390,430]){
    await page.setViewportSize({width,height:844});await page.waitForTimeout(260);
