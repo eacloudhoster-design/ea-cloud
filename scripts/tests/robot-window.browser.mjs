@@ -5,7 +5,10 @@ const { chromium } = await import(
 );
 const origin = process.env.APP_ORIGIN || "http://127.0.0.1:5192/ea-app/";
 assert(["localhost", "127.0.0.1"].includes(new URL(origin).hostname));
-await mkdir("work/robot-window", { recursive: true });
+const output = process.env.ROBOT_OUTPUT || "work/robot-window";
+const startedOn =
+  process.env.ROBOT_START_TAB === "metatrader" ? "metatrader" : "home";
+await mkdir(output, { recursive: true });
 const browser = await chromium.launch({
   executablePath: "/usr/bin/chromium",
   args: ["--no-sandbox"],
@@ -47,6 +50,8 @@ try {
     );
     await context.route("**/api/**", async (r) => {
       const p = new URL(r.request().url()).pathname;
+      if (p === "/api/app/ea-mode-images")
+        return r.fulfill({ json: { eas: [] } });
       if (p === "/api/app/trading-controls") {
         if (r.request().method() === "PATCH") {
           if (delay) await new Promise((resolve) => setTimeout(resolve, delay));
@@ -106,18 +111,28 @@ try {
     });
     page.setDefaultTimeout(12000);
     await page.goto(origin);
-    await page.waitForSelector(".ea-startup", { state: "detached" });
+    await page.waitForSelector(".ea-startup", {
+      state: "detached",
+      timeout: 30000,
+    });
     await page.evaluate(() => document.fonts.ready);
+    if (startedOn === "metatrader") {
+      await page
+        .getByRole("button", { name: "MetaTrader", exact: true })
+        .click();
+      await page.waitForTimeout(650);
+    }
     const circle = page.getByRole("button", {
       name: "Open live trading activity",
       exact: true,
     });
-    const circleStorage = await page.evaluate(() =>
+    let circleStorage = await page.evaluate(() =>
       localStorage.getItem("ea-cloud:floating-robot-position"),
     );
-    const circleBefore = await circle.boundingBox(),
-      circleImage = await circle.locator("img").getAttribute("src");
-    await circle.click();
+    let circleBefore = await circle.boundingBox();
+    const circleImage = await circle.locator("img").getAttribute("src");
+    if (viewport.width < 500) await circle.tap();
+    else await circle.click();
     const panel = page.getByRole("dialog", {
       name: "Live trading activity monitor",
       exact: true,
@@ -171,6 +186,29 @@ try {
       }
       await settle();
     };
+    if (startedOn === "metatrader") {
+      await panel
+        .getByRole("button", { name: "Close trading activity", exact: true })
+        .click();
+      await drag(circle, -140, -180);
+      assert.equal(
+        await panel.isVisible(),
+        false,
+        "circle drag must not open the panel",
+      );
+      const moved = await circle.boundingBox();
+      assert(moved.x !== circleBefore.x || moved.y !== circleBefore.y);
+      assert.equal(moved.width, circleBefore.width);
+      assert.equal(moved.height, circleBefore.height);
+      circleBefore = moved;
+      circleStorage = await page.evaluate(() =>
+        localStorage.getItem("ea-cloud:floating-robot-position"),
+      );
+      if (viewport.width < 500) await circle.tap();
+      else await circle.click();
+      await panel.waitFor();
+      assert.equal(await page.locator(".trading-activity-panel").count(), 1);
+    }
     const handle = panel.getByRole("button", {
       name: "Move robot panel",
       exact: true,
@@ -348,8 +386,84 @@ try {
     await page.waitForTimeout(150);
     assert(reads > 1, "refresh still reads activity");
     await page.screenshot({
-      path: `work/robot-window/${viewport.width}-resized.png`,
+      path: `${output}/${viewport.width}-resized.png`,
     });
+    if (startedOn === "metatrader") {
+      await drag(handle, -1000, -1000);
+      await drag(
+        panel.getByRole("button", {
+          name: "Resize robot panel bottom",
+          exact: true,
+        }),
+        0,
+        -1000,
+      );
+      const useField = async (selector, value) => {
+        const field = page.locator(selector);
+        await field.scrollIntoViewIfNeeded();
+        let b = await field.boundingBox();
+        await page
+          .locator(".mt5-content")
+          .evaluate(
+            (el, delta) => (el.scrollTop += delta),
+            b.y + b.height / 2 - (viewport.height - 145),
+          );
+        await settle();
+        b = await field.boundingBox();
+        const exposed = () =>
+          field.evaluate((el) => {
+            const r = el.getBoundingClientRect(),
+              y = r.y + r.height / 2;
+            for (const x of [r.x + 12, r.right - 12, r.x + r.width / 2]) {
+              const hit = document.elementFromPoint(x, y);
+              if (hit && (hit === el || el.contains(hit)))
+                return { x: x - r.x, y: r.height / 2 };
+            }
+            return null;
+          });
+        let point = await exposed();
+        if (!point) {
+          await drag(handle, 0, 1000);
+          point = await exposed();
+        }
+        if (!point) {
+          await drag(handle, 0, -1000);
+          point = await exposed();
+        }
+        assert(
+          point,
+          "an exposed field point is interactive outside the movable window/circle",
+        );
+        if (viewport.width < 500) await field.tap({ position: point });
+        else await field.click({ position: point });
+        if (value !== undefined) await field.fill(value);
+        assert(await panel.isVisible());
+      };
+      await useField("#mt5-login", "123456");
+      await useField("#mt5-password", "fixture-only");
+      await useField("#mt5-server", "Exness-MT5Real1");
+      await useField(".mt5-connect-button");
+      await page
+        .getByRole("button", { name: "Cancel connection", exact: true })
+        .waitFor();
+      await drag(handle, 0, 1000);
+      await page
+        .getByRole("button", { name: "Cancel connection", exact: true })
+        .click();
+      assert.equal(
+        await page.locator(".mt5-view>.mt5-screen").getAttribute("data-state"),
+        "idle",
+      );
+      assert(await panel.isVisible());
+      assert.equal(
+        await panel.evaluate((e) =>
+          e.style.getPropertyValue("--robot-panel-accent"),
+        ),
+        await page
+          .locator(".ea-glass-navigation")
+          .evaluate((e) => e.style.getPropertyValue("--nav-accent")),
+      );
+    }
     // Preserve the independently draggable robot circle and its storage key.
     assert.equal(await circle.locator("img").getAttribute("src"), circleImage);
     assert.deepEqual(await circle.boundingBox(), circleBefore);
@@ -367,7 +481,9 @@ try {
     await settle();
     assert.deepEqual(await saved(), persisted);
     await page.reload();
-    await page.locator(".ea-startup").waitFor({ state: "detached" });
+    await page
+      .locator(".ea-startup")
+      .waitFor({ state: "detached", timeout: 30000 });
     await cdp.detach();
     cdp = await context.newCDPSession(page);
     await circle.click();
@@ -424,12 +540,12 @@ try {
       );
       await page.waitForTimeout(350);
       await page.screenshot({
-        path: `work/robot-window/${viewport.width}-${id}-after-nav.png`,
+        path: `${output}/${viewport.width}-${id}-after-nav.png`,
       });
       // Move window down temporarily so the Settings header/options are exposed.
       await drag(handle, 0, 1000);
       await page.screenshot({
-        path: `work/robot-window/${viewport.width}-${id}-settings.png`,
+        path: `${output}/${viewport.width}-${id}-settings.png`,
       });
       const accordion = page.getByRole("button", {
         name: "Select Main Interface",
@@ -468,7 +584,7 @@ try {
         .first();
       await clickOutside(symbols);
       await page.screenshot({
-        path: `work/robot-window/${viewport.width}-${id}-symbols.png`,
+        path: `${output}/${viewport.width}-${id}-symbols.png`,
       });
       await home.getByText("ALLOWED SYMBOLS", { exact: true }).waitFor();
       await drag(handle, 0, 1000);
@@ -543,6 +659,7 @@ try {
       initial,
       persisted,
       rotated,
+      startedOn,
       allEightHandles: true,
       pinch: viewport.width < 500,
       nonBlockingAllInterfaces: true,
@@ -550,15 +667,12 @@ try {
       circleUnchanged: true,
     });
     await writeFile(
-      `work/robot-window/${viewport.width}-results.json`,
+      `${output}/${viewport.width}-results.json`,
       JSON.stringify(results.at(-1), null, 2),
     );
     await context.close();
   }
-  await writeFile(
-    "work/robot-window/results.json",
-    JSON.stringify(results, null, 2),
-  );
+  await writeFile(`${output}/results.json`, JSON.stringify(results, null, 2));
   console.log(
     "PASS: floating, draggable, eight resize handles, mobile pinch/scroll, persistence and viewport clamping.",
   );

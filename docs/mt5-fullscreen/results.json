@@ -1,0 +1,279 @@
+{
+  "baselineCommit": "2005d634ebae59ef8380ccee00fc73dc4502c684",
+  "fullscreenComparisons": [
+    {
+      "test": {
+        "style": "regular",
+        "width": 390,
+        "height": 844
+      },
+      "formAndPositionsUnchanged": true,
+      "logoAndBackgroundUnchanged": true,
+      "navigationSkinAndGeometryUnchanged": true,
+      "homeUnchanged": true,
+      "fullscreenCoverage": true,
+      "noOuterCloseOrModal": true,
+      "scrollingAndNavigation": true,
+      "connectionPreviewPreserved": true
+    },
+    {
+      "test": {
+        "style": "regular",
+        "width": 320,
+        "height": 568
+      },
+      "formAndPositionsUnchanged": true,
+      "logoAndBackgroundUnchanged": true,
+      "navigationSkinAndGeometryUnchanged": true,
+      "homeUnchanged": true,
+      "fullscreenCoverage": true,
+      "noOuterCloseOrModal": true,
+      "scrollingAndNavigation": true,
+      "connectionPreviewPreserved": true
+    },
+    {
+      "test": {
+        "style": "s2tone",
+        "width": 390,
+        "height": 844
+      },
+      "formAndPositionsUnchanged": true,
+      "logoAndBackgroundUnchanged": true,
+      "navigationSkinAndGeometryUnchanged": true,
+      "homeUnchanged": true,
+      "fullscreenCoverage": true,
+      "noOuterCloseOrModal": true,
+      "scrollingAndNavigation": true,
+      "connectionPreviewPreserved": true
+    },
+    {
+      "test": {
+        "style": "s2tone",
+        "width": 320,
+        "height": 568
+      },
+      "formAndPositionsUnchanged": true,
+      "logoAndBackgroundUnchanged": true,
+      "navigationSkinAndGeometryUnchanged": true,
+      "homeUnchanged": true,
+      "fullscreenCoverage": true,
+      "noOuterCloseOrModal": true,
+      "scrollingAndNavigation": true,
+      "connectionPreviewPreserved": true
+    },
+    {
+      "test": {
+        "style": "matrix",
+        "width": 390,
+        "height": 844
+      },
+      "formAndPositionsUnchanged": true,
+      "logoAndBackgroundUnchanged": true,
+      "navigationSkinAndGeometryUnchanged": true,
+      "homeUnchanged": true,
+      "fullscreenCoverage": true,
+      "noOuterCloseOrModal": true,
+      "scrollingAndNavigation": true,
+      "connectionPreviewPreserved": true
+    },
+    {
+      "test": {
+        "style": "matrix",
+        "width": 320,
+        "height": 568
+      },
+      "formAndPositionsUnchanged": true,
+      "logoAndBackgroundUnchanged": true,
+      "navigationSkinAndGeometryUnchanged": true,
+      "homeUnchanged": true,
+      "fullscreenCoverage": true,
+      "noOuterCloseOrModal": true,
+      "scrollingAndNavigation": true,
+      "connectionPreviewPreserved": true
+    },
+    {
+      "test": {
+        "style": "matrix",
+        "width": 393,
+        "height": 852,
+        "top": 59,
+        "bottom": 34
+      },
+      "formAndPositionsUnchanged": true,
+      "logoAndBackgroundUnchanged": true,
+      "navigationSkinAndGeometryUnchanged": true,
+      "homeUnchanged": true,
+      "fullscreenCoverage": true,
+      "noOuterCloseOrModal": true,
+      "scrollingAndNavigation": true,
+      "connectionPreviewPreserved": true
+    },
+    {
+      "test": {
+        "style": "s2tone",
+        "width": 844,
+        "height": 390
+      },
+      "formAndPositionsUnchanged": true,
+      "logoAndBackgroundUnchanged": true,
+      "navigationSkinAndGeometryUnchanged": true,
+      "homeUnchanged": true,
+      "fullscreenCoverage": true,
+      "noOuterCloseOrModal": true,
+      "scrollingAndNavigation": true,
+      "connectionPreviewPreserved": true
+    },
+    {
+      "test": {
+        "style": "regular",
+        "width": 1280,
+        "height": 900
+      },
+      "formAndPositionsUnchanged": true,
+      "logoAndBackgroundUnchanged": true,
+      "navigationSkinAndGeometryUnchanged": true,
+      "homeUnchanged": true,
+      "fullscreenCoverage": true,
+      "noOuterCloseOrModal": true,
+      "scrollingAndNavigation": true,
+      "connectionPreviewPreserved": true
+    }
+  ],
+  "sharedRobotOnMT5": [
+    {
+      "outsideZoom": 5,
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "initial": {
+        "x": 53.40625,
+        "y": 112.5,
+        "width": 283.1875,
+        "height": 535
+      },
+      "persisted": {
+        "scale": 0.98870606195359,
+        "width": 336.1600610642206,
+        "height": 276.8376973470052,
+        "x": 4,
+        "y": 563.1623026529949
+      },
+      "rotated": {
+        "x": 4,
+        "y": 4,
+        "width": 336.15625,
+        "height": 276.828125
+      },
+      "startedOn": "metatrader",
+      "allEightHandles": true,
+      "pinch": true,
+      "nonBlockingAllInterfaces": true,
+      "refresh": true,
+      "circleUnchanged": true
+    },
+    {
+      "outsideZoom": 5,
+      "viewport": {
+        "width": 320,
+        "height": 568
+      },
+      "initial": {
+        "x": 30,
+        "y": 48.5,
+        "width": 260,
+        "height": 387
+      },
+      "persisted": {
+        "scale": 1.0168889686544105,
+        "width": 274.5600215366908,
+        "height": 284.72891122323495,
+        "x": 4,
+        "y": 279.27108877676505
+      },
+      "rotated": {
+        "x": 4,
+        "y": 4,
+        "width": 274.546875,
+        "height": 284.71875
+      },
+      "startedOn": "metatrader",
+      "allEightHandles": true,
+      "pinch": true,
+      "nonBlockingAllInterfaces": true,
+      "refresh": true,
+      "circleUnchanged": true
+    },
+    {
+      "outsideZoom": 1,
+      "viewport": {
+        "width": 1280,
+        "height": 900
+      },
+      "initial": {
+        "x": 521.8125,
+        "y": 289,
+        "width": 315.1875,
+        "height": 511
+      },
+      "persisted": {
+        "scale": 1,
+        "width": 410,
+        "height": 280,
+        "x": 4,
+        "y": 616
+      },
+      "rotated": {
+        "x": 4,
+        "y": 4,
+        "width": 352,
+        "height": 280
+      },
+      "startedOn": "metatrader",
+      "allEightHandles": true,
+      "pinch": false,
+      "nonBlockingAllInterfaces": true,
+      "refresh": true,
+      "circleUnchanged": true
+    }
+  ],
+  "homeTouchRegression": [
+    {
+      "outsideZoom": 5,
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "initial": {
+        "x": 53.40625,
+        "y": 112.5,
+        "width": 283.1875,
+        "height": 535
+      },
+      "persisted": {
+        "scale": 0.98870606195359,
+        "width": 336.1600610642206,
+        "height": 659.4669433230445,
+        "x": 49.8399389357794,
+        "y": 37.4000279596252
+      },
+      "rotated": {
+        "x": 4,
+        "y": 4,
+        "width": 336.15625,
+        "height": 276.828125
+      },
+      "startedOn": "home",
+      "allEightHandles": true,
+      "pinch": true,
+      "nonBlockingAllInterfaces": true,
+      "refresh": true,
+      "circleUnchanged": true
+    }
+  ],
+  "typecheck": "passed",
+  "viteBuild": "passed; existing chunk-size warning",
+  "physicalIosStandalone": "not tested",
+  "nativeScreenshot": "not provided",
+  "productionDeployment": false
+}
