@@ -10,9 +10,6 @@ export default function EaModeCards() {
     visualModes;
   return (
     <div className="ea-mode-settings">
-      <p className="ea-mode-note">
-        Appearance only · trading settings stay unchanged
-      </p>
       {eas.length > 1 && (
         <label className="ea-mode-ea">
           EA artwork

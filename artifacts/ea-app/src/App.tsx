@@ -244,7 +244,6 @@ function EACloudApp({ onReady, startupComplete }: { onReady: (ready: boolean) =>
     <AppContext.Provider value={settings}>
       <div
         className="ea-app-viewport relative overflow-clip bg-black"
-        style={{ maxWidth: 430, margin: "0 auto" }}
       >
         {/* Fade only the full-screen image; profile images remain independent. */}
         <ModeImage
@@ -263,7 +262,7 @@ function EACloudApp({ onReady, startupComplete }: { onReady: (ready: boolean) =>
         <div className="ea-app-content relative overflow-clip">
         <BackgroundAnimation effect={backgroundAnimation} color={accentColor} active={activeTab === "home"} />
 
-        <div className="ea-nav-screen absolute inset-0 z-[2]" style={{ opacity: activeTab === "home" ? 1 : 0 }} inert={activeTab !== "home" || settingsClosing}>
+        <div data-home-screen className="ea-nav-screen absolute inset-0 z-[2]" style={{ opacity: activeTab === "home" ? 1 : 0 }} inert={activeTab !== "home" || settingsClosing}>
           <HomeTab homeNavigationRequest={homeNavigationRequest} swipeEnabled={!showChartScanner} onOpenChartScanner={() => setShowChartScanner(true)} />
         </div>
 
