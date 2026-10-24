@@ -1,3 +1,4 @@
+import {queueBotPush} from "../lib/web-push";
 import { Router } from "express";
 import { db, clientSettingsTable, appAccessTable, symbolPairsTable, clientSymbolConfigsTable } from "@workspace/db";
 import { eq, and } from "drizzle-orm";
@@ -61,20 +62,17 @@ router.patch("/app/trading-controls", requireClientAuth, async (req: any, res) =
     if (maxOpenTrades !== undefined) updates.maxOpenTrades = Number(maxOpenTrades);
     if (maxLotSize !== undefined) updates.maxLotSize = String(maxLotSize);
     if (symbolFilters !== undefined) updates.symbolFilters = String(symbolFilters);
-    if (copyingEnabled !== undefined) updates.copyingEnabled = Boolean(copyingEnabled);
-
-    // Upsert
-    let [existing] = await db.select({ id: clientSettingsTable.id })
-      .from(clientSettingsTable).where(eq(clientSettingsTable.clientId, req.clientId)).limit(1);
-
-    let settings;
-    if (existing) {
-      [settings] = await db.update(clientSettingsTable)
-        .set(updates).where(eq(clientSettingsTable.clientId, req.clientId)).returning();
-    } else {
-      [settings] = await db.insert(clientSettingsTable)
-        .values({ clientId: req.clientId, ...updates }).returning();
+    if (copyingEnabled !== undefined) {
+      if(typeof copyingEnabled!=="boolean"){res.status(400).json({error:"copyingEnabled must be boolean"});return;}
+      updates.copyingEnabled = copyingEnabled;
     }
+
+    const {settings,changed}=await db.transaction(async tx=>{
+      const [existing]=await tx.select().from(clientSettingsTable).where(eq(clientSettingsTable.clientId,req.clientId)).limit(1).for("update");
+      const [settings]=existing?await tx.update(clientSettingsTable).set(updates).where(eq(clientSettingsTable.clientId,req.clientId)).returning():await tx.insert(clientSettingsTable).values({clientId:req.clientId,...updates}).returning();
+      return {settings,changed:typeof copyingEnabled==="boolean"&&existing?.copyingEnabled!==settings.copyingEnabled};
+    });
+    if(changed)await queueBotPush(req.clientId,settings.copyingEnabled?'started':'stopped');
 
     // Never expose the encrypted password in API responses.
     const { encryptedMt5Password: _omit, ...safe } = settings;

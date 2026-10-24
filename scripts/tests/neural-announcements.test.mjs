@@ -1,38 +1,72 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { build } from "../../artifacts/api-server/node_modules/esbuild/lib/main.js";
-const result = await build({
-  entryPoints: ["artifacts/ea-app/src/lib/voice-announcement-service.ts"],
+const b = await build({
+  stdin: {
+    contents:
+      'export {AnnouncementAudio} from "./artifacts/ea-app/src/lib/announcement-audio";export {VoiceAnnouncementService} from "./artifacts/ea-app/src/lib/voice-announcement-service";export {localVoiceProfile} from "./artifacts/ea-app/src/lib/local-voice-profile";',
+    resolveDir: process.cwd(),
+  },
   bundle: true,
   platform: "node",
   format: "esm",
   write: false,
 });
-const { VoiceAnnouncementService } = await import(
+const {
+  AnnouncementAudio,
+  VoiceAnnouncementService,
+  localVoiceProfile: profile,
+} = await import(
   "data:text/javascript;base64," +
-    Buffer.from(result.outputFiles[0].text).toString("base64")
+    Buffer.from(b.outputFiles[0].text).toString("base64")
 );
-const wait = (ms) => new Promise((r) => setTimeout(r, ms));
-async function fixture(
-  run,
-  { fail = false, suspended = false, slow = false } = {},
-) {
-  const original = {
-    window: globalThis.window,
-    SpeechSynthesisUtterance: globalThis.SpeechSynthesisUtterance,
-    fetch: globalThis.fetch,
+const wait = (ms) => new Promise((r) => setTimeout(r, ms)),
+  token = btoa("7:client:fixture");
+function wav(text) {
+  const data = Buffer.from(text + "\0".repeat(Buffer.byteLength(text) % 2)),
+    h = Buffer.alloc(44);
+  h.write("RIFF");
+  h.writeUInt32LE(36 + data.length, 4);
+  h.write("WAVEfmt ", 8);
+  h.writeUInt32LE(16, 16);
+  h.writeUInt16LE(1, 20);
+  h.writeUInt16LE(1, 22);
+  h.writeUInt32LE(24000, 24);
+  h.writeUInt32LE(48000, 28);
+  h.writeUInt16LE(2, 32);
+  h.writeUInt16LE(16, 34);
+  h.write("data", 36);
+  h.writeUInt32LE(data.length, 40);
+  const a = Buffer.concat([h, data]);
+  return a.buffer.slice(a.byteOffset, a.byteOffset + a.byteLength);
+}
+function store() {
+  const clips = new Map();
+  return {
+    clips,
+    profile: async () => null,
+    saveProfile: async () => {},
+    get: async (s, k) => (clips.get(k)?.scope === s ? clips.get(k) : null),
+    put: async (c) => {
+      clips.set(c.key, c);
+    },
+    close() {},
   };
-  const calls = [],
-    spoken = [],
-    sources = [],
+}
+async function fixture(run, blocked = false) {
+  const oldWindow = globalThis.window,
+    oldFetch = globalThis.fetch;
+  const spoken = [],
+    calls = [],
     contexts = [];
   let active = 0,
     max = 0,
-    complete;
-  class Context {
-    state = suspended ? "suspended" : "running";
+    fail = false;
+  class Audio extends EventTarget {
+    state = blocked ? "suspended" : "running";
     destination = {};
     constructor() {
+      super();
       contexts.push(this);
     }
     resume() {
@@ -41,6 +75,7 @@ async function fixture(
     }
     suspend() {
       this.state = "suspended";
+      this.dispatchEvent(new Event("statechange"));
       return Promise.resolve();
     }
     close() {
@@ -49,24 +84,26 @@ async function fixture(
     }
     async decodeAudioData(data) {
       return {
-        text: new TextDecoder().decode(data),
+        text: new TextDecoder()
+          .decode(new Uint8Array(data, 44))
+          .replace(/\0+$/, ""),
         length: 1000,
         numberOfChannels: 1,
       };
     }
     createBufferSource() {
-      const source = {
-        onended: null,
+      return {
         connect() {},
         disconnect() {},
         start() {
-          spoken.push({ text: this.buffer.text, at: performance.now() });
           active++;
           max = Math.max(max, active);
+          spoken.push(this.buffer.text);
           this.timer = setTimeout(() => {
+            this.timer = null;
             active--;
             this.onended?.();
-          }, 10);
+          }, 5);
         },
         stop() {
           if (this.timer) {
@@ -76,266 +113,171 @@ async function fixture(
           }
         },
       };
-      sources.push(source);
-      return source;
     }
   }
-  globalThis.window = {
-    AudioContext: Context,
-    speechSynthesis: {
-      getVoices: () => [],
-      addEventListener() {},
-      removeEventListener() {},
-      speaking: false,
-      cancel() {},
-      resume() {},
-      speak(u) {
-        spoken.push({ native: true, text: u.text });
-        u.onend?.();
-      },
+  globalThis.window = { AudioContext: Audio };
+  Object.defineProperty(window, "speechSynthesis", {
+    get() {
+      throw Error("System speech forbidden");
     },
+  });
+  globalThis.fetch = async (url) => {
+    assert.ok(
+      String(url).includes("/natural-voice/"),
+      "No speech API calls allowed",
+    );
+    return new Response("", { status: 404 });
   };
-  globalThis.SpeechSynthesisUtterance = class {
-    constructor(text) {
-      this.text = text;
-    }
+  const engine = {
+    async generate(text, signal) {
+      calls.push(text);
+      if (fail) throw Error("Unavailable");
+      if (signal.aborted) throw new DOMException("Cancelled", "AbortError");
+      return wav(text);
+    },
+    dispose() {},
   };
-  globalThis.fetch = async (url, init) => {
-    assert.equal(url, "/api/app/assistant/speech");
-    assert.equal(init.headers.Authorization, "Bearer fixture-session");
-    const text = JSON.parse(init.body).text;
-    calls.push(text);
-    if (slow && text === "Obsolete.") {
-      await new Promise((r) => (complete = r));
-    }
-    return fail
-      ? new Response("", { status: 503 })
-      : new Response(new TextEncoder().encode(text), {
-          headers: { "content-type": "audio/wav" },
-        });
+  const players = [];
+  const make = (s = store(), t = token) => {
+    const a = new AnnouncementAudio(t, s, engine);
+    players.push(a);
+    return a;
   };
-  const service = new VoiceAnnouncementService("fixture-session");
   try {
     await run({
-      service,
-      calls,
       spoken,
+      calls,
       contexts,
-      sources,
+      engine,
+      make,
+      setFail: (x) => (fail = x),
       get max() {
         return max;
       },
-      release: () => complete?.(),
     });
   } finally {
-    service.dispose();
-    Object.assign(globalThis, original);
-  }
-}
-test("cached neural announcements use one authenticated generation, no overlap, exact dynamic names/prices and immediate reuse", async () =>
-  fixture(async (f) => {
-    f.service.preload(["Welcome to Mentor Élan.", "Normal mode activated."]);
-    await wait(15);
-    f.service.announce("Welcome to Mentor Élan.", "welcome");
-    await wait(20);
-    const start = performance.now();
-    f.service.announce("Normal mode activated.", "normal", 2, "mode");
-    await wait(20);
-    assert.ok(f.spoken.at(-1).at - start < 300);
-    f.service.announce("Normal mode activated.", "normal-repeat", 2, "mode");
-    await wait(20);
-    assert.equal(
-      f.calls.filter((t) => t === "Normal mode activated.").length,
-      1,
-    );
-    const text =
-      "Gold sell setup. Entry at 2,750.25. Stop loss at 2,760.5. Take profit at 2,730.";
-    f.service.announce(text, "scan", 2, "scan");
-    await wait(25);
-    assert.equal(f.spoken.at(-1).text, text);
-    assert.equal(f.max, 1);
-    assert.ok(f.spoken.every((s) => !s.native));
-  }));
-test("blocked neural welcome survives until existing gesture; foreground and dispose respect lifecycle", async () =>
-  fixture(
-    async (f) => {
-      f.service.announce("Welcome to Mentor Alpha.", "welcome");
-      await wait(20);
-      assert.equal(f.spoken.length, 0);
-      f.service.suspend();
-      f.service.foreground();
-      f.service.unlock();
-      await wait(25);
-      assert.equal(f.spoken[0].text, "Welcome to Mentor Alpha.");
-      f.service.suspend();
-      f.service.announce("Hidden.", "hidden");
-      await wait(10);
-      assert.ok(!f.calls.includes("Hidden."));
-      f.service.dispose();
-      assert.equal(f.contexts[0].state, "closed");
-    },
-    { suspended: true },
-  ));
-test("obsolete generation cannot speak after priority/group replacement or disposal", async () =>
-  fixture(
-    async (f) => {
-      f.service.announce("Obsolete.", "old", 2, "mode");
-      await wait(2);
-      f.service.announce("Ultimate mode activated.", "new", 2, "mode");
-      await wait(25);
-      f.release();
-      await wait(20);
-      assert.ok(!f.spoken.some((s) => s.text === "Obsolete."));
-      assert.equal(f.spoken[0].text, "Ultimate mode activated.");
-      assert.equal(f.max, 1);
-    },
-    { slow: true },
-  ));
-test("provider failure preserves announcements with native fallback and backs off further generation", async () =>
-  fixture(
-    async (f) => {
-      f.service.announce("Mentor One activated.", "on", 3, "bot");
-      await wait(20);
-      f.service.announce("Mentor One deactivated.", "off", 3, "bot");
-      await wait(20);
-      assert.deepEqual(
-        f.spoken.map((s) => s.text),
-        ["Mentor One activated.", "Mentor One deactivated."],
-      );
-      assert.ok(f.spoken.every((s) => s.native));
-      assert.equal(f.calls.length, 1);
-    },
-    { fail: true },
-  ));
-test("cold audio streams before EOF, preserves PCM values, schedules sequentially and reuses the decoded clip", async () => {
-  const bundle = await build({
-    entryPoints: ["artifacts/ea-app/src/lib/announcement-audio.ts"],
-    bundle: true,
-    platform: "node",
-    format: "esm",
-    write: false,
-  });
-  const { AnnouncementAudio } = await import(
-    "data:text/javascript;base64," +
-      Buffer.from(bundle.outputFiles[0].text).toString("base64")
-  );
-  const oldWindow = globalThis.window,
-    oldFetch = globalThis.fetch;
-  let finished = false,
-    calls = 0;
-  const starts = [],
-    buffers = [];
-  class Context {
-    state = "running";
-    currentTime = 0;
-    destination = {};
-    resume() {
-      return Promise.resolve();
-    }
-    suspend() {
-      return Promise.resolve();
-    }
-    close() {
-      return Promise.resolve();
-    }
-    createBuffer(_channels, length, rate) {
-      const data = new Float32Array(length);
-      const buffer = {
-        length,
-        numberOfChannels: 1,
-        duration: length / rate,
-        getChannelData: () => data,
-      };
-      buffers.push(buffer);
-      return buffer;
-    }
-    createBufferSource() {
-      return {
-        connect() {},
-        disconnect() {},
-        start(at = 0) {
-          starts.push({ at, finished, duration: this.buffer.duration });
-          this.timer = setTimeout(() => this.onended?.(), 5);
-        },
-        stop() {
-          clearTimeout(this.timer);
-        },
-      };
-    }
-  }
-  globalThis.window = { AudioContext: Context };
-  globalThis.fetch = async (_url, init) => {
-    calls++;
-    assert.equal(JSON.parse(init.body).stream, true);
-    return new Response(
-      new ReadableStream({
-        async start(c) {
-          c.enqueue(Uint8Array.from([0, 64, 0]));
-          await wait(25);
-          c.enqueue(Uint8Array.from([192, 0, 32]));
-          finished = true;
-          c.close();
-        },
-      }),
-      { headers: { "content-type": "audio/L16;rate=24000;channels=1" } },
-    );
-  };
-  const audio = new AnnouncementAudio("session");
-  try {
-    await audio.play("Exact speech.", new AbortController().signal);
-    assert.equal(starts[0].finished, false);
-    assert.ok(starts[1].at >= starts[0].at + starts[0].duration);
-    assert.deepEqual([...buffers.at(-1).getChannelData(0)], [0.5, -0.5, 0.25]);
-    await audio.play("Exact speech.", new AbortController().signal);
-    assert.equal(calls, 1);
-    globalThis.fetch = async (_url, init) => {
-      calls++;
-      return new Response(
-        new ReadableStream({
-          start(c) {
-            c.enqueue(Uint8Array.from([0, 64]));
-            init.signal.addEventListener(
-              "abort",
-              () => c.error(new DOMException("Cancelled", "AbortError")),
-              { once: true },
-            );
-          },
-        }),
-        { headers: { "content-type": "audio/L16;rate=24000;channels=1" } },
-      );
-    };
-    const cancellation = new AbortController();
-    const pending = audio.play("Cancel streamed speech.", cancellation.signal);
-    await wait(10);
-    cancellation.abort();
-    await assert.rejects(
-      () => pending,
-      (error) => error.name === "AbortError",
-    );
-    globalThis.fetch = async () => {
-      calls++;
-      return new Response(
-        new ReadableStream({
-          start(c) {
-            c.enqueue(Uint8Array.from([0, 64]));
-            setTimeout(() => c.error(new Error("Truncated")), 10);
-          },
-        }),
-        { headers: { "content-type": "audio/L16;rate=24000;channels=1" } },
-      );
-    };
-    await assert.rejects(
-      () => audio.play("Broken speech.", new AbortController().signal),
-      (error) => error.name === "PartialSpeechError",
-    );
-    const count = calls;
-    await assert.rejects(() =>
-      audio.play("Broken speech.", new AbortController().signal),
-    );
-    assert.equal(calls, count + 1, "incomplete audio must not be cached");
-  } finally {
-    audio.dispose();
+    for (const a of players) a.dispose();
     globalThis.window = oldWindow;
     globalThis.fetch = oldFetch;
   }
-});
+}
+test("same Kokoro identity preserves exact prices and never contacts Gemini", () =>
+  fixture(async (f) => {
+    const audio = f.make(),
+      text =
+        "Mentor Élan. Entry at 2,750.25. Balance 1,250 dollars and 50 cents.";
+    await audio.play(text, new AbortController().signal);
+    assert.deepEqual(f.calls, [text]);
+    assert.deepEqual(f.spoken, [text]);
+    assert.equal(profile.voice, "af_heart");
+  }));
+test("safe labels persist across instances and accounts stay isolated; financial reports remain memory-only", () =>
+  fixture(async (f) => {
+    const s = store(),
+      a = f.make(s);
+    a.register("Mentor One activated.");
+    await a.prepare("Mentor One activated.");
+    await a.prepare("Balance is 100.25.");
+    assert.equal(s.clips.size, 1);
+    await f.make(s).prepare("Mentor One activated.");
+    assert.equal(
+      f.calls.filter((x) => x === "Mentor One activated.").length,
+      1,
+    );
+    await f.make(s, btoa("9:client:fixture")).prepare("Mentor One activated.");
+    assert.equal(
+      f.calls.filter((x) => x === "Mentor One activated.").length,
+      2,
+    );
+  }));
+test("concurrent identical dynamic speech is generated once", () =>
+  fixture(async (f) => {
+    const a = f.make();
+    await Promise.all([a.prepare("One."), a.prepare("One.")]);
+    assert.deepEqual(f.calls, ["One."]);
+  }));
+test("bundled phrase bypasses dynamic synthesis and persists", () =>
+  fixture(async (f) => {
+    const text = "Robot started.",
+      digest = Buffer.from(
+        await crypto.subtle.digest("SHA-256", new TextEncoder().encode(text)),
+      ).toString("hex"),
+      s = store();
+    globalThis.fetch = async (url) =>
+      String(url).endsWith("manifest.json")
+        ? Response.json({
+            profile,
+            clips: { [digest]: `${profile.id}/${digest}.wav` },
+          })
+        : new Response(wav(text), { headers: { "content-type": "audio/wav" } });
+    await f.make(s).prepare(text);
+    assert.equal(f.calls.length, 0);
+    assert.equal(s.clips.size, 1);
+  }));
+test("confirmed startup stages append in order without overlap or duplicate playback", () =>
+  fixture(async (f) => {
+    const service = new VoiceAnnouncementService(token, f.make());
+    for (const [i, text] of [
+      "Robot started.",
+      "Connecting to EA Cloud service.",
+      "Connected to trade server.",
+      "Ready to trade.",
+    ].entries())
+      service.announce(text, "stage-" + i, 3, "bot", true);
+    service.announce("Robot started.", "stage-0", 3, "bot", true);
+    await wait(100);
+    assert.deepEqual(f.spoken, [
+      "Robot started.",
+      "Connecting to EA Cloud service.",
+      "Connected to trade server.",
+      "Ready to trade.",
+    ]);
+    assert.equal(f.max, 1);
+    service.discard("bot");
+    service.announce("Robot stopped.", "stop", 3, "bot");
+    await wait(20);
+    assert.equal(f.spoken.at(-1), "Robot stopped.");
+    service.dispose();
+  }));
+test("blocked welcome waits for gesture; background events stay silent", () =>
+  fixture(async (f) => {
+    const service = new VoiceAnnouncementService(token, f.make());
+    service.announce("Welcome to Mentor One.", "welcome");
+    await wait(15);
+    assert.equal(f.spoken.length, 0);
+    service.suspend();
+    service.foreground();
+    service.unlock();
+    await wait(25);
+    assert.deepEqual(f.spoken, ["Welcome to Mentor One."]);
+    service.suspend();
+    service.announce("Obsolete.", "obsolete");
+    service.foreground();
+    await wait(15);
+    assert.equal(f.spoken.length, 1);
+    service.dispose();
+  }, true));
+test("local generation failure stays silent while cached natural clips still play", () =>
+  fixture(async (f) => {
+    const a = f.make();
+    await a.prepare("Cached.");
+    f.setFail(true);
+    const service = new VoiceAnnouncementService(token, a);
+    service.announce("Uncached.", "unavailable");
+    await wait(15);
+    assert.equal(f.spoken.length, 0);
+    service.announce("Cached.", "cached");
+    await wait(15);
+    assert.deepEqual(f.spoken, ["Cached."]);
+    service.dispose();
+  }));
+test("OS-closed context resumes on gesture without changing voice", () =>
+  fixture(async (f) => {
+    const a = f.make();
+    await a.prepare("Cached.");
+    await f.contexts[0].close();
+    await a.unlock();
+    await a.play("Cached.", new AbortController().signal);
+    assert.equal(f.contexts.length, 2);
+    assert.deepEqual(f.calls, ["Cached."]);
+  }));

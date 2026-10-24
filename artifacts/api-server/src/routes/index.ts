@@ -1,3 +1,4 @@
+import webPushRouter from "./web-push";
 import { requireAppSession } from "../middlewares/app-session";
 import assistantRouter from "./assistant";
 import eaModeImagesRouter from "./ea-mode-images";
@@ -39,6 +40,7 @@ router.use("/app", (req, res, next) => {
 
 router.use(healthRouter);
 router.use(assistantRouter);
+router.use(webPushRouter);
 router.use(tradingActivityRouter);
 router.use(scannerRouter);
 router.use(scannerAdminRouter);

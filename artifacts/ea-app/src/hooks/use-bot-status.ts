@@ -70,6 +70,7 @@ export function useBotStatus(token: string | null, enabled: boolean) {
     if (!current || current.token !== token || !enabled) return;
     const version = ++current.version;
     assistantEvent({type:"bot-request",enabled:running});
+    if(running)window.dispatchEvent(new Event("ea:open-trading-activity"));
     setState({ token, running, confirmed: false });
     // Keep rapid requests ordered so a late write cannot undo a newer command.
     current.queue = current.queue.then(async () => {
