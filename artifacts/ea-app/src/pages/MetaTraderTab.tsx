@@ -1,3 +1,4 @@
+import {assistantEvent} from "@/lib/assistant-events";
 import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { ArrowRight, ChevronRight, Eye, EyeOff, Fingerprint, LockKeyhole, RotateCcw, Server, X } from "lucide-react";
 import { useApp } from "@/context/AppContext";
@@ -78,13 +79,14 @@ export default function MetaTraderTab() {
     setPassword("");
     setShowPassword(false);
     setState("connecting");
+    assistantEvent({type:"mt5-start",broker:broker?.name || "your broker",server:server.trim()});
     try {
       // No live verification adapter is configured. This credential-free visual
       // demonstration returns unverified only; animation is never auth evidence.
       await previewMt5Connection({ login: login.trim(), server: server.trim() }, attempt.signal);
-      if (!attempt.signal.aborted) setState("unverified");
+      if (!attempt.signal.aborted) { setState("unverified"); assistantEvent({type:"mt5-unverified"}); }
     } catch {
-      if (!attempt.signal.aborted) setState("unverified");
+      if (!attempt.signal.aborted) { setState("unverified"); assistantEvent({type:"mt5-unverified"}); }
     }
   };
   const connect = (event: React.FormEvent) => {

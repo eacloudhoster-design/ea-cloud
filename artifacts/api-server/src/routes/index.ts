@@ -1,3 +1,4 @@
+import assistantRouter from "./assistant";
 import eaModeImagesRouter from "./ea-mode-images";
 import tradingActivityRouter from "./trading-activity";
 import { Router, type IRouter } from "express";
@@ -28,6 +29,7 @@ import scannerRouter from "./scanner";
 const router: IRouter = Router();
 
 router.use(healthRouter);
+router.use(assistantRouter);
 router.use(tradingActivityRouter);
 router.use(scannerRouter);
 router.use(scannerAdminRouter);

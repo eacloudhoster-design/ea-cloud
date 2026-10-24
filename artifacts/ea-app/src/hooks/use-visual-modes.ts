@@ -119,7 +119,7 @@ export function useVisualModes(
     }
   };
   const owner = `${scope}:${ea?.id || 0}`;
-  const [decoded, setDecoded] = useState({ owner: "", url: robotBg });
+  const [decoded, setDecoded] = useState({ owner: "", url: robotBg,mode:0 });
   const [imageError, setImageError] = useState("");
   const cache = useMemo(
     () =>
@@ -185,7 +185,7 @@ export function useVisualModes(
         try {
           await load(url);
           if (!alive) return;
-          setDecoded({ owner, url });
+          setDecoded({ owner, url,mode:selected });
           setImageError(
             failed
               ? "Selected artwork could not load. Showing this EA's fallback image."
@@ -198,7 +198,7 @@ export function useVisualModes(
       }
       if (alive) {
         setDecoded((previous) =>
-          previous.owner === owner ? previous : { owner, url: robotBg },
+          previous.owner === owner ? previous : { owner, url: robotBg,mode:selected },
         );
         setImageError("Unable to load artwork. Please retry.");
       }
@@ -206,7 +206,7 @@ export function useVisualModes(
     return () => {
       alive = false;
     };
-  }, [owner, candidateKey, enabled, cache, revision]);
+  }, [owner, candidateKey, enabled, cache, revision,selected]);
   return {
     eas,
     ea,
@@ -226,6 +226,9 @@ export function useVisualModes(
       cache.clear();
       setRetry((value) => value + 1);
     },
+    activeMode:decoded.owner===owner?decoded.mode:null,
+    imageReady:decoded.owner===owner&&decoded.mode===selected,
+    usingFallback:decoded.url!==ea?.images[selected],
     displayImage: enabled && decoded.owner === owner ? decoded.url : robotBg,
   };
 }
