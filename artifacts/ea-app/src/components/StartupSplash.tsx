@@ -4,10 +4,10 @@ import "./StartupSplash.css";
 // Same original artwork served from each app entry; also used by the first HTML paint.
 const eaLogo = `${import.meta.env.BASE_URL}ea-cloud-logo.jpeg`;
 
-// Preserve the 2s entrance and 7s trace; finish with 100ms glow and a 300ms crossfade.
-export const STARTUP_DURATION_MS = 9400;
-const ENTRANCE_MS = 2000;
-const TRACE_MS = 7000;
+// Halved total: 1s entrance + 3.3s trace + unchanged 100ms glow/300ms crossfade.
+export const STARTUP_DURATION_MS = 4700;
+const ENTRANCE_MS = 1000;
+const TRACE_MS = 3300;
 const FINAL_GLOW_MS = 100;
 const CROSSFADE_MS = 300;
 // Clockwise in the unchanged image's coordinates, including the robot's lower
@@ -81,20 +81,20 @@ export default function StartupSplash({ ready, children }: { ready: boolean; chi
           <defs>
             {/* Explicit user-space filter bounds avoid clipped SVG/CSS shadows on WebKit. */}
             <filter id={outlineHalo} filterUnits="userSpaceOnUse" x="-100" y="40" width="1454" height="940" colorInterpolationFilters="sRGB">
-              <feGaussianBlur stdDeviation="14" />
+              <feGaussianBlur stdDeviation="16" />
             </filter>
             <filter id={outlineBloom} filterUnits="userSpaceOnUse" x="-100" y="40" width="1454" height="940" colorInterpolationFilters="sRGB">
               <feGaussianBlur stdDeviation="5" result="near" />
-              <feGaussianBlur stdDeviation="17" result="wide" />
+              <feGaussianBlur stdDeviation="19" result="wide" />
               <feMerge result="bloom"><feMergeNode in="wide" /><feMergeNode in="near" /></feMerge>
-              <feComponentTransfer in="bloom" result="light"><feFuncA type="linear" slope="2.4" /></feComponentTransfer>
+              <feComponentTransfer in="bloom" result="light"><feFuncA type="linear" slope="2.8" /></feComponentTransfer>
               <feMerge><feMergeNode in="light" /><feMergeNode in="SourceGraphic" /></feMerge>
             </filter>
             <filter id={eyeHalo} filterUnits="userSpaceOnUse" x="320" y="430" width="600" height="260" colorInterpolationFilters="sRGB">
               <feGaussianBlur stdDeviation="6" result="near" />
-              <feGaussianBlur stdDeviation="13" result="wide" />
+              <feGaussianBlur stdDeviation="15" result="wide" />
               <feMerge result="eye-light"><feMergeNode in="wide" /><feMergeNode in="near" /></feMerge>
-              <feComponentTransfer in="eye-light"><feFuncA type="linear" slope="1.65" /></feComponentTransfer>
+              <feComponentTransfer in="eye-light"><feFuncA type="linear" slope="1.85" /></feComponentTransfer>
             </filter>
           </defs>
           <g className="ea-startup-eyes">

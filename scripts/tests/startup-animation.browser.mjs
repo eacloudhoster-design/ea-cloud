@@ -103,7 +103,7 @@ async function check(scenario) {
     });
     await page.waitForTimeout(120);
     const entranceEarly = await sample();
-    await page.waitForTimeout(900);
+    await page.waitForTimeout(400);
     const entranceLate = await sample();
     if (scenario !== 'reduced') {
       assert(entranceEarly.scale >= .88 && entranceEarly.scale < entranceLate.scale);
@@ -111,9 +111,9 @@ async function check(scenario) {
     }
     assert.equal(entranceEarly.opacity, 1); assert.equal(entranceLate.opacity, 1);
     await page.waitForSelector('.ea-startup[data-phase="tracing"]');
-    await page.waitForTimeout(800);
+    await page.waitForTimeout(300);
     const traceEarly = await sample();
-    await page.waitForTimeout(2200);
+    await page.waitForTimeout(900);
     const traceLate = await sample();
     assert(traceEarly.edge > traceLate.edge);
     assert(traceEarly.edge - traceLate.edge < .5, 'trace must travel at the requested slow pace');
@@ -164,11 +164,11 @@ async function check(scenario) {
     assert(fades[0].splash > fades.at(-1).splash && fades[0].home < fades.at(-1).home);
     const phases = await page.evaluate(() => window.startupPhases);
     const elapsed = phases.find(p => p.phase === 'done').time - phases.find(p => p.phase === 'true:entrance').time;
-    assert(elapsed >= 9300);
-    if (scenario !== 'slow-auth') assert(elapsed <= 10500);
+    assert(elapsed >= 4600);
+    if (scenario !== 'slow-auth') assert(elapsed <= 6000);
     else { assert(elapsed >= 11000); assert(elapsed < 13500, 'late readiness must not wait for another full circuit'); }
     const at = name => phases.find(p => p.phase === `true:${name}`).time;
-    assert(at('tracing') - at('entrance') < 2300, 'readiness changes must not restart the entrance clock');
+    assert(at('tracing') - at('entrance') < 1300, 'readiness changes must not restart the entrance clock');
     assert(at('fading') - at('glowing') >= 90 && at('fading') - at('glowing') < 300);
     assert(phases.find(p => p.phase === 'done').time - at('fading') >= 270);
     if (scenario === 'auth-error') await page.getByRole('button', { name: 'Retry', exact: true }).waitFor();
@@ -188,9 +188,11 @@ async function check(scenario) {
   } finally { await context.close(); }
 }
 try {
-  // Independent browser contexts, in small batches, keep timing tests responsive.
-  for (let i = 0; i < scenarios.length; i += 3) {
-    const batch = await Promise.allSettled(scenarios.slice(i, i + 3).map(check));
+  // Keep one foreground page by default: background-page rAF throttling can
+  // otherwise skip most of a short crossfade. Optional concurrency is for smoke runs.
+  const concurrency = Math.max(1, Math.min(3, Number(process.env.STARTUP_CONCURRENCY) || 1));
+  for (let i = 0; i < scenarios.length; i += concurrency) {
+    const batch = await Promise.allSettled(scenarios.slice(i, i + concurrency).map(check));
     const failed = batch.filter(r => r.status === 'rejected');
     if (failed.length) throw new AggregateError(failed.map(r => r.reason));
   }

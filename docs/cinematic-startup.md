@@ -87,3 +87,8 @@ is retained exactly.
 The latest [intensity and first-paint correction](startup-intensity/README.md)
 adds matched neon-intensity frames and verifies the same-logo HTML-to-React
 handoff. It preserves the approved Home crossfade and eye animation clocks.
+
+The [black-launch configuration and half-length startup update](startup-black-launch/README.md)
+adds supported Apple black launch images and theme hints, records the white-flash
+investigation limits, and halves the ready-on-time target to 4700ms at the user's
+request. The 300ms Home crossfade and independent eye clocks remain unchanged.

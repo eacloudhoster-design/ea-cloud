@@ -40,7 +40,7 @@
 
 }
 .ea-startup-tip, .ea-startup-tip-halo {
-  stroke: #ffede6; stroke-width: 4; stroke-dasharray: .018 .982; stroke-dashoffset: .018;
+  stroke: #fff2ed; stroke-width: 4; stroke-dasharray: .018 .982; stroke-dashoffset: .018;
 
 }
 .ea-startup-tip-halo { stroke: #ff1515; stroke-width: 22; opacity: 1; }
@@ -81,7 +81,7 @@
   animation: ea-eye-breathe 2400ms ease-in-out infinite;
 }
 .ea-startup-eye-halo { fill: #ff1616; }
-.ea-startup-eye-core { fill: #ff9274; opacity: .5; }
+.ea-startup-eye-core { fill: #ff9274; opacity: .56; }
 .ea-startup-eye--right { animation-duration: 3100ms; animation-delay: -1050ms; }
 @keyframes ea-eye-breathe {
   0%, 100% { opacity: .1; }
