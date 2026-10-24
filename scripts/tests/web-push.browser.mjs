@@ -1,5 +1,6 @@
 import { createRequire } from "node:module";
 import assert from "node:assert/strict";
+import { readFile } from "node:fs/promises";
 const { chromium } = createRequire(import.meta.url)("playwright");
 const origin = process.env.APP_ORIGIN || "http://127.0.0.1:5281";
 const browser = await chromium.launch({
@@ -13,6 +14,18 @@ try {
     r.fulfill({
       contentType: "text/html",
       body: "<!doctype html><title>Push regression</title>",
+    }),
+  );
+  const workerSource = await readFile(
+    "artifacts/ea-app/public/push-sw.js",
+    "utf8",
+  );
+  await context.route(origin + "/ea-app/push-sw.js", (r) =>
+    r.fulfill({
+      contentType: "application/javascript",
+      body:
+        "const originalAdd=self.addEventListener.bind(self);self.__handlers={};self.addEventListener=(type,handler,...args)=>{self.__handlers[type]=handler;originalAdd(type,handler,...args);};\n" +
+        workerSource,
     }),
   );
   const page = await context.newPage();
@@ -38,12 +51,29 @@ try {
         }),
       );
   });
+  await page.evaluate(async () => {
+    const db = await new Promise((resolve) => {
+      const r = indexedDB.open("ea-cloud-push-device", 1);
+      r.onupgradeneeded = () => r.result.createObjectStore("state");
+      r.onsuccess = () => resolve(r.result);
+    });
+    await new Promise((resolve) => {
+      const tx = db.transaction("state", "readwrite");
+      tx.objectStore("state").put("client:7", "account");
+      tx.oncomplete = resolve;
+    });
+    db.close();
+  });
   for (let i = 0; i < 100 && !registration; i++) await page.waitForTimeout(50);
   assert.ok(registration);
   const payload = {
     eventId: "00000000-0000-4000-8000-000000000001",
     title: "EA Cloud",
-    body: "Robot started.",
+    body: "Robot started successfully.",
+    version: 1,
+    accountScope: "client:7",
+    url: "/ea-app/?tab=home&activity=1",
+    expiresAt: Date.now() + 600000,
   };
   const send = (data) =>
     cdp.send("ServiceWorker.deliverPushMessage", {
@@ -69,22 +99,78 @@ try {
   assert.equal((await notifications()).length, 1);
   const one = (await notifications())[0];
   assert.equal(one.title, "EA Cloud");
-  assert.equal(one.body, "Robot started.");
+  assert.equal(one.body, "Robot started successfully.");
   assert.ok(one.icon.endsWith("/ea-app/apple-touch-icon.jpeg"));
   await send({
     ...payload,
     eventId: "00000000-0000-4000-8000-000000000002",
-    body: "Robot stopped.",
+    body: "Robot stopped successfully.",
   });
   await page.waitForTimeout(300);
   assert.equal((await notifications()).length, 2);
   await send({
     ...payload,
     eventId: "00000000-0000-4000-8000-000000000003",
+    title: "Unknown app",
     body: "Fake account connected.",
   });
   await page.waitForTimeout(200);
   assert.equal((await notifications()).length, 2);
+  await send({
+    ...payload,
+    eventId: "00000000-0000-4000-8000-000000000004",
+    title: "EA Cloud — Trade Executed",
+    body: "XAUUSD BUY executed at 2750.50.",
+    url: "/ea-app/?tab=metatrader&activity=1",
+  });
+  await page.waitForTimeout(250);
+  assert.equal((await notifications()).length, 3);
+  await send({
+    ...payload,
+    eventId: "00000000-0000-4000-8000-000000000005",
+    accountScope: "client:9",
+    title: "EA Cloud — Trade Executed",
+    body: "PRIVATE OTHER ACCOUNT",
+  });
+  await page.waitForTimeout(200);
+  assert.equal((await notifications()).length, 3);
+  await send({
+    ...payload,
+    eventId: "00000000-0000-4000-8000-000000000006",
+    url: "https://evil.example/",
+  });
+  await page.waitForTimeout(150);
+  assert.equal((await notifications()).length, 3);
+  const worker = context
+    .serviceWorkers()
+    .find((w) => w.url().endsWith("/push-sw.js"));
+  assert.ok(worker);
+  const routing = await worker.evaluate(async () => {
+    const actions = [];
+    self.clients.matchAll = async () => [
+      {
+        url: self.location.origin + "/ea-app/",
+        postMessage: (data) => actions.push(data),
+        focus: () => actions.push("focus"),
+      },
+    ];
+    let waiting;
+    self.__handlers.notificationclick({
+      notification: {
+        close() {},
+        data: {
+          url: "/ea-app/?tab=metatrader&activity=1",
+          accountScope: "client:7",
+        },
+      },
+      waitUntil: (p) => (waiting = p),
+    });
+    await waiting;
+    return actions;
+  });
+  assert.equal(routing[0].type, "EA_PUSH_NAVIGATE");
+  assert.equal(routing[0].tab, "metatrader");
+  assert.equal(routing[1], "focus");
   await context.close();
   console.log(
     "PASS real service-worker push dispatch, OS notification API, icon/body, persistent duplicate suppression and invalid-payload rejection (Chromium; no live APNs send)",

@@ -1,3 +1,4 @@
+import {queueExecutionPush} from "./web-push";
 import {and,eq} from 'drizzle-orm';
 import {db,tradingActivityTable,tradeSignalsTable,usersTable} from '@workspace/db';
 import {broadcastToClient} from '../ws';
@@ -15,8 +16,9 @@ export function executionActivity(row:{status:string;signalKind:string;symbol:st
  return {message,level};
 }
 
-export async function recordExecutionActivity(clientId:number,row:{id:number;mentorId:number;signalId:number;status:string;signalKind:string;symbol:string;action?:string|null;ticket?:string|null;retcode?:number|null;errorMessage?:string|null;volume?:string|null;updatedAt?:Date}) {
+export async function recordExecutionActivity(clientId:number,row:{id:number;mentorId:number;signalId:number;status:string;signalKind:string;symbol:string;action?:string|null;ticket?:string|null;retcode?:number|null;errorMessage?:string|null;volume?:string|null;updatedAt?:Date;retryable?:number;vpsResponse?:string|null}) {
  const occurredAt=row.updatedAt??new Date();
+ void queueExecutionPush(clientId,row);
  try{const [signal]=await db.select().from(tradeSignalsTable).where(and(eq(tradeSignalsTable.id,row.signalId),eq(tradeSignalsTable.mentorId,row.mentorId))).limit(1);
  const [mentor]=await db.select({name:usersTable.mentorName,robotName:usersTable.robotName}).from(usersTable).where(eq(usersTable.id,row.mentorId)).limit(1);
  const event=executionActivity(row);await recordTradingActivity(clientId,'mentor',event.level,event.message,{mentor:mentor?.name||mentor?.robotName||null,executionId:row.id,mentorId:row.mentorId,signalId:row.signalId,symbol:row.symbol,direction:row.action,signalKind:row.signalKind,ticket:row.ticket,retcode:row.retcode,volume:row.volume,entry:signal?.openPrice,stopLoss:signal?.stopLoss,takeProfit:signal?.takeProfit},occurredAt);}catch{}

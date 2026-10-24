@@ -28,7 +28,7 @@ const load = async (path) => {
           b.onLoad({ filter: /.*/, namespace: "fixture" }, (args) => ({
             contents: args.path.endsWith("signal-worker")
               ? "export const signalWorkerHealthy=()=>globalThis.__pushEngineHealthy!==false;"
-              : "export const db=globalThis.__pushDB;export const pushSubscriptionsTable=globalThis.__pushSchema?.pushSubscriptionsTable;export const pushEventsTable=globalThis.__pushSchema?.pushEventsTable;export const appAccessTable=globalThis.__pushSchema?.appAccessTable;export const licensesTable=globalThis.__pushSchema?.licensesTable;export const clientSettingsTable=globalThis.__pushSchema?.clientSettingsTable;",
+              : "export const db=globalThis.__pushDB;export const pushSubscriptionsTable=globalThis.__pushSchema?.pushSubscriptionsTable;export const pushEventsTable=globalThis.__pushSchema?.pushEventsTable;export const appAccessTable=globalThis.__pushSchema?.appAccessTable;export const licensesTable=globalThis.__pushSchema?.licensesTable;export const clientSettingsTable=globalThis.__pushSchema?.clientSettingsTable;export const pushDeliveriesTable=globalThis.__pushSchema?.pushDeliveriesTable;",
             loader: "js",
           }));
         },
@@ -99,9 +99,6 @@ test(
       );
     }
     await engine.exec(
-      await readFile("docs/migrations/20261024-web-push.sql", "utf8"),
-    );
-    await engine.exec(
       `INSERT INTO app_access(id,status,mentor_id,license_key) VALUES(7,'approved',5,'VALID'),(9,'approved',6,'OTHER'); INSERT INTO licenses(id,key,status,mentor_id) VALUES(1,'VALID','active',5),(2,'OTHER','active',6); INSERT INTO client_settings(id,client_id,copying_enabled) VALUES(1,7,false);`,
     );
     const query = async (config, params) => {
@@ -128,8 +125,10 @@ test(
       "WEB_PUSH_PUBLIC_KEY",
       "WEB_PUSH_PRIVATE_KEY",
       "WEB_PUSH_SUBJECT",
+      "SESSION_SECRET",
     ])
       saved[k] = process.env[k];
+    process.env.SESSION_SECRET = "push-fixture-session-secret-at-least-32";
     process.env.WEB_PUSH_PUBLIC_KEY = vapid.publicKey;
     process.env.WEB_PUSH_PRIVATE_KEY = vapid.privateKey;
     process.env.WEB_PUSH_SUBJECT = "mailto:admin@example.test";
@@ -138,7 +137,7 @@ test(
     await build({
       stdin: {
         contents:
-          'export {default as push} from "./artifacts/api-server/src/routes/web-push";export {default as settings} from "./artifacts/api-server/src/routes/client-settings";export {requireAppSession} from "./artifacts/api-server/src/middlewares/app-session";export {deliverPushEvents} from "./artifacts/api-server/src/lib/web-push";',
+          'export {default as push} from "./artifacts/api-server/src/routes/web-push";export {default as settings} from "./artifacts/api-server/src/routes/client-settings";export {requireAppSession} from "./artifacts/api-server/src/middlewares/app-session";export {issuePushSession} from "./artifacts/api-server/src/lib/push-session";export {deliverPushEvents,configurePushEngineHealth,queueExecutionPush} from "./artifacts/api-server/src/lib/web-push";',
         resolveDir: process.cwd(),
       },
       bundle: true,
@@ -164,7 +163,7 @@ test(
               contents: args.path.endsWith("signal-worker")
                 ? "export const signalWorkerHealthy=()=>globalThis.__pushEngineHealthy!==false;"
                 : args.path === "web-push"
-                  ? "export default {setVapidDetails(){},async sendNotification(sub,payload){globalThis.__sentPush.push(JSON.parse(payload));}};"
+                  ? "export default {setVapidDetails(){},async sendNotification(sub,payload){if(globalThis.__pushNetworkFailure)throw Error('PRIVATE provider error');if(globalThis.__pushReject){throw {statusCode:globalThis.__pushReject,headers:{'retry-after':'3'}};}globalThis.__sentPush.push(JSON.parse(payload));return {statusCode:201};}};"
                   : `export const db=globalThis.__pushDB;${Object.keys(schema)
                       .filter((k) => k.endsWith("Table"))
                       .map(
@@ -197,11 +196,55 @@ test(
         headers: {
           Authorization:
             "Bearer " + Buffer.from(`${id}:client:fixture`).toString("base64"),
+          Cookie: (() => {
+            let cookie = "";
+            routes.issuePushSession(
+              {
+                cookie(name, value) {
+                  cookie = name + "=" + value;
+                },
+              },
+              id,
+              Buffer.from(`${id}:client:fixture`).toString("base64"),
+            );
+            return cookie;
+          })(),
           "Content-Type": "application/json",
         },
         ...(body ? { body: JSON.stringify(body) } : {}),
       });
+    routes.configurePushEngineHealth(
+      () => globalThis.__pushEngineHealthy !== false,
+    );
+    globalThis.__pushEngineHealthy = false;
+    const pump = async (count) => {
+      for (let i = 0; i < 100 && globalThis.__sentPush.length < count; i++) {
+        await routes.deliverPushEvents({ warn() {} });
+        await new Promise((r) => setTimeout(r, 10));
+      }
+    };
     try {
+      assert.equal(
+        (await (await call("push/status")).json()).storage.reason,
+        "PUSH_BASE_MIGRATION_REQUIRED",
+      );
+      await engine.exec(
+        await readFile("docs/migrations/20261024-web-push.sql", "utf8"),
+      );
+      assert.equal(
+        (await (await call("push/status")).json()).storage.reason,
+        "PUSH_DELIVERY_MIGRATION_REQUIRED",
+      );
+      await engine.exec(
+        await readFile(
+          "docs/migrations/20261025-web-push-reliability.sql",
+          "utf8",
+        ),
+      );
+      assert.equal(
+        "privateKey" in (await (await call("push/status")).json()),
+        false,
+      );
       assert.equal(
         (await appRequest(app, "https://fixture/api/app/push/config")).status,
         401,
@@ -214,6 +257,20 @@ test(
       assert.equal(
         (await call("push/subscriptions", "POST", sub, 9)).status,
         409,
+      );
+      assert.equal(
+        (
+          await call("trading-controls", "PATCH", {
+            copyingEnabled: true,
+            maxOpenTrades: "bad",
+          })
+        ).status,
+        500,
+      );
+      assert.equal(
+        (await engine.query("SELECT * FROM push_events")).rows.length,
+        0,
+        "Failed activation never creates a notification",
       );
       assert.equal(
         (await call("trading-controls", "PATCH", { copyingEnabled: true }))
@@ -239,8 +296,12 @@ test(
       globalThis.__pushEngineHealthy = true;
       await routes.deliverPushEvents({ warn() {} });
       await routes.deliverPushEvents({ warn() {} });
+      await pump(1);
       assert.equal(globalThis.__sentPush.length, 1);
-      assert.equal(globalThis.__sentPush[0].body, "Robot started.");
+      assert.equal(
+        globalThis.__sentPush[0].body,
+        "Robot started successfully.",
+      );
       assert.equal(
         (await call("trading-controls", "PATCH", { copyingEnabled: "false" }))
           .status,
@@ -250,13 +311,113 @@ test(
         (await engine.query("SELECT * FROM push_events")).rows.length,
         1,
       );
+      assert.equal(
+        (
+          await call("trading-controls", "PATCH", {
+            copyingEnabled: false,
+            maxOpenTrades: "bad",
+          })
+        ).status,
+        500,
+      );
+      assert.equal(
+        (await engine.query("SELECT * FROM push_events")).rows.length,
+        1,
+        "Failed deactivation never creates a notification",
+      );
       await call("trading-controls", "PATCH", { copyingEnabled: false });
       await routes.deliverPushEvents({ warn() {} });
-      assert.equal(globalThis.__sentPush[1].body, "Robot stopped.");
+      await pump(2);
+      assert.equal(
+        globalThis.__sentPush[1].body,
+        "Robot stopped successfully.",
+      );
       await call("push/subscriptions", "DELETE", { endpoint: sub.endpoint }, 9);
       assert.equal(
         (await engine.query("SELECT * FROM push_subscriptions")).rows.length,
         1,
+      );
+      const legacy = {
+        ...sub,
+        endpoint: "https://web.push.apple.com/legacy-unverified",
+      };
+      await engine.query(
+        "INSERT INTO push_subscriptions(client_id,endpoint_hash,subscription) VALUES($1,$2,$3)",
+        [7, lib.endpointHash(legacy.endpoint), JSON.stringify(legacy)],
+      );
+      const diagnostic = await (await call("push/status")).json();
+      assert.equal(diagnostic.storage.ready, true);
+      assert.equal(diagnostic.subscriptions, 1);
+      assert.equal(diagnostic.unverifiedSubscriptions, 1);
+      assert.equal(
+        JSON.stringify(diagnostic).includes(vapid.privateKey),
+        false,
+      );
+      const pending = {
+        clientId: 7,
+        id: 55,
+        signalId: 88,
+        status: "pending",
+        signalKind: "OPEN",
+        symbol: "XAUUSD",
+        action: "BUY",
+      };
+      await routes.queueExecutionPush(7, pending);
+      await routes.queueExecutionPush(7, pending);
+      await pump(3);
+      assert.equal(globalThis.__sentPush[2].title, "EA Cloud — Trade Alert");
+      globalThis.__pushReject = 429;
+      await routes.queueExecutionPush(7, {
+        ...pending,
+        status: "success",
+        ticket: "verified",
+        retcode: 10009,
+        vpsResponse: '{"price":"2750.50"}',
+      });
+      for (let i = 0; i < 100; i++) {
+        await routes.deliverPushEvents({ warn() {} });
+        if (
+          (
+            await engine.query(
+              "SELECT * FROM push_deliveries WHERE state='retry' AND last_status=429",
+            )
+          ).rows.length
+        )
+          break;
+        await new Promise((r) => setTimeout(r, 10));
+      }
+      assert.equal(
+        (
+          await engine.query(
+            "SELECT * FROM push_deliveries WHERE state='retry' AND last_status=429",
+          )
+        ).rows.length,
+        1,
+      );
+      globalThis.__pushReject = 0;
+      await engine.exec(
+        "UPDATE push_deliveries SET next_attempt_at=now() WHERE state='retry'",
+      );
+      await pump(4);
+      assert.equal(
+        globalThis.__sentPush[3].body,
+        "XAUUSD BUY executed at 2750.50.",
+      );
+      assert.equal(
+        (
+          await engine.query(
+            "SELECT DISTINCT subscription_id FROM push_deliveries",
+          )
+        ).rows.length,
+        1,
+        "Unverified legacy subscriptions must receive no private events",
+      );
+      await routes.queueExecutionPush(9, { ...pending, id: 99 });
+      await pump(4);
+      assert.equal(
+        globalThis.__sentPush.length,
+        4,
+        "A client mismatch is suppressed",
       );
       await engine.exec(
         "UPDATE licenses SET status='expired' WHERE key='VALID'",
@@ -267,7 +428,7 @@ test(
           .status,
         401,
       );
-      assert.equal(globalThis.__sentPush.length, 2);
+      assert.equal(globalThis.__sentPush.length, 4);
     } finally {
       await engine.close();
       for (const [k, v] of Object.entries(saved))
@@ -277,6 +438,39 @@ test(
       delete globalThis.__pushSchema;
       delete globalThis.__sentPush;
       delete globalThis.__pushEngineHealthy;
+      delete globalThis.__pushReject;
+      delete globalThis.__pushNetworkFailure;
     }
   },
 );
+test("VAPID readiness detects missing settings and mismatched pairs without exposing private keys", async () => {
+  const { default: webpush } =
+    await import("../../artifacts/api-server/node_modules/web-push/src/index.js");
+  const keys = webpush.generateVAPIDKeys(),
+    other = webpush.generateVAPIDKeys(),
+    names = ["WEB_PUSH_PUBLIC_KEY", "WEB_PUSH_PRIVATE_KEY", "WEB_PUSH_SUBJECT"],
+    saved = Object.fromEntries(names.map((k) => [k, process.env[k]]));
+  try {
+    for (const name of names) delete process.env[name];
+    assert.equal(lib.pushConfiguration().reason, "PUSH_VAPID_MISSING");
+    process.env.WEB_PUSH_PUBLIC_KEY = keys.publicKey;
+    process.env.WEB_PUSH_PRIVATE_KEY = other.privateKey;
+    process.env.WEB_PUSH_SUBJECT = "mailto:test@example.com";
+    assert.equal(lib.pushConfiguration().reason, "PUSH_VAPID_INVALID");
+    process.env.WEB_PUSH_PRIVATE_KEY = keys.privateKey;
+    const state = lib.pushConfiguration();
+    assert.equal(state.configured, true);
+    assert.equal(JSON.stringify(state).includes(keys.privateKey), false);
+  } finally {
+    for (const [k, v] of Object.entries(saved))
+      if (v === undefined) delete process.env[k];
+      else process.env[k] = v;
+  }
+});
+test("only explicit transient provider rejections retry, with Retry-After and a finite attempt budget", () => {
+  assert.equal(lib.retryDelay(429, { "retry-after": "59" }, 1), 59000);
+  assert.ok(lib.retryDelay(503, {}, 2) >= 3000);
+  for (const status of [undefined, 400, 401, 403, 404, 410])
+    assert.equal(lib.retryDelay(status, {}, 1), null);
+  assert.equal(lib.retryDelay(429, {}, 4), null);
+});
