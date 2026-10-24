@@ -1,3 +1,4 @@
+import ModeImage from "@/components/ModeImage";
 import { useInterfaceSwipe } from "@/hooks/use-interface-swipe";
 import BotName from "@/components/BotName";
 import "@/components/S2toneActions.css";
@@ -169,7 +170,7 @@ function S2ToneLayout({ shapeStyle, accentColor, botRunning, setBotRunning, eaNa
         }}
       >
         {bgImageUrl && (
-          <img src={bgImageUrl} alt="" className="absolute inset-0 w-full h-full object-cover" />
+          <ModeImage src={bgImageUrl} alt="" className="absolute inset-0 w-full h-full object-cover" />
         )}
         {/* Inner highlight glint */}
         {!bgImageUrl && shapeStyle !== "none" && (
@@ -286,7 +287,7 @@ function RegularLayout({ shapeStyle, accentColor, botRunning, setBotRunning, eaN
         }}
       >
         {bgImageUrl ? (
-          <img src={bgImageUrl} alt="" className="absolute inset-0 w-full h-full object-cover" />
+          <ModeImage src={bgImageUrl} alt="" className="absolute inset-0 w-full h-full object-cover" />
         ) : (
           <ChipIcon size={110} color={accentColor} style={{ filter: `drop-shadow(0 0 18px ${accentColor}) drop-shadow(0 0 36px ${accentColor}66)` }} />
         )}
@@ -470,7 +471,7 @@ function MatrixLayout({ shapeStyle, accentColor, botRunning, setBotRunning, eaNa
         <div className="absolute rounded-full pointer-events-none" style={{ inset: 16, border: `1px solid ${theme}38` }} />
         <RobotImageFrame shape={shapeStyle} accent={accentColor} size={200} borderWidth={3} className="absolute rounded-full overflow-hidden flex items-center justify-center" style={{ inset: 30, background: bgImageUrl ? "transparent" : "rgba(240,245,255,0.96)", border: `3px solid color-mix(in srgb, ${theme} 25%, white 75%)`, boxShadow: `0 0 40px ${theme}55, 0 0 80px ${theme}28` }}>
           {bgImageUrl
-            ? <img src={bgImageUrl} alt={eaName} className="w-full h-full object-cover" />
+            ? <ModeImage src={bgImageUrl} alt={eaName} className="w-full h-full object-cover" />
             : <span className="font-black select-none" style={{ fontSize: 58, color: "transparent", WebkitTextStroke: `3px ${theme}`, lineHeight: 1 }}>P</span>}
           {botRunning && <div className="absolute inset-0 rounded-full animate-ping" style={{ background: theme, opacity: 0.08 }} />}
         </RobotImageFrame>
@@ -634,7 +635,7 @@ function QuotesSheet({ accentColor, clientToken, onClose }: { accentColor: strin
   return (
     <div className="absolute inset-0 z-40 flex flex-col overflow-hidden">
       {/* Mentor bot image background + dark overlay + blur */}
-      <img src={avatar} alt="" className="absolute inset-0 w-full h-full object-cover object-center pointer-events-none" style={{ zIndex: 0 }} />
+      <ModeImage src={avatar} alt="" className="absolute inset-0 w-full h-full object-cover object-center pointer-events-none" style={{ zIndex: 0 }} />
       <div className="absolute inset-0 pointer-events-none" style={{ zIndex: 1, background: "rgba(0,0,0,0.55)", backdropFilter: "blur(2px)" }} />
       <div className="absolute inset-0 pointer-events-none" style={{ zIndex: 1, background: `radial-gradient(ellipse 90% 50% at 50% 0%, ${accentColor}33 0%, transparent 60%)` }} />
 
@@ -643,7 +644,7 @@ function QuotesSheet({ accentColor, clientToken, onClose }: { accentColor: strin
         <button onClick={onClose} className="w-9 h-9 rounded-full flex items-center justify-center active:scale-95 transition-transform flex-shrink-0" style={{ background: "rgba(0,0,0,0.4)", border: "1px solid rgba(255,255,255,0.18)" }}>
           <ChevronLeft size={20} className="text-white" />
         </button>
-        <img src={avatar} alt="" className="w-9 h-9 rounded-full object-cover flex-shrink-0" style={{ border: `1.5px solid ${accentColor}` }} />
+        <ModeImage src={avatar} alt="" className="w-9 h-9 rounded-full object-cover flex-shrink-0" style={{ border: `1.5px solid ${accentColor}` }} />
         <h2 className="text-white font-bold text-lg truncate">{eaName}</h2>
       </div>
 

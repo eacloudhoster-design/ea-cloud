@@ -1,3 +1,5 @@
+import ModeImage from "@/components/ModeImage";
+import { useVisualModes } from "@/hooks/use-visual-modes";
 import { usePwaBackground } from "@/hooks/use-pwa-background";
 import { useBotStatus } from "@/hooks/use-bot-status";
 import BackgroundAnimation from "@/components/BackgroundAnimation";
@@ -63,7 +65,8 @@ function EACloudApp({ onReady }: { onReady: (ready: boolean) => void }) {
   const [eaName, setEaName] = useState("EA Cloud Pro");
   const [eaTagline, setEaTagline] = useState("@ea_cloud");
   const [eaSymbols, setEaSymbols] = useState<string[]>(["EURUSD", "GBPUSD", "XAUUSD"]);
-  const [bgImageUrl, setBgImageUrl] = useState<string | null>(null);
+  const [mentorId, setMentorId] = useState<number|null>(null);
+  const [mentorImageUrl, setBgImageUrl] = useState<string | null>(null);
 
   // On mount: validate stored token or show auth
   useEffect(() => {
@@ -85,6 +88,7 @@ function EACloudApp({ onReady }: { onReady: (ready: boolean) => void }) {
         if (cancelled) return;
         if (!data.mentor) throw new Error("Your mentor is not linked. Please contact support.");
         const mentor = data.mentor;
+        setMentorId(Number.isSafeInteger(mentor.id) ? mentor.id : null);
         const eas: { name: string; symbol: string }[] = data.eas ?? [];
         // Background image from mentor profile
         setBgImageUrl(mentor?.backgroundImageUrl || null);
@@ -134,6 +138,7 @@ function EACloudApp({ onReady }: { onReady: (ready: boolean) => void }) {
     setClientToken(null);
     setBrandingReady(false);
     setBgImageUrl(null);
+    setMentorId(null);
     setAuthStage("access");
   };
 
@@ -150,7 +155,11 @@ function EACloudApp({ onReady }: { onReady: (ready: boolean) => void }) {
     setAuthStage("app");
   };
 
+  const visualModes = useVisualModes(clientToken,authStage === "app" && brandingReady,mentorImageUrl,mentorId);
+  const bgImageUrl = visualModes.displayImage;
+
   const settings: AppSettings = {
+    visualModes,
     activeTab,
     botRunning, botStatusConfirmed, setBotRunning: persistBotRunning,
     interfaceStyle, setInterfaceStyle,
@@ -166,7 +175,7 @@ function EACloudApp({ onReady }: { onReady: (ready: boolean) => void }) {
   const backgroundSrc = bgImageUrl || robotBg;
   usePwaBackground(backgroundSrc, authStage === "app" && brandingReady && showBg);
 
-  const initializing = authStage === "loading" || (authStage === "app" && !brandingReady && !loadError);
+  const initializing = authStage === "loading" || (authStage === "app" && !loadError && (!brandingReady || visualModes.loading));
   useEffect(() => { onReady(!initializing); }, [initializing, onReady]);
 
   // Keep the existing retry flow; slow initialization holds the logo without replay.
@@ -227,7 +236,7 @@ function EACloudApp({ onReady }: { onReady: (ready: boolean) => void }) {
         style={{ maxWidth: 430, margin: "0 auto" }}
       >
         {/* Fade only the full-screen image; profile images remain independent. */}
-        <img
+        <ModeImage
           src={backgroundSrc}
           alt=""
           data-home-background
