@@ -1,0 +1,4 @@
+# Pretrained model chunks and vendored WASM runtime are immutable binary assets.
+artifacts/ea-app/public/natural-voice/model/*.bin binary
+artifacts/ea-app/public/natural-voice/model/*.wasm binary
+artifacts/ea-app/public/natural-voice/model/ort-*.mjs -diff
