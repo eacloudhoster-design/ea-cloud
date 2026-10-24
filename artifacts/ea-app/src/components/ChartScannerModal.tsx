@@ -22,7 +22,7 @@ function ScannerOrb() {
 }
 
 export default function ChartScannerModal({ onClose, onNavigate }: ChartScannerModalProps) {
-  const { bgImageUrl, eaName, clientToken, accentColor, voice } = useApp();
+  const { bgImageUrl, eaName, clientToken, accentColor } = useApp();
   const [strategy, setStrategy] = useState<Strategy>("SMC");
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState("");
@@ -152,7 +152,6 @@ export default function ChartScannerModal({ onClose, onNavigate }: ChartScannerM
         <p>Source-backed context for CPI, PPI, NFP and FOMC. Reports include retrieval time and source links.</p>
       </section>
       <div ref={results} className="scanner-results" aria-live="polite">
-        {result && voice && <div className="ea-voice-actions"><button type="button" onClick={() => void voice.replayRecord(result.id)}>Replay analysis</button><button type="button" onClick={voice.stop}>Stop speaking</button></div>}
         {result && chart && <ScannerChartReport clientToken={clientToken} onSettingsSaved={setTradeSettings} record={result} historical={historical} settings={tradeSettings} onEditSettings={() => setSettingsOpen(true)} />}
         {result && fundamental && <article className="scanner-report"><div className="scanner-report-top"><span>{fundamental.context.market} · {fundamental.context.focus}</span><time dateTime={result.createdAt}>{formatDate(result.createdAt)}</time></div><h3>Market outlook</h3><p className="scanner-report-summary">{fundamental.summary}</p><p className="scanner-report-caution">Researched {formatDate(fundamental.asOf)}. This is not a live economic calendar.</p><h4>Sources</h4><ul>{fundamental.sources.map((source,i) => <li key={i}><a href={source.url} target="_blank" rel="noopener noreferrer">{source.title}<ArrowUpRight size={12} /></a></li>)}</ul><p className="scanner-record-note"><ShieldCheck size={14} /> Saved to your scan history</p></article>}
       </div>

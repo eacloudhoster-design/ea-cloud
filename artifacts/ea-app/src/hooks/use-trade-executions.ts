@@ -1,3 +1,4 @@
+import { assistantEvent } from "@/lib/assistant-events";
 import { useEffect, useState, useCallback } from "react";
 
 export interface TradeExecution {
@@ -97,7 +98,10 @@ export function useTradeExecutions(clientToken: string | null) {
         if (ws !== activeWs || disposed) return;
         try {
           const msg = JSON.parse(ev.data) as { type: string; execution?: TradeExecution };
-          if (msg.type === "TRADE_EXECUTION" && msg.execution) upsert(msg.execution);
+          if (msg.type === "TRADE_EXECUTION" && msg.execution) {
+            upsert(msg.execution);
+            assistantEvent({type:"trade-execution", execution:msg.execution});
+          }
         } catch {
           // ignore malformed frames
         }

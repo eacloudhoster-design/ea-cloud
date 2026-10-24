@@ -1,4 +1,3 @@
-import {VoiceAssistantSettings} from "@/components/VoiceAssistant";
 import EaModeCards from "@/components/EaModeCards";
 import { backgroundAnimations } from "@/lib/home-preferences";
 import {botFonts,botFontStyle,type BotFont} from "@/lib/font-preference";
@@ -15,7 +14,7 @@ interface SettingsTabProps {
   onOpenChartScanner?: () => void;
 }
 
-type OpenSection = "interface" | "shape" | "colour" | "font" | "manipulation" | "animation" | "voice" | null;
+type OpenSection = "interface" | "shape" | "colour" | "font" | "manipulation" | "animation" | null;
 
 const INTERFACE_OPTIONS: { id: InterfaceStyle; label: string; desc: string }[] = [
   { id: "regular", label: "Regular Interface", desc: "Default 2-column layout" },
@@ -170,7 +169,6 @@ export default function SettingsTab({ onOpenChartScanner }: SettingsTabProps) {
           <EaModeCards />
         </AccordionItem>
 
-        <AccordionItem icon={<BellOff size={18} />} label="Voice Assistant" isOpen={open === "voice"} onToggle={() => toggle("voice")} accentColor={accentColor}><VoiceAssistantSettings /></AccordionItem>
 
         {/* Chart Scanner */}
         <button

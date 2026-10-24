@@ -1,3 +1,4 @@
+import { assistantEvent } from "@/lib/assistant-events";
 import ModeImage from "@/components/ModeImage";
 import { useDraggablePanel } from "@/hooks/use-draggable-panel";
 import {useCallback,useEffect,useRef,useState,type CSSProperties} from 'react';
@@ -20,10 +21,10 @@ export default function TradingActivityMonitor(){
  const close=useCallback(()=>{setOpen(false);trigger.current?.focus();},[]);
  useEffect(()=>{setOpen(false);setEvents([]);setSnapshot(null);setError('');},[clientToken]);
  useEffect(()=>{if(!clientToken)return;
- let disposed=false,busy=false,dirty=false,ws:WebSocket|null=null,reconnect:ReturnType<typeof setTimeout>|undefined,lastSnapshot=0;const abort=new AbortController();
+ let disposed=false,busy=false,dirty=false,ws:WebSocket|null=null,reconnect:ReturnType<typeof setTimeout>|undefined,lastSnapshot=0;const abort=new AbortController();let seenActivity:Set<string>|null=null;
  const read=async(path:string)=>{const res=await fetch('/api/app/activity'+path,{headers:{Authorization:`Bearer ${clientToken}`},cache:'no-store',signal:AbortSignal.any([abort.signal,AbortSignal.timeout(15000)])});if(!res.ok)throw Error('Trading activity is unavailable. Retry in a moment.');return res.json();};
  const poll=async()=>{if(disposed||document.hidden)return;if(busy){dirty=true;return;}busy=true;dirty=false;try{
-  const data=await read('');if(!disposed){setEvents(data.events);setError('');}
+  const data=await read('');if(!disposed){setEvents(data.events);setError('');const rows:TradingActivity[]=Array.isArray(data.events)?data.events:[];if(seenActivity){for(const row of rows){const age=Date.now()-new Date(row.createdAt).getTime();if(!seenActivity.has(row.id)&&row.level==='error'&&row.details?.executionId==null&&age>=-5000&&age<60000)assistantEvent({type:'trading-error',id:row.id});}}seenActivity=new Set(rows.map(row=>row.id));}
   if(Date.now()-lastSnapshot>20000){const live=await read('/snapshot');if(!disposed){setSnapshot(live);lastSnapshot=Date.now();}}
  }catch(e){if(!disposed)setError((e as Error).message);}finally{busy=false;if(dirty&&!disposed)void poll();}};
  const connect=()=>{if(disposed)return;try{ws=new WebSocket(`${location.protocol==='https:'?'wss:':'ws:'}//${location.host}/api/ws?token=${encodeURIComponent(clientToken)}`);ws.onmessage=event=>{try{const data=JSON.parse(event.data);if(data.type==='TRADING_ACTIVITY'||data.type==='TRADE_EXECUTION')void poll();}catch{}};ws.onclose=()=>{if(!disposed)reconnect=setTimeout(connect,10000);};ws.onerror=()=>ws?.close();}catch{reconnect=setTimeout(connect,10000);}};
