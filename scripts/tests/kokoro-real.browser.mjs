@@ -22,6 +22,7 @@ try {
   page.on("console", (m) => console.log(m.type(), m.text().slice(0, 300)));
   page.on("pageerror", (e) => console.log("pageerror", e.message));
   await page.goto(origin + "/audio-check");
+  await page.mouse.click(10,10); // Existing gesture permission, not an autoplay bypass.
   const result = await page.evaluate(
     async ({ origin, worker }) => {
       const context = new AudioContext(),
@@ -37,6 +38,11 @@ try {
         );
         if (audio.duration <= 0 || audio.numberOfChannels !== 1)
           throw Error("Invalid clip");
+        if(decoded===0){
+          await context.resume();
+          const source=context.createBufferSource();source.buffer=audio;source.connect(context.destination);
+          await new Promise((resolve,reject)=>{const timeout=setTimeout(()=>reject(Error('Playback did not complete')),10000);source.onended=()=>{clearTimeout(timeout);resolve();};source.start();});
+        }
         decoded++;
       }
       const engine = new Worker(origin + "/ea-app/assets/" + worker, {
