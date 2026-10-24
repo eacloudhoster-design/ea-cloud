@@ -8,11 +8,12 @@ const browser=await chromium.launch({executablePath:'/usr/bin/chromium',args:['-
 const image=await readFile('artifacts/ea-cloud/public/default-robot.jpg');
 const report={id:'00000000-0000-4000-8000-000000000007',kind:'chart',strategy:'SMC',createdAt:new Date().toISOString(),report:{signal:'SELL',symbol:'XAUUSD',timeframe:'M15',entry:2750.25,stopLoss:2760.5,takeProfit:2730,reasoning:'Bearish market structure rejects visible resistance.',limitations:null}};
 const results=[];
+const neural=process.env.NEURAL_VOICE_TEST==='1';
 try{
  for(const name of ['Mentor Alpha','Mentor Beta']){
   const spoken=[],writes=[];let connected=false,running=false,failBot=false,scanFail=false,executions=[];
   const context=await browser.newContext({viewport:{width:390,height:844},hasTouch:true,isMobile:true});
-  await context.addInitScript((blocked)=>{
+  await context.addInitScript(({blocked,neural})=>{
    localStorage.setItem('appClientToken',btoa('7:client:fixture'));
    localStorage.setItem('ea-cloud:client:7:voice',JSON.stringify({enabled:false,provider:'neural'}));
    localStorage.setItem('ea-cloud:client:7:home-appearance',JSON.stringify({interfaceStyle:'regular',accentColor:'#00c9ed',showBg:true,backgroundAnimation:'none'}));
@@ -27,14 +28,27 @@ try{
      current=u;window.__speech.active++;window.__speech.max=Math.max(window.__speech.max,window.__speech.active);window.__speech.calls.push({text:u.text,at:performance.now(),rate:u.rate});u.onstart?.();timer=setTimeout(()=>{current=null;window.__speech.active--;u.onend?.();},15);},
     cancel(){clearTimeout(timer);if(current){window.__speech.active--;current=null;}}
    }});
+   if(neural){
+    class AudioContextFixture{
+     state=blocked?'suspended':'running';destination={};
+     resume(){this.state='running';return Promise.resolve();}suspend(){this.state='suspended';return Promise.resolve();}close(){this.state='closed';return Promise.resolve();}
+     async decodeAudioData(data){return {text:new TextDecoder().decode(data),length:1000,numberOfChannels:1};}
+     createBufferSource(){return {connect(){},disconnect(){},onended:null,
+      start(){window.__speech.attempts.push({text:this.buffer.text,splash:!!document.querySelector('.ea-startup')});window.__speech.active++;window.__speech.max=Math.max(window.__speech.max,window.__speech.active);window.__speech.calls.push({text:this.buffer.text,at:performance.now(),rate:1});this.timer=setTimeout(()=>{this.timer=null;window.__speech.active--;this.onended?.();},15);},
+      stop(){if(this.timer){clearTimeout(this.timer);this.timer=null;window.__speech.active--;}}
+     };}
+    }
+    window.AudioContext=AudioContextFixture;
+   }else{Object.defineProperty(window,'AudioContext',{value:undefined});Object.defineProperty(window,'webkitAudioContext',{value:undefined});}
    window.SpeechRecognition=class{constructor(){throw Error('Microphone must never be used');}};
-  },name==='Mentor Alpha');
+  },{blocked:name==='Mentor Alpha',neural});
   const sockets=[];await context.routeWebSocket('**/api/ws?*',socket=>sockets.push(socket));
   await context.route('https://fonts.**',r=>r.abort());
   await context.route('**/voice-image-*.jpg',r=>r.fulfill({body:image,contentType:'image/jpeg'}));
   await context.route('**/api/**',async route=>{
    const request=route.request(),path=new URL(request.url()).pathname,body=request.postDataJSON?.bind(request);
    if(request.method()!=='GET')writes.push(path);
+   if(path==='/api/app/assistant/speech'&&neural){assert.match(request.headers().authorization,/^Bearer /);await route.fulfill({body:request.postDataJSON().text,contentType:'audio/wav'});return;}
    if(path.includes('/assistant/')){throw Error('Announcement made an unnecessary assistant request: '+path);}
    if(path==='/api/app/symbol-configs'){const configs=[{pairName:'XAUUSD',variations:['XAUUSD','XAUUSDm'],selectedSymbol:request.method()==='PATCH'?request.postDataJSON().configs[0].selectedSymbol:null,customLotSize:'0.05'}];await route.fulfill({json:configs});return;}
    if(path.endsWith('/trading-controls')){
@@ -46,7 +60,7 @@ try{
    await route.fulfill({json});
   });
   const page=await context.newPage();page.setDefaultTimeout(15000);const errors=[];page.on('pageerror',e=>errors.push(e.message));
-  await page.goto(origin+'/ea-app/');await page.locator('.ea-startup').waitFor({state:'visible'});assert.equal(await page.evaluate(()=>window.__speech.attempts.length),0,'no voice before splash finishes');await page.locator('.ea-startup').waitFor({state:'detached'});await page.waitForFunction(()=>window.__speech.attempts.length>0);assert.ok((await page.evaluate(()=>window.__speech.attempts)).every(attempt=>!attempt.splash));
+  await page.goto(origin+'/ea-app/');await page.locator('.ea-startup').waitFor({state:'visible'});assert.equal(await page.evaluate(()=>window.__speech.attempts.length),0,'no voice before splash finishes');await page.locator('.ea-startup').waitFor({state:'detached'});if(name==='Mentor Alpha'&&neural)await page.waitForTimeout(100);else await page.waitForFunction(()=>window.__speech.attempts.length>0);assert.ok((await page.evaluate(()=>window.__speech.attempts)).every(attempt=>!attempt.splash));
   const speech=()=>page.evaluate(()=>window.__speech.calls);
   assert.equal((await speech()).length,name==='Mentor Alpha'?0:1,'automatic welcome wherever permitted; blocked browsers await gesture');
   const nav=page.locator('.ea-app-viewport > .ea-glass-navigation');const originalNav=await nav.boundingBox();
@@ -81,5 +95,5 @@ try{
   await page.reload();await page.locator('.ea-startup').waitFor({state:'detached'});await page.tap('body');await page.waitForTimeout(80);assert.equal((await speech()).filter(t=>t.text===`Welcome to ${name}.`).length,1,'new launch welcomes once');assert.ok((await page.evaluate(()=>window.__speech.attempts)).every(attempt=>!attempt.splash));
   assert.deepEqual(errors,[]);results.push({name,announcements:await speech(),writes});await page.screenshot({path:`work/announcement-tests/${name.replaceAll(' ','-')}.png`});await context.close();
  }
- await writeFile('work/announcement-tests/browser-results.json',JSON.stringify(results,null,2));console.log('PASS automatic native welcome, gesture retry, no chatbot/microphone/cloud calls, saved Start/Stop/symbol, actual scanner price narration, honest MT5 preview and outcome categories, WebSocket execution/error/dedup, rapid modes, reopening and navigation bounds');
+ await writeFile('work/announcement-tests/browser-results.json',JSON.stringify(results,null,2));console.log('PASS automatic welcome, gesture retry, no chatbot/microphone/intent calls, saved Start/Stop/symbol, actual scanner price narration, honest MT5 preview and outcome categories, WebSocket execution/error/dedup, rapid modes, reopening and navigation bounds');
 }finally{await browser.close();}

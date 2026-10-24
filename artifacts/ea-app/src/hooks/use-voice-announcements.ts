@@ -4,16 +4,17 @@ import { VoiceAnnouncementService } from "@/lib/voice-announcement-service";
 import { cleanText, modeNames, speakSymbol } from "@/lib/assistant-text";
 import { scannerAnnouncement, tradeAnnouncement, mt5AttemptAnnouncement, mt5ResultAnnouncement } from "@/lib/voice-announcement-text";
 import type { AssistantEvent } from "@/lib/assistant-events";
-/** Automatic, non-conversational announcements. Never reads an API to generate speech. */
-export function useVoiceAnnouncements(token: string | null, ready: boolean, botName: string, modes: VisualModes) {
+/** Automatic, non-conversational announcements. Uses the existing authenticated speech endpoint only. */
+export function useVoiceAnnouncements(token: string | null, ready: boolean, botName: string, modes: VisualModes, preloadReady = ready) {
   const context = useRef({ ready, botName });
   context.current = { ready, botName };
   const service = useRef<VoiceAnnouncementService | null>(null);
   const welcome = useRef(false);
+  const greetNow = useRef<() => void>(() => {});
   const lastMode = useRef<string | null>(null);
   useEffect(() => {
-    if (!ready || !token) return;
-    const voice = new VoiceAnnouncementService();
+    if (!preloadReady || !token) return;
+    const voice = new VoiceAnnouncementService(token);
     service.current = voice;
     welcome.current = false;
     lastMode.current = null;
@@ -22,6 +23,7 @@ export function useVoiceAnnouncements(token: string | null, ready: boolean, botN
       welcome.current = true;
       voice.announce(`Welcome to ${(cleanText(context.current.botName, 120) || "EA Cloud Pro")}.`, "welcome", 1);
     };
+    greetNow.current = greet;
     const gesture = () => { greet(); voice.unlock(); };
     const visibility = () => { if (document.hidden) voice.suspend(); else voice.foreground(); };
     const leave = () => voice.suspend();
@@ -69,7 +71,15 @@ export function useVoiceAnnouncements(token: string | null, ready: boolean, botN
     window.addEventListener("pagehide", leave);
     window.addEventListener("pageshow", show);
     greet();
+    voice.preload([
+      `Welcome to ${(cleanText(context.current.botName,120) || "EA Cloud Pro")}.`,
+      ...modeNames.map(mode => `${mode} mode activated.`),
+      `${(cleanText(context.current.botName,120) || "EA Cloud Pro")} activated.`,
+      `${(cleanText(context.current.botName,120) || "EA Cloud Pro")} deactivated.`,
+      "No trades currently open.", "Chart analysis started.", "Fundamental analysis started.",
+    ]);
     return () => {
+      greetNow.current = () => {};
       voice.dispose();
       if (service.current === voice) service.current = null;
       window.removeEventListener("ea:assistant", handler);
@@ -80,7 +90,8 @@ export function useVoiceAnnouncements(token: string | null, ready: boolean, botN
       window.removeEventListener("pagehide", leave);
       window.removeEventListener("pageshow", show);
     };
-  }, [token, ready]);
+  }, [token, preloadReady]);
+  useEffect(() => { if (ready) greetNow.current(); }, [ready, token]);
   const activeMode = modes.imageReady ? modes.activeMode : null;
   useEffect(() => {
     if (!ready || activeMode === null) return;

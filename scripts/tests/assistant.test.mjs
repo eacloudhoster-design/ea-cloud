@@ -24,7 +24,7 @@ test('answers use verified fresh account values and never infer positions, succe
  assert.match(text.speechChunks('Stop loss at 2750.25. Take profit at 2700.5.').join(' '),/2750\.25.*2700\.5/);
 });
 test('neural provider builds verified PCM WAV and distinguishes upstream/configuration failures without keys in URLs',async()=>{
- const original=globalThis.fetch,old=process.env.GEMINI_API_KEY;process.env.GEMINI_API_KEY='private-fixture-key';let calls=0;
+ const original=globalThis.fetch,old=process.env.GEMINI_API_KEY,oldModel=process.env.GEMINI_VOICE_MODEL;process.env.GEMINI_VOICE_MODEL='gemini-2.5-flash-preview-tts';process.env.GEMINI_API_KEY='private-fixture-key';let calls=0;
  try{
   globalThis.fetch=async(url,init)=>{calls++;assert.ok(!String(url).includes('private-fixture-key'));assert.equal(init.headers['x-goog-api-key'],'private-fixture-key');const body=JSON.parse(init.body);assert.deepEqual(body.generationConfig.responseModalities,['AUDIO']);assert.equal(body.generationConfig.speechConfig.voiceConfig.prebuiltVoiceConfig.voiceName,'Aoede');return Response.json({candidates:[{finishReason:'STOP',content:{parts:[{inlineData:{mimeType:'audio/L16;codec=pcm;rate=24000',data:Buffer.alloc(2400).toString('base64')}}]}}]});};
   const result=await provider.synthesize(7,'Welcome to Mentor One.',new AbortController().signal);assert.equal(result.toString('ascii',0,4),'RIFF');assert.equal(result.readUInt32LE(24),24000);
@@ -35,7 +35,7 @@ test('neural provider builds verified PCM WAV and distinguishes upstream/configu
   delete process.env.GEMINI_API_KEY;await assert.rejects(()=>provider.synthesize(7,'Unconfigured',new AbortController().signal),/not configured/);
   assert.equal((await provider.classifyQuestion('What is my balance?',new AbortController().signal)).intent,'balance');
   assert.equal((await provider.classifyQuestion('Execute a buy trade',new AbortController().signal)).intent,'unsupported');
- }finally{globalThis.fetch=original;if(old===undefined)delete process.env.GEMINI_API_KEY;else process.env.GEMINI_API_KEY=old;}
+ }finally{globalThis.fetch=original;if(oldModel===undefined)delete process.env.GEMINI_VOICE_MODEL;else process.env.GEMINI_VOICE_MODEL=oldModel;if(old===undefined)delete process.env.GEMINI_API_KEY;else process.env.GEMINI_API_KEY=old;}
 });
 test('single audio queue respects gesture, priorities, deduplication, stop, mute, disable and autoplay retry',async()=>{
  const originalFetch=globalThis.fetch,originalAudio=globalThis.Audio;let active=0,maxActive=0,calls=[],blocked=false;const states=[];

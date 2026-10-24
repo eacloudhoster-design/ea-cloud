@@ -188,7 +188,7 @@ function EACloudApp({ onReady, startupComplete }: { onReady: (ready: boolean) =>
 
   const visualModes = useVisualModes(clientToken,authStage === "app" && brandingReady,mentorImageUrl,mentorId);
   const bgImageUrl = visualModes.displayImage;
-  useVoiceAnnouncements(clientToken,authStage === "app" && brandingReady && startupComplete,eaName,visualModes);
+  useVoiceAnnouncements(clientToken,authStage === "app" && brandingReady && startupComplete,eaName,visualModes,authStage === "app" && brandingReady);
 
   const settings: AppSettings = {
     visualModes,
