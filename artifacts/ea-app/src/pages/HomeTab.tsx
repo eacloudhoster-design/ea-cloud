@@ -3,6 +3,7 @@ import ModeImage from "@/components/ModeImage";
 import { useInterfaceSwipe } from "@/hooks/use-interface-swipe";
 import BotName from "@/components/BotName";
 import "@/components/S2toneActions.css";
+import InteractiveBotPortrait from "@/components/InteractiveBotPortrait";
 import RobotImageFrame from "@/components/RobotImageFrame";
 import { Bell, Trash2, DollarSign, Play, Pause, X, TrendingUp, Settings2, Check, Menu, BarChart2, Plus, ArrowUpRight, ArrowDownRight, Activity, ChevronDown, ChevronLeft, Loader2 } from "lucide-react";
 import { useState, useEffect, useLayoutEffect, useRef } from "react";
@@ -49,6 +50,7 @@ export default function HomeTab({ onOpenChartScanner, swipeEnabled = true, homeN
 
   const sharedLayoutProps = {
     shapeStyle,
+    portraitEnabled: activeTab === "home" && !showQuotes && !showTrades && !showRemoveConfirm,
     accentColor,
     botRunning,
     setBotRunning,
@@ -113,6 +115,7 @@ export default function HomeTab({ onOpenChartScanner, swipeEnabled = true, homeN
         {interfaceStyle === "matrix" && (
           <MatrixLayout
             shapeStyle={shapeStyle}
+            portraitEnabled={activeTab === "home" && !showQuotes && !showTrades && !showRemoveConfirm}
             accentColor={accentColor}
             botRunning={botRunning}
             setBotRunning={setBotRunning}
@@ -150,14 +153,12 @@ export default function HomeTab({ onOpenChartScanner, swipeEnabled = true, homeN
 /* ══════════════════════════════════════════════════════════════════ */
 /* S2TONE — v2: glowing sphere • large name • pill buttons + list   */
 /* ══════════════════════════════════════════════════════════════════ */
-function S2ToneLayout({ shapeStyle, accentColor, botRunning, setBotRunning, eaName, eaTagline, bgImageUrl, showBg, setShowBg, setShowRemoveConfirm, setShowQuotes }: any) {
+function S2ToneLayout({ portraitEnabled, shapeStyle, accentColor, botRunning, setBotRunning, eaName, eaTagline, bgImageUrl, showBg, setShowBg, setShowRemoveConfirm, setShowQuotes }: any) {
   return (
-    <div className="relative z-10 flex flex-col items-center px-5 pt-2 pb-6 gap-5"
-      // Reserve the existing 230px frame and 20px gap using padding, not a hidden image.
-      style={shapeStyle === "none" ? { paddingTop: "calc(0.5rem + 230px + 1.25rem)" } : undefined}>
+    <div className="relative z-10 flex flex-col items-center px-5 pt-2 pb-6 gap-5">
 
       {/* Large glowing sphere */}
-      <RobotImageFrame shape={shapeStyle} accent={accentColor} size={230} borderWidth={2.5}
+      <InteractiveBotPortrait enabled={portraitEnabled} size={230}>{displayShape=><RobotImageFrame shape={displayShape} accent={accentColor} size={230} borderWidth={2.5}
         className="relative flex-shrink-0 flex items-center justify-center overflow-hidden"
         style={{
           width: 230,
@@ -171,7 +172,7 @@ function S2ToneLayout({ shapeStyle, accentColor, botRunning, setBotRunning, eaNa
         }}
       >
         {bgImageUrl && (
-          <ModeImage src={bgImageUrl} alt="" className="absolute inset-0 w-full h-full object-cover" />
+          <ModeImage draggable={false} src={bgImageUrl} alt="" className="absolute inset-0 w-full h-full object-cover" />
         )}
         {/* Inner highlight glint */}
         {!bgImageUrl && shapeStyle !== "none" && (
@@ -185,7 +186,7 @@ function S2ToneLayout({ shapeStyle, accentColor, botRunning, setBotRunning, eaNa
             }}
           />
         )}
-      </RobotImageFrame>
+      </RobotImageFrame>}</InteractiveBotPortrait>
 
       {/* Bot name — large white bold, wraps naturally */}
       <BotName primary toggleBackground
@@ -254,16 +255,15 @@ function S2ToneLayout({ shapeStyle, accentColor, botRunning, setBotRunning, eaNa
 /* ══════════════════════════════════════════════════════════════════ */
 /* REGULAR — v2: large glowing circle • white bot name • 3 buttons  */
 /* ══════════════════════════════════════════════════════════════════ */
-function RegularLayout({ shapeStyle, accentColor, botRunning, setBotRunning, eaName, bgImageUrl, showBg, setShowBg, setShowRemoveConfirm, setShowQuotes }: any) {
+function RegularLayout({ portraitEnabled, shapeStyle, accentColor, botRunning, setBotRunning, eaName, bgImageUrl, showBg, setShowBg, setShowRemoveConfirm, setShowQuotes }: any) {
   return (
-    <div className="relative z-10 flex flex-col items-center px-2 mt-0"
-      // Reserve the existing 290px frame plus its 24px bottom margin for None only.
-      style={shapeStyle === "none" ? { paddingTop: 290 + 24 } : undefined}>
+    <div className="relative z-10 flex flex-col items-center px-2 mt-0">
 
       {/* Wide radial glow bloom behind the circle */}
-      {shapeStyle !== "none" && <div
-        className="pointer-events-none absolute"
+      {<div
+        className="portrait-bloom pointer-events-none absolute"
         style={{
+          opacity:shapeStyle === "none"?0:1,
           width: 360,
           height: 360,
           borderRadius: "50%",
@@ -275,8 +275,8 @@ function RegularLayout({ shapeStyle, accentColor, botRunning, setBotRunning, eaN
       />}
 
       {/* Circle — very large */}
-      <RobotImageFrame shape={shapeStyle} accent={accentColor} size={290} borderWidth={2.5}
-        className="relative flex items-center justify-center overflow-hidden mb-6"
+      <InteractiveBotPortrait enabled={portraitEnabled} size={290} margin={24}>{displayShape=><RobotImageFrame shape={displayShape} accent={accentColor} size={290} borderWidth={2.5}
+        className="relative flex items-center justify-center overflow-hidden"
         style={{
           width: 290,
           height: 290,
@@ -288,11 +288,11 @@ function RegularLayout({ shapeStyle, accentColor, botRunning, setBotRunning, eaN
         }}
       >
         {bgImageUrl ? (
-          <ModeImage src={bgImageUrl} alt="" className="absolute inset-0 w-full h-full object-cover" />
+          <ModeImage draggable={false} src={bgImageUrl} alt="" className="absolute inset-0 w-full h-full object-cover" />
         ) : (
           <ChipIcon size={110} color={accentColor} style={{ filter: `drop-shadow(0 0 18px ${accentColor}) drop-shadow(0 0 36px ${accentColor}66)` }} />
         )}
-      </RobotImageFrame>
+      </RobotImageFrame>}</InteractiveBotPortrait>
 
       {/* Bot name — tap to toggle bg */}
       <button type="button" aria-label={showBg ? "Hide background image" : "Show background image"} aria-pressed={!showBg} onClick={() => setShowBg(!showBg)} className="active:opacity-70 transition-opacity mb-3 z-10 px-4" style={{maxWidth:"100%"}}>
@@ -390,7 +390,7 @@ function ThreeButtons({
 /* ══════════════════════════════════════════════════════════════════ */
 /* MATRIX layout                                                     */
 /* ══════════════════════════════════════════════════════════════════ */
-function MatrixLayout({ shapeStyle, accentColor, botRunning, setBotRunning, eaName, eaTagline, bgImageUrl, setShowQuotes, setShowRemoveConfirm, onOpenTrades, tradeCount = 0 }: any) {
+function MatrixLayout({ portraitEnabled, shapeStyle, accentColor, botRunning, setBotRunning, eaName, eaTagline, bgImageUrl, setShowQuotes, setShowRemoveConfirm, onOpenTrades, tradeCount = 0 }: any) {
   const theme = accentColor;
   const layoutRef = useRef<HTMLDivElement>(null);
   const brandingBelowName = shapeStyle === "orbit" || shapeStyle === "neural";
@@ -405,33 +405,15 @@ function MatrixLayout({ shapeStyle, accentColor, botRunning, setBotRunning, eaNa
       branding.style.transform = `translateY(${name.offsetTop + name.offsetHeight + 8 - branding.offsetTop}px)`;
     };
     positionBranding();
+    layout.addEventListener("ea:portrait-layout",positionBranding);
     const observer = new ResizeObserver(positionBranding);
     observer.observe(layout);
     observer.observe(name);
     observer.observe(branding);
-    return () => { observer.disconnect(); branding.style.removeProperty("transform"); };
+    return () => { observer.disconnect();layout.removeEventListener("ea:portrait-layout",positionBranding); branding.style.removeProperty("transform"); };
   }, [brandingBelowName]);
-  useLayoutEffect(() => {
-    if (shapeStyle !== "none") return;
-    const layout = layoutRef.current;
-    const name = layout?.querySelector<HTMLElement>('[data-bot-name="primary"]');
-    const bar = layout?.querySelector<HTMLElement>('[data-matrix-functions]');
-    if (!layout || !name || !bar) return;
-    const positionName = () => {
-      // offsetTop ignores this transform: preserve all original flow measurements.
-      // Keep the existing pagination dots in the clean 32px gap above the bar.
-      const distance = Math.max(0, bar.offsetTop - name.offsetTop - name.offsetHeight - 32);
-      name.style.transform = `translateY(${distance}px)`;
-    };
-    positionName();
-    const observer = new ResizeObserver(positionName);
-    observer.observe(layout);
-    observer.observe(name);
-    observer.observe(bar);
-    return () => { observer.disconnect(); name.style.removeProperty("transform"); };
-  }, [shapeStyle]);
   return (
-    <div ref={layoutRef} className="relative z-10 flex flex-col items-center" style={{ minHeight: "calc(var(--ea-content-height, 100dvh) - 88px)", paddingBottom: 16 }}>
+    <div ref={layoutRef} className="matrix-portrait-layout relative z-10 flex flex-col items-center" style={{ minHeight: shapeStyle === "none" ? 0 : "calc(var(--ea-content-height, 100dvh) - 88px)", paddingBottom: 16 }}>
       <div className="w-full flex items-center justify-between px-4 pt-3 pb-4">
         <button className="w-9 h-9 rounded-full flex items-center justify-center active:scale-95 transition-transform" style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.12)" }}>
           <Menu size={16} className="text-white/60" />
@@ -466,18 +448,16 @@ function MatrixLayout({ shapeStyle, accentColor, botRunning, setBotRunning, eaNa
         {[...Array(5)].map((_, i) => <div key={i} className="w-1 h-1 rounded-full bg-white" style={{ opacity: i === 2 ? 0.8 : 0.4, background: i === 2 ? theme : undefined }} />)}
       </div>
 
-      {shapeStyle !== "none" && (
-      <div className="relative flex items-center justify-center mb-6" style={{ width: 260, height: 260 }}>
+      <InteractiveBotPortrait enabled={portraitEnabled} size={260} margin={24} frameInset={30}>{displayShape=><div className="relative flex items-center justify-center" style={{ width: 260, height: 260 }}>
         <div className="absolute rounded-full pointer-events-none" style={{ inset: 0, border: `1px solid ${theme}1f` }} />
         <div className="absolute rounded-full pointer-events-none" style={{ inset: 16, border: `1px solid ${theme}38` }} />
-        <RobotImageFrame shape={shapeStyle} accent={accentColor} size={200} borderWidth={3} className="absolute rounded-full overflow-hidden flex items-center justify-center" style={{ inset: 30, background: bgImageUrl ? "transparent" : "rgba(240,245,255,0.96)", border: `3px solid color-mix(in srgb, ${theme} 25%, white 75%)`, boxShadow: `0 0 40px ${theme}55, 0 0 80px ${theme}28` }}>
+        <RobotImageFrame shape={displayShape} accent={accentColor} size={200} borderWidth={3} className="absolute rounded-full overflow-hidden flex items-center justify-center" style={{ inset: 30, background: bgImageUrl ? "transparent" : "rgba(240,245,255,0.96)", border: `3px solid color-mix(in srgb, ${theme} 25%, white 75%)`, boxShadow: `0 0 40px ${theme}55, 0 0 80px ${theme}28` }}>
           {bgImageUrl
-            ? <ModeImage src={bgImageUrl} alt={eaName} className="w-full h-full object-cover" />
+            ? <ModeImage draggable={false} src={bgImageUrl} alt={eaName} className="w-full h-full object-cover" />
             : <span className="font-black select-none" style={{ fontSize: 58, color: "transparent", WebkitTextStroke: `3px ${theme}`, lineHeight: 1 }}>P</span>}
           {botRunning && <div className="absolute inset-0 rounded-full animate-ping" style={{ background: theme, opacity: 0.08 }} />}
         </RobotImageFrame>
-      </div>
-      )}
+      </div>}</InteractiveBotPortrait>
 
       <BotName primary toggleBackground className="text-white font-black text-center tracking-tight mb-1 px-4" style={{ fontSize: 34, lineHeight: 1.0, textShadow: "0 2px 20px rgba(0,0,0,0.9)" }}>
         {eaName.toUpperCase()}

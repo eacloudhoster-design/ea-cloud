@@ -4,8 +4,8 @@ const context={eaName:'SMC Blueprint EA',eaTagline:'Mentor',bgImageUrl:'/existin
 test('None removes the portrait; Orbit and Neural keep it in all three layouts',()=>{
  for(const interfaceStyle of ['s2tone','regular','matrix'])for(const shapeStyle of ['none','orbit','neural']){
   const html=render({...context,interfaceStyle,shapeStyle});
-  if(shapeStyle==='neural')assert.ok(html.includes('robot-frame-outline'));
-  else assert.ok(!html.includes('robot-frame-outline'));
+  assert.equal(html.includes('robot-frame-outline'),shapeStyle!=='none');
+  if(shapeStyle!=='none')assert.ok(html.includes('data-robot-shape="'+shapeStyle+'"'));
  }
 });
 test('remaining geometry and all menu selections work',()=>{

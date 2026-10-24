@@ -69,7 +69,7 @@ function EACloudApp({ onReady, startupComplete }: { onReady: (ready: boolean) =>
   const [showChartScanner, setShowChartScanner] = useState(false);
   const { botRunning, botStatusConfirmed, setBotRunning: persistBotRunning } = useBotStatus(clientToken, authStage === "app");
   const { interfaceStyle, setInterfaceStyle, showBg, setShowBg, backgroundAnimation, setBackgroundAnimation, accentColor, setAccentColor } = useHomePreferences(clientToken);
-  const [shapeStyle, setShapeStyle] = useShapePreference(clientToken);
+  const [mentorShape, setMentorShape] = useState<import("@/context/AppContext").ShapeStyle|undefined>();
   const [botFont, setBotFont] = useFontPreference(clientToken);
   const [mtConnected, setMtConnected] = useState(false);
 
@@ -100,6 +100,7 @@ function EACloudApp({ onReady, startupComplete }: { onReady: (ready: boolean) =>
         if (!data.mentor) throw new Error("Your mentor is not linked. Please contact support.");
         const mentor = data.mentor;
         setMentorId(Number.isSafeInteger(mentor.id) ? mentor.id : null);
+        setMentorShape(["orbit","neural","none"].includes(mentor.shapeStyle) ? mentor.shapeStyle : undefined);
         const eas: { name: string; symbol: string }[] = data.eas ?? [];
         // Background image from mentor profile
         setBgImageUrl(mentor?.backgroundImageUrl || null);
@@ -150,6 +151,7 @@ function EACloudApp({ onReady, startupComplete }: { onReady: (ready: boolean) =>
     setBrandingReady(false);
     setBgImageUrl(null);
     setMentorId(null);
+    setMentorShape(undefined);
     setAuthStage("access");
   };
 
@@ -188,6 +190,7 @@ function EACloudApp({ onReady, startupComplete }: { onReady: (ready: boolean) =>
 
   const visualModes = useVisualModes(clientToken,authStage === "app" && brandingReady,mentorImageUrl,mentorId);
   const bgImageUrl = visualModes.displayImage;
+  const [shapeStyle,setShapeStyle,restoreShape] = useShapePreference(clientToken,{bot:`mentor:${mentorId}:ea:${visualModes.ea?.id ?? "default"}`,interfaceStyle},mentorShape);
   useVoiceAnnouncements(clientToken,authStage === "app" && brandingReady && startupComplete,eaName,visualModes,authStage === "app" && brandingReady);
 
   const settings: AppSettings = {
@@ -196,7 +199,7 @@ function EACloudApp({ onReady, startupComplete }: { onReady: (ready: boolean) =>
     botRunning, botStatusConfirmed, setBotRunning: persistBotRunning,
     interfaceStyle, setInterfaceStyle,
     accentColor, setAccentColor,
-    shapeStyle, setShapeStyle,
+    shapeStyle, setShapeStyle, restoreShape,
     botFont, setBotFont,
     mtConnected, setMtConnected,
     eaName, eaTagline, eaSymbols, bgImageUrl,
