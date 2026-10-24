@@ -105,9 +105,9 @@ test('assistant routes preserve authentication, licences, account/report ownersh
   await engine.exec("UPDATE scanner_entitlements SET status='revoked' WHERE client_id=7");
   assert.equal((await call('report/00000000-0000-4000-8000-000000000007')).status,403);assert.equal((await(await call('facts')).json()).latest,null);
   assert.equal((await engine.query('SELECT credits_remaining FROM scanner_entitlements WHERE client_id=7')).rows[0].credits_remaining,12);
-  await engine.exec("UPDATE licenses SET status='expired' WHERE key='VALID'");assert.equal((await call('speech',7,{text:'Not permitted'})).status,403);assert.equal((await call('facts')).status,403);
-  await engine.exec("UPDATE licenses SET status='active', expires_at=now()-interval '1 second' WHERE key='VALID'");assert.equal((await call('intent',7,{question:'Balance'})).status,403);
-  await engine.exec("UPDATE licenses SET expires_at=null WHERE key='VALID'; UPDATE app_access SET status='pending' WHERE id=7");assert.equal((await call('facts')).status,403);
+  await engine.exec("UPDATE licenses SET status='expired' WHERE key='VALID'");assert.equal((await call('speech',7,{text:'Not permitted'})).status,401);assert.equal((await call('facts')).status,401);
+  await engine.exec("UPDATE licenses SET status='active', expires_at=now()-interval '1 second' WHERE key='VALID'");assert.equal((await call('intent',7,{question:'Balance'})).status,401);
+  await engine.exec("UPDATE licenses SET expires_at=null WHERE key='VALID'; UPDATE app_access SET status='pending' WHERE id=7");assert.equal((await call('facts')).status,401);
  }finally{await engine.close();delete globalThis.__voiceSchema;delete globalThis.__voiceDB;delete globalThis.__voiceRead;}
 });
 

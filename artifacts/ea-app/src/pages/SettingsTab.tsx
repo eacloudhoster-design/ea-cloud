@@ -53,7 +53,7 @@ export default function SettingsTab({ onOpenChartScanner }: SettingsTabProps) {
   return (
     <div
       className="h-full flex flex-col overflow-hidden"
-      style={{ background: "#080808", paddingBottom: 75 }}
+      style={{ background: "#080808", paddingBottom: "var(--ea-nav-clearance, 90px)" }}
     >
       {/* Header */}
       <div className="flex items-center justify-between px-5 pt-14 pb-4">

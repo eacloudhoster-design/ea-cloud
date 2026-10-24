@@ -1,6 +1,8 @@
+import { requireAppSession } from "../middlewares/app-session";
+import { resolveAppSessionAccess } from "../lib/app-session-access";
 import { Router } from "express";
 import { db, appAccessTable, licensesTable, usersTable, easTable } from "@workspace/db";
-import { eq, and } from "drizzle-orm";
+import { eq, and, sql } from "drizzle-orm";
 import crypto from "crypto";
 
 const router = Router();
@@ -15,7 +17,7 @@ export const requireClientAuth = async (req: any, res: any, next: any) => {
   try {
     const decoded = Buffer.from(token, "base64").toString();
     const [idStr, role] = decoded.split(":");
-    if (role !== "client") { res.status(401).json({ error: "Unauthorized" }); return; }
+    if (role !== "client" || !/^[1-9]\d*$/.test(idStr) || !Number.isSafeInteger(Number(idStr)) || Number(idStr) > 2147483647) { res.status(401).json({ error: "Unauthorized" }); return; }
     const id = parseInt(idStr);
     const [client] = await db.select().from(appAccessTable).where(eq(appAccessTable.id, id)).limit(1);
     if (!client) { res.status(401).json({ error: "Unauthorized" }); return; }
@@ -110,8 +112,20 @@ router.post(["/app/login", "/app/login-by-email"], async (req, res) => {
       .where(and(eq(appAccessTable.email, email.toLowerCase()), eq(appAccessTable.password, hashPassword(password)))).limit(1);
     if (!client) { res.status(401).json({ error: "Invalid credentials" }); return; }
 
+    // Credentials may open the existing activation screen, but only a verified
+    // licence opens the app. This keeps renewals possible after session revocation.
+    let verified = client;
+    let sessionAccess: "app" | "setup" = "setup";
+    if (client.status === "approved") {
+      const access = await resolveAppSessionAccess(client);
+      if ("code" in access) verified = { ...client, licenseKey: null };
+      else {
+        verified = { ...client, mentorId: access.mentorId, licenseKey: access.licenseKey };
+        sessionAccess = "app";
+      }
+    }
     const token = makeToken(client.id);
-    res.json({ client: toClientDto(client), token });
+    res.json({ client: toClientDto(verified), token, sessionAccess });
   } catch (err) {
     req.log.error({ err }, "AppLogin error");
     res.status(500).json({ error: "Internal server error" });
@@ -123,7 +137,15 @@ router.get("/app/me", requireClientAuth, async (req: any, res) => {
   try {
     const [client] = await db.select().from(appAccessTable).where(eq(appAccessTable.id, req.clientId)).limit(1);
     if (!client) { res.status(404).json({ error: "Not found" }); return; }
-    res.json(toClientDto(client));
+    res.setHeader("Cache-Control", "no-store");
+    let verified = client;
+    if (client.status === "approved") {
+      const access = await resolveAppSessionAccess(client);
+      if ("code" in access) {
+        if (client.licenseKey || access.code !== "LICENCE_NOT_LINKED") { res.status(401).json({ ...access, code: `SESSION_${access.code}` }); return; }
+      } else verified = { ...client, mentorId: access.mentorId, licenseKey: access.licenseKey };
+    }
+    res.json(toClientDto(verified));
   } catch (err) {
     req.log.error({ err }, "AppGetMe error");
     res.status(500).json({ error: "Internal server error" });
@@ -134,7 +156,7 @@ router.get("/app/me", requireClientAuth, async (req: any, res) => {
 router.post("/app/activate", requireClientAuth, async (req: any, res) => {
   try {
     const { licenseKey } = req.body as { licenseKey: string };
-    if (!licenseKey) { res.status(400).json({ error: "License key required" }); return; }
+    if (typeof licenseKey !== "string" || !licenseKey.trim() || licenseKey.length > 256) { res.status(400).json({ error: "License key required" }); return; }
 
     const [client] = await db.select().from(appAccessTable).where(eq(appAccessTable.id, req.clientId)).limit(1);
     if (!client) { res.status(404).json({ error: "Not found" }); return; }
@@ -142,11 +164,15 @@ router.post("/app/activate", requireClientAuth, async (req: any, res) => {
 
     // Find the license
     const [license] = await db.select().from(licensesTable)
-      .where(and(eq(licensesTable.key, licenseKey.trim()), eq(licensesTable.status, "active"))).limit(1);
+      .where(and(eq(licensesTable.key, licenseKey.trim()), sql`lower(trim(${licensesTable.status})) = 'active'`)).limit(1);
     if (!license) { res.status(404).json({ error: "Invalid or expired license key" }); return; }
 
+    if (license.expiresAt && (!Number.isFinite(new Date(license.expiresAt).getTime()) || new Date(license.expiresAt).getTime() <= Date.now())) {
+      res.status(403).json({ error: "This licence has expired. Contact your mentor.", code: "LICENCE_EXPIRED" }); return;
+    }
+
     // Enforce email pairing — license must be issued to this client's email
-    if (license.clientEmail && license.clientEmail.toLowerCase() !== client.email.toLowerCase()) {
+    if (license.clientEmail && license.clientEmail.trim().toLowerCase() !== client.email.trim().toLowerCase()) {
       res.status(403).json({ error: "This license key is not registered to your email address" });
       return;
     }
@@ -163,21 +189,22 @@ router.post("/app/activate", requireClientAuth, async (req: any, res) => {
 });
 
 // Dashboard
-router.get("/app/dashboard", requireClientAuth, async (req: any, res) => {
+router.get("/app/dashboard", requireAppSession, async (req: any, res) => {
   try {
     const [client] = await db.select().from(appAccessTable).where(eq(appAccessTable.id, req.clientId)).limit(1);
     if (!client) { res.status(404).json({ error: "Not found" }); return; }
-    if (client.status !== "approved" || !client.mentorId) {
+    const mentorId = req.appSession?.mentorId ?? client.mentorId;
+    if (client.status !== "approved" || !mentorId) {
       res.json({ client: toClientDto(client), mentor: null, eas: [] }); return;
     }
 
     const [mentor] = await db.select({
       id: usersTable.id, mentorName: usersTable.mentorName, robotName: usersTable.robotName,
       robotTagline: usersTable.robotTagline, backgroundImageUrl: usersTable.backgroundImageUrl,
-    }).from(usersTable).where(eq(usersTable.id, client.mentorId)).limit(1);
+    }).from(usersTable).where(eq(usersTable.id, mentorId)).limit(1);
 
     const eas = await db.select().from(easTable)
-      .where(and(eq(easTable.mentorId, client.mentorId), eq(easTable.isActive, true)));
+      .where(and(eq(easTable.mentorId, mentorId), eq(easTable.isActive, true)));
 
     res.json({ client: toClientDto(client), mentor: mentor ?? null, eas });
   } catch (err) {

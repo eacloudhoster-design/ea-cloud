@@ -1,3 +1,4 @@
+import { requireAppSession } from "../middlewares/app-session";
 import assistantRouter from "./assistant";
 import eaModeImagesRouter from "./ea-mode-images";
 import tradingActivityRouter from "./trading-activity";
@@ -27,6 +28,14 @@ import scannerAdminRouter from "./scanner-admin";
 import scannerRouter from "./scanner";
 
 const router: IRouter = Router();
+
+// Account setup remains available before activation. Scanner is an existing
+// independently entitled product and retains its own authentication/quota policy.
+const setup = new Set(["/login", "/login-by-email", "/register", "/me", "/activate", "/mentor-config"]);
+router.use("/app", (req, res, next) => {
+  if (setup.has(req.path.replace(/\/$/, "")) || req.path === "/scanner" || req.path.startsWith("/scanner/")) { next(); return; }
+  void requireAppSession(req, res, next);
+});
 
 router.use(healthRouter);
 router.use(assistantRouter);

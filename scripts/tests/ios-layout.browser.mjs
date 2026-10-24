@@ -105,7 +105,7 @@ try {
     await page.goto(origin + "/ea-app/");
     await page.locator(".ea-startup").waitFor({ state: "detached" });
     await page.evaluate(() => document.fonts.ready);
-    const appNav = page.locator(".ea-app-content > .ea-glass-navigation");
+    const appNav = page.locator(".ea-app-viewport > .ea-glass-navigation");
     const navGeometry = (nav) =>
       nav.locator(".ea-glass-bar").evaluate((el) => {
         const r = el.getBoundingClientRect(),

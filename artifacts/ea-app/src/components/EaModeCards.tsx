@@ -1,15 +1,16 @@
+import type { CSSProperties } from "react";
 import { ImageOff } from "lucide-react";
 import { useApp } from "@/context/AppContext";
 import "./EaModeCards.css";
 
 const modes = ["NORMAL", "BEAST", "AGGRESSIVE", "ULTIMATE"] as const;
 export default function EaModeCards() {
-  const { visualModes } = useApp();
+  const { visualModes, accentColor } = useApp();
   if (!visualModes) return null;
   const { eas, ea, selected, choose, selectEa, loading, error, retry } =
     visualModes;
   return (
-    <div className="ea-mode-settings">
+    <div className="ea-mode-settings" style={{"--ea-mode-accent":accentColor} as CSSProperties}>
       {eas.length > 1 && (
         <label className="ea-mode-ea">
           EA artwork

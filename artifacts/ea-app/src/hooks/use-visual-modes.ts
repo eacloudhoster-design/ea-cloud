@@ -72,6 +72,7 @@ export function useVisualModes(
           if (alive && (result.status === 401 || result.status === 403))
             setData({ scope, eas: [] });
           const body = await result.json().catch(() => ({}));
+          if (alive && !current.signal.aborted && result.status === 401) window.dispatchEvent(new CustomEvent("ea:session-invalidated", { detail: { token: clientToken } }));
           throw new Error(
             body.error || "Unable to load mode images. Please retry.",
           );

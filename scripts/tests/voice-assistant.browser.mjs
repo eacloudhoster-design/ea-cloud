@@ -49,7 +49,7 @@ try{
   await page.goto(origin+'/ea-app/');await page.locator('.ea-startup').waitFor({state:'visible'});assert.equal(await page.evaluate(()=>window.__speech.attempts.length),0,'no voice before splash finishes');await page.locator('.ea-startup').waitFor({state:'detached'});await page.waitForFunction(()=>window.__speech.attempts.length>0);assert.ok((await page.evaluate(()=>window.__speech.attempts)).every(attempt=>!attempt.splash));
   const speech=()=>page.evaluate(()=>window.__speech.calls);
   assert.equal((await speech()).length,name==='Mentor Alpha'?0:1,'automatic welcome wherever permitted; blocked browsers await gesture');
-  const nav=page.locator('.ea-app-content > .ea-glass-navigation');const originalNav=await nav.boundingBox();
+  const nav=page.locator('.ea-app-viewport > .ea-glass-navigation');const originalNav=await nav.boundingBox();
   await nav.getByRole('button',{name:'Settings',exact:true}).tap();await page.waitForTimeout(80);
   assert.equal((await speech()).filter(t=>t.text===`Welcome to ${name}.`).length,1,'earliest existing gesture unlocks welcome');
   assert.equal(await page.getByRole('button',{name:'Voice Assistant',exact:true}).count(),0);assert.equal(await page.getByRole('button',{name:'Microphone',exact:true}).count(),0);assert.equal(await page.locator('.ea-voice-controls').count(),0);
@@ -76,6 +76,7 @@ try{
   await page.evaluate(()=>window.dispatchEvent(new CustomEvent('ea:assistant',{detail:{type:'mt5-result',outcome:{status:'connected',verified:false}}})));await page.waitForTimeout(50);assert.ok(!(await speech()).some(call=>/connected successfully/.test(call.text)));
   await nav.getByRole('button',{name:'Settings',exact:true}).tap();
   await page.getByRole('button',{name:'Chart Scanner',exact:true}).click();const scanner=page.getByRole('dialog',{name:new RegExp(name+' Chart Scanner')});await scanner.locator('input[type=file]').first().setInputFiles({name:'chart.jpg',mimeType:'image/jpeg',buffer:image});await scanner.getByRole('button',{name:'Analyse chart'}).click();await page.waitForTimeout(120);assert.ok((await speech()).some(t=>/gold sell setup detected.*Entry at 2,750\.25.*Stop loss at 2,760\.5.*Take profit at 2,730/.test(t.text)));assert.ok((await speech()).some(t=>t.text==='Chart analysis started.'));
+  await scanner.getByRole('button',{name:'Close scanner',exact:true}).click();
   assert.deepEqual(await nav.boundingBox(),originalNav);assert.equal(await page.evaluate(()=>window.__speech.max),1);assert.equal((await speech()).filter(t=>t.text===`Welcome to ${name}.`).length,1);
   await page.reload();await page.locator('.ea-startup').waitFor({state:'detached'});await page.tap('body');await page.waitForTimeout(80);assert.equal((await speech()).filter(t=>t.text===`Welcome to ${name}.`).length,1,'new launch welcomes once');assert.ok((await page.evaluate(()=>window.__speech.attempts)).every(attempt=>!attempt.splash));
   assert.deepEqual(errors,[]);results.push({name,announcements:await speech(),writes});await page.screenshot({path:`work/announcement-tests/${name.replaceAll(' ','-')}.png`});await context.close();
