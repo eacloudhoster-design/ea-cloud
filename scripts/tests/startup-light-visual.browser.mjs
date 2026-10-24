@@ -34,7 +34,9 @@ try {
   await page.screenshot({ path: `${output}/outline-control.png` });
   await page.locator('.ea-startup-trail,.ea-startup-tip-halo').evaluateAll(nodes => nodes.forEach(node => node.style.visibility = ''));
   await page.screenshot({ path: `${output}/outline-neon.png` });
-  assert.equal(await page.locator('feGaussianBlur').count(), 2);
+  await page.locator('.ea-startup-edge,.ea-startup-tip,.ea-startup-tip-halo,.ea-startup-trail,.ea-startup-traveller').evaluateAll(nodes => nodes.forEach(node => node.getAnimations().forEach(a => { a.pause(); a.currentTime = 6999; })));
+  await page.screenshot({ path: `${output}/outline-complete.png` });
+  assert.equal(await page.locator('feGaussianBlur').count(), 5);
   assert.equal(await page.locator('.ea-startup-eye').count(), 2);
   await writeFile(`${output}/geometry.json`, JSON.stringify(geometry));
   console.log('Matched actual-logo pixel frames saved to', output);

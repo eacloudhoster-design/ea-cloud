@@ -83,3 +83,7 @@ pixel evidence and readiness-clock regression are documented in
 supersedes this page's earlier statement that a recording was unavailable and
 its earlier light-layer implementation details. The approved 300ms crossfade
 is retained exactly.
+
+The latest [intensity and first-paint correction](startup-intensity/README.md)
+adds matched neon-intensity frames and verifies the same-logo HTML-to-React
+handoff. It preserves the approved Home crossfade and eye animation clocks.

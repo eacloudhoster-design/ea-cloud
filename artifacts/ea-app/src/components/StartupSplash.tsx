@@ -1,6 +1,8 @@
 import { useEffect, useId, useRef, useState, type CSSProperties, type ReactNode } from "react";
-import eaLogo from "../../../ea-cloud/public/ea-cloud-logo.jpeg?url";
 import "./StartupSplash.css";
+
+// Same original artwork served from each app entry; also used by the first HTML paint.
+const eaLogo = `${import.meta.env.BASE_URL}ea-cloud-logo.jpeg`;
 
 // Preserve the 2s entrance and 7s trace; finish with 100ms glow and a 300ms crossfade.
 export const STARTUP_DURATION_MS = 9400;
@@ -18,6 +20,7 @@ export default function StartupSplash({ ready, children }: { ready: boolean; chi
   const filterId = useId().replace(/:/g, "");
   const outlineHalo = `${filterId}-outline-halo`;
   const eyeHalo = `${filterId}-eye-halo`;
+  const outlineBloom = `${filterId}-outline-bloom`;
   const imageRef = useRef<HTMLImageElement>(null);
   const [started, setStarted] = useState(false);
   const [phase, setPhase] = useState<Phase>("entrance");
@@ -77,11 +80,21 @@ export default function StartupSplash({ ready, children }: { ready: boolean; chi
         <svg viewBox="0 150 1254 690" className="ea-startup-energy" fill="none">
           <defs>
             {/* Explicit user-space filter bounds avoid clipped SVG/CSS shadows on WebKit. */}
-            <filter id={outlineHalo} filterUnits="userSpaceOnUse" x="-60" y="90" width="1374" height="810" colorInterpolationFilters="sRGB">
-              <feGaussianBlur stdDeviation="9" />
+            <filter id={outlineHalo} filterUnits="userSpaceOnUse" x="-100" y="40" width="1454" height="940" colorInterpolationFilters="sRGB">
+              <feGaussianBlur stdDeviation="14" />
             </filter>
-            <filter id={eyeHalo} filterUnits="userSpaceOnUse" x="350" y="460" width="540" height="200" colorInterpolationFilters="sRGB">
-              <feGaussianBlur stdDeviation="8" />
+            <filter id={outlineBloom} filterUnits="userSpaceOnUse" x="-100" y="40" width="1454" height="940" colorInterpolationFilters="sRGB">
+              <feGaussianBlur stdDeviation="5" result="near" />
+              <feGaussianBlur stdDeviation="17" result="wide" />
+              <feMerge result="bloom"><feMergeNode in="wide" /><feMergeNode in="near" /></feMerge>
+              <feComponentTransfer in="bloom" result="light"><feFuncA type="linear" slope="2.4" /></feComponentTransfer>
+              <feMerge><feMergeNode in="light" /><feMergeNode in="SourceGraphic" /></feMerge>
+            </filter>
+            <filter id={eyeHalo} filterUnits="userSpaceOnUse" x="320" y="430" width="600" height="260" colorInterpolationFilters="sRGB">
+              <feGaussianBlur stdDeviation="6" result="near" />
+              <feGaussianBlur stdDeviation="13" result="wide" />
+              <feMerge result="eye-light"><feMergeNode in="wide" /><feMergeNode in="near" /></feMerge>
+              <feComponentTransfer in="eye-light"><feFuncA type="linear" slope="1.65" /></feComponentTransfer>
             </filter>
           </defs>
           <g className="ea-startup-eyes">
@@ -94,7 +107,7 @@ export default function StartupSplash({ ready, children }: { ready: boolean; chi
               <path className="ea-startup-eye-core" d="M834 507 L687 603 L796 570 Z" />
             </g>
           </g>
-          <path className="ea-startup-edge" pathLength="1" d={CLOUD_OUTLINE}
+          <path className="ea-startup-edge" filter={`url(#${outlineBloom})`} pathLength="1" d={CLOUD_OUTLINE}
             onAnimationEnd={event => {
               if (event.animationName === "ea-cloud-trace") setTraceComplete(true);
             }} />
