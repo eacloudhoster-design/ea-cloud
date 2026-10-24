@@ -6,7 +6,7 @@ type Position={x:number;y:number};
 type Gesture={id:number;clientX:number;clientY:number;origin:Position;dragged:boolean};
 
 /** Position the existing shared trigger within the visible application, not its scrolling content. */
-export function useFloatingRobot(container:RefObject<HTMLDivElement|null>,button:RefObject<HTMLButtonElement|null>,enabled:boolean){
+export function useFloatingRobot(container:RefObject<HTMLDivElement|null>,button:RefObject<HTMLButtonElement|null>,enabled:boolean,onTap?:()=>void){
  const [position,setPosition]=useState<Position|null>(null);
  const current=useRef<Position|null>(null),gesture=useRef<Gesture|null>(null),suppressClick=useRef(false),frame=useRef<number|null>(null);
  const constrain=(point:Position):Position=>{
@@ -31,10 +31,15 @@ export function useFloatingRobot(container:RefObject<HTMLDivElement|null>,button
   try{const stored=JSON.parse(localStorage.getItem(FLOATING_ROBOT_POSITION_KEY)||'null');if(stored&&Number.isFinite(stored.x)&&Number.isFinite(stored.y))point={x:stored.x,y:stored.y};}catch{}
   const initial=constrain(point);current.current=initial;setPosition(initial);
   const resize=()=>{if(!current.current)return;const next=constrain(current.current);current.current=next;setPosition(next);save(next);};
+  // Touch activation uses pointerup. Cancel native compatibility clicks locally
+  // so a drag cannot swallow the next tap or click through a newly opened panel.
+  const triggerNode=button.current;
+  const preventCompatibilityClick=(event:TouchEvent)=>{if(event.touches.length===1)event.preventDefault();};
+  if(onTap)triggerNode.addEventListener('touchstart',preventCompatibilityClick,{passive:false});
   const observer=new ResizeObserver(resize);observer.observe(container.current);observer.observe(button.current);
   window.addEventListener('resize',resize);window.visualViewport?.addEventListener('resize',resize);window.visualViewport?.addEventListener('scroll',resize);
-  return()=>{observer.disconnect();window.removeEventListener('resize',resize);window.visualViewport?.removeEventListener('resize',resize);window.visualViewport?.removeEventListener('scroll',resize);if(frame.current!==null)cancelAnimationFrame(frame.current);frame.current=null;gesture.current=null;};
- },[enabled]);
+  return()=>{triggerNode.removeEventListener('touchstart',preventCompatibilityClick);observer.disconnect();window.removeEventListener('resize',resize);window.visualViewport?.removeEventListener('resize',resize);window.visualViewport?.removeEventListener('scroll',resize);if(frame.current!==null)cancelAnimationFrame(frame.current);frame.current=null;gesture.current=null;};
+ },[enabled,onTap]);
  const onPointerDown=(event:ReactPointerEvent<HTMLButtonElement>)=>{
   if(!event.isPrimary||event.button!==0||!current.current||gesture.current)return;
   suppressClick.current=false;
@@ -53,6 +58,7 @@ export function useFloatingRobot(container:RefObject<HTMLDivElement|null>,button
   gesture.current=null;
   if(drag.dragged&&current.current){suppressClick.current=true;save(current.current);if(frame.current!==null)cancelAnimationFrame(frame.current);frame.current=null;setPosition(current.current);}
   if(event.currentTarget.hasPointerCapture(event.pointerId))event.currentTarget.releasePointerCapture(event.pointerId);
+  if(!drag.dragged&&event.type==='pointerup'&&event.pointerType==='touch'&&onTap){suppressClick.current=true;onTap();}
  };
  const allowClick=(event:ReactMouseEvent<HTMLButtonElement>)=>{
   if(suppressClick.current&&event.detail!==0){suppressClick.current=false;event.preventDefault();event.stopPropagation();return false;}

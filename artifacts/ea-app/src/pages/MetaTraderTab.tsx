@@ -1,4 +1,5 @@
 import {assistantEvent} from "@/lib/assistant-events";
+import { createPortal } from "react-dom";
 import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { ArrowRight, ChevronRight, Eye, EyeOff, Fingerprint, LockKeyhole, RotateCcw, Server, X } from "lucide-react";
 import { useApp } from "@/context/AppContext";
@@ -13,8 +14,8 @@ const mt5Logo = new URL("../assets/platform/metatrader5.png", import.meta.url).h
 type ConnectionState = "idle" | "connecting" | "unverified";
 interface SavedAccount { login: string; server: string }
 
-export default function MetaTraderTab() {
-  const { bgImageUrl, eaName, clientToken, activeTab, accentColor } = useApp();
+export default function MetaTraderTab({ backgroundHost, backgroundImage }: { backgroundHost: HTMLElement | null; backgroundImage: string }) {
+  const { eaName, clientToken, activeTab, accentColor } = useApp();
   const [login, setLogin] = useState("");
   const [password, setPassword] = useState("");
   const [server, setServer] = useState("");
@@ -32,7 +33,7 @@ export default function MetaTraderTab() {
   const broker = detectBroker(server);
   const modalOpen = state !== "idle";
 
-  useEffect(() => { setBackgroundFailed(false); }, [bgImageUrl]);
+  useEffect(() => { setBackgroundFailed(false); }, [backgroundImage]);
   // Read-only restoration: a saved account is never treated as verified live auth.
   useEffect(() => {
     let cancelled = false;
@@ -98,10 +99,15 @@ export default function MetaTraderTab() {
   };
 
   return (
+    <>
+      {backgroundHost && createPortal(
+        <div className="mt5-screen mt5-background-layer" data-state={state}
+          style={{ "--mt5-accent": accentColor } as CSSProperties}>
+          {!backgroundFailed && <img className="mt5-mentor-background" src={backgroundImage} alt="" onError={() => setBackgroundFailed(true)} />}
+          <div className="mt5-background-shade" />
+        </div>, backgroundHost)}
     <section className="mt5-screen" aria-label="MT5 Connections" data-state={state}
       style={{ "--mt5-accent": accentColor } as CSSProperties}>
-      {bgImageUrl && !backgroundFailed && <img className="mt5-mentor-background" src={bgImageUrl} alt="" onError={() => setBackgroundFailed(true)} />}
-      <div className="mt5-background-shade" />
       <div className="mt5-content" inert={modalOpen}>
         <header className="mt5-topline"><span>EA CLOUD</span><p className="mt5-mentor-name">{eaName}</p></header>
         <div className="mt5-intro">
@@ -167,5 +173,6 @@ export default function MetaTraderTab() {
         </div>
       </div>}
     </section>
+    </>
   );
 }

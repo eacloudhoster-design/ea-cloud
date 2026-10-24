@@ -14,7 +14,8 @@ export default function TradingActivityMonitor(){
  const container=useRef<HTMLDivElement>(null);
  const panel=useRef<HTMLDivElement>(null),terminal=useRef<HTMLDivElement>(null),trigger=useRef<HTMLButtonElement>(null),autoscroll=useRef(true);
  const panelDrag=useDraggablePanel(container,panel,open);
- const floating=useFloatingRobot(container,trigger,Boolean(clientToken));
+ const showPanel=useCallback(()=>setOpen(true),[]);
+ const floating=useFloatingRobot(container,trigger,Boolean(clientToken),showPanel);
  const [failedImage,setFailedImage]=useState<string|null>(null);const image=bgImageUrl&&failedImage!==bgImageUrl?bgImageUrl:robotBg;
  useEffect(()=>{const show=()=>setOpen(true);window.addEventListener('ea:open-trading-activity',show);return()=>window.removeEventListener('ea:open-trading-activity',show);},[]);
  useEffect(()=>{if(!open)return;const frame=requestAnimationFrame(()=>panel.current?.querySelector<HTMLButtonElement>('.activity-close')?.focus());return()=>cancelAnimationFrame(frame);},[open]);
