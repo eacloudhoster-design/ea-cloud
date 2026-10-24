@@ -1,8 +1,7 @@
 .ea-app-viewport {
   --ea-nav-height: 60px;
-  /* Reserve the home-indicator zone without adding the entire 34px inset
-     below a separately padded control row. Smaller/zero insets stay intact. */
-  --ea-nav-bottom: min(20px, env(safe-area-inset-bottom, 0px));
+  /* The same glass surface fills the inset; only the controls are lifted. */
+  --ea-nav-bottom: env(safe-area-inset-bottom, 0px);
   --ea-nav-clearance: calc(var(--ea-nav-height) + var(--ea-nav-bottom) + 12px);
 }
 .ea-glass-navigation {

@@ -1,5 +1,6 @@
+import { resolveEaModeAccess } from "../lib/ea-mode-access";
 import { Router } from "express";
-import { db, usersTable, easTable, appAccessTable, licensesTable, eaModeImagesTable } from "@workspace/db";
+import { db, usersTable, easTable, appAccessTable, eaModeImagesTable } from "@workspace/db";
 import { eq, and, asc } from "drizzle-orm";
 import { z } from "zod";
 import { requireAuth, type AuthRequest } from "../middlewares/auth";
@@ -57,14 +58,15 @@ router.get("/app/ea-mode-images", requireClientAuth, async (req: any, res) => {
   res.setHeader("Cache-Control", "no-store");
   try {
     const [client] = await db.select().from(appAccessTable).where(eq(appAccessTable.id, req.clientId)).limit(1);
-    const [license] = client?.licenseKey ? await db.select().from(licensesTable).where(eq(licensesTable.key, client.licenseKey)).limit(1) : [];
-    if (!client || client.status !== "approved" || !client.mentorId || !license || license.mentorId !== client.mentorId || license.status !== "active" || (license.expiresAt && (!Number.isFinite(new Date(license.expiresAt).getTime()) || new Date(license.expiresAt).getTime() <= Date.now()))) {
-      res.status(403).json({ error: "An approved account with an active linked EA licence is required." }); return;
+    const access = await resolveEaModeAccess(client);
+    if ("code" in access) {
+      req.log?.warn?.({ event: "ea_mode_access_denied", code: access.code, clientId: req.clientId }, "EA artwork access denied");
+      res.status(403).json(access); return;
     }
-    const [mentor] = await db.select({ backgroundImageUrl: usersTable.backgroundImageUrl }).from(usersTable).where(eq(usersTable.id, client.mentorId)).limit(1);
+    const [mentor] = await db.select({ backgroundImageUrl: usersTable.backgroundImageUrl }).from(usersTable).where(eq(usersTable.id, access.mentorId)).limit(1);
     const rows = await db.select({ id: easTable.id, name: easTable.name, normal: eaModeImagesTable.normal, beast: eaModeImagesTable.beast, aggressive: eaModeImagesTable.aggressive, ultimate: eaModeImagesTable.ultimate })
       .from(easTable).leftJoin(eaModeImagesTable, eq(eaModeImagesTable.eaId, easTable.id))
-      .where(and(eq(easTable.mentorId, client.mentorId), eq(easTable.isActive, true))).orderBy(asc(easTable.id));
+      .where(and(eq(easTable.mentorId, access.mentorId), eq(easTable.isActive, true))).orderBy(asc(easTable.id));
     res.json({ eas: rows.map(row => ({ id: row.id, name: row.name, images: rowImages(row, mentor?.backgroundImageUrl || null) })) });
   } catch (error) { unavailable(req, res, error); }
 });

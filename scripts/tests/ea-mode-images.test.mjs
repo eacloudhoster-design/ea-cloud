@@ -62,6 +62,25 @@ test('EA artwork migration, authenticated ownership, persistence and client isol
   assert.deepEqual((await(await call('/app/ea-mode-images',9,'client')).json()).eas.map(e=>e.id),[21]);
   assert.equal((await call('/eas/11/mode-images',5,'mentor',['javascript:alert(1)',null,null,null])).status,400);
   assert.equal((await call('/eas/11/mode-images',5,'mentor',['/api/storage/r2/6/private',null,null,null])).status,403);
+  // Exercise persisted licence states and legacy associations without a production DB.
+  const deny=async code=>{const response=await call('/app/ea-mode-images',7,'client');assert.equal(response.status,403);assert.equal((await response.json()).code,code);};
+  await engine.exec("UPDATE app_access SET email='Client@Example.invalid' WHERE id=7; UPDATE licenses SET client_email='client@example.invalid' WHERE key='VALID'");
+  assert.equal((await call('/app/ea-mode-images',7,'client')).status,200);
+  await engine.exec("UPDATE app_access SET license_key='  VALID  ' WHERE id=7");
+  assert.equal((await call('/app/ea-mode-images',7,'client')).status,200,'normalise a linked key without changing records');
+  await engine.exec("UPDATE app_access SET license_key=null WHERE id=7");
+  const beforeFallback=(await engine.query('SELECT * FROM app_access WHERE id=7')).rows;
+  assert.equal((await call('/app/ea-mode-images',7,'client')).status,200,'legacy mentor link resolves only its owned valid email licence');
+  assert.deepEqual((await engine.query('SELECT * FROM app_access WHERE id=7')).rows,beforeFallback,'access checks never repair/write account records');
+  await engine.exec("UPDATE app_access SET license_key='VALID',mentor_id=null WHERE id=7");
+  assert.equal((await call('/app/ea-mode-images',7,'client')).status,200,'verified owned key can resolve its mentor read-only');
+  await engine.exec("UPDATE app_access SET mentor_id=6 WHERE id=7");await deny('LICENCE_ASSOCIATION_MISMATCH');
+  await engine.exec("UPDATE app_access SET mentor_id=5,license_key='MISSING' WHERE id=7");await deny('LICENCE_NOT_FOUND');
+  await engine.exec("UPDATE app_access SET license_key='VALID' WHERE id=7; UPDATE licenses SET client_email='other@example.invalid' WHERE key='VALID'");await deny('LICENCE_ASSOCIATION_MISMATCH');
+  await engine.exec("UPDATE licenses SET client_email='client@example.invalid',status='inactive' WHERE key='VALID'");await deny('LICENCE_INACTIVE');
+  await engine.exec("INSERT INTO licenses(id,key,mentor_id,status,client_email) VALUES(10,'NEWER',5,'active','client@example.invalid'); UPDATE licenses SET status='expired' WHERE key='VALID'");await deny('LICENCE_EXPIRED');
+  await engine.exec("UPDATE app_access SET license_key=null,email='client%@example.invalid' WHERE id=7");await deny('LICENCE_NOT_LINKED');
+  await engine.exec("UPDATE app_access SET license_key='VALID',email='client@example.invalid' WHERE id=7; UPDATE licenses SET status='active' WHERE key='VALID'; DELETE FROM licenses WHERE key='NEWER'");
   await engine.exec("UPDATE app_access SET status='pending' WHERE id=7");
   assert.equal((await call('/app/ea-mode-images',7,'client')).status,403);
   await engine.exec("UPDATE app_access SET status='approved' WHERE id=7");

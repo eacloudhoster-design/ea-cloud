@@ -97,7 +97,7 @@ try {
   assert.equal(dock.left,0);assert.equal(dock.right,0);assert.equal(dock.bottom,0);
   assert.equal(dock.radius,"22px 22px 0px 0px");
   const initial=await geometry(); assert.equal(initial.radius,"0px");
-  assert.ok(Math.abs(initial.bottom-Math.min(20,screen.bottom))<1);
+  assert.ok(Math.abs(initial.bottom-screen.bottom)<1);
   assert.ok(initial.blur.includes("12px"));
   assert.equal(initial.h,60);
   const sizes=await nav.evaluate(el=>({
@@ -105,7 +105,7 @@ try {
     buttons:[...el.querySelectorAll("button")].map(b=>b.getBoundingClientRect().height),
     indicator:el.querySelector(".ea-glass-indicator").getBoundingClientRect().height,
   }));
-  assert.equal(sizes.dock,60+Math.min(20,screen.bottom));
+  assert.equal(sizes.dock,60+screen.bottom);
   assert.ok(sizes.dock<66+screen.bottom);
   assert.ok(sizes.buttons.every(h=>h===54),"existing button target size retained");
   assert.equal(sizes.indicator,54,"existing oval height retained");
@@ -120,7 +120,7 @@ try {
     return {left:a.left-b.left,right:b.right-a.right,radius:getComputedStyle(el).borderRadius};
    });
    assert.equal(rects.radius,"999px");assert.ok(rects.left>=0&&rects.right>=-1);
-   if(name==="MetaTrader")assert.equal(await page.locator(".mt5-popup-backdrop").evaluate(el=>getComputedStyle(el).opacity),"1");
+   if(name==="MetaTrader")assert.equal(await page.locator(".mt5-view").evaluate(el=>getComputedStyle(el).opacity),"1");
    if(screen.width===393 || screen.width===355)await page.screenshot({path:`${out}/${screen.width}-${style}-${name}.png`});
   }
   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);
@@ -133,7 +133,7 @@ try {
  await nav.getByRole("button",{name:"MetaTrader",exact:true}).tap();await page.waitForTimeout(300);
  const field=page.locator(".mt5-input-wrap input").first();await field.fill("12345678");
  await nav.getByRole("button",{name:"Home",exact:true}).tap();await page.waitForTimeout(300);
- assert.equal(await page.locator(".mt5-popup-backdrop").getAttribute("hidden"),"");
+ assert.equal(await page.locator(".mt5-view").getAttribute("hidden"),"");
  await nav.getByRole("button",{name:"MetaTrader",exact:true}).tap();await page.waitForTimeout(300);
  assert.equal(await field.inputValue(),"12345678");
  const start=await nav.getByRole("button",{name:"MetaTrader",exact:true}).boundingBox();

@@ -1,32 +1,44 @@
-/* The image fills the edge-to-edge viewport. Content keeps its previous
-   status-bar-free viewport, so extending the background does not lift controls. */
+/* One edge-to-edge app box; foreground retains its existing top-safe offset. */
 .ea-app-viewport {
   --ea-status-inset: env(safe-area-inset-top, 0px);
-  --ea-content-safe-top: 0px;
-  --ea-content-safe-bottom: 0px;
-  --ea-content-safe-left: 0px;
-  --ea-content-safe-right: 0px;
-  --ea-content-height: calc(100dvh - var(--ea-status-inset));
-  --ea-content-vh: calc((100vh - var(--ea-status-inset)) / 100);
+  --ea-content-safe-top: 0px; /* the content box already excludes this inset */
+  --ea-content-safe-bottom: env(safe-area-inset-bottom, 0px);
+  --ea-content-safe-left: env(safe-area-inset-left, 0px);
+  --ea-content-safe-right: env(safe-area-inset-right, 0px);
+  --ea-content-height: calc(100vh - var(--ea-status-inset));
+  --ea-content-vh: calc(var(--ea-content-height) / 100);
+  position: fixed;
+  inset: 0;
+  width: 100%;
   height: 100vh;
+  height: 100svh;
   height: 100dvh;
+  margin: 0;
+}
+@supports (height: 100dvh) {
+  .ea-app-viewport { --ea-content-height: calc(100dvh - var(--ea-status-inset)); }
 }
 .ea-app-content {
   container: ea-app / size;
+  position: absolute;
   top: var(--ea-status-inset);
-  height: var(--ea-content-height);
+  bottom: 0;
+  width: 100%;
+  height: auto;
 }
 .ea-home-background {
-  position: fixed;
+  position: absolute;
   inset: 0;
-  margin: 0 auto;
   width: 100%;
-  max-width: 430px;
-  height: 100dvh;
+  max-width: none;
+  height: 100%;
   object-fit: cover;
   object-position: center;
   transition: opacity 250ms ease;
 }
+/* Keep foreground screens out of landscape notches; the dock/image stay full bleed. */
+.ea-app-content > [data-home-screen],
+.ea-app-content > .mt5-view { left: var(--ea-content-safe-left); right: var(--ea-content-safe-right); }
 .ea-home-swipe-surface {
   touch-action: pan-y pinch-zoom;
 }
