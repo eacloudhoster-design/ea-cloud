@@ -1,43 +1,72 @@
 .ea-startup-home { opacity: 0; }
-.ea-startup-home[data-visible="true"] { opacity: 1; transition: opacity 500ms linear; }
+.ea-startup-home[data-visible="true"] {
+  opacity: 1; transition: opacity var(--ea-crossfade-duration) cubic-bezier(.4, 0, .2, 1);
+}
 .ea-startup {
   position: fixed; inset: 0; z-index: 10000; overflow: hidden;
-  display: grid; place-items: center; background: #000;
-  opacity: 1;
+  display: grid; place-items: center; background: #000; opacity: 1;
 }
-.ea-startup[data-phase="fading"] { opacity: 0; transition: opacity 500ms linear; pointer-events: none; }
+.ea-startup[data-phase="fading"] {
+  opacity: 0; transition: opacity var(--ea-crossfade-duration) cubic-bezier(.4, 0, .2, 1);
+  pointer-events: none;
+}
 .ea-startup-mark {
-  position: relative; width: min(84vw, 460px, 84vh); aspect-ratio: 1;
+  position: relative; width: min(84vw, 460px, 140vh); aspect-ratio: 1254 / 690;
+  animation: ea-logo-entrance var(--ea-entrance-duration) cubic-bezier(.16, 1, .3, 1) both;
 }
-/* Keep the complete original artwork, including its permanently glowing eyes. */
-.ea-startup-mark img { display: block; width: 100%; height: 100%; }
+/* Crop before the wordmark at y=849. Both image and paths use the same scale. */
+.ea-startup-artwork { position: absolute; inset: 0; overflow: hidden; }
+.ea-startup-artwork img { position: absolute; width: 100%; height: auto; left: 0; top: -21.7391304%; display: block; }
 .ea-startup-energy { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
-.ea-startup-edge, .ea-startup-tip {
-  stroke: #ff2828; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round;
-  filter: drop-shadow(0 0 5px #ff1010) drop-shadow(0 0 12px #ed0000);
+.ea-startup-edge, .ea-startup-tip, .ea-startup-trail {
+  stroke-linecap: round; stroke-linejoin: round;
 }
 .ea-startup-edge {
-  stroke-dasharray: 1 1; stroke-dashoffset: 1;
-  animation: ea-cloud-trace var(--ea-startup-duration) linear infinite;
+  stroke: #ff3930; stroke-width: 4; stroke-dasharray: 1 1; stroke-dashoffset: 1;
+  filter: drop-shadow(0 0 6px #ff1818) drop-shadow(0 0 16px #f00000);
+}
+.ea-startup[data-phase="tracing"] .ea-startup-edge {
+  animation: ea-cloud-trace var(--ea-trace-duration) linear infinite;
+}
+.ea-startup-traveller { opacity: 0; }
+.ea-startup[data-phase="tracing"] .ea-startup-traveller {
+  animation: ea-cloud-power var(--ea-trace-duration) linear infinite;
+}
+/* A broad, soft trailing stroke and a narrow bright core share the cloud path.
+   Static filters keep the expensive halo stable; only dash offsets/opacity move. */
+.ea-startup-trail {
+  stroke: #ff2020; stroke-width: 8; opacity: .65;
+  stroke-dasharray: .11 .89; stroke-dashoffset: .11;
+  filter: drop-shadow(0 0 10px #ff1515) drop-shadow(0 0 20px #ef0000);
 }
 .ea-startup-tip {
-  stroke: #ffb0a0; stroke-width: 3.5; stroke-dasharray: .018 .982; stroke-dashoffset: .018;
-  animation: ea-cloud-tip var(--ea-startup-duration) linear infinite;
+  stroke: #ffe3d6; stroke-width: 4; stroke-dasharray: .018 .982; stroke-dashoffset: .018;
+  filter: drop-shadow(0 0 5px #ff6860) drop-shadow(0 0 14px #ff1010);
 }
-.ea-startup:not([data-started="true"]) path { animation-play-state: paused; }
-.ea-startup[data-phase="glowing"] .ea-startup-edge,
+.ea-startup[data-phase="tracing"] .ea-startup-trail { animation: ea-cloud-trail var(--ea-trace-duration) linear infinite; }
+.ea-startup[data-phase="tracing"] .ea-startup-tip { animation: ea-cloud-tip var(--ea-trace-duration) linear infinite; }
+.ea-startup:not([data-started="true"]) .ea-startup-mark { animation-play-state: paused; }
+.ea-startup[data-phase="glowing"] .ea-startup-edge {
+  stroke-dashoffset: 0; animation: ea-cloud-complete var(--ea-final-glow-duration) ease-in-out both;
+}
 .ea-startup[data-phase="fading"] .ea-startup-edge {
-  animation: ea-cloud-complete 240ms ease-out both; stroke-dashoffset: 0;
+  stroke-dashoffset: 0; opacity: 0;
+  transition: opacity var(--ea-crossfade-duration) ease-out;
 }
-.ea-startup[data-phase="glowing"] .ea-startup-tip,
-.ea-startup[data-phase="fading"] .ea-startup-tip { display: none; }
+@keyframes ea-logo-entrance {
+  from { opacity: 0; transform: scale(.88); }
+  to { opacity: 1; transform: scale(1); }
+}
 @keyframes ea-cloud-trace { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
 @keyframes ea-cloud-tip { from { stroke-dashoffset: .018; } to { stroke-dashoffset: -.982; } }
+@keyframes ea-cloud-trail { from { stroke-dashoffset: .11; } to { stroke-dashoffset: -.89; } }
+@keyframes ea-cloud-power { from { opacity: .55; } to { opacity: 1; } }
 @keyframes ea-cloud-complete {
-  from { filter: drop-shadow(0 0 5px #ff1010) drop-shadow(0 0 12px #ed0000); }
-  to { stroke: #ff6860; filter: drop-shadow(0 0 9px #ff1010) drop-shadow(0 0 22px #ed0000); }
+  0%, 100% { stroke-width: 4; stroke: #ff3930; }
+  40% { stroke-width: 7; stroke: #ffb0a0; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .ea-startup-tip { display: none; }
-  .ea-startup-edge { animation-timing-function: ease-in-out; }
+  .ea-startup-mark { animation-name: ea-logo-quiet-entrance; }
+  .ea-startup-traveller { display: none; }
 }
+@keyframes ea-logo-quiet-entrance { from { opacity: 0; } to { opacity: 1; } }
