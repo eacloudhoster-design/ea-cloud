@@ -20,6 +20,7 @@ export interface AppSettings {
   botFont: BotFont;
   setBotFont: (font: BotFont) => void;
   shapeStyle: ShapeStyle;
+  restoreShape?: Exclude<ShapeStyle,"none">;
   setShapeStyle: (v: ShapeStyle) => void;
   mtConnected: boolean;
   setMtConnected: (v: boolean) => void;

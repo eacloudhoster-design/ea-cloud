@@ -19,11 +19,11 @@ try{
   await settings();await page.getByRole('button',{name:'Select Main Interface'}).click();await page.getByRole('button',{name:label,exact:false}).click();await shapes();
   assert.equal(await page.getByRole('button',{name:/Cornerstone|Fortress/}).count(),0);
   for(const [shape,option] of [['none','None'],['orbit','The Orbit'],['neural','The Neural Interface'],['none','None']]){
-   await page.getByRole('button',{name:new RegExp(option)}).click();
+   await page.getByRole('button',{name:new RegExp(option)}).click();await page.waitForTimeout(450);
    // Changes must already be present behind Settings, with no navigation/reload.
    assert.equal(await page.locator('[data-robot-shape]').count(),shape==='none'?0:1);
    if(shape!=='none')assert.equal(await page.locator('[data-robot-shape]').getAttribute('data-robot-shape'),shape);
-   assert.equal(await page.evaluate(()=>localStorage.getItem('ea-cloud:client:7:robot-shape')),shape);
+   assert.equal(await page.evaluate(layout=>{const key=Object.keys(localStorage).find(k=>k.startsWith('ea-cloud:client:7:robot-shape:bot:')&&k.endsWith(':interface:'+layout));return JSON.parse(localStorage.getItem(key)).shape;},layout),shape);
    await home();
    let state;
    const background=page.locator('img[src="/fixture-robot.jpg"]').first();

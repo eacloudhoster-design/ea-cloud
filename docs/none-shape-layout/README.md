@@ -1,5 +1,7 @@
 # None-only content positioning
 
+> Historical layout record. The interactive portrait feature now deliberately collapses None instead of reserving portrait space. See [interactive portrait](../interactive-portrait.md). Recorded JSON/pixel baselines below describe the earlier behaviour; current browser assertions check compact flow.
+
 ## Cause and change
 
 `RobotImageFrame` correctly returns null for None. That also removes its layout dimensions and margins, placing Regular/S2tone's main name and following controls immediately below the header. Matrix removes its outer frame holder as well; its name stays near the top while its flex spacer keeps the function bar lower down.
