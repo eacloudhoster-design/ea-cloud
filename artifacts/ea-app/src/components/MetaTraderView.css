@@ -1,0 +1,62 @@
+.mt5-view {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+}
+.mt5-view[hidden] {
+  display: none;
+}
+/* The image and its existing effects live in the full app background host. */
+.mt5-view .mt5-screen {
+  background: transparent;
+}
+.mt5-view .mt5-content {
+  height: 100%;
+  padding-bottom: var(--ea-nav-clearance, 90px);
+  scroll-padding-bottom: var(--ea-nav-clearance, 90px);
+  /* Preserve the existing global form position while excluding the safe area
+     from its scroll viewport. The background spans that area independently. */
+  padding-top: max(0px, calc(16px - var(--ea-status-inset, 0px)));
+  overflow-x: hidden;
+}
+.mt5-view .mt5-connection-screen {
+  top: 0;
+  bottom: var(--ea-nav-clearance, 90px);
+}
+.mt5-view .mt5-topline {
+  min-height: 32px;
+  padding-right: 34px;
+}
+.mt5-view .mt5-intro p {
+  display: block;
+}
+.mt5-view .mt5-floating-field > label {
+  font-family: "EA Bot Inter", Inter, sans-serif;
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+  line-height: 1.4;
+}
+
+/* Keep the existing 240ms page crossfade, including its outgoing screen. */
+.mt5-view,
+.mt5-background-transition {
+  opacity: 0;
+  transition: opacity 240ms ease;
+}
+.mt5-view[data-active="true"],
+.mt5-background-transition[data-active="true"] {
+  opacity: 1;
+}
+@starting-style {
+  .mt5-view[data-active="true"],
+  .mt5-background-transition[data-active="true"] {
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .mt5-view,
+  .mt5-background-transition {
+    transition: none !important;
+  }
+}

@@ -5,7 +5,14 @@
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
+  "background_color": "#000000",
   "icons": [
-    { "src": "favicon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
-  ]
+    {
+      "src": "favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ],
+  "theme_color": "#000000"
 }

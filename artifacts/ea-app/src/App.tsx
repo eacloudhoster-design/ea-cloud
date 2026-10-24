@@ -13,7 +13,7 @@ import { useState, useEffect, useCallback } from "react";
 import { AppContext, AppSettings } from "@/context/AppContext";
 import HomeTab from "@/pages/HomeTab";
 import MetaTraderTab from "@/pages/MetaTraderTab";
-import MetaTraderPopup from "@/components/MetaTraderPopup";
+import MetaTraderView from "@/components/MetaTraderView";
 import SettingsTab from "@/pages/SettingsTab";
 import BottomNav from "@/components/BottomNav";
 import ChartScannerModal from "@/components/ChartScannerModal";
@@ -43,6 +43,13 @@ function EACloudApp({ onReady, startupComplete }: { onReady: (ready: boolean) =>
   const [clientStatus, setClientStatus] = useState<"pending" | "rejected" | "approved">("pending");
 
   const [activeTab, setActiveTab] = useState<Tab>("home");
+  const [mt5BackgroundHost, setMt5BackgroundHost] = useState<HTMLDivElement | null>(null);
+  const [mt5Present, setMt5Present] = useState(false);
+  useEffect(() => {
+    if (activeTab === "metatrader") { setMt5Present(true); return; }
+    const timer = window.setTimeout(() => setMt5Present(false), 240);
+    return () => window.clearTimeout(timer);
+  }, [activeTab]);
   const [homeNavigationRequest, setHomeNavigationRequest] = useState(0);
   const navigate = (tab: Tab) => {
     if (tab === "home") setHomeNavigationRequest(value => value + 1);
@@ -248,7 +255,12 @@ function EACloudApp({ onReady, startupComplete }: { onReady: (ready: boolean) =>
           style={{ zIndex: 0, opacity: showBg ? 1 : 0 }}
         />
 
-        <div className={`ea-app-content relative overflow-clip${activeTab === "metatrader" ? " ea-app-content--mt5" : ""}`}>
+        <div ref={setMt5BackgroundHost} data-mt5-background-host
+          className="mt5-background-transition absolute inset-0 pointer-events-none" style={{ zIndex: 0 }}
+          data-active={activeTab === "metatrader"}
+          hidden={activeTab !== "metatrader" && !mt5Present} aria-hidden="true" />
+
+        <div className="ea-app-content relative overflow-clip">
         <BackgroundAnimation effect={backgroundAnimation} color={accentColor} active={activeTab === "home"} />
 
         <div className="ea-nav-screen absolute inset-0 z-[2]" style={{ opacity: activeTab === "home" ? 1 : 0 }} inert={activeTab !== "home" || settingsClosing}>
@@ -265,9 +277,9 @@ function EACloudApp({ onReady, startupComplete }: { onReady: (ready: boolean) =>
           />
         )}
 
-        <MetaTraderPopup open={activeTab === "metatrader"} onClose={() => setActiveTab("home")}>
-          <MetaTraderTab />
-        </MetaTraderPopup>
+        <MetaTraderView active={activeTab === "metatrader"} present={mt5Present}>
+          <MetaTraderTab backgroundHost={mt5BackgroundHost} backgroundImage={backgroundSrc} />
+        </MetaTraderView>
 
         <div
           className="ea-nav-screen absolute top-0 right-0 h-full z-30"
@@ -277,7 +289,7 @@ function EACloudApp({ onReady, startupComplete }: { onReady: (ready: boolean) =>
           <SettingsTab onOpenChartScanner={() => setShowChartScanner(true)} />
         </div>
 
-        <div inert={activeTab === "metatrader"}><TradingActivityMonitor /></div>
+        <TradingActivityMonitor />
         <BottomNav activeTab={activeTab} onTabChange={navigate} backgroundImage={showBg ? backgroundSrc : undefined} />
 
         {showChartScanner && (
