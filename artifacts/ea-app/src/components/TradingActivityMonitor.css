@@ -58,3 +58,8 @@
 @container ea-app (max-height:650px) {.trading-activity-header{min-height:155px}.trading-activity-terminal{max-height:200px}}
 
 @container ea-app (max-height:650px) {.trading-activity-header{min-height:140px;padding:44px 16px 14px}.trading-activity-terminal{max-height:120px;min-height:40px}.trading-account-grid{padding:10px 6px}}
+
+/* Keep the mounted circle and its saved geometry while its window is open. */
+.trading-activity-trigger[data-panel-open]{visibility:hidden;pointer-events:none}
+.trading-activity-header{user-select:none;-webkit-user-select:none;cursor:grab}
+.trading-activity-header:active{cursor:grabbing}

@@ -122,10 +122,7 @@ try {
         .click();
       await page.waitForTimeout(650);
     }
-    const circle = page.getByRole("button", {
-      name: "Open live trading activity",
-      exact: true,
-    });
+    const circle = page.locator(".trading-activity-trigger");
     let circleStorage = await page.evaluate(() =>
       localStorage.getItem("ea-cloud:floating-robot-position"),
     );
@@ -138,6 +135,11 @@ try {
       exact: true,
     });
     await panel.waitFor();
+    assert.equal(
+      await circle.isVisible(),
+      false,
+      "circle hides while panel opens",
+    );
     await page.waitForTimeout(250);
     const initial = await panel.boundingBox();
     assert.equal(await panel.getAttribute("aria-modal"), null);
@@ -213,6 +215,61 @@ try {
       name: "Move robot panel",
       exact: true,
     });
+    if (viewport.width < 500) {
+      const gestureAt = async (x, y, dx, dy, double = false) => {
+        const touch = (type, points) =>
+          cdp.send("Input.dispatchTouchEvent", { type, touchPoints: points });
+        if (double) {
+          await touch("touchStart", [{ x, y, id: 1 }]);
+          await touch("touchEnd", []);
+          await page.waitForTimeout(80);
+        }
+        await touch("touchStart", [{ x, y, id: 1 }]);
+        await page.waitForTimeout(150);
+        for (let i = 1; i <= 8; i++)
+          await touch("touchMove", [
+            { x: x + (dx * i) / 8, y: y + (dy * i) / 8, id: 1 },
+          ]);
+        await touch("touchEnd", []);
+        await settle();
+      };
+      const header = await panel.locator("header").boundingBox();
+      const beforeUpper = await panel.boundingBox();
+      // Outside the old 40px strip: image, title and badge region moves the whole window.
+      await gestureAt(header.x + 60, header.y + header.height - 35, 30, -35);
+      const afterUpper = await panel.boundingBox();
+      near(
+        afterUpper.x,
+        Math.min(beforeUpper.x + 30, viewport.width - beforeUpper.width - 4),
+        "upper image drag x",
+      );
+      near(afterUpper.y, beforeUpper.y - 35, "upper image drag y");
+      near(afterUpper.width, beforeUpper.width, "drag preserves width");
+      const lower = await panel.locator(".trading-account-grid").boundingBox();
+      const beforeLower = await panel.boundingBox();
+      await gestureAt(lower.x + 50, lower.y + 25, 0, 0);
+      assert.deepEqual(
+        await panel.boundingBox(),
+        beforeLower,
+        "single lower tap does not drag",
+      );
+      await page.waitForTimeout(400);
+      await gestureAt(lower.x + 50, lower.y + 25, -20, 30, true);
+      const afterLower = await panel.boundingBox();
+      near(afterLower.x, beforeLower.x - 20, "double tap hold lower x");
+      near(afterLower.y, beforeLower.y + 30, "double tap hold lower y");
+    } else {
+      const h = await panel.locator("header").boundingBox();
+      const before = await panel.boundingBox();
+      await page.mouse.move(h.x + 60, h.y + h.height - 35);
+      await page.mouse.down();
+      await page.mouse.move(h.x + 30, h.y + h.height - 65, { steps: 8 });
+      await page.mouse.up();
+      await settle();
+      const after = await panel.boundingBox();
+      near(after.x, before.x - 30, "mouse header drag x");
+      near(after.y, before.y - 30, "mouse header drag y");
+    }
     {
       // Make room in both directions before checking all eight resize handles.
       await drag(handle, -1000, -1000);
@@ -466,7 +523,12 @@ try {
     }
     // Preserve the independently draggable robot circle and its storage key.
     assert.equal(await circle.locator("img").getAttribute("src"), circleImage);
-    assert.deepEqual(await circle.boundingBox(), circleBefore);
+    assert.equal(await circle.isVisible(), false);
+    const hiddenRect = await circle.evaluate((el) => {
+      const r = el.getBoundingClientRect();
+      return { x: r.x, y: r.y, width: r.width, height: r.height };
+    });
+    assert.deepEqual(hiddenRect, circleBefore);
     assert.equal(
       await page.evaluate(() =>
         localStorage.getItem("ea-cloud:floating-robot-position"),
@@ -477,6 +539,8 @@ try {
     await panel
       .getByRole("button", { name: "Close trading activity", exact: true })
       .click();
+    assert(await circle.isVisible());
+    assert.deepEqual(await circle.boundingBox(), circleBefore);
     await circle.click();
     await settle();
     assert.deepEqual(await saved(), persisted);
@@ -489,7 +553,7 @@ try {
     await circle.click();
     await settle();
     assert.deepEqual(await saved(), persisted, "reload restores all geometry");
-    await drag(circle, 0, -1000);
+    assert.equal(await circle.isVisible(), false);
     // Move to the top and shrink height, leaving the Home controls and navigation free.
     await drag(handle, -1000, -1000);
     await drag(
@@ -547,6 +611,45 @@ try {
       await page.screenshot({
         path: `${output}/${viewport.width}-${id}-settings.png`,
       });
+      if (id === "regular") {
+        await panel
+          .getByRole("button", { name: "Close trading activity", exact: true })
+          .click();
+        await page
+          .getByRole("button", { name: "Select Colour", exact: true })
+          .click();
+        await page
+          .getByRole("button", { name: "Electric Blue", exact: true })
+          .click();
+        await circle.click();
+        await panel.waitFor();
+        assert.equal(
+          await panel.evaluate((el) =>
+            el.style.getPropertyValue("--robot-panel-accent"),
+          ),
+          "#3b82f6",
+        );
+        assert.equal(
+          await circle.evaluate((el) =>
+            el.style.getPropertyValue("--floating-robot-accent"),
+          ),
+          "#3b82f6",
+        );
+        await panel
+          .getByRole("button", { name: "Close trading activity", exact: true })
+          .click();
+        await page
+          .getByRole("button", { name: "Pure Red", exact: true })
+          .click();
+        await circle.click();
+        await panel.waitFor();
+        assert.equal(
+          await panel.evaluate((el) =>
+            el.style.getPropertyValue("--robot-panel-accent"),
+          ),
+          "#ef4444",
+        );
+      }
       const accordion = page.getByRole("button", {
         name: "Select Main Interface",
         exact: true,
@@ -574,9 +677,17 @@ try {
       await clickOutside(control);
       await page.waitForTimeout(150);
       assert.equal(enabled, true);
+      assert(
+        await circle.locator(".activity-dot.active").count(),
+        "active circle status retained while hidden",
+      );
       await clickOutside(control);
       await page.waitForTimeout(150);
       assert.equal(enabled, false);
+      assert(
+        await circle.locator(".activity-dot.paused").count(),
+        "paused circle status retained while hidden",
+      );
       const symbols = home
         .locator(
           "button:has(svg.lucide-chart-no-axes-column),button:has(svg.lucide-chart-column),button:has(svg.lucide-trending-up)",
@@ -590,6 +701,43 @@ try {
       await drag(handle, 0, 1000);
       await clickOutside(home.locator("button:has(svg.lucide-chevron-left)"));
       await drag(handle, 0, -1000);
+      const activate = (locator) =>
+        viewport.width < 500 ? locator.tap() : locator.click();
+      const priorCircle = await circle.evaluate((el) => el.style.transform);
+      await panel
+        .getByRole("button", { name: "Close trading activity", exact: true })
+        .click();
+      assert(await circle.isVisible());
+      assert.equal(
+        await circle.evaluate((el) => el.style.transform),
+        priorCircle,
+      );
+      await activate(
+        page.locator("[data-home-swipe-surface] button:has(svg.lucide-bell)"),
+      );
+      await page.locator("[data-copied-trades-backdrop]").waitFor();
+      await activate(page.getByRole("button", { name: "Home", exact: true }));
+      assert.equal(
+        await page.locator("[data-copied-trades-backdrop]").count(),
+        0,
+        "Home closes Copied Trades even when already selected",
+      );
+      await activate(
+        page.locator("[data-home-swipe-surface] button:has(svg.lucide-bell)"),
+      );
+      await page.locator("[data-copied-trades-backdrop]").waitFor();
+      await page
+        .locator("[data-copied-trades-backdrop] button")
+        .first()
+        .click();
+      assert.equal(
+        await page.locator("[data-copied-trades-backdrop]").count(),
+        0,
+        "original X still closes trades",
+      );
+      await circle.click();
+      await panel.waitFor();
+      assert.equal(await circle.isVisible(), false);
     }
     await panel
       .getByRole("button", {
@@ -665,6 +813,12 @@ try {
       nonBlockingAllInterfaces: true,
       refresh: true,
       circleUnchanged: true,
+      circleHiddenWhileOpen: true,
+      upperImageDrag: true,
+      lowerDoubleTapHold: viewport.width < 500,
+      copiedTradesHomeAllInterfaces: true,
+      themeSwitching: true,
+      activePausedStatus: true,
     });
     await writeFile(
       `${output}/${viewport.width}-results.json`,

@@ -39,8 +39,8 @@ export default function HomeTab({ onOpenChartScanner, swipeEnabled = true, homeN
   const [showRemoveConfirm, setShowRemoveConfirm] = useState(false);
   const [showQuotes, setShowQuotes] = useState(false);
   const [showTrades, setShowTrades] = useState(false);
-  // Selecting an already-active Home tab must also dismiss its Quotes/Symbols view.
-  useLayoutEffect(() => { setShowQuotes(false); }, [homeNavigationRequest]);
+  // Selecting an already-active Home tab must also dismiss Quotes/Symbols and Copied Trades.
+  useLayoutEffect(() => { setShowQuotes(false); setShowTrades(false); }, [homeNavigationRequest]);
   const { executions, connected } = useTradeExecutions(clientToken);
   const hasLiveTrades = executions.length > 0;
   const swipe = useInterfaceSwipe(interfaceStyle, setInterfaceStyle,

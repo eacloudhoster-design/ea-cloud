@@ -178,6 +178,21 @@ export function useDraggablePanel(
     // Native non-passive touch listeners allow two-finger resizing while keeping
     // single-finger log scrolling native. Browser zoom stays enabled outside this panel.
     const element = panel.current;
+    let lastTap: { time: number; x: number; y: number } | null = null;
+    let contact: {
+      id: number;
+      x: number;
+      y: number;
+      time: number;
+      lower: boolean;
+      moved: boolean;
+      drag: boolean;
+      origin: WindowBox;
+    } | null = null;
+    const excluded = (target: Element) =>
+      target.closest(
+        "button,input,select,textarea,a,[role=button],.activity-panel-resize",
+      );
     const touchesInside = (event: TouchEvent) =>
       Array.from(event.touches).filter((t) =>
         element.contains(t.target as Node),
@@ -186,6 +201,34 @@ export function useDraggablePanel(
       const touches = touchesInside(event);
       if (event.touches.length === 1) {
         suppressClick.current = false;
+        const target = event.target as Element;
+        const t = touches[0];
+        if (t && current.current && !excluded(target)) {
+          const upper = Boolean(target.closest(".trading-activity-header"));
+          const second =
+            !upper &&
+            lastTap &&
+            performance.now() - lastTap.time < 350 &&
+            Math.hypot(t.clientX - lastTap.x, t.clientY - lastTap.y) < 28;
+          contact = {
+            id: t.identifier,
+            x: t.clientX,
+            y: t.clientY,
+            time: performance.now(),
+            lower: !upper,
+            moved: false,
+            drag: upper || Boolean(second),
+            origin: { ...current.current },
+          };
+          if (contact.drag) {
+            event.preventDefault();
+            lastTap = null;
+            gesture.current = null;
+          }
+        } else {
+          contact = null;
+          lastTap = null;
+        }
         if (
           (event.target as Element).closest(
             ".activity-panel-drag-handle,.activity-panel-resize",
@@ -194,6 +237,8 @@ export function useDraggablePanel(
           event.preventDefault();
       }
       if (touches.length !== 2 || !current.current) return;
+      contact = null;
+      lastTap = null;
       event.preventDefault();
       gesture.current = null;
       pinching.current = true;
@@ -212,6 +257,27 @@ export function useDraggablePanel(
       };
     };
     const move = (event: TouchEvent) => {
+      if (contact && !pinch) {
+        const t = Array.from(event.touches).find(
+          (t) => t.identifier === contact!.id,
+        );
+        if (t) {
+          const dx = t.clientX - contact.x,
+            dy = t.clientY - contact.y;
+          if (Math.hypot(dx, dy) >= 6) contact.moved = true;
+          if (contact.drag) {
+            event.preventDefault();
+            if (contact.moved) {
+              suppressClick.current = true;
+              update({
+                ...contact.origin,
+                x: contact.origin.x + dx,
+                y: contact.origin.y + dy,
+              });
+            }
+          }
+        }
+      }
       if (!pinch) return;
       const a = Array.from(event.touches).find(
           (t) => t.identifier === pinch!.ids[0],
@@ -249,6 +315,22 @@ export function useDraggablePanel(
     };
     const end = (event: TouchEvent) => {
       if (
+        contact &&
+        !Array.from(event.touches).some((t) => t.identifier === contact!.id)
+      ) {
+        if (
+          contact.lower &&
+          !contact.drag &&
+          !contact.moved &&
+          performance.now() - contact.time < 300 &&
+          event.type !== "touchcancel"
+        )
+          lastTap = { time: performance.now(), x: contact.x, y: contact.y };
+        else lastTap = null;
+        if (contact.drag) flush();
+        contact = null;
+      }
+      if (
         pinch &&
         !pinch.ids.every((id) =>
           Array.from(event.touches).some((t) => t.identifier === id),
@@ -278,7 +360,7 @@ export function useDraggablePanel(
       pinching.current = false;
     };
   }, [open]);
-  const finish = (event: PointerEvent<HTMLButtonElement>) => {
+  const finish = (event: PointerEvent<HTMLElement>) => {
     if (gesture.current?.id !== event.pointerId) return;
     gesture.current = null;
     flush();
@@ -317,7 +399,7 @@ export function useDraggablePanel(
     update({ ...o, x, y, width, height });
   };
   const handlers = (edge?: Edge) => ({
-    onPointerDown: (event: PointerEvent<HTMLButtonElement>) => {
+    onPointerDown: (event: PointerEvent<HTMLElement>) => {
       if (
         !event.isPrimary ||
         event.button !== 0 ||
@@ -337,7 +419,7 @@ export function useDraggablePanel(
         event.currentTarget.setPointerCapture(event.pointerId);
       }
     },
-    onPointerMove: (event: PointerEvent<HTMLButtonElement>) => {
+    onPointerMove: (event: PointerEvent<HTMLElement>) => {
       const g = gesture.current;
       if (!g || g.id !== event.pointerId || pinching.current) return;
       const dx = event.clientX - g.x,
@@ -394,6 +476,20 @@ export function useDraggablePanel(
         }
       : {},
     handle: handlers(),
+    header: {
+      onPointerDown: (event: PointerEvent<HTMLElement>) => {
+        if (
+          event.pointerType === "touch" ||
+          (event.target as Element).closest("button,input,a")
+        )
+          return;
+        handlers().onPointerDown(event);
+      },
+      onPointerMove: handlers().onPointerMove,
+      onPointerUp: finish,
+      onPointerCancel: finish,
+      onLostPointerCapture: finish,
+    },
     edges: EDGES.map((edge) => ({ edge, handle: handlers(edge) })),
     onClickCapture: (event: MouseEvent<HTMLDivElement>) => {
       if (suppressClick.current) {
