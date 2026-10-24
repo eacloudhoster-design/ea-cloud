@@ -1,10 +1,9 @@
-import { resolveEaModeAccess } from "../lib/ea-mode-access";
+import { requireAppSession } from "../middlewares/app-session";
 import { Router } from "express";
-import { db, usersTable, easTable, appAccessTable, eaModeImagesTable } from "@workspace/db";
+import { db, usersTable, easTable, eaModeImagesTable } from "@workspace/db";
 import { eq, and, asc } from "drizzle-orm";
 import { z } from "zod";
 import { requireAuth, type AuthRequest } from "../middlewares/auth";
-import { requireClientAuth } from "./client-app";
 
 const router = Router();
 const image = z.string().max(2048).refine(value => {
@@ -54,15 +53,10 @@ router.put("/eas/:id/mode-images", requireAuth, async (req: AuthRequest, res) =>
   } catch (error) { unavailable(req, res, error); }
 });
 
-router.get("/app/ea-mode-images", requireClientAuth, async (req: any, res) => {
+router.get("/app/ea-mode-images", requireAppSession, async (req: any, res) => {
   res.setHeader("Cache-Control", "no-store");
   try {
-    const [client] = await db.select().from(appAccessTable).where(eq(appAccessTable.id, req.clientId)).limit(1);
-    const access = await resolveEaModeAccess(client);
-    if ("code" in access) {
-      req.log?.warn?.({ event: "ea_mode_access_denied", code: access.code, clientId: req.clientId }, "EA artwork access denied");
-      res.status(403).json(access); return;
-    }
+    const access = req.appSession;
     const [mentor] = await db.select({ backgroundImageUrl: usersTable.backgroundImageUrl }).from(usersTable).where(eq(usersTable.id, access.mentorId)).limit(1);
     const rows = await db.select({ id: easTable.id, name: easTable.name, normal: eaModeImagesTable.normal, beast: eaModeImagesTable.beast, aggressive: eaModeImagesTable.aggressive, ultimate: eaModeImagesTable.ultimate })
       .from(easTable).leftJoin(eaModeImagesTable, eq(eaModeImagesTable.eaId, easTable.id))

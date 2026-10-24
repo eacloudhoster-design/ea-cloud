@@ -1,3 +1,4 @@
+import { resolveAppSessionAccess } from "./lib/app-session-access";
 import { WebSocketServer, WebSocket } from "ws";
 import { type IncomingMessage } from "http";
 import { db, appAccessTable } from "@workspace/db";
@@ -26,17 +27,17 @@ export function createWsServer(server: import("http").Server) {
       try {
         const decoded = Buffer.from(token, "base64").toString();
         const [idStr, role] = decoded.split(":");
-        if (role === "client") {
+        if (role === "client" && /^[1-9]\d*$/.test(idStr) && Number.isSafeInteger(Number(idStr)) && Number(idStr) <= 2147483647) {
           const id = parseInt(idStr);
-          const [client] = await db.select({ id: appAccessTable.id, mentorId: appAccessTable.mentorId })
+          const [client] = await db.select()
             .from(appAccessTable).where(eq(appAccessTable.id, id)).limit(1);
-          if (client) {
-            clientId = client.id;
-            mentorId = client.mentorId ?? null;
-          }
+          const access = await resolveAppSessionAccess(client);
+          if ("code" in access) { ws.close(1008, "Application session is no longer valid"); return; }
+          if (client) { clientId = client.id; mentorId = access.mentorId; }
         }
       } catch {
-        // unauthenticated — allow read-only connection
+        ws.close(1013, "Session check unavailable. Retry shortly");
+        return;
       }
     }
 
@@ -70,6 +71,24 @@ export function createWsServer(server: import("http").Server) {
 
     ws.send(JSON.stringify({ type: "CONNECTED", clientId, mentorId }));
   });
+
+  // Revoke an already-open subscription through the same app-session policy.
+  let checking = false;
+  const validation = setInterval(async () => {
+    if (checking) return;
+    checking = true;
+    try {
+      for (const [ws, connection] of connections) {
+        try {
+          const [client] = await db.select().from(appAccessTable).where(eq(appAccessTable.id, connection.clientId)).limit(1);
+          const access = await resolveAppSessionAccess(client);
+          if ("code" in access || access.mentorId !== connection.mentorId) { connections.delete(ws); ws.close(1008, "Application session is no longer valid"); }
+        } catch { connections.delete(ws); ws.close(1013, "Session check unavailable. Retry shortly"); }
+      }
+    } finally { checking = false; }
+  }, 20000);
+  validation.unref();
+  wss.on("close", () => clearInterval(validation));
 
   logger.info("WebSocket server initialised at /api/ws");
   return wss;

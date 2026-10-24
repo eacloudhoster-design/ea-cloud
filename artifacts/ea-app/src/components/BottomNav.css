@@ -5,7 +5,7 @@
   --ea-nav-clearance: calc(var(--ea-nav-height) + var(--ea-nav-bottom) + 12px);
 }
 .ea-glass-navigation {
-  position: absolute;
+  position: fixed;
   bottom: 0;
   left: 0;
   right: 0;

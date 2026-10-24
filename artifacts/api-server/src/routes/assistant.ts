@@ -5,14 +5,13 @@ import { eq, desc, and } from "drizzle-orm";
 import {
   db,
   appAccessTable,
-  licensesTable,
   clientSettingsTable,
   usersTable,
   scannerReportsTable,
   scannerEntitlementsTable,
   tradeExecutionsTable,
 } from "@workspace/db";
-import { requireClientAuth } from "./client-app";
+import { requireAppSession } from "../middlewares/app-session";
 import { scannerMt5Read } from "../lib/scanner-mt5";
 import { evaluateScannerAccess } from "../lib/scanner-access";
 import { signalWorkerHealthy } from "../lib/signal-worker";
@@ -22,44 +21,9 @@ import {
   classifyQuestion,
 } from "../lib/assistant-voice";
 const router = Router();
-router.use("/app/assistant", requireClientAuth, async (req: any, res, next) => {
-  res.setHeader("Cache-Control", "no-store");
-  try {
-    const [client] = await db
-      .select()
-      .from(appAccessTable)
-      .where(eq(appAccessTable.id, req.clientId))
-      .limit(1);
-    const [license] = client?.licenseKey
-      ? await db
-          .select()
-          .from(licensesTable)
-          .where(eq(licensesTable.key, client.licenseKey))
-          .limit(1)
-      : [];
-    const expires = license?.expiresAt
-      ? new Date(license.expiresAt).getTime()
-      : null;
-    if (
-      !client ||
-      client.status !== "approved" ||
-      !client.mentorId ||
-      !license ||
-      license.mentorId !== client.mentorId ||
-      license.status !== "active" ||
-      (expires !== null && (!Number.isFinite(expires) || expires <= Date.now()))
-    ) {
-      res.status(403).json({
-        error:
-          "An approved account with an active linked EA licence is required.",
-      });
-      return;
-    }
-    req.assistantClient = client;
-    next();
-  } catch {
-    res.status(503).json({ error: "Assistant access could not be verified." });
-  }
+router.use("/app/assistant", requireAppSession, (req: any, _res, next) => {
+  req.assistantClient = { ...req.appClient, mentorId: req.appSession.mentorId };
+  next();
 });
 router.use(
   "/app/assistant",

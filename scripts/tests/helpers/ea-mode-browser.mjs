@@ -32,7 +32,7 @@ export async function verifyModeBrowser(app,engine){
    const raw=new Request(request.url(),{method:request.method(),headers:request.headers(),...(request.method()!=='GET'&&request.method()!=='HEAD'?{body:request.postDataBuffer()}:{} )});
    if(path==='/api/storage/uploads/request-url')response=await requestBackgroundUpload({request:raw,env});
    else if(path.startsWith('/api/storage/r2/'))response=await storedBackground({request:raw,env});
-   else if(path.endsWith('/mode-images')||path==='/api/app/ea-mode-images')response=await appRequest(app,request.url(),{method:request.method(),headers:request.headers(),...(request.postDataBuffer()?{body:request.postDataBuffer()}:{} )});
+   else if(path.endsWith('/mode-images')||path==='/api/app/ea-mode-images'||path==='/api/app/me')response=await appRequest(app,request.url(),{method:request.method(),headers:request.headers(),...(request.postDataBuffer()?{body:request.postDataBuffer()}:{} )});
    else if(path==='/api/auth/me'||path==='/api/profile')response=Response.json({id:5,role:'mentor',status:'approved',email:'mentor@example.invalid',backgroundImageUrl:'https://images.example/legacy.png'});
    else if(path==='/api/eas')response=Response.json([11,12].map(id=>({id,name:id===11?'EA One':'EA Two',symbol:'XAUUSD',lotSize:'0.01',riskLevel:'medium',isActive:true})));
    else if(path==='/api/app/me')response=Response.json({id:7,status:'approved',licenseKey:'VALID'});
@@ -74,7 +74,7 @@ export async function verifyModeBrowser(app,engine){
    if(!localStorage.getItem('ea-cloud:client:7:home-appearance'))localStorage.setItem('ea-cloud:client:7:home-appearance',JSON.stringify({interfaceStyle:'regular',accentColor:'#00c9ed',showBg:true,backgroundAnimation:'none'}));
   });
   const page=await client.newPage();await page.goto(origin+'/ea-app/');await page.locator('.ea-startup').waitFor({state:'detached'});
-  const nav=page.locator('.ea-app-content > .ea-glass-navigation');await nav.getByRole('button',{name:'Settings',exact:true}).tap();
+  const nav=page.locator('.ea-app-viewport > .ea-glass-navigation');await nav.getByRole('button',{name:'Settings',exact:true}).tap();
   await page.getByRole('button',{name:'EA Manipulation',exact:true}).tap();await page.locator('.ea-mode-card').first().waitFor();
   const originalNav=await nav.boundingBox();
   const assertArtwork=async expected=>{
@@ -160,7 +160,7 @@ export async function verifyModeBrowser(app,engine){
     await page.reload();await page.locator('.ea-startup').waitFor({state:'detached'});
     await assertArtwork(replacement);
     await nav.getByRole('button',{name:'Settings',exact:true}).tap();await page.getByRole('button',{name:'EA Manipulation',exact:true}).tap();
-    const geometry=()=>page.locator('.robot-image-frame,.trading-activity-trigger,.ea-app-content > .ea-glass-navigation').evaluateAll(nodes=>nodes.map(el=>{const r=el.getBoundingClientRect();return {x:r.x,y:r.y,w:r.width,h:r.height};}));
+    const geometry=()=>page.locator('.robot-image-frame,.trading-activity-trigger,.ea-app-viewport > .ea-glass-navigation').evaluateAll(nodes=>nodes.map(el=>{const r=el.getBoundingClientRect();return {x:r.x,y:r.y,w:r.width,h:r.height};}));
     const boxes=await geometry();
     for(const name of ['NORMAL','BEAST','AGGRESSIVE','ULTIMATE']){
       await page.getByRole('button',{name:`${name} visual mode`}).tap();await assertArtwork(modeSources[name.toLowerCase()]);
@@ -192,6 +192,24 @@ export async function verifyModeBrowser(app,engine){
    assert.ok(cards.every(c=>c.textWidth<=c.available),'labels fit: '+JSON.stringify(cards));
    await page.screenshot({path:`${output}/client-${width}.png`});layout.push({width,cards});
   }
+  // Session revocation removes the entire authenticated app, not just its cards.
+  await page.evaluate(()=>localStorage.setItem('appClientToken',btoa('7:client:fixture')));
+  await page.reload();await page.locator('.ea-startup').waitFor({state:'detached'});
+  await engine.exec("UPDATE licenses SET status='revoked' WHERE key='VALID'");
+  await page.evaluate(()=>window.dispatchEvent(new Event('focus')));
+  await page.waitForFunction(()=>localStorage.getItem('appClientToken')===null);
+  assert.equal(await page.locator('.ea-mode-grid').count(),0);
+  await engine.exec("UPDATE licenses SET status='active' WHERE key='VALID'");
+  await page.evaluate(()=>localStorage.setItem('appClientToken',btoa('7:client:fixture')));
+  await page.reload();await page.locator('.ea-startup').waitFor({state:'detached'});
+  await nav.getByRole('button',{name:'Settings',exact:true}).tap();await page.getByRole('button',{name:'EA Manipulation',exact:true}).tap();
+  assert.equal(await page.locator('.ea-mode-card').count(),4);
+  await page.bringToFront();
+  await page.screenshot({path:`${output}/restored-four-cards.png`});
+  await nav.getByRole('button',{name:'Home',exact:true}).tap();
+  await page.waitForFunction(()=>document.querySelector('.ea-glass-bar button[aria-current="page"] span')?.textContent==='Home');
+  await page.waitForFunction(()=>{const panels=document.querySelectorAll('.ea-nav-screen');const settings=panels[panels.length-1];return settings.inert&&Number(getComputedStyle(settings).opacity)<.01;});
+  await page.waitForTimeout(350);await page.screenshot({path:`${output}/restored-home.png`});
   await writeFile(output+'/layout.json',JSON.stringify(layout,null,2));
   await client.close();await mentor.close();
  }finally{globalThis.fetch=nativeFetch;await browser.close();}

@@ -152,6 +152,26 @@ function EACloudApp({ onReady, startupComplete }: { onReady: (ready: boolean) =>
     setAuthStage("access");
   };
 
+  useEffect(() => {
+    if (authStage !== "app" || !clientToken) return;
+    let alive = true, busy = false;
+    const invalid = (event: Event) => {
+      if ((event as CustomEvent).detail?.token === clientToken && alive) clearAuth();
+    };
+    const check = async () => {
+      if (!alive || busy || document.hidden) return;
+      busy = true;
+      try { const client = await requestJson("/api/app/me", { headers: { Authorization: `Bearer ${clientToken}` } }); if (alive && (client.status !== "approved" || !client.licenseKey)) clearAuth(); }
+      catch (error) { if (alive && (error as {status?: number}).status === 401) clearAuth(); }
+      finally { busy = false; }
+    };
+    window.addEventListener("ea:session-invalidated", invalid);
+    window.addEventListener("focus", check);
+    document.addEventListener("visibilitychange", check);
+    const timer = window.setInterval(check, 20000);
+    return () => { alive = false; clearInterval(timer); window.removeEventListener("ea:session-invalidated", invalid); window.removeEventListener("focus", check); document.removeEventListener("visibilitychange", check); };
+  }, [authStage, clientToken]);
+
   const handleAuthenticated = (token: string, status: string, licenseKey: string | null) => {
     setClientToken(token);
     routeByStatus(status, licenseKey);
@@ -289,7 +309,6 @@ function EACloudApp({ onReady, startupComplete }: { onReady: (ready: boolean) =>
         </div>
 
         <TradingActivityMonitor />
-        <BottomNav activeTab={activeTab} onTabChange={navigate} backgroundImage={showBg ? backgroundSrc : undefined} />
 
         {showChartScanner && (
           <div className="absolute inset-0 z-50">
@@ -297,6 +316,8 @@ function EACloudApp({ onReady, startupComplete }: { onReady: (ready: boolean) =>
           </div>
         )}
         </div>
+        {/* The dock must not inherit the content size-container/overflow bounds. */}
+        {!showChartScanner && <BottomNav activeTab={activeTab} onTabChange={navigate} backgroundImage={showBg ? backgroundSrc : undefined} />}
       </div>
     </AppContext.Provider>
   );

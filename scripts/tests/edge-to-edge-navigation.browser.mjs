@@ -85,7 +85,7 @@ try {
   await cdp.send("Emulation.setSafeAreaInsetsOverride",{insets:{top:0,bottom:screen.bottom,left:screen.left||0,right:screen.right||0}});
   await page.goto(origin+"/ea-app/");
   await page.locator(".ea-startup").waitFor({state:"detached"});
-  const nav=page.locator(".ea-app-content > .ea-glass-navigation");
+  const nav=page.locator(".ea-app-viewport > .ea-glass-navigation");
   const geometry=()=>nav.locator(".ea-glass-bar").evaluate(el=>{
    const r=el.getBoundingClientRect(),s=getComputedStyle(el);
    return {x:r.x,y:r.y,w:r.width,h:r.height,bottom:innerHeight-r.bottom,radius:s.borderRadius,blur:getComputedStyle(el.parentElement).backdropFilter};
@@ -129,7 +129,7 @@ try {
  const context=await browser.newContext({viewport:{width:393,height:852},hasTouch:true,isMobile:true});
  await fixture(context);const page=await context.newPage();await page.goto(origin+"/ea-app/");
  await page.locator(".ea-startup").waitFor({state:"detached"});
- const nav=page.locator(".ea-app-content > .ea-glass-navigation");
+ const nav=page.locator(".ea-app-viewport > .ea-glass-navigation");
  await nav.getByRole("button",{name:"MetaTrader",exact:true}).tap();await page.waitForTimeout(300);
  const field=page.locator(".mt5-input-wrap input").first();await field.fill("12345678");
  await nav.getByRole("button",{name:"Home",exact:true}).tap();await page.waitForTimeout(300);
