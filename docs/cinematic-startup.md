@@ -74,3 +74,12 @@ unavailable. Chromium mobile/standalone emulation is not native iOS testing.
 The referenced recordings were not attached to this conversation, so no direct
 recording comparison is claimed. Existing Vite chunk-size/label sourcemap
 warnings remain.
+
+## Recording-based follow-up
+
+The subsequent recording inspection, visible SVG light correction, actual-logo
+pixel evidence and readiness-clock regression are documented in
+[startup-visible-light/README.md](startup-visible-light/README.md). That report
+supersedes this page's earlier statement that a recording was unavailable and
+its earlier light-layer implementation details. The approved 300ms crossfade
+is retained exactly.

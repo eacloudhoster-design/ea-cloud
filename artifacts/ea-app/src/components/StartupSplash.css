@@ -18,7 +18,7 @@
 .ea-startup-artwork { position: absolute; inset: 0; overflow: hidden; }
 .ea-startup-artwork img { position: absolute; width: 100%; height: auto; left: 0; top: -21.7391304%; display: block; }
 .ea-startup-energy { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
-.ea-startup-edge, .ea-startup-tip, .ea-startup-trail {
+.ea-startup-edge, .ea-startup-tip, .ea-startup-trail, .ea-startup-tip-halo {
   stroke-linecap: round; stroke-linejoin: round;
 }
 .ea-startup-edge {
@@ -35,16 +35,18 @@
 /* A broad, soft trailing stroke and a narrow bright core share the cloud path.
    Static filters keep the expensive halo stable; only dash offsets/opacity move. */
 .ea-startup-trail {
-  stroke: #ff2020; stroke-width: 8; opacity: .65;
+  stroke: #ff1818; stroke-width: 12; opacity: .8;
   stroke-dasharray: .11 .89; stroke-dashoffset: .11;
-  filter: drop-shadow(0 0 11px #ff1515) drop-shadow(0 0 22px #ef0000);
+
 }
-.ea-startup-tip {
+.ea-startup-tip, .ea-startup-tip-halo {
   stroke: #ffede6; stroke-width: 4; stroke-dasharray: .018 .982; stroke-dashoffset: .018;
-  filter: drop-shadow(0 0 6px #ff6860) drop-shadow(0 0 16px #ff1010);
+
 }
+.ea-startup-tip-halo { stroke: #ff1515; stroke-width: 16; opacity: .9; }
 .ea-startup[data-phase="tracing"] .ea-startup-trail { animation: ea-cloud-trail var(--ea-trace-duration) linear infinite; }
-.ea-startup[data-phase="tracing"] .ea-startup-tip { animation: ea-cloud-tip var(--ea-trace-duration) linear infinite; }
+.ea-startup[data-phase="tracing"] .ea-startup-tip,
+.ea-startup[data-phase="tracing"] .ea-startup-tip-halo { animation: ea-cloud-tip var(--ea-trace-duration) linear infinite; }
 .ea-startup:not([data-started="true"]) .ea-startup-mark,
 .ea-startup:not([data-started="true"]) .ea-startup-eye { animation-play-state: paused; }
 .ea-startup[data-phase="glowing"] .ea-startup-edge {
@@ -72,18 +74,19 @@
 }
 @keyframes ea-logo-quiet-entrance { from { opacity: 0; } to { opacity: 1; } }
 
-/* Original embedded eyes stay visible underneath. Only the aligned light layer
-   breathes; static, small shadows avoid per-frame filter recalculation. */
+/* Feathered red light extends beyond the already bright embedded eye pixels.
+   Animate each light group, never the original JPEG. No blend-mode dependency. */
 .ea-startup-eye {
-  fill: #ff2525; opacity: .05; mix-blend-mode: screen;
-  filter: drop-shadow(0 0 5px #ff2929) drop-shadow(0 0 10px #ef1010);
+  opacity: .1;
   animation: ea-eye-breathe 2400ms ease-in-out infinite;
 }
+.ea-startup-eye-halo { fill: #ff1616; }
+.ea-startup-eye-core { fill: #ff6a50; opacity: .32; }
 .ea-startup-eye--right { animation-duration: 3100ms; animation-delay: -1050ms; }
 @keyframes ea-eye-breathe {
-  0%, 100% { opacity: .05; }
-  40%, 55% { opacity: .24; }
+  0%, 100% { opacity: .1; }
+  40%, 55% { opacity: .7; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .ea-startup-eye { animation: none; opacity: .1; }
+  .ea-startup-eye { animation: none; opacity: .18; }
 }

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
+import { useEffect, useId, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import eaLogo from "../../../ea-cloud/public/ea-cloud-logo.jpeg?url";
 import "./StartupSplash.css";
 
@@ -15,6 +15,9 @@ type Phase = "entrance" | "tracing" | "glowing" | "fading" | "done";
 
 /** A presentation layer: initialization and the existing app stay mounted below. */
 export default function StartupSplash({ ready, children }: { ready: boolean; children: ReactNode }) {
+  const filterId = useId().replace(/:/g, "");
+  const outlineHalo = `${filterId}-outline-halo`;
+  const eyeHalo = `${filterId}-eye-halo`;
   const imageRef = useRef<HTMLImageElement>(null);
   const [started, setStarted] = useState(false);
   const [phase, setPhase] = useState<Phase>("entrance");
@@ -34,8 +37,10 @@ export default function StartupSplash({ ready, children }: { ready: boolean; chi
     if (traceComplete && ready && phase === "tracing") setPhase("glowing");
   }, [traceComplete, ready, phase]);
 
+  // Readiness changes must not restart the entrance clock (or its CSS timeline).
+  const canAdvance = phase !== "glowing" || ready;
   useEffect(() => {
-    if (phase === "glowing" && !ready) return;
+    if (!canAdvance) return;
     if (!started || phase === "tracing" || phase === "done") return;
     const next: Record<"entrance" | "glowing" | "fading", [Phase, number]> = {
       entrance: ["tracing", ENTRANCE_MS],
@@ -46,7 +51,7 @@ export default function StartupSplash({ ready, children }: { ready: boolean; chi
     const [nextPhase, delay] = next[phase];
     const timer = window.setTimeout(() => setPhase(nextPhase), delay);
     return () => window.clearTimeout(timer);
-  }, [started, phase, ready]);
+  }, [started, phase, canAdvance]);
 
   const revealing = phase === "fading" || phase === "done";
   const timing = {
@@ -70,16 +75,32 @@ export default function StartupSplash({ ready, children }: { ready: boolean; chi
           <img ref={imageRef} src={eaLogo} alt="" decoding="sync" fetchPriority="high" />
         </div>
         <svg viewBox="0 150 1254 690" className="ea-startup-energy" fill="none">
+          <defs>
+            {/* Explicit user-space filter bounds avoid clipped SVG/CSS shadows on WebKit. */}
+            <filter id={outlineHalo} filterUnits="userSpaceOnUse" x="-60" y="90" width="1374" height="810" colorInterpolationFilters="sRGB">
+              <feGaussianBlur stdDeviation="9" />
+            </filter>
+            <filter id={eyeHalo} filterUnits="userSpaceOnUse" x="350" y="460" width="540" height="200" colorInterpolationFilters="sRGB">
+              <feGaussianBlur stdDeviation="8" />
+            </filter>
+          </defs>
           <g className="ea-startup-eyes">
-            <path className="ea-startup-eye ea-startup-eye--left" d="M410 516 L547 598 L447 569 Z" />
-            <path className="ea-startup-eye ea-startup-eye--right" d="M827 516 L692 598 L795 569 Z" />
+            <g className="ea-startup-eye ea-startup-eye--left">
+              <path className="ea-startup-eye-halo" filter={`url(#${eyeHalo})`} d="M403 507 L552 603 L443 570 Z" />
+              <path className="ea-startup-eye-core" d="M403 507 L552 603 L443 570 Z" />
+            </g>
+            <g className="ea-startup-eye ea-startup-eye--right">
+              <path className="ea-startup-eye-halo" filter={`url(#${eyeHalo})`} d="M834 507 L687 603 L796 570 Z" />
+              <path className="ea-startup-eye-core" d="M834 507 L687 603 L796 570 Z" />
+            </g>
           </g>
           <path className="ea-startup-edge" pathLength="1" d={CLOUD_OUTLINE}
             onAnimationEnd={event => {
               if (event.animationName === "ea-cloud-trace") setTraceComplete(true);
             }} />
           <g className="ea-startup-traveller">
-            <path className="ea-startup-trail" pathLength="1" d={CLOUD_OUTLINE} />
+            <path className="ea-startup-trail" filter={`url(#${outlineHalo})`} pathLength="1" d={CLOUD_OUTLINE} />
+            <path className="ea-startup-tip-halo" filter={`url(#${outlineHalo})`} pathLength="1" d={CLOUD_OUTLINE} />
             <path className="ea-startup-tip" pathLength="1" d={CLOUD_OUTLINE} />
           </g>
         </svg>
