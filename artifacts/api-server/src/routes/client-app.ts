@@ -8,7 +8,7 @@ const router = Router();
 const hashPassword = (p: string) => crypto.createHash("sha256").update(p + "ea_cloud_salt_2024").digest("hex");
 const makeToken = (id: number) => Buffer.from(`${id}:client:${Date.now()}`).toString("base64");
 
-const requireClientAuth = async (req: any, res: any, next: any) => {
+export const requireClientAuth = async (req: any, res: any, next: any) => {
   const auth = req.headers.authorization as string | undefined;
   if (!auth?.startsWith("Bearer ")) { res.status(401).json({ error: "Unauthorized" }); return; }
   const token = auth.slice(7);

@@ -1,3 +1,4 @@
+import MentorModeArtwork from "@/components/MentorModeArtwork";
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { usePortalRedirect } from "@/contexts/AuthContext";
@@ -212,6 +213,7 @@ export default function AdminProfile() {
               <p className="text-white/25 text-xs mt-1">JPG, PNG, WebP up to 10MB</p>
               <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/webp,image/gif" className="hidden" onChange={handleFileSelect} />
             </div>
+            <MentorModeArtwork />
           </div>
         </motion.div>
 
