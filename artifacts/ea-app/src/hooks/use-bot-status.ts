@@ -1,3 +1,4 @@
+import {assistantEvent} from "@/lib/assistant-events";
 import { useEffect, useRef, useState } from "react";
 
 type Session = {
@@ -68,6 +69,7 @@ export function useBotStatus(token: string | null, enabled: boolean) {
     const current = session.current;
     if (!current || current.token !== token || !enabled) return;
     const version = ++current.version;
+    assistantEvent({type:"bot-request",enabled:running});
     setState({ token, running, confirmed: false });
     // Keep rapid requests ordered so a late write cannot undo a newer command.
     current.queue = current.queue.then(async () => {
@@ -76,15 +78,19 @@ export function useBotStatus(token: string | null, enabled: boolean) {
         const saved = await read(current, running);
         if (session.current !== current) return;
         current.confirmed = saved;
-        if (version === current.version)
+        if (version === current.version) {
           setState({ token, running: saved, confirmed: true });
+          assistantEvent(saved === running ? {type:"bot-saved",enabled:saved} : {type:"bot-failed",enabled:running});
+        }
       } catch {
-        if (session.current === current && version === current.version)
+        if (session.current === current && version === current.version) {
+          assistantEvent({type:"bot-failed",enabled:running});
           setState({
             token,
             running: current.confirmed ?? true,
             confirmed: false,
           });
+        }
       }
     });
   };

@@ -1,3 +1,5 @@
+import {useVoiceAssistant} from "@/hooks/use-voice-assistant";
+import {VoiceAssistantControls} from "@/components/VoiceAssistant";
 import ModeImage from "@/components/ModeImage";
 import { useVisualModes } from "@/hooks/use-visual-modes";
 import { usePwaBackground } from "@/hooks/use-pwa-background";
@@ -157,9 +159,10 @@ function EACloudApp({ onReady }: { onReady: (ready: boolean) => void }) {
 
   const visualModes = useVisualModes(clientToken,authStage === "app" && brandingReady,mentorImageUrl,mentorId);
   const bgImageUrl = visualModes.displayImage;
+  const voice = useVoiceAssistant(clientToken,authStage === "app" && brandingReady,eaName,visualModes);
 
   const settings: AppSettings = {
-    visualModes,
+    visualModes,voice,
     activeTab,
     botRunning, botStatusConfirmed, setBotRunning: persistBotRunning,
     interfaceStyle, setInterfaceStyle,
@@ -274,6 +277,7 @@ function EACloudApp({ onReady }: { onReady: (ready: boolean) => void }) {
         </div>
 
         <div inert={activeTab === "metatrader"}><TradingActivityMonitor /></div>
+        <VoiceAssistantControls />
         <BottomNav activeTab={activeTab} onTabChange={navigate} backgroundImage={showBg ? backgroundSrc : undefined} />
 
         {showChartScanner && (
