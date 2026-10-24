@@ -2,6 +2,7 @@ import {useVoiceAnnouncements} from "@/hooks/use-voice-announcements";
 import ModeImage from "@/components/ModeImage";
 import { useVisualModes } from "@/hooks/use-visual-modes";
 import { usePwaBackground } from "@/hooks/use-pwa-background";
+import { useIosStandaloneLayout } from "@/hooks/use-ios-standalone-layout";
 import { useBotStatus } from "@/hooks/use-bot-status";
 import BackgroundAnimation from "@/components/BackgroundAnimation";
 import {useHomePreferences} from "@/hooks/use-home-preferences";
@@ -205,6 +206,7 @@ function EACloudApp({ onReady, startupComplete }: { onReady: (ready: boolean) =>
 
   const backgroundSrc = bgImageUrl || robotBg;
   usePwaBackground(backgroundSrc, authStage === "app" && brandingReady && showBg);
+  useIosStandaloneLayout(authStage === "app" && brandingReady);
 
   const initializing = authStage === "loading" || (authStage === "app" && !loadError && (!brandingReady || visualModes.loading));
   useEffect(() => { onReady(!initializing); }, [initializing, onReady]);

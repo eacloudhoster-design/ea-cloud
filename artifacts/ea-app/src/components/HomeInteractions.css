@@ -36,6 +36,18 @@
   object-position: center;
   transition: opacity 250ms ease;
 }
+/* Installed WebKit may expose a fixed/dvh viewport shorter than its large
+   document canvas. Keep this root in flow and anchor the real dock to it.
+   The existing top inset and bottom control inset remain applied once each. */
+html[data-ea-ios-standalone-layout] .ea-startup-home[data-visible="true"] .ea-app-viewport {
+  position: relative;
+  inset: auto;
+  height: 100vh;
+  --ea-content-height: calc(100vh - var(--ea-status-inset));
+}
+html[data-ea-ios-standalone-layout] .ea-startup-home[data-visible="true"] .ea-app-viewport .ea-glass-navigation {
+  position: absolute;
+}
 /* Keep foreground screens out of landscape notches; the dock/image stay full bleed. */
 .ea-app-content > [data-home-screen],
 .ea-app-content > .mt5-view { left: var(--ea-content-safe-left); right: var(--ea-content-safe-right); }
