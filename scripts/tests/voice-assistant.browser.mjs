@@ -9,7 +9,9 @@ const image=await readFile('artifacts/ea-cloud/public/default-robot.jpg');
 const report={id:'00000000-0000-4000-8000-000000000007',kind:'chart',strategy:'SMC',createdAt:new Date().toISOString(),report:{signal:'SELL',symbol:'XAUUSD',timeframe:'M15',entry:2750.25,stopLoss:2760.5,takeProfit:2730,reasoning:'Bearish market structure rejects visible resistance.',limitations:null}};
 const results=[];
 const neural=true;
-const voiceProfile={id:'a'.repeat(64),model:'gemini-3.8-flash-tts',voice:'Aoede',configured:true};
+const manifest=JSON.parse(await readFile('artifacts/ea-app/public/natural-voice/manifest.json','utf8'));
+const phrases=JSON.parse(await readFile('lib/api-zod/src/common-voice-phrases.json','utf8'));
+const {createHash}=await import('node:crypto');const byHash=Object.fromEntries(phrases.map(text=>[createHash('sha256').update(text).digest('hex'),text]));
 const fixtureWav=text=>{const data=Buffer.from(text+'\0'.repeat(Buffer.byteLength(text)%2)),h=Buffer.alloc(44);h.write('RIFF');h.writeUInt32LE(36+data.length,4);h.write('WAVEfmt ',8);h.writeUInt32LE(16,16);h.writeUInt16LE(1,20);h.writeUInt16LE(1,22);h.writeUInt32LE(24000,24);h.writeUInt32LE(48000,28);h.writeUInt16LE(2,32);h.writeUInt16LE(16,34);h.write('data',36);h.writeUInt32LE(data.length,40);return Buffer.concat([h,data]);};
 try{
  for(const name of ['Mentor Alpha','Mentor Beta']){
@@ -34,16 +36,19 @@ try{
     }
     window.AudioContext=AudioContextFixture;
    }else{Object.defineProperty(window,'AudioContext',{value:undefined});Object.defineProperty(window,'webkitAudioContext',{value:undefined});}
+   window.Worker=class{
+    postMessage({id,text}){const data=new TextEncoder().encode(text+'\0'.repeat(new TextEncoder().encode(text).length%2)),wav=new ArrayBuffer(44+data.length),v=new DataView(wav),put=(n,s)=>{for(let i=0;i<s.length;i++)v.setUint8(n+i,s.charCodeAt(i));};put(0,'RIFF');put(8,'WAVEfmt ');new Uint8Array(wav,44).set(data);this.timer=setTimeout(()=>this.onmessage?.({data:{id,wav}}),5);}
+    terminate(){clearTimeout(this.timer);}
+   };
    window.SpeechRecognition=class{constructor(){throw Error('Microphone must never be used');}};
   },{blocked:name==='Mentor Alpha',neural});
   const sockets=[];await context.routeWebSocket('**/api/ws?*',socket=>sockets.push(socket));
   await context.route('https://fonts.**',r=>r.abort());
   await context.route('**/voice-image-*.jpg',r=>r.fulfill({body:image,contentType:'image/jpeg'}));
+  await context.route('**/ea-app/natural-voice/**',route=>{const name=new URL(route.request().url()).pathname.split('/').at(-1);return name==='manifest.json'?route.fulfill({json:manifest}):route.fulfill({body:fixtureWav(byHash[name.replace('.wav','')]||'Unknown.'),contentType:'audio/wav'});});
   await context.route('**/api/**',async route=>{
    const request=route.request(),path=new URL(request.url()).pathname,body=request.postDataJSON?.bind(request);
    if(request.method()!=='GET')writes.push(path);
-   if(path==='/api/app/assistant/voice-config'){await route.fulfill({json:voiceProfile});return;}
-   if(path==='/api/app/assistant/speech'&&neural){if(quotaBlocked){await route.fulfill({status:429,json:{code:'VOICE_PROVIDER'},headers:{'Retry-After':'60'}});return;}assert.match(request.headers().authorization,/^Bearer /);await route.fulfill({body:fixtureWav(request.postDataJSON().text),contentType:'audio/wav',headers:{'X-EA-Voice-Identity':voiceProfile.id}});return;}
    if(path.includes('/assistant/')){throw Error('Announcement made an unnecessary assistant request: '+path);}
    if(path==='/api/app/symbol-configs'){const configs=[{pairName:'XAUUSD',variations:['XAUUSD','XAUUSDm'],selectedSymbol:request.method()==='PATCH'?request.postDataJSON().configs[0].selectedSymbol:null,customLotSize:'0.05'}];await route.fulfill({json:configs});return;}
    if(path.endsWith('/trading-controls')){
@@ -51,7 +56,7 @@ try{
     await route.fulfill({json:{copyingEnabled:running}});return;
    }
    if(path==='/api/app/scanner/chart'){await route.fulfill(scanFail?{status:503,json:{error:'AI unavailable',code:'AI_UNAVAILABLE',category:'ai',retryable:true}}:{json:report});return;}
-   const json=path==='/api/app/me'?{status:'approved',licenseKey:'VALID'}:path==='/api/app/dashboard'?{mentor:{id:5,robotName:name,backgroundImageUrl:'/voice-image-1.jpg'},eas:[]}:path==='/api/app/ea-mode-images'?{eas:[{id:11,name,images:[1,2,3,4].map(i=>`/voice-image-${i}.jpg`)}]}:path.endsWith('/activity/snapshot')?{observedAt:Date.now(),connected:false,engine:false,robotEnabled:false,tradeAllowed:false,account:null,symbols:[]}:path.endsWith('/scanner/status')?{configured:true}:path.endsWith('/scanner/history')?{records:[],hasMore:false}:[];
+   const json=path==='/api/app/me'?{status:'approved',licenseKey:'VALID'}:path==='/api/app/dashboard'?{mentor:{id:5,robotName:name,backgroundImageUrl:'/voice-image-1.jpg'},eas:[]}:path==='/api/app/ea-mode-images'?{eas:[{id:11,name,images:[1,2,3,4].map(i=>`/voice-image-${i}.jpg`)}]}:path.endsWith('/activity')?{events:[]}:path.endsWith('/activity/snapshot')?{observedAt:Date.now(),connected,engine:true,robotEnabled:running,tradeAllowed:connected,account:null,symbols:[]}:path.endsWith('/scanner/status')?{configured:true}:path.endsWith('/scanner/history')?{records:[],hasMore:false}:[];
    await route.fulfill({json});
   });
   const page=await context.newPage();page.setDefaultTimeout(15000);const errors=[];page.on('pageerror',e=>errors.push(e.message));
@@ -63,9 +68,9 @@ try{
   assert.equal((await speech()).filter(t=>t.text===`Welcome to ${name}.`).length,1,'earliest existing gesture unlocks welcome');
   assert.equal(await page.getByRole('button',{name:'Voice Assistant',exact:true}).count(),0);assert.equal(await page.getByRole('button',{name:'Microphone',exact:true}).count(),0);assert.equal(await page.locator('.ea-voice-controls').count(),0);
   await nav.getByRole('button',{name:'Home',exact:true}).tap();
-  failBot=true;await page.getByText('START',{exact:true}).locator('..').locator('button').click();await page.waitForTimeout(100);assert.ok((await speech()).some(t=>t.text==='Bot activation failed.'));assert.ok(!(await speech()).some(t=>t.text===`${name} activated.`));
-  failBot=false;await page.getByText('START',{exact:true}).locator('..').locator('button').click();await page.waitForTimeout(100);assert.ok((await speech()).some(t=>t.text===`${name} activated.`));
-  await page.getByText('STOP',{exact:true}).locator('..').locator('button').click();await page.waitForTimeout(100);assert.ok((await speech()).some(t=>t.text===`${name} deactivated.`));
+  failBot=true;await page.getByText('START',{exact:true}).locator('..').locator('button').click();await page.waitForFunction(()=>window.__speech.calls.some(t=>t.text==='Bot activation failed.')).catch(async error=>{console.log('failure details',JSON.stringify({speech:await speech(),writes,errors}));throw error;});assert.ok((await speech()).some(t=>t.text==='Bot activation failed.'));assert.ok(!(await speech()).some(t=>t.text==='Robot started.'));await page.getByRole('button',{name:'Close trading activity',exact:true}).click();
+  failBot=false;await page.getByText('START',{exact:true}).locator('..').locator('button').click();await page.waitForFunction(()=>window.__speech.calls.some(t=>t.text==='Robot started.'));assert.ok((await speech()).some(t=>t.text==='Robot started.'));assert.equal(await page.getByRole('dialog',{name:'Live trading activity monitor'}).count(),1);assert.ok(!(await speech()).some(t=>t.text==='Connected to trade server.'));connected=true;await page.getByRole('button',{name:'Refresh activity',exact:true}).click();await page.waitForFunction(()=>window.__speech.calls.some(t=>t.text==='Ready to trade.'));assert.ok((await speech()).some(t=>t.text==='Connected to trade server.'));await page.getByRole('button',{name:'Close trading activity',exact:true}).click();
+  await page.getByText('STOP',{exact:true}).locator('..').locator('button').click();await page.waitForTimeout(100);assert.ok((await speech()).some(t=>t.text==='Robot stopped.'));
   const trade={id:99,status:'pending',signalKind:'OPEN',action:'BUY',symbol:'XAUUSD',ticket:null,retcode:null,updatedAt:new Date().toISOString()};
   for(const socket of sockets)socket.send(JSON.stringify({type:'TRADE_EXECUTION',execution:trade}));await page.waitForTimeout(80);assert.ok(!(await speech()).some(t=>/buy execution/.test(t.text)));
   trade.status='success';trade.ticket='verified-ticket';trade.retcode=10009;
@@ -89,7 +94,7 @@ try{
   assert.deepEqual(await nav.boundingBox(),originalNav);assert.equal(await page.evaluate(()=>window.__speech.max),1);assert.equal((await speech()).filter(t=>t.text===`Welcome to ${name}.`).length,1);
   const speechRequestsBefore=writes.filter(path=>path==='/api/app/assistant/speech').length;quotaBlocked=true;
   await page.reload();await page.locator('.ea-startup').waitFor({state:'detached'});await page.tap('body');await page.waitForTimeout(80);assert.equal((await speech()).filter(t=>t.text===`Welcome to ${name}.`).length,1,'new launch welcomes once');assert.ok((await page.evaluate(()=>window.__speech.attempts)).every(attempt=>!attempt.splash));
-  assert.equal(writes.filter(path=>path==='/api/app/assistant/speech').length,speechRequestsBefore,'persisted welcome and common preloads survive reload without Gemini even during quota exhaustion');
+  assert.equal(writes.filter(path=>path==='/api/app/assistant/speech').length,speechRequestsBefore,'persisted welcome/common clips survive reload without speech API calls');
   assert.deepEqual(errors,[]);results.push({name,announcements:await speech(),writes});await page.screenshot({path:`work/announcement-tests/${name.replaceAll(' ','-')}.png`});await context.close();
  }
  await writeFile('work/announcement-tests/browser-results.json',JSON.stringify(results,null,2));console.log('PASS automatic welcome, gesture retry, no chatbot/microphone/intent calls, saved Start/Stop/symbol, actual scanner price narration, honest MT5 preview and outcome categories, WebSocket execution/error/dedup, rapid modes, reopening and navigation bounds');

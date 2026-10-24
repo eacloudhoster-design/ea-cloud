@@ -4,5 +4,5 @@ mkdirSync('work/activity-tests',{recursive:true});const path=resolve('work/activ
 test('actual floating monitor uses mentor artwork, starts closed/waiting and never exposes signed-out data',()=>{
  assert.equal(render({clientToken:null,eaName:'SMC Blueprint EA',bgImageUrl:'/mentor.png'}),'');
  const html=render({clientToken:'fixture',eaName:'SMC Blueprint EA',bgImageUrl:'/mentor.png'});
- assert.ok(html.includes('/mentor.png'));assert.ok(html.includes('aria-expanded="false"'));assert.ok(html.includes('Awaiting status'));assert.ok(!html.includes('role="dialog"'));assert.ok(!html.includes('ea-cloud-logo'));assert.ok(!html.includes('EA Connect'));assert.ok(!html.includes('Gemini'));
+ assert.ok(html.includes('/mentor.png'));assert.ok(html.includes('aria-expanded="false"'));assert.ok(html.includes('Bot status unconfirmed'));assert.ok(!html.includes('role="dialog"'));assert.ok(!html.includes('ea-cloud-logo'));assert.ok(!html.includes('EA Connect'));assert.ok(!html.includes('Gemini'));
 });

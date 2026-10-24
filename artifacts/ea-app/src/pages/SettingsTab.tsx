@@ -1,3 +1,5 @@
+import {toggleWebPush,prepareWebPush} from "@/lib/web-push-client";
+import {useEffect} from "react";
 import EaModeCards from "@/components/EaModeCards";
 import { backgroundAnimations } from "@/lib/home-preferences";
 import {botFonts,botFontStyle,type BotFont} from "@/lib/font-preference";
@@ -45,7 +47,8 @@ const SHAPE_ICONS: Record<ShapeStyle, React.ReactNode> = {
 };
 
 export default function SettingsTab({ onOpenChartScanner }: SettingsTabProps) {
-  const { backgroundAnimation, setBackgroundAnimation, accentColor, setAccentColor, interfaceStyle, setInterfaceStyle, shapeStyle, setShapeStyle, activeTab, botFont="Inter", setBotFont } = useApp();
+  const { clientToken, backgroundAnimation, setBackgroundAnimation, accentColor, setAccentColor, interfaceStyle, setInterfaceStyle, shapeStyle, setShapeStyle, activeTab, botFont="Inter", setBotFont } = useApp();
+  useEffect(()=>{if(clientToken)void prepareWebPush()?.catch(()=>{});},[clientToken]);
   const [open, setOpen] = useState<OpenSection>(null);
 
   const toggle = (section: OpenSection) => setOpen(prev => prev === section ? null : section);
@@ -61,6 +64,8 @@ export default function SettingsTab({ onOpenChartScanner }: SettingsTabProps) {
           Settings
         </h1>
         <button
+          aria-label="Enable or disable push notifications"
+          onClick={()=>{if(clientToken)void toggleWebPush(clientToken);}}
           className="w-10 h-10 rounded-full flex items-center justify-center"
           style={{ background: `${accentColor}33`, border: `1px solid ${accentColor}77` }}
         >

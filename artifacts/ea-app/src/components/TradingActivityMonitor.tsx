@@ -1,3 +1,5 @@
+import {BotStartProgress} from "@/lib/bot-start-progress";
+import type {AssistantEvent} from "@/lib/assistant-events";
 import { assistantEvent } from "@/lib/assistant-events";
 import ModeImage from "@/components/ModeImage";
 import { useDraggablePanel } from "@/hooks/use-draggable-panel";
@@ -13,6 +15,13 @@ export default function TradingActivityMonitor(){
  const {clientToken,eaName,bgImageUrl,accentColor,botRunning,botStatusConfirmed}=useApp();const [open,setOpen]=useState(false),[events,setEvents]=useState<TradingActivity[]>([]),[snapshot,setSnapshot]=useState<ActivitySnapshot|null>(null),[error,setError]=useState(''),[refresh,setRefresh]=useState(0),[clock,setClock]=useState(Date.now());
  const container=useRef<HTMLDivElement>(null);
  const panel=useRef<HTMLDivElement>(null),terminal=useRef<HTMLDivElement>(null),trigger=useRef<HTMLButtonElement>(null),autoscroll=useRef(true);
+ const progress=useRef(new BotStartProgress());const [connectionText,setConnectionText]=useState('');
+ useEffect(()=>{const listener=(event:Event)=>{const detail=(event as CustomEvent<AssistantEvent>).detail;
+ if(detail?.type==='bot-request'){progress.current.stop();if(detail.enabled){progress.current.request();setOpen(true);setConnectionText('Connecting to EA Cloud service...');}else setConnectionText('');}
+ if(detail?.type==='bot-saved'){if(detail.enabled){progress.current.saved=true;setRefresh(x=>x+1);}else{progress.current.stop();setConnectionText('');}}
+ if(detail?.type==='bot-failed'){progress.current.stop();setConnectionText('');}
+ };window.addEventListener('ea:assistant',listener);return()=>window.removeEventListener('ea:assistant',listener);},[]);
+ useEffect(()=>{if(!snapshot)return;for(const phase of progress.current.observe(snapshot)){setConnectionText(phase==='activated'?'Connecting to EA Cloud service...':phase==='connected'?'Connected to trade server.':'Ready to trade.');assistantEvent({type:'bot-progress',phase});}},[snapshot]);
  const panelDrag=useDraggablePanel(container,panel,open);
  const showPanel=useCallback(()=>setOpen(true),[]);
  const floating=useFloatingRobot(container,trigger,Boolean(clientToken),showPanel);
@@ -20,7 +29,7 @@ export default function TradingActivityMonitor(){
  useEffect(()=>{const show=()=>setOpen(true);window.addEventListener('ea:open-trading-activity',show);return()=>window.removeEventListener('ea:open-trading-activity',show);},[]);
  useEffect(()=>{if(!open)return;const frame=requestAnimationFrame(()=>panel.current?.querySelector<HTMLButtonElement>('.activity-close')?.focus());return()=>cancelAnimationFrame(frame);},[open]);
  const close=useCallback(()=>{setOpen(false);requestAnimationFrame(()=>trigger.current?.focus({preventScroll:true}));},[]);
- useEffect(()=>{setOpen(false);setEvents([]);setSnapshot(null);setError('');},[clientToken]);
+ useEffect(()=>{setOpen(false);setEvents([]);setSnapshot(null);setError('');setConnectionText('');progress.current.stop();},[clientToken]);
  useEffect(()=>{if(!clientToken)return;
  let disposed=false,busy=false,dirty=false,ws:WebSocket|null=null,reconnect:ReturnType<typeof setTimeout>|undefined,lastSnapshot=0;const abort=new AbortController();let seenActivity:Set<string>|null=null;
  const read=async(path:string)=>{const res=await fetch('/api/app/activity'+path,{headers:{Authorization:`Bearer ${clientToken}`},cache:'no-store',signal:AbortSignal.any([abort.signal,AbortSignal.timeout(15000)])});if(!res.ok)throw Error('Trading activity is unavailable. Retry in a moment.');return res.json();};
@@ -46,6 +55,7 @@ export default function TradingActivityMonitor(){
  <header {...panelDrag.header} className="trading-activity-header" style={{backgroundImage:`linear-gradient(0deg,var(--robot-panel-shade) 3%,color-mix(in srgb,var(--robot-panel-shade) 33%,transparent) 75%),url("${image.replace(/["\\\n\r]/g,'')}")`}}><button type="button" className="activity-panel-drag-handle" aria-label="Move robot panel" title="Drag to move; use arrow keys when focused" {...panelDrag.handle} /><button className="activity-close" type="button" aria-label="Close trading activity" onClick={close}><X size={23}/></button><div><h2>{eaName}</h2><div className="activity-badges"><span className={active?'on':'off'}><Activity size={12}/>{active?'TRADING ACTIVE':!fresh?'AWAITING STATUS':connected?(snapshot?.robotEnabled?'ENGINE UNCONFIRMED':'TRADING STOPPED'):'DISCONNECTED'}</span><span>{active?'ROBOT ACTIVATED':snapshot?.robotEnabled?'ROBOT WAITING':'ROBOT STOPPED'}</span></div></div></header>
  <div className="trading-account-grid">{[['BALANCE',snapshot?.account?.balance],['EQUITY',snapshot?.account?.equity],['P&L',snapshot?.account?.profit]].map(([label,value])=><section key={String(label)}><h3>{label}</h3><strong className={label==='P&L'&&typeof value==='number'?(value<0?'loss':'gain'):''}>{fresh?`${label==='P&L'&&typeof value==='number'&&value>0?'+':''}${amount(value as number|undefined)}`:'—'}</strong></section>)}</div>
  <div className="trading-activity-terminal" ref={terminal} role="log" aria-live="polite" aria-relevant="additions" onScroll={event=>{const el=event.currentTarget;autoscroll.current=el.scrollHeight-el.scrollTop-el.clientHeight<40;}}>
+ {connectionText&&<p className="event-info">{connectionText==="Ready to trade."&&!active||connectionText==="Connected to trade server."&&!connected?"Connecting to EA Cloud service...":connectionText}</p>}
  {error&&<p className="event-error">{error}</p>}{snapshot?.unavailable&&<p className="event-warning">{snapshot.unavailable}</p>}
  {snapshot?.symbols.map(item=><p className={item.available?'event-success':'event-warning'} key={item.symbol}>{item.available?'Symbol verified':'Symbol not found'}: {item.symbol}{!item.available&&'. Check the broker’s exact symbol name.'}</p>)}
  {!events.length&&!error&&<p>No recorded trading events yet.</p>}

@@ -1,5 +1,7 @@
 # Natural-only announcement reliability
 
+**Superseded for current PR #70:** see [free-natural-voice-push.md](free-natural-voice-push.md). Announcements now use bundled/on-device Kokoro, with no Gemini speech API dependency. The Gemini instructions below describe the earlier implementation only.
+
 This supersedes the browser-speech fallback and streaming-client descriptions in `voice-assistant.md`. No application screen or announcement trigger was redesigned. The client plays validated, complete natural-voice WAV recordings only. Browser/system synthesis and the unused legacy voice queue were removed. Unavailable uncached speech stays silent; no banner or notification is introduced.
 
 ## Confirmed production cause and protocol corrections

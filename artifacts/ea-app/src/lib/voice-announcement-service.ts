@@ -8,7 +8,7 @@ type Job = {
   priority: number;
   at: number;
 };
-/** The sole automatic announcer. It never uses device-generated speech. */
+/** Sole announcement queue; uses bundled or on-device Kokoro, never system speech. */
 export class VoiceAnnouncementService {
   private audio: AnnouncementAudio | null = null;
   private queue: Job[] = [];
@@ -20,8 +20,9 @@ export class VoiceAnnouncementService {
   private disposed = false;
   private blocked = false;
   private generation = 0;
-  constructor(token?: string) {
-    if (token)
+  constructor(token?: string, audio?: AnnouncementAudio) {
+    if (audio) this.audio = audio;
+    else if (token)
       try {
         this.audio = new AnnouncementAudio(token);
       } catch {
@@ -43,7 +44,13 @@ export class VoiceAnnouncementService {
           : 20000)
     );
   }
-  announce(text: string, key: string, priority = 1, group?: string) {
+  announce(
+    text: string,
+    key: string,
+    priority = 1,
+    group?: string,
+    append = false,
+  ) {
     if (this.disposed || this.suspended || !this.audio) return;
     text = cleanText(text, 800);
     if (group === "bot" || group === "symbol" || group === "mt5")
@@ -53,12 +60,12 @@ export class VoiceAnnouncementService {
     if (this.seen.size > 200)
       this.seen.delete(this.seen.values().next().value!);
     this.queue = this.queue.filter(
-      (job) => (!group || job.group !== group) && this.fresh(job),
+      (job) => (append || !group || job.group !== group) && this.fresh(job),
     );
     if (
       this.current &&
       (priority > this.current.priority ||
-        (group && group === this.current.group))
+        (!append && group && group === this.current.group))
     )
       this.cancelCurrent();
     this.queue.push({ text, key, priority, group, at: Date.now() });

@@ -1,10 +1,11 @@
+import {commonNaturalAnnouncements} from "../../../../lib/api-zod/src/voice-announcements";
 import { useEffect, useRef } from "react";
 import type { VisualModes } from "./use-visual-modes";
 import { VoiceAnnouncementService } from "@/lib/voice-announcement-service";
 import { cleanText, modeNames, speakSymbol } from "@/lib/assistant-text";
 import { scannerAnnouncement, tradeAnnouncement, mt5AttemptAnnouncement, mt5ResultAnnouncement } from "@/lib/voice-announcement-text";
 import type { AssistantEvent } from "@/lib/assistant-events";
-/** Automatic, non-conversational announcements. Uses the existing authenticated speech endpoint only. */
+/** Automatic announcements; bundled Kokoro clips and private on-device synthesis only. */
 export function useVoiceAnnouncements(token: string | null, ready: boolean, botName: string, modes: VisualModes, preloadReady = ready) {
   const context = useRef({ ready, botName });
   context.current = { ready, botName };
@@ -37,7 +38,14 @@ export function useVoiceAnnouncements(token: string | null, ready: boolean, botN
       const detail = (event as CustomEvent<AssistantEvent>).detail;
       if (!detail) return;
       if (detail.type === "bot-request") voice.discard("bot");
-      if (detail.type === "bot-saved") voice.announce(`${(cleanText(context.current.botName,120) || "EA Cloud Pro")} ${detail.enabled ? "activated" : "deactivated"}.`, `bot-${detail.enabled}-${Date.now()}`, 3, "bot");
+      if (detail.type === "bot-saved" && !detail.enabled)voice.announce("Robot stopped.",`stop-${Date.now()}`,3,"bot");
+      if(detail.type === "bot-progress"){
+        const key=`bot-${detail.phase}-${Date.now()}`;
+        if(detail.phase==='activated'){
+          voice.announce("Robot started.",key,3,"bot");
+          voice.announce("Connecting to EA Cloud service.",key+'-connecting',3,"bot",true);
+        }else voice.announce(detail.phase==='connected'?"Connected to trade server.":"Ready to trade.",key,3,"bot",true);
+      }
       if (detail.type === "bot-failed") voice.announce(`Bot ${detail.enabled ? "activation" : "deactivation"} failed.`, `bot-failed-${detail.enabled}-${Date.now()}`, 3, "bot");
       if (detail.type === "mt5-start") {
         mt5Attempt++;
@@ -74,10 +82,12 @@ export function useVoiceAnnouncements(token: string | null, ready: boolean, botN
     window.addEventListener("online",online);
     greet();
     voice.preload([
+      ...commonNaturalAnnouncements,
       `Welcome to ${(cleanText(context.current.botName,120) || "EA Cloud Pro")}.`,
       ...modeNames.map(mode => `${mode} mode activated.`),
       `${(cleanText(context.current.botName,120) || "EA Cloud Pro")} activated.`,
       `${(cleanText(context.current.botName,120) || "EA Cloud Pro")} deactivated.`,
+      "Robot started.", "Robot stopped.", "Connecting to EA Cloud service.", "Connected to trade server.", "Ready to trade.",
       "No trades currently open.", "Chart analysis started.", "Fundamental analysis started.",
     ]);
     return () => {

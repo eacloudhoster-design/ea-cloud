@@ -1,3 +1,4 @@
+import {startPushWorker} from "./lib/web-push";
 import http from "http";
 import app from "./app";
 import { createWsServer } from "./ws";
@@ -69,6 +70,7 @@ createWsServer(server);
 // opening and the deploy failing its readiness probe.
 server.listen(port, () => {
   logger.info({ port }, "Server listening");
+  startPushWorker(logger);
   void runStartupTasks();
 });
 

@@ -13,7 +13,7 @@ export async function appRequest(app, url, init={}) {
   const res=new ServerResponse(req);res.assignSocket(socket);
   const result=new Promise((resolve,reject)=>{res.on('error',reject);res.on('finish',()=>{
     const raw=Buffer.concat(chunks),start=raw.indexOf('\r\n\r\n')+4;
-    resolve(new Response(raw.subarray(start),{status:res.statusCode,headers:res.getHeaders()}));socket.destroy();
+    resolve(new Response([204,205,304].includes(res.statusCode)?null:raw.subarray(start),{status:res.statusCode,headers:res.getHeaders()}));socket.destroy();
   });});
   req.complete=true;app(req,res);req.push(body.length?body:null);if(body.length)req.push(null);
   return result;

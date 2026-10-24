@@ -1,3 +1,5 @@
+import { localVoiceProfile } from "./local-voice-profile";
+import { LocalNeuralVoice } from "./local-neural-voice";
 import {
   IndexedNaturalAudioStore,
   announcementScope,
@@ -14,12 +16,6 @@ export class NaturalSpeechError extends Error {
     super(code);
   }
 }
-const profileValid = (value: any): value is NaturalVoiceProfile =>
-  value &&
-  /^[a-f0-9]{64}$/.test(value.id) &&
-  typeof value.model === "string" &&
-  typeof value.voice === "string" &&
-  typeof value.configured === "boolean";
 /** One natural identity, exact-text reuse and bounded persistent common recordings. */
 export class AnnouncementAudio {
   private context: AudioContext;
@@ -31,15 +27,15 @@ export class AnnouncementAudio {
   private source: AudioBufferSourceNode | null = null;
   private end: (() => void) | null = null;
   private bytes = 0;
-  private unavailableUntil = 0;
-  private configuration: Promise<NaturalVoiceProfile> | null = null;
-  private configurationRetryAt = 0;
-  private configurationValue: NaturalVoiceProfile | null = null;
   private manifest: Promise<any> | null = null;
   private scope: string | null;
   constructor(
     private token: string,
     private storage: NaturalAudioStore = new IndexedNaturalAudioStore(),
+    private engine: Pick<
+      LocalNeuralVoice,
+      "generate" | "dispose"
+    > = new LocalNeuralVoice(),
   ) {
     const Constructor =
       window.AudioContext ||
@@ -80,62 +76,7 @@ export class AnnouncementAudio {
     });
   }
   private profile() {
-    if (this.configuration) return this.configuration;
-    if (Date.now() < this.configurationRetryAt)
-      return Promise.reject(new NaturalSpeechError("VOICE_CONFIGURATION"));
-    const work = (async () => {
-      const previous = this.scope
-        ? await this.storage.profile(this.scope).catch(() => null)
-        : null;
-      if (
-        typeof navigator !== "undefined" &&
-        navigator.onLine === false &&
-        profileValid(previous)
-      )
-        return previous;
-      try {
-        const response = await fetch("/api/app/assistant/voice-config", {
-          cache: "no-store",
-          headers: { Authorization: `Bearer ${this.token}` },
-          signal: AbortSignal.any([
-            this.lifetime.signal,
-            AbortSignal.timeout(4000),
-          ]),
-        });
-        if (response.status === 401 || response.status === 403)
-          throw new NaturalSpeechError("VOICE_ACCESS_DENIED");
-        if (!response.ok) throw new NaturalSpeechError("VOICE_CONFIGURATION");
-        const profile = await response.json();
-        if (!profileValid(profile))
-          throw new NaturalSpeechError("VOICE_CONFIGURATION");
-        if (this.scope)
-          await this.storage.saveProfile(this.scope, profile).catch(() => {});
-        return profile;
-      } catch (error) {
-        if (
-          error instanceof NaturalSpeechError &&
-          error.code === "VOICE_ACCESS_DENIED"
-        )
-          throw error;
-        if (!this.lifetime.signal.aborted && profileValid(previous))
-          return previous;
-        const manifest = await this.assets();
-        if (profileValid(manifest?.profile))
-          return { ...manifest.profile, configured: false };
-        throw error;
-      }
-    })();
-    this.configuration = work
-      .then((profile) => {
-        this.configurationValue = profile;
-        return profile;
-      })
-      .catch((error) => {
-        this.configuration = null;
-        this.configurationRetryAt = Date.now() + 10000;
-        throw error;
-      });
-    return this.configuration;
+    return Promise.resolve(localVoiceProfile);
   }
   private assets() {
     if (!this.manifest)
@@ -159,7 +100,7 @@ export class AnnouncementAudio {
     profile: NaturalVoiceProfile,
     key: string | null,
   ) {
-    if (!isCommonNaturalAnnouncement(text) || !key) return null;
+    if (!key) return null;
     const manifest = await this.assets(),
       hash = key.split(":").at(-1);
     if (
@@ -192,8 +133,6 @@ export class AnnouncementAudio {
     }
   }
   recover() {
-    this.configurationRetryAt = 0;
-    if (!this.configurationValue?.configured) this.configuration = null;
     this.manifest = null;
   }
   private async key(text: string, profile: NaturalVoiceProfile) {
@@ -206,92 +145,22 @@ export class AnnouncementAudio {
   }
   private async fetchAudio(
     text: string,
-    profile: NaturalVoiceProfile,
+    _profile: NaturalVoiceProfile,
     signal?: AbortSignal,
   ): Promise<ArrayBuffer> {
-    const timeout = AbortSignal.timeout(32000),
-      combined = AbortSignal.any([
-        this.lifetime.signal,
-        timeout,
-        ...(signal ? [signal] : []),
-      ]);
-    for (let attempt = 0; attempt < 2; attempt++) {
-      if (combined.aborted) throw new DOMException("Cancelled", "AbortError");
-      try {
-        const response = await fetch("/api/app/assistant/speech", {
-          method: "POST",
-          cache: "no-store",
-          headers: {
-            Authorization: `Bearer ${this.token}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ text, profileId: profile.id }),
-          signal: combined,
-        });
-        if (!response.ok) {
-          if (response.status === 409) {
-            this.configurationValue = null;
-            this.configuration = null;
-          }
-          const body = await response.json().catch(() => ({}));
-          const seconds = Number(response.headers.get("Retry-After"));
-          const retryAfter =
-            Number.isFinite(seconds) && seconds > 0
-              ? seconds * 1000
-              : response.status === 429
-                ? 60000
-                : 0;
-          throw new NaturalSpeechError(
-            typeof body.code === "string"
-              ? body.code
-              : `VOICE_HTTP_${response.status}`,
-            [429, 502, 503, 504].includes(response.status) &&
-              body.code !== "VOICE_CONFIGURATION",
-            retryAfter,
-          );
-        }
-        if (response.headers.get("X-EA-Voice-Identity") !== profile.id)
-          throw new NaturalSpeechError("VOICE_IDENTITY_MISMATCH");
-        if (!response.headers.get("content-type")?.includes("audio/wav"))
-          throw new NaturalSpeechError("VOICE_AUDIO");
-        const data = await response.arrayBuffer();
-        const bytes = new Uint8Array(data);
-        if (
-          data.byteLength < 44 ||
-          data.byteLength > 4_100_000 ||
-          String.fromCharCode(...bytes.subarray(0, 4)) !== "RIFF" ||
-          String.fromCharCode(...bytes.subarray(8, 12)) !== "WAVE"
-        )
-          throw new NaturalSpeechError("VOICE_AUDIO");
-        return data;
-      } catch (error) {
-        if (combined.aborted) throw error;
-        const failure =
-          error instanceof NaturalSpeechError
-            ? error
-            : new NaturalSpeechError("VOICE_NETWORK", true);
-        if (attempt || !failure.retryable || failure.retryAfter > 1500) {
-          this.unavailableUntil =
-            Date.now() + Math.max(30000, failure.retryAfter);
-          throw failure;
-        }
-        await new Promise<void>((resolve, reject) => {
-          const abort = () => {
-            clearTimeout(timer);
-            reject(new DOMException("Cancelled", "AbortError"));
-          };
-          const timer = setTimeout(
-            () => {
-              combined.removeEventListener("abort", abort);
-              resolve();
-            },
-            Math.max(250, failure.retryAfter),
-          );
-          combined.addEventListener("abort", abort, { once: true });
-        });
-      }
-    }
-    throw new NaturalSpeechError("VOICE_UNAVAILABLE");
+    const data = await this.engine.generate(
+      text,
+      AbortSignal.any([this.lifetime.signal, ...(signal ? [signal] : [])]),
+    );
+    const bytes = new Uint8Array(data);
+    if (
+      data.byteLength < 44 ||
+      data.byteLength > 4_100_000 ||
+      String.fromCharCode(...bytes.subarray(0, 4)) !== "RIFF" ||
+      String.fromCharCode(...bytes.subarray(8, 12)) !== "WAVE"
+    )
+      throw new NaturalSpeechError("VOICE_AUDIO");
+    return data;
   }
   async prepare(text: string, signal?: AbortSignal): Promise<AudioBuffer> {
     if (this.lifetime.signal.aborted || signal?.aborted)
@@ -343,8 +212,6 @@ export class AnnouncementAudio {
           /* Invalid assets cannot replace speech. */
         }
       }
-      if (!profile.configured || Date.now() < this.unavailableUntil)
-        throw new NaturalSpeechError("VOICE_UNAVAILABLE");
       const data = await this.fetchAudio(text, profile, signal);
       const audio = await this.context.decodeAudioData(data.slice(0));
       if (this.lifetime.signal.aborted || signal?.aborted)
@@ -395,12 +262,12 @@ export class AnnouncementAudio {
     this.persistent.add(text);
   }
   async preload(texts: string[]) {
-    const unique = [...new Set(texts)].slice(0, 12);
+    const unique = [...new Set(texts)].slice(0, 32);
     for (const text of unique) this.persistent.add(text);
     for (const text of unique) {
       if (this.lifetime.signal.aborted) return;
       try {
-        await this.prepare(text);
+        if (isCommonNaturalAnnouncement(text)) await this.prepare(text);
       } catch {
         /* Later cached phrases can remain available while generation is offline. */
       }
@@ -476,6 +343,7 @@ export class AnnouncementAudio {
   }
   dispose() {
     this.lifetime.abort();
+    this.engine.dispose();
     this.stop();
     this.cache.clear();
     this.pending.clear();
