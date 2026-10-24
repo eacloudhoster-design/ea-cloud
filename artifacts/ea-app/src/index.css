@@ -121,3 +121,15 @@ html[data-ea-pwa-background] {
 
 /* Native safe areas belong to app layers, not duplicated page padding. */
 html, body, #root { width: 100%; min-height: 100%; height: 100%; margin: 0; padding: 0; }
+
+/* 100% and fixed roots can inherit iOS standalone's shortened containing block.
+   100vh is the full, toolbar-free document canvas in this mode; dvh remains
+   unchanged in ordinary Safari/Android. This is not extra safe-area padding. */
+html[data-ea-ios-standalone-layout],
+html[data-ea-ios-standalone-layout] body,
+html[data-ea-ios-standalone-layout] #root {
+  height: 100vh;
+  min-height: 100vh;
+  overflow: hidden;
+  overflow: clip;
+}
