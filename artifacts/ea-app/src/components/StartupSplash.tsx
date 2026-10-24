@@ -2,12 +2,12 @@ import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from 
 import eaLogo from "../../../ea-cloud/public/ea-cloud-logo.jpeg?url";
 import "./StartupSplash.css";
 
-// The complete ready-on-time sequence is 2s entrance + 7s trace + 1s glow + 2s fade.
-export const STARTUP_DURATION_MS = 12000;
+// Preserve the 2s entrance and 7s trace; finish with 100ms glow and a 300ms crossfade.
+export const STARTUP_DURATION_MS = 9400;
 const ENTRANCE_MS = 2000;
 const TRACE_MS = 7000;
-const FINAL_GLOW_MS = 1000;
-const CROSSFADE_MS = 2000;
+const FINAL_GLOW_MS = 100;
+const CROSSFADE_MS = 300;
 // Clockwise in the unchanged image's coordinates, including the robot's lower
 // silhouette where it interrupts the cloud baseline. No generic border shape.
 const CLOUD_OUTLINE = "M626 180 C711 180 787 230 819 308 C873 308 919 346 934 399 C1007 398 1064 449 1073 520 C1141 528 1194 587 1194 658 C1194 734 1135 796 1060 796 H782 L701 825 L620 833 L541 825 L462 796 H190 C113 796 52 736 52 660 C52 605 87 556 140 537 C158 483 204 447 261 443 C279 365 345 308 427 308 C461 231 539 180 626 180 Z";
@@ -18,8 +18,7 @@ export default function StartupSplash({ ready, children }: { ready: boolean; chi
   const imageRef = useRef<HTMLImageElement>(null);
   const [started, setStarted] = useState(false);
   const [phase, setPhase] = useState<Phase>("entrance");
-  const readyRef = useRef(ready);
-  readyRef.current = ready;
+  const [traceComplete, setTraceComplete] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -32,16 +31,22 @@ export default function StartupSplash({ ready, children }: { ready: boolean; chi
   }, []);
 
   useEffect(() => {
+    if (traceComplete && ready && phase === "tracing") setPhase("glowing");
+  }, [traceComplete, ready, phase]);
+
+  useEffect(() => {
+    if (phase === "glowing" && !ready) return;
     if (!started || phase === "tracing" || phase === "done") return;
     const next: Record<"entrance" | "glowing" | "fading", [Phase, number]> = {
       entrance: ["tracing", ENTRANCE_MS],
       glowing: ["fading", FINAL_GLOW_MS],
-      fading: ["done", CROSSFADE_MS],
+      // Transitionend owns removal; this fallback handles cancelled transitions.
+      fading: ["done", CROSSFADE_MS + 100],
     };
     const [nextPhase, delay] = next[phase];
     const timer = window.setTimeout(() => setPhase(nextPhase), delay);
     return () => window.clearTimeout(timer);
-  }, [started, phase]);
+  }, [started, phase, ready]);
 
   const revealing = phase === "fading" || phase === "done";
   const timing = {
@@ -55,16 +60,23 @@ export default function StartupSplash({ ready, children }: { ready: boolean; chi
       {children}
     </div>
     {phase !== "done" && <div className="ea-startup" data-ready={ready} data-started={started} data-phase={phase}
-      style={timing} role="status" aria-label="Starting EA Cloud">
+      style={timing} role="status" aria-label="Starting EA Cloud"
+      onTransitionEnd={event => {
+        if (phase === "fading" && event.target === event.currentTarget && event.propertyName === "opacity") setPhase("done");
+      }}>
       <div className="ea-startup-mark" aria-hidden="true">
         <div className="ea-startup-artwork">
           {/* Crop only the baked-in wordmark; never edit, stretch or recolour the asset. */}
           <img ref={imageRef} src={eaLogo} alt="" decoding="sync" fetchPriority="high" />
         </div>
         <svg viewBox="0 150 1254 690" className="ea-startup-energy" fill="none">
+          <g className="ea-startup-eyes">
+            <path className="ea-startup-eye ea-startup-eye--left" d="M410 516 L547 598 L447 569 Z" />
+            <path className="ea-startup-eye ea-startup-eye--right" d="M827 516 L692 598 L795 569 Z" />
+          </g>
           <path className="ea-startup-edge" pathLength="1" d={CLOUD_OUTLINE}
-            onAnimationIteration={event => {
-              if (event.animationName === "ea-cloud-trace" && phase === "tracing" && readyRef.current) setPhase("glowing");
+            onAnimationEnd={event => {
+              if (event.animationName === "ea-cloud-trace") setTraceComplete(true);
             }} />
           <g className="ea-startup-traveller">
             <path className="ea-startup-trail" pathLength="1" d={CLOUD_OUTLINE} />

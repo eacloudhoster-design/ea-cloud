@@ -36,6 +36,7 @@ async function check(scenario) {
         return r.fulfill({ json: { id: 1, status: 'approved', licenseKey: 'licensed' } });
       }
       if (path === '/api/app/dashboard') return r.fulfill({ json: { mentor: { robotName: 'Startup Test Mentor' }, eas: [] } });
+      if (path === '/api/app/ea-mode-images') return r.fulfill({ json: { eas: [] } });
       return r.fulfill({ json: { copyingEnabled: true, executions: [] } });
     });
     await context.route('**/*ea-cloud-logo*', async r => {
@@ -50,12 +51,27 @@ async function check(scenario) {
     // Observe actual phase times without accelerating or replacing app timers.
     await page.addInitScript(() => {
       window.startupPhases = [];
+      window.startupFades = [];
       let previous = '';
       new MutationObserver(() => {
         const splash = document.querySelector('.ea-startup');
         const phase = splash ? `${splash.dataset.started}:${splash.dataset.phase}` : 'done';
         if (phase !== previous && (splash || previous)) {
           window.startupPhases.push({ phase, time: performance.now() }); previous = phase;
+          if (phase === 'true:fading') {
+            const capture = () => {
+              const overlay = document.querySelector('.ea-startup');
+              if (!overlay) return;
+              const home = document.querySelector('.ea-startup-home');
+              window.startupFades.push({
+                splash: Number(getComputedStyle(overlay).opacity), home: Number(getComputedStyle(home).opacity),
+                duration: getComputedStyle(home).transitionDuration,
+                edge: parseFloat(getComputedStyle(overlay.querySelector('.ea-startup-edge')).strokeDashoffset),
+              });
+              requestAnimationFrame(capture);
+            };
+            requestAnimationFrame(capture);
+          }
         }
       }).observe(document, { subtree: true, childList: true, attributes: true, attributeFilter: ['data-started', 'data-phase'] });
     });
@@ -78,7 +94,8 @@ async function check(scenario) {
         cropTop: (crop.top - image.top) / image.height * img.naturalHeight,
         cropBottom: (crop.bottom - image.top) / image.height * img.naturalHeight,
         background: getComputedStyle(splash).backgroundColor, text: splash.innerText,
-        viewBox: splash.querySelector('svg').getAttribute('viewBox') };
+        viewBox: splash.querySelector('svg').getAttribute('viewBox'),
+        eyes: [...splash.querySelectorAll('.ea-startup-eye')].map(e => ({ opacity: Number(getComputedStyle(e).opacity), duration: getComputedStyle(e).animationDuration, delay: getComputedStyle(e).animationDelay })) };
     });
     await page.waitForTimeout(120);
     const entranceEarly = await sample();
@@ -109,35 +126,44 @@ async function check(scenario) {
     }
     assert.equal(traceLate.scale, 1);
     assert(traceLate.filter.includes('drop-shadow'));
+    assert.equal(traceLate.eyes.length, 2);
+    for (const frame of [traceEarly, traceLate]) for (const eye of frame.eyes) assert(eye.opacity >= .049 && eye.opacity <= .241);
+    if (scenario !== 'reduced') {
+      assert.equal(traceLate.eyes[0].duration, '2.4s'); assert.equal(traceLate.eyes[1].duration, '3.1s');
+      assert.equal(traceLate.eyes[1].delay, '-1.05s');
+      assert.notEqual(traceEarly.eyes[0].opacity, traceEarly.eyes[1].opacity);
+      assert.notEqual(traceEarly.eyes[0].opacity, traceLate.eyes[0].opacity);
+      assert.notEqual(traceEarly.eyes[1].opacity, traceLate.eyes[1].opacity);
+    }
+
     await page.screenshot({ path: `${output}/${scenario}-trace.png` });
     if (scenario === 'slow-auth') {
       await page.waitForTimeout(4300);
       assert.equal(await page.locator('.ea-startup').getAttribute('data-ready'), 'false');
       assert.equal(await page.locator('.ea-startup').getAttribute('data-phase'), 'tracing');
       assert.equal(await page.locator('.ea-startup-home').getAttribute('inert'), '');
+      await page.waitForTimeout(500);
+      assert.equal(await page.locator('.ea-startup-edge').evaluate(e => parseFloat(getComputedStyle(e).strokeDashoffset)), 0);
+
     }
-    await page.waitForSelector('.ea-startup[data-phase="glowing"]', { timeout: 20000 });
-    assert.equal(await page.locator('.ea-startup-edge').evaluate(e => parseFloat(getComputedStyle(e).strokeDashoffset)), 0);
-    await page.screenshot({ path: `${output}/${scenario}-glow.png` });
-    await page.waitForSelector('.ea-startup[data-phase="fading"]');
-    const fades = [];
-    for (let i = 0; i < 3; i++) {
-      await page.waitForTimeout(450);
-      fades.push(await page.evaluate(() => ({ splash: Number(getComputedStyle(document.querySelector('.ea-startup')).opacity),
-        home: Number(getComputedStyle(document.querySelector('.ea-startup-home')).opacity),
-        duration: getComputedStyle(document.querySelector('.ea-startup-home')).transitionDuration })));
-    }
+    await page.waitForSelector('.ea-startup', { state: 'detached', timeout: 20000 });
+    // Capture on browser frames, avoiding protocol/screenshot latency during a 300ms fade.
+    const fades = (await page.evaluate(() => window.startupFades)).filter(f => f.splash > .01 && f.splash < .99);
+    assert(fades.length >= 2, 'both layers must overlap on multiple rendered frames');
     for (const fade of fades) {
-      assert(fade.splash > 0 && fade.splash < 1); assert(fade.home > 0 && fade.home < 1);
-      assert(Math.abs(fade.splash + fade.home - 1) < .05); assert.equal(fade.duration, '2s');
+      assert(fade.home > 0 && fade.home < 1);
+      assert(Math.abs(fade.splash + fade.home - 1) < .05); assert.equal(fade.duration, '0.3s');
+      assert.equal(fade.edge, 0);
     }
-    assert(fades[0].splash > fades[2].splash && fades[0].home < fades[2].home);
-    await page.waitForSelector('.ea-startup', { state: 'detached' });
+    assert(fades[0].splash > fades.at(-1).splash && fades[0].home < fades.at(-1).home);
     const phases = await page.evaluate(() => window.startupPhases);
     const elapsed = phases.find(p => p.phase === 'done').time - phases.find(p => p.phase === 'true:entrance').time;
-    assert(elapsed >= 11800);
-    if (scenario !== 'slow-auth') assert(elapsed <= 15000);
-    else assert(elapsed >= 18500, 'late initialization must finish a further complete circuit');
+    assert(elapsed >= 9300);
+    if (scenario !== 'slow-auth') assert(elapsed <= 10500);
+    else { assert(elapsed >= 11000); assert(elapsed < 13500, 'late readiness must not wait for another full circuit'); }
+    const at = name => phases.find(p => p.phase === `true:${name}`).time;
+    assert(at('fading') - at('glowing') >= 90 && at('fading') - at('glowing') < 300);
+    assert(phases.find(p => p.phase === 'done').time - at('fading') >= 270);
     if (scenario === 'auth-error') await page.getByRole('button', { name: 'Retry', exact: true }).waitFor();
     if (scenario === 'slow-auth') {
       for (const name of ['MetaTrader', 'Settings', 'Home']) {
