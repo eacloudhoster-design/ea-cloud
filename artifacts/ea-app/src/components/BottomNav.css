@@ -1,3 +1,9 @@
+/* Interpolate the existing context accent once; all glass layers inherit it. */
+@property --nav-accent {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: transparent;
+}
 .ea-app-viewport {
   --ea-nav-height: 60px;
   /* The same glass surface fills the inset; only the controls are lifted. */
@@ -12,13 +18,13 @@
   z-index: 40;
   height: calc(var(--ea-nav-height, 66px) + var(--ea-nav-bottom, 4px));
   pointer-events: none;
-  --dock-cyan: #00c9ed;
+  transition: --nav-accent 240ms ease;
   border-radius: 22px 22px 0 0;
-  border-top: 1px solid #5ae7ffb3;
+  border-top: 1px solid color-mix(in srgb, color-mix(in srgb, var(--nav-accent) 65%, white) 70%, transparent);
   background:
-    linear-gradient(180deg, #00c9ed12, transparent 50%),
-    linear-gradient(110deg, #122b3dc9, #03121cde 55%, #102735d1);
-  box-shadow: 0 -1px 8px #00d5ff75, inset 0 1px 8px #00c9ed40;
+    linear-gradient(180deg, color-mix(in srgb, var(--nav-accent) 7%, transparent), transparent 50%),
+    linear-gradient(110deg, color-mix(in srgb, color-mix(in srgb, var(--nav-accent) 12%, #191c20) 79%, transparent), #080b0ede 55%, color-mix(in srgb, color-mix(in srgb, var(--nav-accent) 10%, #171b20) 82%, transparent));
+  box-shadow: 0 -1px 8px color-mix(in srgb, var(--nav-accent) 46%, transparent), inset 0 1px 8px color-mix(in srgb, var(--nav-accent) 25%, transparent);
   overflow: hidden;
 }
 .ea-glass-bar {
@@ -69,8 +75,8 @@
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
   transition:
-    color 160ms ease,
-    text-shadow 160ms ease;
+    color 240ms ease,
+    text-shadow 240ms ease;
 }
 .ea-glass-bar button svg {
   flex-shrink: 0;
@@ -86,15 +92,15 @@
 }
 .ea-glass-bar button[aria-current="page"],
 .ea-glass-bar[data-pressed="true"] button[data-preview="true"] {
-  color: var(--dock-cyan);
-  text-shadow: 0 0 12px color-mix(in srgb, var(--dock-cyan) 45%, transparent);
+  color: color-mix(in srgb, var(--nav-accent) 85%, white);
+  text-shadow: 0 0 12px color-mix(in srgb, var(--nav-accent) 45%, transparent);
 }
 .ea-glass-bar[data-pressed="true"] button[data-preview="false"] {
   color: #e5eef0c7;
   text-shadow: none;
 }
 .ea-glass-bar button:focus-visible {
-  outline: 2px solid var(--dock-cyan);
+  outline: 2px solid var(--nav-accent);
   outline-offset: -2px;
 }
 .ea-glass-indicator {
@@ -108,16 +114,16 @@
   pointer-events: none;
   overflow: hidden;
   will-change: transform;
-  border: 1px solid #60eaff;
+  border: 1px solid color-mix(in srgb, var(--nav-accent) 65%, white);
   background:
-    linear-gradient(150deg, #82edff40, #00bde918 48%, #00c9ed66),
-    color-mix(in srgb, var(--dock-cyan) 9%, transparent);
+    linear-gradient(150deg, color-mix(in srgb, color-mix(in srgb, var(--nav-accent) 50%, white) 25%, transparent), color-mix(in srgb, var(--nav-accent) 9%, transparent) 48%, color-mix(in srgb, var(--nav-accent) 40%, transparent)),
+    color-mix(in srgb, var(--nav-accent) 9%, transparent);
   box-shadow:
-    inset 0 1px 2px #b0f6ffb0,
-    inset 0 -4px 12px #00d5ff75,
+    inset 0 1px 2px color-mix(in srgb, color-mix(in srgb, var(--nav-accent) 30%, white) 69%, transparent),
+    inset 0 -4px 12px color-mix(in srgb, var(--nav-accent) 46%, transparent),
     inset 0 -1px 2px #ffffff30,
     0 3px 8px #0004,
-    0 0 14px color-mix(in srgb, var(--dock-cyan) 18%, transparent);
+    0 0 14px color-mix(in srgb, var(--nav-accent) 18%, transparent);
   backdrop-filter: blur(3px) saturate(1.4);
   -webkit-backdrop-filter: blur(3px) saturate(1.4);
   transition:
@@ -166,12 +172,12 @@
   transition: transform 180ms ease;
 }
 .ea-glass-bar[data-pressed="true"] .ea-glass-indicator {
-  border-color: #a0f4ff;
+  border-color: color-mix(in srgb, var(--nav-accent) 35%, white);
   box-shadow:
     inset 0 2px 3px #ffffffb0,
     inset 0 -2px 5px #ffffff50,
     0 6px 12px #0005,
-    0 0 22px color-mix(in srgb, var(--dock-cyan) 30%, transparent);
+    0 0 22px color-mix(in srgb, var(--nav-accent) 30%, transparent);
 }
 .ea-glass-bar[data-pressed="true"] .ea-glass-reflection {
   opacity: 0.95;
@@ -189,6 +195,7 @@
   }
 }
 @media (prefers-reduced-motion: reduce) {
+  .ea-glass-navigation,
   .ea-glass-bar *,
   .ea-glass-bar *::before,
   .ea-glass-bar *::after {
