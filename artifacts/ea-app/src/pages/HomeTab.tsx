@@ -1,3 +1,4 @@
+import { assistantEvent } from "@/lib/assistant-events";
 import ModeImage from "@/components/ModeImage";
 import { useInterfaceSwipe } from "@/hooks/use-interface-swipe";
 import BotName from "@/components/BotName";
@@ -598,6 +599,7 @@ function QuotesSheet({ accentColor, clientToken, onClose }: { accentColor: strin
       }
       const updated = await res.json().catch(() => null);
       if (Array.isArray(updated)) setConfigs(updated as PairConfig[]);
+      if (Array.isArray(updated) && updated.some((cfg: PairConfig) => cfg.pairName === activePair.pairName && cfg.selectedSymbol === symbolVal)) assistantEvent({type:"symbol-saved", symbol:symbolVal});
       setSaved(true);
       // Configured pairs move to the Selected tab.
       closeTimer.current = setTimeout(() => { setActivePair(null); setSaved(false); setTab("selected"); }, 700);

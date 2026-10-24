@@ -6,7 +6,10 @@ export type AssistantEvent =
   | { type: "mt5-unverified" }
   | { type: "scan-start"; kind?: "chart" | "fundamental" }
   | { type: "scan-complete"; record: unknown }
-  | { type: "scan-failed" };
+  | { type: "scan-failed" }
+  | { type: "symbol-saved"; symbol: string }
+  | { type: "trade-execution"; execution: unknown }
+  | { type: "trading-error"; id: string };
 export function assistantEvent(event: AssistantEvent) {
   if (typeof window !== "undefined")
     window.dispatchEvent(new CustomEvent("ea:assistant", { detail: event }));

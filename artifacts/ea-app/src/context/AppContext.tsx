@@ -1,4 +1,3 @@
-import type { VoiceAssistant } from "@/hooks/use-voice-assistant";
 import type { VisualModes } from "@/hooks/use-visual-modes";
 import type { BackgroundAnimation } from "@/lib/home-preferences";
 import type {BotFont} from "@/lib/font-preference";
@@ -9,7 +8,6 @@ export type InterfaceStyle = "regular" | "matrix" | "s2tone";
 export type ShapeStyle = "orbit" | "neural" | "none";
 
 export interface AppSettings {
-  voice?: VoiceAssistant;
   visualModes?: VisualModes;
   activeTab: Tab;
   botRunning: boolean;
