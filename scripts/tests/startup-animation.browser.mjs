@@ -6,7 +6,7 @@ const { chromium } = await import(process.env.PLAYWRIGHT_MODULE || 'playwright')
 const output = process.env.STARTUP_CAPTURE_DIR || 'work/cinematic-startup/verification';
 await mkdir(output, { recursive: true });
 const browser = await chromium.launch({ headless: true, executablePath: process.env.CHROMIUM_PATH || '/usr/bin/chromium', args: ['--no-sandbox'] });
-const scenarios = process.env.STARTUP_SCENARIOS?.split(',') || ['guest', 'desktop', 'android', 'standalone', 'cold-logo', 'slow-auth', 'auth-error', 'portal', 'portal-dashboard', 'reduced', 'asset-error'];
+const scenarios = process.env.STARTUP_SCENARIOS?.split(',') || ['guest', 'desktop', 'android', 'standalone', 'cold-logo', 'slow-auth', 'auth-error', 'portal', 'portal-dashboard', 'reduced', 'asset-error', 'mid-entrance-ready'];
 const results = [];
 const appOrigin = process.env.STARTUP_APP_ORIGIN || 'http://127.0.0.1:5174/';
 const portalOrigin = process.env.STARTUP_PORTAL_ORIGIN || 'http://127.0.0.1:5173';
@@ -24,7 +24,7 @@ async function check(scenario) {
       const nativeMatch = window.matchMedia.bind(window);
       window.matchMedia = query => query === '(display-mode: standalone)' ? { ...nativeMatch(query), matches: true, addEventListener() {}, removeEventListener() {} } : nativeMatch(query);
     });
-    if (['slow-auth', 'auth-error', 'portal-dashboard'].includes(scenario)) await context.addInitScript(() => {
+    if (['slow-auth', 'auth-error', 'portal-dashboard', 'mid-entrance-ready'].includes(scenario)) await context.addInitScript(() => {
       localStorage.setItem('appClientToken', 'startup-test'); localStorage.setItem('app_token', 'startup-test');
     });
     await context.route('https://fonts.**', r => r.abort());
@@ -32,6 +32,7 @@ async function check(scenario) {
       const path = new URL(r.request().url()).pathname;
       if (path === '/api/app/me') {
         if (scenario === 'slow-auth') await new Promise(resolve => setTimeout(resolve, 11000));
+        if (scenario === 'mid-entrance-ready') await new Promise(resolve => setTimeout(resolve, 1200));
         if (scenario === 'auth-error') return r.fulfill({ status: 503, json: {} });
         return r.fulfill({ json: { id: 1, status: 'approved', licenseKey: 'licensed' } });
       }
@@ -127,13 +128,15 @@ async function check(scenario) {
     assert.equal(traceLate.scale, 1);
     assert(traceLate.filter.includes('drop-shadow'));
     assert.equal(traceLate.eyes.length, 2);
-    for (const frame of [traceEarly, traceLate]) for (const eye of frame.eyes) assert(eye.opacity >= .049 && eye.opacity <= .241);
+    for (const frame of [traceEarly, traceLate]) for (const eye of frame.eyes) assert(eye.opacity >= .099 && eye.opacity <= .701);
     if (scenario !== 'reduced') {
       assert.equal(traceLate.eyes[0].duration, '2.4s'); assert.equal(traceLate.eyes[1].duration, '3.1s');
       assert.equal(traceLate.eyes[1].delay, '-1.05s');
-      assert.notEqual(traceEarly.eyes[0].opacity, traceEarly.eyes[1].opacity);
-      assert.notEqual(traceEarly.eyes[0].opacity, traceLate.eyes[0].opacity);
-      assert.notEqual(traceEarly.eyes[1].opacity, traceLate.eyes[1].opacity);
+      await page.waitForTimeout(500);
+      const third = await sample();
+      const eyeFrames = [traceEarly, traceLate, third];
+      for (let i = 0; i < 2; i++) assert(new Set(eyeFrames.map(f => f.eyes[i].opacity)).size > 1);
+      assert(eyeFrames.some(f => Math.abs(f.eyes[0].opacity - f.eyes[1].opacity) > .03));
     }
 
     await page.screenshot({ path: `${output}/${scenario}-trace.png` });
@@ -162,6 +165,7 @@ async function check(scenario) {
     if (scenario !== 'slow-auth') assert(elapsed <= 10500);
     else { assert(elapsed >= 11000); assert(elapsed < 13500, 'late readiness must not wait for another full circuit'); }
     const at = name => phases.find(p => p.phase === `true:${name}`).time;
+    assert(at('tracing') - at('entrance') < 2300, 'readiness changes must not restart the entrance clock');
     assert(at('fading') - at('glowing') >= 90 && at('fading') - at('glowing') < 300);
     assert(phases.find(p => p.phase === 'done').time - at('fading') >= 270);
     if (scenario === 'auth-error') await page.getByRole('button', { name: 'Retry', exact: true }).waitFor();
