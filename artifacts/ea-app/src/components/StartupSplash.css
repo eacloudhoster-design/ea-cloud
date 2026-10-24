@@ -23,10 +23,10 @@
 }
 .ea-startup-edge {
   stroke: #ff3930; stroke-width: 4; stroke-dasharray: 1 1; stroke-dashoffset: 1;
-  filter: drop-shadow(0 0 6px #ff1818) drop-shadow(0 0 16px #f00000);
+  filter: drop-shadow(0 0 7px #ff1818) drop-shadow(0 0 18px #f00000);
 }
 .ea-startup[data-phase="tracing"] .ea-startup-edge {
-  animation: ea-cloud-trace var(--ea-trace-duration) linear infinite;
+  animation: ea-cloud-trace var(--ea-trace-duration) linear both;
 }
 .ea-startup-traveller { opacity: 0; }
 .ea-startup[data-phase="tracing"] .ea-startup-traveller {
@@ -37,15 +37,16 @@
 .ea-startup-trail {
   stroke: #ff2020; stroke-width: 8; opacity: .65;
   stroke-dasharray: .11 .89; stroke-dashoffset: .11;
-  filter: drop-shadow(0 0 10px #ff1515) drop-shadow(0 0 20px #ef0000);
+  filter: drop-shadow(0 0 11px #ff1515) drop-shadow(0 0 22px #ef0000);
 }
 .ea-startup-tip {
-  stroke: #ffe3d6; stroke-width: 4; stroke-dasharray: .018 .982; stroke-dashoffset: .018;
-  filter: drop-shadow(0 0 5px #ff6860) drop-shadow(0 0 14px #ff1010);
+  stroke: #ffede6; stroke-width: 4; stroke-dasharray: .018 .982; stroke-dashoffset: .018;
+  filter: drop-shadow(0 0 6px #ff6860) drop-shadow(0 0 16px #ff1010);
 }
 .ea-startup[data-phase="tracing"] .ea-startup-trail { animation: ea-cloud-trail var(--ea-trace-duration) linear infinite; }
 .ea-startup[data-phase="tracing"] .ea-startup-tip { animation: ea-cloud-tip var(--ea-trace-duration) linear infinite; }
-.ea-startup:not([data-started="true"]) .ea-startup-mark { animation-play-state: paused; }
+.ea-startup:not([data-started="true"]) .ea-startup-mark,
+.ea-startup:not([data-started="true"]) .ea-startup-eye { animation-play-state: paused; }
 .ea-startup[data-phase="glowing"] .ea-startup-edge {
   stroke-dashoffset: 0; animation: ea-cloud-complete var(--ea-final-glow-duration) ease-in-out both;
 }
@@ -62,11 +63,27 @@
 @keyframes ea-cloud-trail { from { stroke-dashoffset: .11; } to { stroke-dashoffset: -.89; } }
 @keyframes ea-cloud-power { from { opacity: .55; } to { opacity: 1; } }
 @keyframes ea-cloud-complete {
-  0%, 100% { stroke-width: 4; stroke: #ff3930; }
-  40% { stroke-width: 7; stroke: #ffb0a0; }
+  from { stroke: #ff3930; }
+  to { stroke: #ff8b80; }
 }
 @media (prefers-reduced-motion: reduce) {
   .ea-startup-mark { animation-name: ea-logo-quiet-entrance; }
   .ea-startup-traveller { display: none; }
 }
 @keyframes ea-logo-quiet-entrance { from { opacity: 0; } to { opacity: 1; } }
+
+/* Original embedded eyes stay visible underneath. Only the aligned light layer
+   breathes; static, small shadows avoid per-frame filter recalculation. */
+.ea-startup-eye {
+  fill: #ff2525; opacity: .05; mix-blend-mode: screen;
+  filter: drop-shadow(0 0 5px #ff2929) drop-shadow(0 0 10px #ef1010);
+  animation: ea-eye-breathe 2400ms ease-in-out infinite;
+}
+.ea-startup-eye--right { animation-duration: 3100ms; animation-delay: -1050ms; }
+@keyframes ea-eye-breathe {
+  0%, 100% { opacity: .05; }
+  40%, 55% { opacity: .24; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ea-startup-eye { animation: none; opacity: .1; }
+}
