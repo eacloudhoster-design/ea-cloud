@@ -9,9 +9,11 @@ await mkdir(output, { recursive: true });
 const browser = await chromium.launch({ executablePath: process.env.CHROMIUM_PATH || '/usr/bin/chromium', args: ['--no-sandbox'] });
 try {
  for (const reduced of [false, true]) {
-  const page = await browser.newPage({ viewport: { width: 390, height: 844 }, reducedMotion: reduced ? 'reduce' : 'no-preference' });
+  const page = await browser.newPage({ viewport: { width: 390, height: 844 }, screen: { width: 390, height: 844 }, deviceScaleFactor: 3, isMobile: true, reducedMotion: reduced ? 'reduce' : 'no-preference' });
   const errors = []; page.on('pageerror', error => errors.push(error.message));
-  let release; const gate = new Promise(resolve => { release = resolve; });
+  let release; let gate;
+  for (const launch of ['cold', 'reload']) {
+  gate = new Promise(resolve => { release = resolve; });
   let unlocked = false;
   await page.route('**/*', async r => {
    if (r.request().resourceType() === 'script' && !unlocked) await gate;
@@ -19,19 +21,27 @@ try {
    if (r.request().url().startsWith('https://fonts.')) return r.abort();
    return r.continue();
   });
-  await page.goto(process.env.STARTUP_APP_ORIGIN || 'http://127.0.0.1:5174/', { waitUntil: 'commit' });
+  if (launch === 'cold') await page.goto(process.env.STARTUP_APP_ORIGIN || 'http://127.0.0.1:5174/', { waitUntil: 'commit' });
+  else await page.reload({ waitUntil: 'commit' });
   await page.waitForSelector('#root', { state: 'attached' });
   const initial = await page.evaluate(async () => {
    const root = document.getElementById('root'), style = getComputedStyle(root, '::before');
    const image = new Image(); image.src = document.querySelector('link[rel="preload"][as="image"]').href; await image.decode();
    const rect = root.getBoundingClientRect();
-   return { empty: root.childElementCount === 0, content: style.content, image: style.backgroundImage,
+   const backgrounds = ['html', 'body', '#root'].map(selector => getComputedStyle(document.querySelector(selector)).backgroundColor);
+   const manifest = await (await fetch(document.querySelector('link[rel=manifest]').href)).json();
+   const launchImages = [...document.querySelectorAll('link[rel=apple-touch-startup-image]')];
+   return { backgrounds, theme: document.querySelector('meta[name=theme-color]')?.content, manifest,
+    matchingLaunchImages: launchImages.filter(link => matchMedia(link.media).matches).map(link => link.href), empty: root.childElementCount === 0, content: style.content, image: style.backgroundImage,
     width: parseFloat(style.width), transform: style.transform, x: rect.x + rect.width / 2, y: rect.y + rect.height / 2,
     loaded: image.naturalWidth === 1254 };
   });
+  assert.deepEqual(initial.backgrounds, ['rgb(0, 0, 0)', 'rgb(0, 0, 0)', 'rgb(0, 0, 0)']);
+  assert.equal(initial.theme, '#000000'); assert.equal(initial.manifest.theme_color, '#000000'); assert.equal(initial.manifest.background_color, '#000000');
+  assert.equal(initial.matchingLaunchImages.length, 1); assert(initial.matchingLaunchImages[0].includes('1170x2532'));
   assert(initial.empty && initial.loaded); assert.equal(initial.content, '""');
   assert(initial.image.includes('ea-cloud-logo.jpeg'));
-  await page.screenshot({ path: `${output}/${reduced ? 'reduced' : 'normal'}-before-javascript.png` });
+  await page.screenshot({ scale: 'css', path: `${output}/${reduced ? 'reduced' : 'normal'}-${launch}-before-javascript.png` });
   await page.evaluate(() => {
    window.handoffFrames = [];
    const capture = () => {
@@ -39,7 +49,7 @@ try {
     if (!marks.length) return requestAnimationFrame(capture);
     const mark = marks[0], rect = mark.getBoundingClientRect();
     window.handoffFrames.push({ opacity: Number(getComputedStyle(mark).opacity),
-     width: rect.width, x: rect.x + rect.width / 2, y: rect.y + rect.height / 2,
+     background: getComputedStyle(document.querySelector('.ea-startup')).backgroundColor, width: rect.width, x: rect.x + rect.width / 2, y: rect.y + rect.height / 2,
      loaded: mark.querySelector('img').naturalWidth === 1254, count: marks.length,
      fallback: getComputedStyle(document.getElementById('root'), '::before').content });
     if (window.handoffFrames.length < 16) requestAnimationFrame(capture);
@@ -50,16 +60,18 @@ try {
   await page.waitForFunction(() => window.handoffFrames?.length >= 16);
   const frames = await page.evaluate(() => window.handoffFrames);
   for (const frame of frames) {
-   assert.equal(frame.opacity, 1); assert(frame.loaded); assert.equal(frame.count, 1);
+   assert.equal(frame.background, 'rgb(0, 0, 0)'); assert.equal(frame.opacity, 1); assert(frame.loaded); assert.equal(frame.count, 1);
    assert(Math.abs(frame.x - 195) < 1 && Math.abs(frame.y - 422) < 1);
    assert.equal(frame.fallback, 'none');
   }
   const initialScale = reduced ? 1 : .88;
   assert(Math.abs(frames[0].width - initial.width * initialScale) < 4, 'handoff must retain logo dimensions');
   assert.deepEqual(errors, []);
-  await page.screenshot({ path: `${output}/${reduced ? 'reduced' : 'normal'}-after-handoff.png` });
-  await writeFile(`${output}/${reduced ? 'reduced' : 'normal'}-frames.json`, JSON.stringify({ initial, frames }, null, 2));
+  await page.screenshot({ scale: 'css', path: `${output}/${reduced ? 'reduced' : 'normal'}-${launch}-after-handoff.png` });
+  await writeFile(`${output}/${reduced ? 'reduced' : 'normal'}-${launch}-frames.json`, JSON.stringify({ initial, frames }, null, 2));
+  await page.unrouteAll({ behavior: 'ignoreErrors' });
+  }
   await page.close();
  }
- console.log('Pre-JavaScript logo and stable React handoff verified in normal/reduced-motion modes');
+ console.log('Black HTML/body/root, matching launch hint and stable handoff verified on fresh/reloaded pages in normal/reduced-motion modes');
 } finally { await browser.close(); }

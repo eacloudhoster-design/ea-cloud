@@ -12,8 +12,9 @@ try {
   await page.waitForSelector('.ea-startup[data-phase="tracing"]');
   const geometry = await page.locator('.ea-startup-mark').evaluate(mark => {
     const rect = mark.getBoundingClientRect();
+    const duration = parseFloat(getComputedStyle(mark.closest(".ea-startup")).getPropertyValue("--ea-trace-duration"));
     for (const node of mark.querySelectorAll('*')) for (const animation of node.getAnimations()) {
-      animation.pause(); animation.currentTime = 2500;
+      animation.pause(); animation.currentTime = duration * .35;
     }
     return { x: rect.x, y: rect.y, width: rect.width, height: rect.height };
   });
@@ -34,7 +35,7 @@ try {
   await page.screenshot({ path: `${output}/outline-control.png` });
   await page.locator('.ea-startup-trail,.ea-startup-tip-halo').evaluateAll(nodes => nodes.forEach(node => node.style.visibility = ''));
   await page.screenshot({ path: `${output}/outline-neon.png` });
-  await page.locator('.ea-startup-edge,.ea-startup-tip,.ea-startup-tip-halo,.ea-startup-trail,.ea-startup-traveller').evaluateAll(nodes => nodes.forEach(node => node.getAnimations().forEach(a => { a.pause(); a.currentTime = 6999; })));
+  await page.locator('.ea-startup-edge,.ea-startup-tip,.ea-startup-tip-halo,.ea-startup-trail,.ea-startup-traveller').evaluateAll(nodes => nodes.forEach(node => node.getAnimations().forEach(a => { a.pause(); a.currentTime = Number(a.effect.getTiming().duration) - 1; })));
   await page.screenshot({ path: `${output}/outline-complete.png` });
   assert.equal(await page.locator('feGaussianBlur').count(), 5);
   assert.equal(await page.locator('.ea-startup-eye').count(), 2);
