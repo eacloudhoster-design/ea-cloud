@@ -1,4 +1,13 @@
 import { cleanText } from "./assistant-text";
+/** Prefer installed enhanced/natural English voices; never wait for a cloud provider. */
+export function selectAnnouncementVoice(voices: SpeechSynthesisVoice[]) {
+  const score = (voice: SpeechSynthesisVoice) =>
+    (/Premium|Enhanced|Natural|Neural/i.test(voice.name) ? 100 : 0) +
+    (/Samantha|Karen|Moira|Tessa|Victoria|Serena|Zira|Aria|Jenny|Sonia|Ava|Emma/i.test(voice.name) ? 20 : 0) +
+    (voice.localService ? 10 : 0) + (voice.default ? 1 : 0);
+  return voices.filter(v => /^en(?:-|_|$)/i.test(v.lang))
+    .sort((a,b) => score(b) - score(a))[0] || null;
+}
 export const AnnouncementPriority = { LOW: 1, MEDIUM: 2, HIGH: 3 } as const;
 type Job = { text: string; key: string; group?: string; priority: number; at: number };
 /** One native player per signed-in app session. No cloud speech or microphone. */
@@ -16,9 +25,7 @@ export class VoiceAnnouncementService {
   private synth = typeof window !== "undefined" ? window.speechSynthesis : undefined;
   private selectVoice = () => {
     const voices = this.synth?.getVoices() || [];
-    const english = voices.filter(v => /^en(?:-|_)/i.test(v.lang));
-    this.voice = english.find(v => /Samantha|Karen|Moira|Tessa|Victoria|Serena|Zira|Aria|Jenny/i.test(v.name))
-      || english.find(v => v.localService) || english[0] || null;
+    this.voice = selectAnnouncementVoice(voices);
   };
   constructor() {
     this.selectVoice();
@@ -64,11 +71,19 @@ export class VoiceAnnouncementService {
     this.utterance = null;
     this.synth?.cancel();
   }
-  suspend() { this.suspended = true; this.queue = []; this.cancelCurrent(); }
+  suspend() {
+    this.suspended = true;
+    // Keep an unheard autoplay-blocked welcome for the earliest permitted gesture.
+    // All stale trading/mode work is still discarded when the app is hidden.
+    this.queue = this.queue.filter(job => job.key === "welcome");
+    if (this.current?.key === "welcome" && !this.synth?.speaking) this.queue.unshift(this.current);
+    this.cancelCurrent();
+  }
   foreground() { this.suspended = false; }
   dispose() {
     this.disposed = true;
     this.suspend();
+    this.queue = [];
     this.seen.clear();
     this.synth?.removeEventListener("voiceschanged", this.selectVoice);
   }
@@ -83,7 +98,8 @@ export class VoiceAnnouncementService {
     const utterance = this.utterance = new SpeechSynthesisUtterance(job.text);
     utterance.voice = this.voice;
     utterance.lang = this.voice?.lang || "en-US";
-    utterance.rate = 1.1;
+    utterance.rate = 1.04;
+    utterance.pitch = 1;
     utterance.volume = 1;
     const finish = (blocked = false) => {
       if (generation !== this.generation || this.disposed) return;
@@ -100,7 +116,7 @@ export class VoiceAnnouncementService {
     let started = false;
     utterance.onstart = () => { started = true; };
     // Bound a silent WebKit stall. A subsequent real gesture may retry welcome.
-    this.timer = setTimeout(() => { this.cancelCurrent(); if (!started) { this.blocked = true; this.queue.unshift(job); } else this.drain(); }, 20000);
+    this.timer = setTimeout(() => { this.cancelCurrent(); if (!started) { this.blocked = true; this.queue.unshift(job); } else this.drain(); }, Math.max(20000, Math.min(60000, job.text.length * 80)));
     try { this.synth.speak(utterance); } catch { finish(true); }
   }
 }

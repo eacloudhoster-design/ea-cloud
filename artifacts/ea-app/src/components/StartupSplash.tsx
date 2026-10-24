@@ -16,7 +16,7 @@ const CLOUD_OUTLINE = "M626 180 C711 180 787 230 819 308 C873 308 919 346 934 39
 type Phase = "entrance" | "tracing" | "glowing" | "fading" | "done";
 
 /** A presentation layer: initialization and the existing app stay mounted below. */
-export default function StartupSplash({ ready, children }: { ready: boolean; children: ReactNode }) {
+export default function StartupSplash({ ready, children, onComplete }: { ready: boolean; children: ReactNode; onComplete?: () => void }) {
   const filterId = useId().replace(/:/g, "");
   const outlineHalo = `${filterId}-outline-halo`;
   const eyeHalo = `${filterId}-eye-halo`;
@@ -55,6 +55,9 @@ export default function StartupSplash({ ready, children }: { ready: boolean; chi
     const timer = window.setTimeout(() => setPhase(nextPhase), delay);
     return () => window.clearTimeout(timer);
   }, [started, phase, canAdvance]);
+
+  // Report completion only after the latest transition has removed the splash.
+  useEffect(() => { if (phase === "done") onComplete?.(); }, [phase, onComplete]);
 
   const revealing = phase === "fading" || phase === "done";
   const timing = {
