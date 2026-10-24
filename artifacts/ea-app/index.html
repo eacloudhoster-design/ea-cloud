@@ -6,6 +6,18 @@
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <link rel="manifest" href="%BASE_URL%manifest.webmanifest" />
+    <link rel="preload" as="image" href="%BASE_URL%ea-cloud-logo.jpeg" fetchpriority="high" />
+    <!-- Paint the existing cropped mark before the application module arrives.
+         :empty hands off atomically when React mounts; no second overlay or timer. -->
+    <style id="ea-startup-first-paint">
+      #root:empty { min-height: 100vh; min-height: 100dvh; display: grid; place-items: center; }
+      #root:empty::before {
+        content: ""; width: min(84vw, 460px, 140vh); aspect-ratio: 1254 / 690;
+        background: url("/ea-cloud-logo.jpeg") center 26.59574468% / 100% auto no-repeat;
+        transform: scale(.88);
+      }
+      @media (prefers-reduced-motion: reduce) { #root:empty::before { transform: none; } }
+    </style>
     <title>EA Cloud App</title>
     <meta name="description" content="EA Cloud App — built on Replit. Update this description to reflect the app." />
     <meta name="robots" content="index, follow" />

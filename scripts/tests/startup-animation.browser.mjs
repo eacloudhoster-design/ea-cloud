@@ -40,9 +40,11 @@ async function check(scenario) {
       if (path === '/api/app/ea-mode-images') return r.fulfill({ json: { eas: [] } });
       return r.fulfill({ json: { copyingEnabled: true, executions: [] } });
     });
+    let releaseLogo;
+    const logoGate = new Promise(resolve => { releaseLogo = resolve; });
     await context.route('**/*ea-cloud-logo*', async r => {
       if (r.request().resourceType() !== 'image') return r.continue();
-      if (scenario === 'cold-logo') await new Promise(resolve => setTimeout(resolve, 2600));
+      if (scenario === 'cold-logo') await logoGate;
       if (scenario === 'asset-error') return r.abort();
       return r.continue();
     });
@@ -80,6 +82,7 @@ async function check(scenario) {
     if (scenario === 'cold-logo') {
       await page.waitForTimeout(2200);
       assert.equal(await page.locator('.ea-startup').getAttribute('data-started'), 'false');
+      releaseLogo();
     }
     await page.waitForSelector('.ea-startup[data-started="true"]');
     const sample = () => page.evaluate(() => {
@@ -106,7 +109,7 @@ async function check(scenario) {
       assert(entranceEarly.scale >= .88 && entranceEarly.scale < entranceLate.scale);
       assert(entranceLate.scale <= 1);
     }
-    assert(entranceEarly.opacity > 0 && entranceEarly.opacity < entranceLate.opacity);
+    assert.equal(entranceEarly.opacity, 1); assert.equal(entranceLate.opacity, 1);
     await page.waitForSelector('.ea-startup[data-phase="tracing"]');
     await page.waitForTimeout(800);
     const traceEarly = await sample();
@@ -126,7 +129,7 @@ async function check(scenario) {
       }
     }
     assert.equal(traceLate.scale, 1);
-    assert(traceLate.filter.includes('drop-shadow'));
+    assert(traceLate.filter.includes('url('));
     assert.equal(traceLate.eyes.length, 2);
     for (const frame of [traceEarly, traceLate]) for (const eye of frame.eyes) assert(eye.opacity >= .099 && eye.opacity <= .701);
     if (scenario !== 'reduced') {

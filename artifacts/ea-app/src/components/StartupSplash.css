@@ -23,7 +23,7 @@
 }
 .ea-startup-edge {
   stroke: #ff3930; stroke-width: 4; stroke-dasharray: 1 1; stroke-dashoffset: 1;
-  filter: drop-shadow(0 0 7px #ff1818) drop-shadow(0 0 18px #f00000);
+
 }
 .ea-startup[data-phase="tracing"] .ea-startup-edge {
   animation: ea-cloud-trace var(--ea-trace-duration) linear both;
@@ -35,7 +35,7 @@
 /* A broad, soft trailing stroke and a narrow bright core share the cloud path.
    Static filters keep the expensive halo stable; only dash offsets/opacity move. */
 .ea-startup-trail {
-  stroke: #ff1818; stroke-width: 12; opacity: .8;
+  stroke: #ff1818; stroke-width: 18; opacity: .95;
   stroke-dasharray: .11 .89; stroke-dashoffset: .11;
 
 }
@@ -43,7 +43,7 @@
   stroke: #ffede6; stroke-width: 4; stroke-dasharray: .018 .982; stroke-dashoffset: .018;
 
 }
-.ea-startup-tip-halo { stroke: #ff1515; stroke-width: 16; opacity: .9; }
+.ea-startup-tip-halo { stroke: #ff1515; stroke-width: 22; opacity: 1; }
 .ea-startup[data-phase="tracing"] .ea-startup-trail { animation: ea-cloud-trail var(--ea-trace-duration) linear infinite; }
 .ea-startup[data-phase="tracing"] .ea-startup-tip,
 .ea-startup[data-phase="tracing"] .ea-startup-tip-halo { animation: ea-cloud-tip var(--ea-trace-duration) linear infinite; }
@@ -57,7 +57,7 @@
   transition: opacity var(--ea-crossfade-duration) ease-out;
 }
 @keyframes ea-logo-entrance {
-  from { opacity: 0; transform: scale(.88); }
+  from { opacity: 1; transform: scale(.88); }
   to { opacity: 1; transform: scale(1); }
 }
 @keyframes ea-cloud-trace { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
@@ -72,7 +72,7 @@
   .ea-startup-mark { animation-name: ea-logo-quiet-entrance; }
   .ea-startup-traveller { display: none; }
 }
-@keyframes ea-logo-quiet-entrance { from { opacity: 0; } to { opacity: 1; } }
+@keyframes ea-logo-quiet-entrance { from { opacity: 1; } to { opacity: 1; } }
 
 /* Feathered red light extends beyond the already bright embedded eye pixels.
    Animate each light group, never the original JPEG. No blend-mode dependency. */
@@ -81,7 +81,7 @@
   animation: ea-eye-breathe 2400ms ease-in-out infinite;
 }
 .ea-startup-eye-halo { fill: #ff1616; }
-.ea-startup-eye-core { fill: #ff6a50; opacity: .32; }
+.ea-startup-eye-core { fill: #ff9274; opacity: .5; }
 .ea-startup-eye--right { animation-duration: 3100ms; animation-delay: -1050ms; }
 @keyframes ea-eye-breathe {
   0%, 100% { opacity: .1; }
