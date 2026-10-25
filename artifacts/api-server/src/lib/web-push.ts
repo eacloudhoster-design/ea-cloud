@@ -13,6 +13,7 @@ import {
 import {
   robotNotification,
   executionNotification,
+  symbolConfiguredNotification,
   type PushContent,
 } from "./push-notification";
 import { resolveAppSessionAccess } from "./app-session-access";
@@ -133,6 +134,37 @@ export async function queueBotPush(
     log?.warn?.(
       { event: "web_push_enqueue_failed", code: "PUSH_STORAGE_UNAVAILABLE" },
       "Notification storage unavailable; trading state was preserved",
+    );
+  }
+}
+/** Called only after symbol settings have been persisted and read back. */
+export async function queueSymbolPush(
+  clientId: number,
+  symbols: { pairName: string; selectedSymbol: string }[],
+  saveId: string,
+  log: any = defaultLog,
+) {
+  const events = symbols.flatMap(({ pairName, selectedSymbol }) => {
+    const payload = symbolConfiguredNotification(selectedSymbol);
+    return payload
+      ? [
+          {
+            clientId,
+            kind: "symbol_configured",
+            payload,
+            sourceKey: `symbol:${saveId}:${endpointHash(pairName)}`,
+          },
+        ]
+      : [];
+  });
+  if (!events.length) return;
+  try {
+    await db.insert(pushEventsTable).values(events).onConflictDoNothing();
+    void deliverPushEvents(log);
+  } catch {
+    log?.warn?.(
+      { event: "web_push_enqueue_failed", code: "PUSH_SYMBOL_ENQUEUE_FAILED" },
+      "Symbol settings saved; notification storage unavailable",
     );
   }
 }
@@ -317,6 +349,7 @@ export async function deliverPushEvents(log: any = defaultLog) {
         started: "EA Cloud",
         stopped: "EA Cloud",
         trade_alert: "EA Cloud — Trade Alert",
+        symbol_configured: "Symbol Configured",
         trade_executed: "EA Cloud — Trade Executed",
         trade_failed: "EA Cloud — Trade Failed",
       };

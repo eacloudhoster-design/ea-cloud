@@ -13,7 +13,7 @@ export type AssistantEvent =
   | { type: "scan-start"; kind?: "chart" | "fundamental" }
   | { type: "scan-complete"; record: unknown }
   | { type: "scan-failed" }
-  | { type: "symbol-saved"; symbol: string }
+  | { type: "symbol-saved"; symbol: string; saveId?: string }
   | { type: "trade-execution"; execution: unknown }
   | { type: "trading-error"; id: string };
 export function assistantEvent(event: AssistantEvent) {

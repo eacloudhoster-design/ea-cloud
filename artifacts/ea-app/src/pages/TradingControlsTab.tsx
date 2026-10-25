@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react";
+import { confirmSymbolSave } from "@/lib/symbol-save";
+import { useState, useEffect, useRef } from "react";
 import { useApp } from "@/context/AppContext";
 import { Save, ToggleLeft, ToggleRight, ChevronDown, Loader2, CheckCircle, Info, Layers } from "lucide-react";
 
@@ -41,6 +42,7 @@ export default function TradingControlsTab() {
   const [symbolConfigs, setSymbolConfigs] = useState<SymbolConfig[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const saveInFlight = useRef(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState("");
 
@@ -74,7 +76,9 @@ export default function TradingControlsTab() {
     setSymbolConfigs(prev => prev.map(c => c.pairName === pairName ? { ...c, ...patch } : c));
 
   const handleSave = async () => {
-    if (!clientToken) return;
+    if (!clientToken || saveInFlight.current) return;
+    saveInFlight.current = true;
+    const saveId = crypto.randomUUID();
     setSaving(true);
     setError("");
     try {
@@ -83,7 +87,7 @@ export default function TradingControlsTab() {
         fetch(`${BASE}/app/trading-controls`, { method: "PATCH", headers, body: JSON.stringify(controls) }),
         ...(symbolConfigs.length > 0 ? [
           fetch(`${BASE}/app/symbol-configs`, {
-            method: "PATCH", headers,
+            method: "PATCH", headers: { ...headers, "X-Symbol-Save-Id": saveId },
             body: JSON.stringify({
               configs: symbolConfigs.map(c => ({
                 pairName: c.pairName,
@@ -94,6 +98,14 @@ export default function TradingControlsTab() {
           }),
         ] : []),
       ]);
+      const symbolResponse = responses[1];
+      if (symbolResponse?.ok) {
+        const result = await symbolResponse.json().catch(() => null);
+        if (!confirmSymbolSave(result, symbolConfigs, symbolResponse.headers.get("X-Symbol-Save-Id") || saveId)) {
+          setError("The saved symbols could not be confirmed. Reload their settings to check.");
+          return;
+        }
+      }
       const failed = responses.find(r => !r.ok);
       if (failed) {
         const data = await failed.json().catch(() => null);
@@ -104,8 +116,10 @@ export default function TradingControlsTab() {
       }
     } catch {
       setError("Network error. Please try again.");
+    } finally {
+      saveInFlight.current = false;
+      setSaving(false);
     }
-    setSaving(false);
   };
 
   if (loading) {

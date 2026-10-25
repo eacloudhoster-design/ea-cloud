@@ -1,4 +1,5 @@
-import {queueBotPush} from "../lib/web-push";
+import { randomUUID } from "node:crypto";
+import {queueBotPush, queueSymbolPush} from "../lib/web-push";
 import { Router } from "express";
 import { db, clientSettingsTable, appAccessTable, symbolPairsTable, clientSymbolConfigsTable } from "@workspace/db";
 import { eq, and } from "drizzle-orm";
@@ -122,6 +123,10 @@ router.patch("/app/symbol-configs", requireClientAuth, async (req: any, res) => 
   try {
     const body = req.body as { configs?: unknown };
     const configs = Array.isArray(body.configs) ? body.configs : [];
+    const requestedSaveId = req.get("X-Symbol-Save-Id");
+    const saveId = typeof requestedSaveId === "string" && /^[a-f0-9-]{36}$/i.test(requestedSaveId)
+      ? requestedSaveId.toLowerCase() : randomUUID();
+    const savedPairs = new Set<string>();
 
     // Resolve the client's mentor and that mentor's active pairs up front so we
     // can reject any config that targets a pair the client isn't allowed to set,
@@ -186,6 +191,7 @@ router.patch("/app/symbol-configs", requireClientAuth, async (req: any, res) => 
         await db.insert(clientSymbolConfigsTable)
           .values({ clientId: req.clientId, pairName, selectedSymbol, customLotSize });
       }
+      savedPairs.add(pairName);
     }
 
     // Return the freshly merged view so the client can re-render immediately.
@@ -206,7 +212,11 @@ router.patch("/app/symbol-configs", requireClientAuth, async (req: any, res) => 
         customLotSize: cfg?.customLotSize ?? null,
       };
     });
-    res.json(merged);
+    // Reuse the persisted values, never request labels or unsaved edits. Clears
+    // are deliberately silent. Queue storage failures cannot roll back the save.
+    await queueSymbolPush(req.clientId, merged.filter(c => savedPairs.has(c.pairName) && c.selectedSymbol !== null)
+      .map(c => ({ pairName: c.pairName, selectedSymbol: c.selectedSymbol! })), saveId, req.log);
+    res.set("X-Symbol-Save-Id", saveId).json(merged);
   } catch (err) {
     req.log.error({ err }, "UpdateSymbolConfigs error");
     res.status(500).json({ error: "Internal server error" });

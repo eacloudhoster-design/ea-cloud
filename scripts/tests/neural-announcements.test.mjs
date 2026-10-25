@@ -281,3 +281,19 @@ test("OS-closed context resumes on gesture without changing voice", () =>
     assert.equal(f.contexts.length, 2);
     assert.deepEqual(f.calls, ["Cached."]);
   }));
+
+test("symbol confirmations queue behind important speech, deduplicate one save and keep later saves", () =>
+  fixture(async (f) => {
+    const service = new VoiceAnnouncementService(token, f.make());
+    service.announce("Robot started.", "important", 3, "bot", true);
+    service.announce("Symbol configured.", "symbol-save-1", 1, "symbol", true);
+    service.announce("Symbol configured.", "symbol-save-1", 1, "symbol", true);
+    service.announce("Symbol configured.", "symbol-save-2", 1, "symbol", true);
+    await wait(100);
+    assert.deepEqual(f.spoken, [
+      "Robot started.",
+      "Symbol configured.",
+      "Symbol configured.",
+    ]);
+    service.dispose();
+  }));

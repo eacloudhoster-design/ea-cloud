@@ -95,6 +95,7 @@ self.addEventListener("push", (event) =>
           "EA Cloud — Trade Executed",
           "EA Cloud — Trade Failed",
           "EA Cloud — Trade Alert",
+          "Symbol Configured",
         ].includes(data.title) ||
         typeof data.body !== "string" ||
         !data.body.trim() ||

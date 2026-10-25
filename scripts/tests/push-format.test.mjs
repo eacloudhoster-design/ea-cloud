@@ -7,7 +7,11 @@ const b = await build({
   format: "esm",
   write: false,
 });
-const { robotNotification, executionNotification } = await import(
+const {
+  robotNotification,
+  executionNotification,
+  symbolConfiguredNotification,
+} = await import(
   "data:text/javascript;base64," +
     Buffer.from(b.outputFiles[0].text).toString("base64")
 );
@@ -88,4 +92,23 @@ test("terminal failures use actual codes/reasons, never raw credentials or inven
     "XAUUSD BUY failed. See execution details in EA Cloud.",
   );
   assert.equal(executionNotification({ ...failed, retryable: 1 }), null);
+});
+
+test("symbol notification uses every persisted broker variation without guessing the pair", () => {
+  for (const symbol of [
+    "XAUUSD",
+    "BTCUSD",
+    "EURUSD",
+    "GBPUSD",
+    "XAUUSDm",
+    "EURUSD.a",
+    "US30.cash",
+    "Volatility 75 Index",
+  ]) {
+    const content = symbolConfiguredNotification(symbol);
+    assert.equal(content.title, "Symbol Configured");
+    assert.equal(content.body, `${symbol} configured successfully.`);
+  }
+  for (const value of ["", "a".repeat(201), "XAUUSD\nPRIVATE"])
+    assert.equal(symbolConfiguredNotification(value), null);
 });

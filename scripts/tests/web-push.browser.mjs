@@ -141,6 +141,54 @@ try {
   });
   await page.waitForTimeout(150);
   assert.equal((await notifications()).length, 3);
+  const symbolPayload = {
+    ...payload,
+    eventId: "00000000-0000-4000-8000-000000000007",
+    title: "Symbol Configured",
+    body: "XAUUSDm configured successfully.",
+  };
+  await page.bringToFront();
+  await send(symbolPayload);
+  await page.waitForTimeout(250);
+  assert.equal((await notifications()).length, 4);
+  assert.ok(
+    (await notifications()).some(
+      (n) =>
+        n.title === "Symbol Configured" &&
+        n.body === "XAUUSDm configured successfully.",
+    ),
+  );
+  await send(symbolPayload);
+  await page.waitForTimeout(200);
+  assert.equal((await notifications()).length, 4);
+  // Deliver while the app page is closed; the service worker still owns display.
+  const observer = await context.newPage();
+  const observerCDP = await context.newCDPSession(observer);
+  await observerCDP.send("ServiceWorker.enable");
+  await page.close();
+  await observerCDP.send("ServiceWorker.deliverPushMessage", {
+    origin,
+    registrationId: registration.registrationId,
+    data: JSON.stringify({
+      ...symbolPayload,
+      eventId: "00000000-0000-4000-8000-000000000008",
+      body: "EURUSD.a configured successfully.",
+    }),
+  });
+  await new Promise((r) => setTimeout(r, 250));
+  const reopened = await context.newPage();
+  await reopened.goto(origin + "/push-check");
+  assert.equal(
+    await reopened.evaluate(
+      async () =>
+        (
+          await (
+            await navigator.serviceWorker.getRegistration("/ea-app/")
+          ).getNotifications()
+        ).length,
+    ),
+    5,
+  );
   const worker = context
     .serviceWorkers()
     .find((w) => w.url().endsWith("/push-sw.js"));

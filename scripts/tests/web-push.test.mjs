@@ -92,10 +92,12 @@ test(
       schema.appAccessTable,
       schema.licensesTable,
       schema.clientSettingsTable,
+      schema.symbolPairsTable,
+      schema.clientSymbolConfigsTable,
     ]) {
       const cfg = getTableConfig(table);
       await engine.exec(
-        `CREATE TABLE "${cfg.name}" (${cfg.columns.map((c) => `"${c.name}" ${c.getSQLType()}${c.primary ? " PRIMARY KEY" : ""}`).join(",")})`,
+        `CREATE TABLE "${cfg.name}" (${cfg.columns.map((c) => `"${c.name}" ${c.primary && [schema.symbolPairsTable, schema.clientSymbolConfigsTable].includes(table) ? "serial" : c.getSQLType()}${c.primary ? " PRIMARY KEY" : ""}`).join(",")})`,
       );
     }
     await engine.exec(
@@ -190,7 +192,7 @@ test(
     });
     app.use("/api/app", routes.requireAppSession);
     app.use("/api", routes.push, routes.settings);
-    const call = (path, method = "GET", body, id = 7) =>
+    const call = (path, method = "GET", body, id = 7, extraHeaders = {}) =>
       appRequest(app, "https://fixture/api/app/" + path, {
         method,
         headers: {
@@ -210,6 +212,7 @@ test(
             return cookie;
           })(),
           "Content-Type": "application/json",
+          ...extraHeaders,
         },
         ...(body ? { body: JSON.stringify(body) } : {}),
       });
@@ -429,6 +432,108 @@ test(
         401,
       );
       assert.equal(globalThis.__sentPush.length, 4);
+
+      // Real symbol-save route → PostgreSQL → existing push outbox → provider fixture.
+      await engine.exec(
+        "UPDATE licenses SET status='active' WHERE key='VALID'; INSERT INTO symbol_pairs(mentor_id,pair_name,variations,is_active) VALUES(5,'XAUUSD','XAUUSDm,XAUUSD.m',true)",
+      );
+      const configBody = (symbol = "XAUUSDm", lot = "0.05") => ({
+        configs: [
+          { pairName: "XAUUSD", selectedSymbol: symbol, customLotSize: lot },
+        ],
+      });
+      const saveSymbol = (id, body = configBody()) =>
+        call("symbol-configs", "PATCH", body, 7, { "X-Symbol-Save-Id": id });
+      const events = async () =>
+        Number(
+          (
+            await engine.query(
+              "SELECT count(*) AS n FROM push_events WHERE kind='symbol_configured'",
+            )
+          ).rows[0].n,
+        );
+      const id1 = "10000000-0000-4000-8000-000000000001";
+      // Missing additive migration cannot turn a committed save into an error.
+      let response = await saveSymbol(id1);
+      assert.equal(response.status, 200);
+      assert.equal((await response.json())[0].selectedSymbol, "XAUUSDm");
+      assert.equal(await events(), 0);
+      await engine.exec(
+        await readFile(
+          "docs/migrations/20261025-symbol-configured-push.sql",
+          "utf8",
+        ),
+      );
+      const id2 = "10000000-0000-4000-8000-000000000002";
+      response = await saveSymbol(id2);
+      assert.equal(response.status, 200);
+      assert.equal(response.headers.get("X-Symbol-Save-Id"), id2);
+      assert.equal((await response.json())[0].customLotSize, "0.05");
+      await pump(5);
+      assert.equal(await events(), 1);
+      assert.equal(globalThis.__sentPush[4].title, "Symbol Configured");
+      assert.equal(
+        globalThis.__sentPush[4].body,
+        "XAUUSDm configured successfully.",
+      );
+      await saveSymbol(id2); // Same logical request must never create a second push.
+      assert.equal(await events(), 1);
+      const id3 = "10000000-0000-4000-8000-000000000003";
+      assert.equal(
+        (await saveSymbol(id3, configBody("XAUUSD.m", "0.06"))).status,
+        200,
+      );
+      await pump(6);
+      assert.equal(await events(), 2);
+      assert.equal(
+        globalThis.__sentPush[5].body,
+        "XAUUSD.m configured successfully.",
+      );
+      assert.equal((await saveSymbol(id3, configBody("UNKNOWN"))).status, 400);
+      assert.equal(
+        (await saveSymbol(id3, configBody("XAUUSDm", "-1"))).status,
+        400,
+      );
+      assert.equal(
+        (await call("symbol-configs", "PATCH", configBody(), 9)).status,
+        400,
+      );
+      assert.equal(
+        (
+          await appRequest(app, "https://fixture/api/app/symbol-configs", {
+            method: "PATCH",
+          })
+        ).status,
+        401,
+      );
+      assert.equal(await events(), 2);
+      await engine.exec(
+        "ALTER TABLE client_symbol_configs ADD CONSTRAINT fixture_write_failure CHECK (custom_lot_size <> 0.13) NOT VALID",
+      );
+      assert.equal(
+        (await saveSymbol(id1, configBody("XAUUSDm", "0.13"))).status,
+        500,
+      );
+      assert.equal(await events(), 2);
+      await engine.exec(
+        "ALTER TABLE client_symbol_configs DROP CONSTRAINT fixture_write_failure",
+      );
+      assert.equal((await saveSymbol(id1, configBody(null, null))).status, 200);
+      assert.equal(
+        await events(),
+        2,
+        "Removing a mapping must not announce configuration success",
+      );
+      await engine.exec(
+        "ALTER TABLE push_events RENAME TO fixture_push_events_unavailable",
+      );
+      response = await saveSymbol(id1, configBody("XAUUSDm", "0.07"));
+      assert.equal(response.status, 200);
+      assert.equal((await response.json())[0].customLotSize, "0.07");
+      await engine.exec(
+        "ALTER TABLE fixture_push_events_unavailable RENAME TO push_events",
+      );
+      assert.equal(await events(), 2);
     } finally {
       await engine.close();
       for (const [k, v] of Object.entries(saved))

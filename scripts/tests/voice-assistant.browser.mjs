@@ -15,8 +15,8 @@ const {createHash}=await import('node:crypto');const byHash=Object.fromEntries(p
 const fixtureWav=text=>{const data=Buffer.from(text+'\0'.repeat(Buffer.byteLength(text)%2)),h=Buffer.alloc(44);h.write('RIFF');h.writeUInt32LE(36+data.length,4);h.write('WAVEfmt ',8);h.writeUInt32LE(16,16);h.writeUInt16LE(1,20);h.writeUInt16LE(1,22);h.writeUInt32LE(24000,24);h.writeUInt32LE(48000,28);h.writeUInt16LE(2,32);h.writeUInt16LE(16,34);h.write('data',36);h.writeUInt32LE(data.length,40);return Buffer.concat([h,data]);};
 try{
  for(const name of ['Mentor Alpha','Mentor Beta']){
-  const spoken=[],writes=[];let connected=false,running=false,failBot=false,scanFail=false,quotaBlocked=false,executions=[];
-  const context=await browser.newContext({viewport:{width:390,height:844},hasTouch:true,isMobile:true});
+  const spoken=[],writes=[];let connected=false,running=false,failBot=false,scanFail=false,quotaBlocked=false,executions=[],failSymbol=false,symbolPosts=0;
+  const context=await browser.newContext({viewport:name==='Mentor Alpha'?{width:390,height:844}:{width:1280,height:900},hasTouch:true,isMobile:name==='Mentor Alpha'});
   await context.addInitScript(({blocked,neural})=>{
    localStorage.setItem('appClientToken',btoa('7:client:fixture'));
    localStorage.setItem('ea-cloud:client:7:voice',JSON.stringify({enabled:false,provider:'neural'}));
@@ -50,7 +50,7 @@ try{
    const request=route.request(),path=new URL(request.url()).pathname,body=request.postDataJSON?.bind(request);
    if(request.method()!=='GET')writes.push(path);
    if(path.includes('/assistant/')){throw Error('Announcement made an unnecessary assistant request: '+path);}
-   if(path==='/api/app/symbol-configs'){const configs=[{pairName:'XAUUSD',variations:['XAUUSD','XAUUSDm'],selectedSymbol:request.method()==='PATCH'?request.postDataJSON().configs[0].selectedSymbol:null,customLotSize:'0.05'}];await route.fulfill({json:configs});return;}
+   if(path==='/api/app/symbol-configs'){if(request.method()==='PATCH'){symbolPosts++;await new Promise(r=>setTimeout(r,120));if(failSymbol)return route.fulfill({status:500,json:{error:'Symbol save failed'}});}const configs=[{pairName:'XAUUSD',variations:['XAUUSD','XAUUSDm'],selectedSymbol:request.method()==='PATCH'?request.postDataJSON().configs[0].selectedSymbol:null,customLotSize:'0.05'}];await route.fulfill({json:configs});return;}
    if(path.endsWith('/trading-controls')){
     if(request.method()==='PATCH'){if(failBot){await route.fulfill({status:500,json:{error:'failed'}});return;}running=request.postDataJSON().copyingEnabled;}
     await route.fulfill({json:{copyingEnabled:running}});return;
@@ -78,7 +78,21 @@ try{
   for(const socket of sockets)socket.send(JSON.stringify({type:'TRADE_EXECUTION',execution:trade}));await page.waitForTimeout(80);
   for(const socket of sockets)socket.send(JSON.stringify({type:'TRADE_EXECUTION',execution:trade}));await page.waitForTimeout(80);assert.equal((await speech()).filter(t=>/confirmed a buy execution for gold/.test(t.text)).length,1);
   for(const socket of sockets)socket.send(JSON.stringify({type:'TRADE_EXECUTION',execution:{...trade,id:100,status:'failed'}}));await page.waitForTimeout(80);assert.ok((await speech()).some(t=>/Trade execution failed/.test(t.text)));
-  await page.getByText('SYMBOLS',{exact:true}).locator('..').locator('button').click();await page.getByRole('button',{name:'XAUUSD',exact:true}).click();await page.getByRole('button',{name:/Select your broker/}).click();await page.getByRole('button',{name:'XAUUSD',exact:true}).last().click();await page.getByPlaceholder('e.g. 0.05').fill('0.05');await page.getByRole('button',{name:'Save',exact:true}).click();await page.waitForTimeout(100);assert.ok((await speech()).some(t=>t.text==='gold configured.'));
+  await page.getByText('SYMBOLS',{exact:true}).locator('..').locator('button').click();await page.getByRole('button',{name:'XAUUSD',exact:true}).click();await page.getByRole('button',{name:/Select your broker/}).click();await page.getByRole('button',{name:'XAUUSD',exact:true}).last().click();await page.getByPlaceholder('e.g. 0.05').fill('0.05');failSymbol=true;
+  await page.getByRole('button',{name:'Save',exact:true}).click();
+  await page.getByText('Symbol save failed',{exact:true}).waitFor();
+  assert.equal((await speech()).filter(t=>t.text==='Symbol configured.').length,0);
+  failSymbol=false;const postsBefore=symbolPosts;
+  await page.getByRole('button',{name:'Save',exact:true}).evaluate(button=>{button.click();button.click();});
+  await page.waitForFunction(()=>window.__speech.calls.some(t=>t.text==='Symbol configured.'));
+  assert.equal(symbolPosts,postsBefore+1,'rapid double click sends one save');
+  assert.equal((await speech()).filter(t=>t.text==='Symbol configured.').length,1);
+  // An intentional later successful save gets a new announcement identity.
+  await page.waitForTimeout(800);
+  await page.getByRole('button',{name:/XAUUSD.*0.05/}).click();
+  await page.getByRole('button',{name:'Save',exact:true}).click();
+  await page.waitForFunction(()=>window.__speech.calls.filter(t=>t.text==='Symbol configured.').length===2);
+
   // Return through existing close control.
   await page.waitForTimeout(750);await page.locator('.ea-nav-screen').first().locator('button').filter({has:page.locator('svg.lucide-chevron-left')}).click();
   await nav.getByRole('button',{name:'Settings',exact:true}).tap();await page.getByRole('button',{name:'EA Manipulation',exact:true}).tap();
