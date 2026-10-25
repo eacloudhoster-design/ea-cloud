@@ -19,7 +19,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import "./Landing.css";
-import { homepageWordmark } from "@/lib/branding";
+import { homepageWordmark, navigationLogo } from "@/lib/branding";
 import { usePublicScrollMotion } from "@/hooks/use-public-scroll-motion";
 
 const features = [
@@ -315,6 +315,30 @@ export default function Landing() {
           <a href="/register" className="public-cta public-cta-secondary">
             Become a Mentor
             <ArrowUpRight size={17} />
+          </a>
+        </div>
+      </section>
+      <section
+        id="support"
+        className="public-section public-support-section"
+        aria-labelledby="support-title"
+      >
+        <div data-reveal>
+          <p className="public-eyebrow">04 / HERE TO HELP</p>
+          <div className="public-support-heading">
+            <img src={navigationLogo} alt="" width="112" height="62" />
+            <h2 id="support-title">Support</h2>
+          </div>
+          <p className="help-intro">
+            Need help with EA Cloud? Get in touch for assistance with account
+            access, platform tools and general questions.
+          </p>
+          <a
+            href="mailto:eacloudhoster@gmail.com"
+            className="public-cta public-cta-primary"
+          >
+            Get Support
+            <ArrowUpRight size={18} />
           </a>
         </div>
       </section>
