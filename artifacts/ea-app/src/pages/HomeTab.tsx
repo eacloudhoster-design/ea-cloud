@@ -393,9 +393,8 @@ function ThreeButtons({
 function MatrixLayout({ portraitEnabled, shapeStyle, accentColor, botRunning, setBotRunning, eaName, eaTagline, bgImageUrl, setShowQuotes, setShowRemoveConfirm, onOpenTrades, tradeCount = 0 }: any) {
   const theme = accentColor;
   const layoutRef = useRef<HTMLDivElement>(null);
-  const brandingBelowName = shapeStyle === "orbit" || shapeStyle === "neural";
+  // Keep branding anchored below the name even when the portrait is hidden.
   useLayoutEffect(() => {
-    if (!brandingBelowName) return;
     const layout = layoutRef.current;
     const name = layout?.querySelector<HTMLElement>('[data-bot-name="primary"]');
     const branding = layout?.querySelector<HTMLElement>('[data-matrix-branding]');
@@ -411,9 +410,9 @@ function MatrixLayout({ portraitEnabled, shapeStyle, accentColor, botRunning, se
     observer.observe(name);
     observer.observe(branding);
     return () => { observer.disconnect();layout.removeEventListener("ea:portrait-layout",positionBranding); branding.style.removeProperty("transform"); };
-  }, [brandingBelowName]);
+  }, []);
   return (
-    <div ref={layoutRef} className="matrix-portrait-layout relative z-10 flex flex-col items-center" style={{ minHeight: shapeStyle === "none" ? 0 : "calc(var(--ea-content-height, 100dvh) - 88px)", paddingBottom: 16 }}>
+    <div ref={layoutRef} className="matrix-portrait-layout relative z-10 flex flex-col items-center" style={{ minHeight: "calc(var(--ea-content-height, 100dvh) - 88px)", paddingBottom: 16 }}>
       <div className="w-full flex items-center justify-between px-4 pt-3 pb-4">
         <button className="w-9 h-9 rounded-full flex items-center justify-center active:scale-95 transition-transform" style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.12)" }}>
           <Menu size={16} className="text-white/60" />
@@ -462,7 +461,7 @@ function MatrixLayout({ portraitEnabled, shapeStyle, accentColor, botRunning, se
       <BotName primary toggleBackground className="text-white font-black text-center tracking-tight mb-1 px-4" style={{ fontSize: 34, lineHeight: 1.0, textShadow: "0 2px 20px rgba(0,0,0,0.9)" }}>
         {eaName.toUpperCase()}
       </BotName>
-      {eaTagline && <p className="text-white/35 text-sm text-center mb-2 tracking-wide" style={{ visibility: shapeStyle === "none" || brandingBelowName ? "hidden" : undefined }}>{eaTagline}</p>}
+      {eaTagline && <p className="text-white/35 text-sm text-center mb-2 tracking-wide" style={{ visibility: "hidden" }}>{eaTagline}</p>}
 
       <div className="flex-1" style={{ minHeight: 32 }} />
       <div className="flex gap-2 mb-5 opacity-20">
