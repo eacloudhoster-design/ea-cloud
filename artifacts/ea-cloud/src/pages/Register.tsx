@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef } from "react";
 import { Link, useLocation } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
-import { logo } from "@/lib/branding";
+import { navigationLogo as logo } from "@/lib/branding";
+import "./MentorAuth.css";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -143,14 +144,14 @@ export default function Register() {
   }
 
   return (
-    <div className="min-h-screen bg-[#080810] flex items-center justify-center px-4 py-20">
+    <div className="mentor-register-page min-h-screen bg-[#080810] flex items-center justify-center px-4 py-20">
       <div className="fixed inset-0 pointer-events-none" style={{ backgroundImage: "radial-gradient(ellipse at 50% 0%, rgba(227,30,36,0.1) 0%, transparent 60%)" }} />
       <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }} className="w-full max-w-md">
         <div className="text-center mb-8">
           <motion.div animate={{ y: [0, -8, 0] }} transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }} className="inline-block mb-4">
             <div className="relative">
               <div className="absolute inset-0 rounded-full bg-primary/30 blur-xl scale-150" />
-              <img src={logo} alt="EA Cloud" className="relative w-20 h-20 rounded-full object-cover ring-2 ring-primary/50 shadow-[0_0_30px_rgba(227,30,36,0.5)]" />
+              <img src={logo} alt="EA Cloud" className="relative w-20 h-20 rounded-full object-contain bg-black p-0.5 ring-2 ring-primary/50 shadow-[0_0_30px_rgba(227,30,36,0.5)]" />
             </div>
           </motion.div>
           <h1 className="text-2xl font-bold text-white">Create Mentor Account</h1>

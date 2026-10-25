@@ -1,0 +1,63 @@
+{
+  "results": [
+    {
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "mobile": false,
+      "headerScopeCorrect": true,
+      "cloudOnlyBothPages": true,
+      "validationAndSubmissionContract": true,
+      "publicHeadersPreserved": true
+    },
+    {
+      "viewport": {
+        "width": 820,
+        "height": 1000
+      },
+      "mobile": false,
+      "headerScopeCorrect": true,
+      "cloudOnlyBothPages": true,
+      "validationAndSubmissionContract": true,
+      "publicHeadersPreserved": true
+    },
+    {
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "mobile": true,
+      "headerScopeCorrect": true,
+      "cloudOnlyBothPages": true,
+      "validationAndSubmissionContract": true,
+      "publicHeadersPreserved": true
+    },
+    {
+      "viewport": {
+        "width": 320,
+        "height": 568
+      },
+      "mobile": true,
+      "headerScopeCorrect": true,
+      "cloudOnlyBothPages": true,
+      "validationAndSubmissionContract": true,
+      "publicHeadersPreserved": true
+    },
+    {
+      "viewport": {
+        "width": 844,
+        "height": 390
+      },
+      "mobile": true,
+      "headerScopeCorrect": true,
+      "cloudOnlyBothPages": true,
+      "validationAndSubmissionContract": true,
+      "publicHeadersPreserved": true
+    }
+  ],
+  "limitations": [
+    "Chromium touch emulation; no physical iPhone/Safari test.",
+    "Isolated API fixtures; no real account created or live credentials used."
+  ]
+}

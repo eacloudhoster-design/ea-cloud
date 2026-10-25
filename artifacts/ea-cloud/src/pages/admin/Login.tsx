@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link, useLocation, useSearch } from "wouter";
 import { motion } from "framer-motion";
 import { loginErrorMessage } from "@/lib/login-error";
-import { logo } from "@/lib/branding";
+import { navigationLogo as logo } from "@/lib/branding";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -45,7 +45,7 @@ export default function AdminLogin() {
         <motion.div animate={{ y: [0, -10, 0] }} transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }} className="flex justify-center mb-8">
           <div className="relative">
             <div className="absolute inset-0 rounded-full bg-primary/40 blur-2xl scale-200" />
-            <img src={logo} alt="EA Cloud" className="relative w-24 h-24 rounded-full object-cover ring-2 ring-primary/60 shadow-[0_0_50px_rgba(227,30,36,0.6)]" />
+            <img src={logo} alt="EA Cloud" className="relative w-24 h-24 rounded-full object-contain bg-black p-0.5 ring-2 ring-primary/60 shadow-[0_0_50px_rgba(227,30,36,0.6)]" />
           </div>
         </motion.div>
 
