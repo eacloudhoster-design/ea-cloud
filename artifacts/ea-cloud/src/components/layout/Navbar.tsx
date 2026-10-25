@@ -127,8 +127,9 @@ export function Navbar() {
       else navigate(href);
     });
   };
-  // Authentication pages have no mobile website chrome or portal overlays.
-  if (compact && (path === "/register" || path === "/admin/login")) return null;
+  // Sign Up is header-free at every size; preserve the existing mobile Sign In rule.
+  if (/^\/register\/?$/i.test(path) || (compact && path === "/admin/login"))
+    return null;
   return (
     <>
       <header ref={header} className="public-header">

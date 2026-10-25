@@ -1,3 +1,4 @@
+import "../styles/PublicTypography.css";
 import { useEffect, useState, type FormEvent } from "react";
 import { Link } from "wouter";
 import { legalLinks } from "../privacy/legal-links";
@@ -346,7 +347,6 @@ export default function Legal({ page }: { page?: string }) {
   return (
     <main id="public-content" className="legal-page">
       <div className="legal-shell">
-        <Link href="/">← Back to homepage</Link>
         <p className="legal-eyebrow">EA CLOUD / LEGAL &amp; PRIVACY</p>
         <h1>{title}</h1>
         <p className="legal-subtitle">

@@ -1,0 +1,16 @@
+/* Self-hosted OFL fonts; only scoped public heading/copy selectors use these aliases. */
+@font-face {
+  font-family: "EA Space Grotesk";
+  src: url("../assets/fonts/space-grotesk-latin-700-normal.woff2")
+    format("woff2");
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+}
+@font-face {
+  font-family: "EA Public Inter";
+  src: url("../assets/fonts/inter-latin-500-normal.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+}

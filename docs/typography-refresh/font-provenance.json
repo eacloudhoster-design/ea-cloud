@@ -1,0 +1,22 @@
+[
+  {
+    "package": "@fontsource/space-grotesk",
+    "version": "5.3.0",
+    "license": "OFL-1.1",
+    "archive": "https://registry.npmjs.org/@fontsource/space-grotesk/-/space-grotesk-5.3.0.tgz",
+    "verifiedArchiveIntegrity": "sha512-ksnGizDPXIDuvqcTYTSrmZ+evx9sDlS8rp7+42BQ7wU+spt3twEoXfbJz672C+5CLg6VeUQwRy5RXshWb67LcQ==",
+    "asset": "artifacts/ea-cloud/src/assets/fonts/space-grotesk-latin-700-normal.woff2",
+    "assetSha256": "35f8aec56cfd5cbfdb03cc68733a54a0b05bb3617ffcd5fd332badc0b045ca55",
+    "bytes": 12840
+  },
+  {
+    "package": "@fontsource/inter",
+    "version": "5.3.0",
+    "license": "OFL-1.1",
+    "archive": "https://registry.npmjs.org/@fontsource/inter/-/inter-5.3.0.tgz",
+    "verifiedArchiveIntegrity": "sha512-RofMylZmjlJEfELXeNHFWBRcSs75rGU/6bV2S2jfnvv/3rPXPGe0LgUJTklcHZ9lM4OZmAVFhcJPnACfb91A3g==",
+    "asset": "artifacts/ea-cloud/src/assets/fonts/inter-latin-500-normal.woff2",
+    "assetSha256": "f3779f1efccc4bdcdf9c0a02ab95bf6bd092ed09c48c08cedc725889edd1d19f",
+    "bytes": 24272
+  }
+]

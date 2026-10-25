@@ -91,17 +91,54 @@
   margin: 0 0 24px;
 }
 .hero-copy h2 {
-  font-size: clamp(25px, 2.7vw, 43px);
-  line-height: 1.16;
-  font-weight: 600;
+  font-family: "EA Space Grotesk", Inter, sans-serif;
+  font-size: clamp(28px, 2.8vw, 43px);
+  line-height: 1.15;
+  font-weight: 700;
   letter-spacing: -0.035em;
   margin: 0 0 28px;
 }
 .hero-description {
   max-width: 450px;
-  color: #929299;
-  font-size: 13px;
-  line-height: 1.8;
+  font-family: "EA Public Inter", Inter, Arial, sans-serif;
+  color: #bec1cb;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.85;
+}
+.hero-headline-lead,
+.hero-headline-metal {
+  display: block;
+}
+.hero-headline-lead {
+  color: #fff;
+}
+.hero-headline-metal {
+  width: fit-content;
+  max-width: 100%;
+  color: #e8eaf0;
+}
+@supports ((background-clip: text) or (-webkit-background-clip: text)) {
+  .hero-headline-metal {
+    background: linear-gradient(
+      110deg,
+      #fff 0%,
+      #bfc5d1 38%,
+      #f8f9fc 75%,
+      #e5bdc4 100%
+    );
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+}
+.hero-text-accent {
+  color: #e9848e;
+}
+.cinematic-site .public-help-section h2,
+.cinematic-site .public-faq button {
+  font-family: "EA Space Grotesk", Inter, sans-serif;
+  font-weight: 700;
 }
 .hero-description p + p {
   margin-top: 14px;
@@ -394,7 +431,7 @@
 .public-faq button {
   padding: 24px 0;
   font-size: 14px;
-  font-weight: 500;
+  font-weight: 700;
   color: #dedee4;
   text-align: left;
   line-height: 1.5;
@@ -541,15 +578,15 @@
     margin-bottom: 15px;
   }
   .hero-copy h2 {
-    font-size: 26px;
+    font-size: clamp(25px, 6.7vw, 29px);
     margin-bottom: 18px;
   }
   .hero-copy h2 br {
     display: none;
   }
   .hero-description {
-    font-size: 12px;
-    line-height: 1.75;
+    font-size: 13px;
+    line-height: 1.8;
     max-width: none;
   }
   .hero-description p + p {
