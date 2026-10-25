@@ -1,5 +1,7 @@
 # Cinematic public website
 
+This documents the initial public-site redesign. The current homepage replaces the large animated hero logo with the user’s three application screenshots; see [the completed showcase](../hero-app-showcase/README.md) for current implementation and verification. The original screenshots/results below remain historical evidence of the first redesign.
+
 Changes are limited to the public landing page, its shared public navigation, an animated-logo component and their styles. Dashboard, scanner, MT5, startup, authentication, registration, API and session implementations are unchanged. No dependency declarations, lockfiles or original artwork changed.
 
 ## Existing destinations retained

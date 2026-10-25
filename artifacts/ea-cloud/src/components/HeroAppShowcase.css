@@ -1,0 +1,202 @@
+/* Device geometry and perspective are outside the image: no artwork filters or crops. */
+.hero-showcase {
+  position: absolute;
+  right: clamp(20px, 3vw, 70px);
+  top: 50%;
+  transform: translateY(-50%);
+  width: min(49vw, calc((100svh - 210px) / 1.05), 760px);
+  aspect-ratio: 1/1.05;
+  z-index: 1;
+  isolation: isolate;
+  pointer-events: none;
+}
+.showcase-ambient {
+  position: absolute;
+  inset: 9% -3% 0;
+  background: radial-gradient(ellipse at 50% 60%, #dc243336, transparent 66%);
+  opacity: 0;
+  animation: showcase-ambient-in 1.4s 0.6s ease-out forwards;
+}
+.showcase-ambient::after {
+  content: "";
+  position: absolute;
+  bottom: 1%;
+  left: 12%;
+  right: 12%;
+  height: 10%;
+  border-radius: 50%;
+  background: radial-gradient(ellipse, #e9344525, transparent 70%);
+}
+.showcase-phone {
+  position: absolute;
+  margin: 0;
+  transform-style: preserve-3d;
+}
+.showcase-phone--centre {
+  width: 42%;
+  left: 29%;
+  top: 2%;
+  z-index: 3;
+}
+.showcase-phone--left {
+  width: 34%;
+  left: 1%;
+  top: 12%;
+  z-index: 1;
+  transform: perspective(1000px) rotateY(12deg) rotate(5deg);
+}
+.showcase-phone--right {
+  width: 34%;
+  right: 1%;
+  top: 12%;
+  z-index: 2;
+  transform: perspective(1000px) rotateY(-12deg) rotate(-5deg);
+}
+.showcase-entrance {
+  animation: showcase-centre-enter 1s 0.12s cubic-bezier(0.2, 0.65, 0.2, 1) both;
+}
+.showcase-phone--left .showcase-entrance {
+  animation-name: showcase-left-enter;
+  animation-delay: 0.34s;
+}
+.showcase-phone--right .showcase-entrance {
+  animation-name: showcase-right-enter;
+  animation-delay: 0.54s;
+}
+.showcase-phone-frame {
+  padding: 3px;
+  border: 1px solid #ef53634d;
+  border-radius: clamp(12px, 1.7vw, 25px);
+  background: #110c10;
+  box-shadow:
+    0 26px 50px #0009,
+    inset 0 1px 1px #ffffff22,
+    0 0 24px #e9344512;
+  animation: showcase-float 8s 1.2s ease-in-out infinite;
+}
+.showcase-phone--centre .showcase-phone-frame {
+  border-color: #fa667580;
+  box-shadow:
+    0 34px 65px #000a,
+    0 0 28px #e934452b,
+    inset 0 1px 1px #ffffff33;
+}
+.showcase-phone--left .showcase-phone-frame {
+  animation-delay: 1.6s;
+  animation-duration: 9s;
+}
+.showcase-phone--right .showcase-phone-frame {
+  animation-delay: 2s;
+  animation-duration: 8.6s;
+}
+.showcase-phone picture {
+  display: block;
+  border-radius: inherit;
+  overflow: hidden;
+}
+.showcase-phone img {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 739/1600;
+  object-fit: contain;
+  border-radius: inherit;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+@keyframes showcase-centre-enter {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 20px, 0) scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+}
+@keyframes showcase-left-enter {
+  from {
+    opacity: 0;
+    transform: translate3d(-28px, 14px, 0) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+}
+@keyframes showcase-right-enter {
+  from {
+    opacity: 0;
+    transform: translate3d(28px, 14px, 0) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+}
+@keyframes showcase-ambient-in {
+  to {
+    opacity: 1;
+  }
+}
+@keyframes showcase-float {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+  50% {
+    transform: translate3d(0, -4px, 0);
+  }
+}
+@media (max-width: 1100px) {
+  .hero-showcase {
+    position: relative;
+    inset: auto;
+    transform: none;
+    width: 100%;
+    max-width: 620px;
+    margin: 42px auto 0;
+    order: 2;
+  }
+  .cinematic-hero .hero-copy {
+    order: 1;
+    margin: 0 auto;
+  }
+  .cinematic-hero {
+    justify-content: flex-start;
+  }
+}
+@media (min-width: 761px) and (max-width: 1100px) {
+  .cinematic-hero {
+    padding-top: 120px;
+  }
+}
+@media (max-width: 480px) {
+  .hero-showcase {
+    margin-top: 36px;
+  }
+  .showcase-phone-frame {
+    padding: 2px;
+    border-radius: 13px;
+  }
+  .showcase-phone picture,
+  .showcase-phone img {
+    border-radius: 10px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hero-showcase * {
+    animation: none !important;
+    transition: none !important;
+  }
+  .showcase-ambient {
+    opacity: 1;
+  }
+}
+
+/* Start the entrance after the real images decode, including on a cold cache. */
+.hero-showcase[data-ready="false"] .showcase-entrance,
+.hero-showcase[data-ready="false"] .showcase-phone-frame,
+.hero-showcase[data-ready="false"] .showcase-ambient {
+  animation-play-state: paused;
+}

@@ -9,7 +9,7 @@ import {
   SlidersHorizontal,
   MoveUpRight,
 } from "lucide-react";
-import CinematicLogo from "@/components/CinematicLogo";
+import HeroAppShowcase from "@/components/HeroAppShowcase";
 import AppInstallation from "@/components/AppInstallation";
 import {
   Accordion,
@@ -124,13 +124,7 @@ export default function Landing() {
           <div className="hero-orbit" />
           <div className="hero-grid" />
         </div>
-        <div className="hero-art">
-          <CinematicLogo />
-          <div className="art-caption" aria-hidden="true">
-            <span>EA CLOUD / ORIGINAL IDENTITY</span>
-            <span>CONNECTED. INTELLIGENT. AUTOMATED.</span>
-          </div>
-        </div>
+        <HeroAppShowcase />
         <div className="hero-copy">
           <p className="public-eyebrow hero-enter">
             <span /> THE NEXT CHAPTER OF TRADING
