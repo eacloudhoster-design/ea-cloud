@@ -288,14 +288,7 @@ try {
     );
     await p.goto(`${origin}/register`);
     await p.locator("form").waitFor();
-    if (mobile) assert.equal(await p.locator(".public-header").count(), 0);
-    else {
-      await scroll(p, 200);
-      assert.equal(
-        await p.locator(".public-header").getAttribute("data-scroll-hidden"),
-        "false",
-      );
-    }
+    assert.equal(await p.locator(".public-header").count(), 0);
     await p.goto(`${origin}/admin/login`);
     await p.locator("form").waitFor();
     assert.equal(await p.locator(".public-header").count(), 0);

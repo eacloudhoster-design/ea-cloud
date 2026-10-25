@@ -1,0 +1,69 @@
+{
+  "results": [
+    {
+      "width": 1440,
+      "legalContentUnchanged": true,
+      "noBackLink": true,
+      "headingFontAndWeight": true,
+      "tabsAndPrivacyControls": true,
+      "exactHomepageCopy": true,
+      "responsive": true,
+      "headerlessSignup": true,
+      "registrationFixturePassed": true,
+      "mobileSignupBaselineCompared": false
+    },
+    {
+      "width": 820,
+      "legalContentUnchanged": true,
+      "noBackLink": true,
+      "headingFontAndWeight": true,
+      "tabsAndPrivacyControls": true,
+      "exactHomepageCopy": true,
+      "responsive": true,
+      "headerlessSignup": true,
+      "registrationFixturePassed": true,
+      "mobileSignupBaselineCompared": false
+    },
+    {
+      "width": 390,
+      "legalContentUnchanged": true,
+      "noBackLink": true,
+      "headingFontAndWeight": true,
+      "tabsAndPrivacyControls": true,
+      "exactHomepageCopy": true,
+      "responsive": true,
+      "headerlessSignup": true,
+      "registrationFixturePassed": true,
+      "mobileSignupBaselineCompared": true
+    },
+    {
+      "width": 430,
+      "legalContentUnchanged": true,
+      "noBackLink": true,
+      "headingFontAndWeight": true,
+      "tabsAndPrivacyControls": true,
+      "exactHomepageCopy": true,
+      "responsive": true,
+      "headerlessSignup": true,
+      "registrationFixturePassed": true,
+      "mobileSignupBaselineCompared": true
+    },
+    {
+      "width": 320,
+      "legalContentUnchanged": true,
+      "noBackLink": true,
+      "headingFontAndWeight": true,
+      "tabsAndPrivacyControls": true,
+      "exactHomepageCopy": true,
+      "responsive": true,
+      "headerlessSignup": true,
+      "registrationFixturePassed": true,
+      "mobileSignupBaselineCompared": false
+    }
+  ],
+  "staggeredEntrance": true,
+  "limitations": [
+    "Chromium desktop and touch emulation; no physical Android/iPhone Safari testing.",
+    "Registration/privacy API fixtures only; no live account created or privacy email sent."
+  ]
+}

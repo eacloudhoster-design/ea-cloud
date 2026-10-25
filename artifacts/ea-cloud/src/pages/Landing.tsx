@@ -1,3 +1,4 @@
+import "../styles/PublicTypography.css";
 import { useEffect, useRef } from "react";
 import {
   ArrowUpRight,
@@ -143,18 +144,21 @@ export default function Landing() {
             />
           </h1>
           <h2 className="hero-enter">
-            The Future of <br />
-            Automated Trading
+            <span className="hero-headline-lead">The Future of</span>
+            <span className="hero-headline-metal">Automated Trading</span>
           </h2>
           <div className="hero-description hero-enter">
             <p>
-              EA Cloud is a modern trading platform that connects traders with
-              experienced mentors through automated copy trading, intelligent
-              chart analysis and seamless account management.
+              EA Cloud connects traders with experienced mentors through{" "}
+              <span className="hero-text-accent">intelligent copy trading</span>
+              , AI-powered chart analysis, and seamless trading account
+              management.
             </p>
             <p>
-              Access your trading tools, manage your connections and explore a
-              smarter trading experience in one place.
+              Connect your trading account, explore{" "}
+              <span className="hero-text-accent">advanced trading tools</span>,
+              and experience a smarter way to trade—all in one powerful
+              platform.
             </p>
           </div>
           <div className="public-cta-row hero-enter">

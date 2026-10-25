@@ -1,7 +1,12 @@
-/* Match the public header's mobile mode; desktop form spacing stays unchanged. */
+/* Desktop Sign Up starts below the browser UI, without the former header offset. */
+.mentor-register-page {
+  padding-top: max(24px, env(safe-area-inset-top));
+  align-items: flex-start;
+}
+/* Keep the existing mobile Sign Up alignment and spacing exactly as before. */
 @media (max-width: 760px),
   (max-width: 960px) and (max-height: 500px) and (hover: none) and (pointer: coarse) {
   .mentor-register-page {
-    padding-top: max(24px, env(safe-area-inset-top));
+    align-items: center;
   }
 }

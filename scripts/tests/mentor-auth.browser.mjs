@@ -69,10 +69,7 @@ try {
         ) >=
           size.width / 2,
       );
-      assert.equal(
-        await p.locator(".public-header").count(),
-        mobile || route === "admin/login" ? 0 : 1,
-      );
+      assert.equal(await p.locator(".public-header").count(), 0);
       assert.equal(
         await p.locator(".public-mobile-sheet,.public-mobile-backdrop").count(),
         0,
@@ -97,10 +94,24 @@ try {
             rect: el.getBoundingClientRect().toJSON(),
           })),
         );
-      if (
+      if (viewport.width === 1440 && route === "register") {
+        const baseline = JSON.parse(
+          await readFile(`${out}/1440-register-before.json`, "utf8"),
+        );
+        const shift = geometry[0].rect.top - baseline[0].rect.top;
+        geometry.forEach((entry, i) => {
+          assert.equal(entry.rect.width, baseline[i].rect.width);
+          assert.equal(entry.rect.height, baseline[i].rect.height);
+          assert.equal(entry.rect.left, baseline[i].rect.left);
+          assert.ok(
+            Math.abs(entry.rect.top - baseline[i].rect.top - shift) < 0.1,
+          );
+        });
+        assert.equal(size.y, 24);
+      } else if (
         viewport.width === 1440 ||
         (viewport.width === 390 && route === "admin/login")
-      )
+      ) {
         assert.deepEqual(
           geometry,
           JSON.parse(
@@ -109,8 +120,8 @@ try {
               "utf8",
             ),
           ),
-          "desktop form layout / existing headerless Sign In layout unchanged",
         );
+      }
       if ([1440, 390].includes(viewport.width))
         await p.screenshot({
           path: `${out}/${viewport.width}-${name}-after.png`,
@@ -143,7 +154,7 @@ try {
           .getByText("Account Created Successfully", { exact: true })
           .waitFor();
         assert.equal(submitted.mentorName, "Test Mentor");
-        assert.equal(await p.locator(".public-header").count(), mobile ? 0 : 1);
+        assert.equal(await p.locator(".public-header").count(), 0);
       } else {
         await p
           .getByPlaceholder("admin@eacloud.com")
