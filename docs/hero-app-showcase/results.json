@@ -1,0 +1,231 @@
+{
+  "status": "PARTIAL / BLOCKED: exact three interface screenshots were not attached",
+  "baseline": "65e2399",
+  "heroShowcaseImplemented": false,
+  "originalHeroLogo": "retained until the replacement source images are supplied",
+  "typescript": "passed",
+  "publicProductionBuild": "passed with existing Vite warnings",
+  "fontLicenseIncludedInBuild": true,
+  "fontSha256": "ce87e6a1b1955bbc7b1d2d1c30fb5b53af5e34edb5b93a33e28068054892ef74",
+  "installationChecks": {
+    "results": [
+      {
+        "viewport": {
+          "width": 1440,
+          "height": 1000
+        },
+        "typography": {
+          "title": "\"EA Cloud Hero\", Inter, Arial, sans-serif",
+          "paragraph": "Inter, Arial, sans-serif",
+          "nav": "Geist, Inter, sans-serif",
+          "dot": "rgb(239, 57, 67)",
+          "loaded": true,
+          "headingWidth": 558,
+          "headingClient": 558
+        },
+        "iosGuide": true,
+        "androidGuide": true,
+        "realAppEntry": true,
+        "manualCopyFallback": true,
+        "modalCloseAndFocus": true,
+        "overflow": false,
+        "screenshotShowcase": "blocked: original three screenshots not attached"
+      },
+      {
+        "viewport": {
+          "width": 390,
+          "height": 844
+        },
+        "typography": {
+          "title": "\"EA Cloud Hero\", Inter, Arial, sans-serif",
+          "paragraph": "Inter, Arial, sans-serif",
+          "nav": "Geist, Inter, sans-serif",
+          "dot": "rgb(239, 57, 67)",
+          "loaded": true,
+          "headingWidth": 342,
+          "headingClient": 342
+        },
+        "iosGuide": true,
+        "androidGuide": true,
+        "realAppEntry": true,
+        "manualCopyFallback": true,
+        "modalCloseAndFocus": true,
+        "overflow": false,
+        "screenshotShowcase": "blocked: original three screenshots not attached"
+      },
+      {
+        "viewport": {
+          "width": 320,
+          "height": 568
+        },
+        "typography": {
+          "title": "\"EA Cloud Hero\", Inter, Arial, sans-serif",
+          "paragraph": "Inter, Arial, sans-serif",
+          "nav": "Geist, Inter, sans-serif",
+          "dot": "rgb(239, 57, 67)",
+          "loaded": true,
+          "headingWidth": 280,
+          "headingClient": 280
+        },
+        "iosGuide": true,
+        "androidGuide": true,
+        "realAppEntry": true,
+        "manualCopyFallback": true,
+        "modalCloseAndFocus": true,
+        "overflow": false,
+        "screenshotShowcase": "blocked: original three screenshots not attached"
+      }
+    ],
+    "physicalDevices": false,
+    "nativeInstallPrompt": "No handler exists in app; manual browser installation instructions link to existing manifest-scoped app entry."
+  },
+  "existingWebsiteRegression": {
+    "viewports": [
+      {
+        "viewport": {
+          "width": 1440,
+          "height": 1000
+        },
+        "hero": {
+          "x": 0,
+          "y": 0,
+          "width": 1440,
+          "height": 1000
+        },
+        "accountBounds": {
+          "x": 1152.0999755859375,
+          "y": 72,
+          "width": 229.9000244140625,
+          "height": 160.5500030517578
+        },
+        "outlineAndIndependentEyes": {
+          "first": {
+            "offset": "0.885196px",
+            "left": "0.369938",
+            "right": "0.242472"
+          },
+          "later": {
+            "offset": "0.774089px",
+            "left": "0.549992",
+            "right": "0.418827"
+          }
+        },
+        "dropdownToggleOutsideEscapeHelp": true,
+        "navigationAndCTAs": true,
+        "loginAndRegistrationHandlers": true,
+        "existingAppEntry": true,
+        "horizontalOverflow": false
+      },
+      {
+        "viewport": {
+          "width": 768,
+          "height": 1024
+        },
+        "hero": {
+          "x": 0,
+          "y": 0,
+          "width": 768,
+          "height": 1024
+        },
+        "accountBounds": {
+          "x": 507.1000061035156,
+          "y": 72,
+          "width": 229.89999389648438,
+          "height": 160.5500030517578
+        },
+        "outlineAndIndependentEyes": {
+          "first": {
+            "offset": "0.85186px",
+            "left": "0.45489",
+            "right": "0.267522"
+          },
+          "later": {
+            "offset": "0.738904px",
+            "left": "0.704286",
+            "right": "0.490743"
+          }
+        },
+        "dropdownToggleOutsideEscapeHelp": true,
+        "navigationAndCTAs": true,
+        "loginAndRegistrationHandlers": true,
+        "existingAppEntry": true,
+        "horizontalOverflow": false
+      },
+      {
+        "viewport": {
+          "width": 390,
+          "height": 844
+        },
+        "hero": {
+          "x": 0,
+          "y": 0,
+          "width": 390,
+          "height": 844
+        },
+        "accountBounds": {
+          "x": 101.7301254272461,
+          "y": 64.90570831298828,
+          "width": 231.2698745727539,
+          "height": 161.50664520263672
+        },
+        "outlineAndIndependentEyes": {
+          "first": {
+            "offset": "0.909267px",
+            "left": "0.312617",
+            "right": "0.6"
+          },
+          "later": {
+            "offset": "0.798153px",
+            "left": "0.540915",
+            "right": "0.36358"
+          }
+        },
+        "dropdownToggleOutsideEscapeHelp": true,
+        "navigationAndCTAs": true,
+        "loginAndRegistrationHandlers": true,
+        "existingAppEntry": true,
+        "horizontalOverflow": false
+      },
+      {
+        "viewport": {
+          "width": 320,
+          "height": 568
+        },
+        "hero": {
+          "x": 0,
+          "y": 0,
+          "width": 320,
+          "height": 782.84375
+        },
+        "accountBounds": {
+          "x": 44.10000228881836,
+          "y": 64,
+          "width": 229.89999771118164,
+          "height": 160.5500030517578
+        },
+        "outlineAndIndependentEyes": {
+          "first": {
+            "offset": "0.91297px",
+            "left": "0.304944",
+            "right": "0.6"
+          },
+          "later": {
+            "offset": "0.80187px",
+            "left": "0.537909",
+            "right": "0.355277"
+          }
+        },
+        "dropdownToggleOutsideEscapeHelp": true,
+        "navigationAndCTAs": true,
+        "loginAndRegistrationHandlers": true,
+        "existingAppEntry": true,
+        "horizontalOverflow": false
+      }
+    ],
+    "reducedMotion": true,
+    "sessionPreserved": true,
+    "backend": "API fixtures; no real accounts created",
+    "physicalDevices": false
+  },
+  "productionDeployment": false
+}

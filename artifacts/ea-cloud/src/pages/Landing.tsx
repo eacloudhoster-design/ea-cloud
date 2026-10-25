@@ -10,6 +10,7 @@ import {
   MoveUpRight,
 } from "lucide-react";
 import CinematicLogo from "@/components/CinematicLogo";
+import AppInstallation from "@/components/AppInstallation";
 import {
   Accordion,
   AccordionContent,
@@ -201,13 +202,7 @@ export default function Landing() {
             together with EA Cloud. Open the existing app on your phone or
             desktop and continue through your account-access flow.
           </p>
-          <a href="/ea-app/" className="public-cta public-cta-primary">
-            Open EA Cloud
-            <ArrowUpRight size={18} />
-          </a>
-          <span className="public-small-note">
-            For mobile &amp; desktop · Existing access requirements apply
-          </span>
+          <AppInstallation />
         </div>
       </section>
       <section
