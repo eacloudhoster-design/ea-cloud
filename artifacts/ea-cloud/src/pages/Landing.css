@@ -90,9 +90,6 @@
   white-space: nowrap;
   margin: 0 0 24px;
 }
-.hero-title-period {
-  color: var(--public-red);
-}
 .hero-copy h2 {
   font-size: clamp(25px, 2.7vw, 43px);
   line-height: 1.16;
@@ -717,36 +714,29 @@
   z-index: 3;
 }
 
-/* Authentic bundled Orbitron; scoped exclusively to the large hero wordmark. */
-@font-face {
-  font-family: "EA Cloud Hero";
-  src: url("../assets/fonts/orbitron-latin-900-normal.woff2") format("woff2");
-  font-weight: 900;
-  font-style: normal;
-  font-display: swap;
-}
+/* Preserve the previous heading's line-box height; display the original artwork. */
 .hero-copy h1 {
-  font-family: "EA Cloud Hero", Inter, Arial, sans-serif;
-  font-weight: 900;
-  font-size: clamp(43px, 5.2vw, 92px);
-  letter-spacing: -0.065em;
-  line-height: clamp(53.04px, 6.426vw, 114.24px);
+  height: clamp(53.04px, 6.426vw, 114.24px);
+}
+.hero-wordmark {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: left center;
 }
 @media (max-width: 1100px) {
   .hero-copy h1 {
-    font-size: clamp(43px, 8.1vw, 64px);
-    line-height: clamp(45.9px, 10.2vw, 69.36px);
+    height: clamp(45.9px, 10.2vw, 69.36px);
   }
 }
 @media (max-width: 480px) {
   .hero-copy h1 {
-    font-size: 43px;
-    line-height: 51px;
+    height: 51px;
   }
 }
 @media (max-width: 360px) {
   .hero-copy h1 {
-    font-size: 36px;
-    line-height: 43.86px;
+    height: 43.86px;
   }
 }

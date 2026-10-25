@@ -18,6 +18,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import "./Landing.css";
+import { homepageWordmark } from "@/lib/branding";
 
 const features = [
   {
@@ -130,7 +131,14 @@ export default function Landing() {
             <span /> THE NEXT CHAPTER OF TRADING
           </p>
           <h1 id="hero-title" className="hero-enter">
-            EA CLOUD<span className="hero-title-period">.</span>
+            <img
+              className="hero-wordmark"
+              src={homepageWordmark}
+              alt="EA CLOUD"
+              width="1150"
+              height="168"
+              fetchPriority="high"
+            />
           </h1>
           <h2 className="hero-enter">
             The Future of <br />
