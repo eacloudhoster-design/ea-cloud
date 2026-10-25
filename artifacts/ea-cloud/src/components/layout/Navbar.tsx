@@ -13,6 +13,7 @@ import {
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import "./PublicNavigation.css";
+import { useSmartPublicNavigation } from "@/hooks/use-smart-public-navigation";
 
 const sections = [
   { label: "Home", href: "/", id: "home" },
@@ -52,6 +53,15 @@ export function Navbar() {
   const [account, setAccount] = useState(false);
   const [help, setHelp] = useState(false);
   const [active, setActive] = useState("home");
+  const header = useRef<HTMLElement>(null);
+  useSmartPublicNavigation(
+    header,
+    account ||
+      mobilePanel.panel !== null ||
+      path === "/register" ||
+      path === "/admin/login",
+    `${path}:${compact}`,
+  );
   useEffect(() => {
     mobilePanel.close();
     setAccount(false);
@@ -121,7 +131,7 @@ export function Navbar() {
   if (compact && (path === "/register" || path === "/admin/login")) return null;
   return (
     <>
-      <header className="public-header">
+      <header ref={header} className="public-header">
         <a className="public-skip" href="#public-content">
           Skip to content
         </a>

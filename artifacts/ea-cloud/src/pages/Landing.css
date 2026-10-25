@@ -740,3 +740,14 @@
     height: 43.86px;
   }
 }
+
+/* Viewport-edge motion composes with the original reveal and hover animations. */
+@media (prefers-reduced-motion: no-preference) {
+  .cinematic-site [data-scroll-motion] {
+    filter: var(--scroll-filter, none);
+    translate: var(--scroll-translate, none);
+  }
+  .cinematic-site [data-scroll-soft] {
+    will-change: filter, translate;
+  }
+}

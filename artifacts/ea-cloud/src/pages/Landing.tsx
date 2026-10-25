@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/accordion";
 import "./Landing.css";
 import { homepageWordmark } from "@/lib/branding";
+import { usePublicScrollMotion } from "@/hooks/use-public-scroll-motion";
 
 const features = [
   {
@@ -74,6 +75,7 @@ const faqs = [
 export default function Landing() {
   const root = useRef<HTMLElement>(null);
   const atmosphere = useRef<HTMLDivElement>(null);
+  usePublicScrollMotion(root);
   useEffect(() => {
     const reduced = matchMedia("(prefers-reduced-motion: reduce)");
     const observer = new IntersectionObserver(
