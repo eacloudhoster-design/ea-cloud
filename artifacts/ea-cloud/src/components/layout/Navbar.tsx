@@ -1,4 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import MobilePublicPanel from "./MobilePublicPanel";
+import { usePublicMobilePanel } from "@/hooks/use-public-mobile-panel";
 import { useLocation } from "wouter";
 import { UserRound, Menu, X, ArrowUpRight, ChevronDown } from "lucide-react";
 import { logo } from "@/lib/branding";
@@ -17,15 +19,42 @@ const sections = [
   { label: "Features", href: "/#features", id: "features" },
 ];
 export function Navbar() {
-  const [path] = useLocation();
-  const [mobile, setMobile] = useState(false);
+  const [path, navigate] = useLocation();
+  const [compact, setCompact] = useState(
+    () =>
+      window.matchMedia(
+        "(max-width: 760px), (max-width: 960px) and (max-height: 500px) and (hover: none) and (pointer: coarse)",
+      ).matches,
+  );
+  const mobilePanel = usePublicMobilePanel(compact);
+  const mobileAccount = useRef<HTMLButtonElement>(null),
+    mobileMenu = useRef<HTMLButtonElement>(null),
+    panelTrigger = useRef<HTMLButtonElement | null>(null);
+  useEffect(() => {
+    const media = window.matchMedia(
+      "(max-width: 760px), (max-width: 960px) and (max-height: 500px) and (hover: none) and (pointer: coarse)",
+    );
+    const update = () => {
+      setCompact(media.matches);
+      setAccount(false);
+    };
+    media.addEventListener("change", update);
+    return () => media.removeEventListener("change", update);
+  }, []);
+  useEffect(() => {
+    if (mobilePanel.panel)
+      panelTrigger.current =
+        mobilePanel.panel === "account"
+          ? mobileAccount.current
+          : mobileMenu.current;
+  }, [mobilePanel.panel]);
   const [account, setAccount] = useState(false);
   const [help, setHelp] = useState(false);
   const [active, setActive] = useState("home");
   useEffect(() => {
-    setMobile(false);
+    mobilePanel.close();
     setAccount(false);
-  }, [path]);
+  }, [path, mobilePanel.close]);
   useEffect(() => {
     if (path !== "/") return;
     const observer = new IntersectionObserver(
@@ -42,7 +71,6 @@ export function Navbar() {
     return () => observer.disconnect();
   }, [path]);
   const jump = (event: React.MouseEvent<HTMLAnchorElement>, id: string) => {
-    setMobile(false);
     setAccount(false);
     if (
       path !== "/" ||
@@ -64,156 +92,190 @@ export function Navbar() {
     });
     setActive(id);
   };
+  const selectMobile = (href: string, section?: string) => {
+    mobilePanel.close(() => {
+      if (section && path === "/") {
+        const target = document.getElementById(section);
+        if (target) {
+          history.pushState(
+            null,
+            "",
+            section === "home" ? "/" : `/#${section}`,
+          );
+          target.scrollIntoView({
+            behavior: matchMedia("(prefers-reduced-motion: reduce)").matches
+              ? "instant"
+              : "smooth",
+          });
+          setActive(section);
+          return;
+        }
+      }
+      if (href === "/ea-app/") window.location.assign(href);
+      else navigate(href);
+    });
+  };
   return (
-    <header className="public-header">
-      <a className="public-skip" href="#public-content">
-        Skip to content
-      </a>
-      <div className="public-nav-shell">
-        <a
-          href="/"
-          className="public-brand"
-          onClick={(event) => jump(event, "home")}
-          aria-label="EA Cloud homepage"
-        >
-          <img src={logo} alt="" width="44" height="44" />
-          <span>
-            EA CLOUD<span className="public-brand-dot">.</span>
-          </span>
+    <>
+      <header className="public-header">
+        <a className="public-skip" href="#public-content">
+          Skip to content
         </a>
-        <nav className="public-nav-links" aria-label="Website navigation">
-          {sections.map((item) => (
-            <a
-              key={item.id}
-              href={item.href}
-              onClick={(event) => jump(event, item.id)}
-              aria-current={
-                path === "/" && active === item.id ? "location" : undefined
-              }
-            >
-              {item.label}
-            </a>
-          ))}
-        </nav>
-        <div className="public-nav-actions">
-          <a className="public-get-app" href="/ea-app/">
-            Get App
-            <ArrowUpRight size={15} />
-          </a>
-          <DropdownMenu
-            modal={false}
-            open={account}
-            onOpenChange={(value) => {
-              setAccount(value);
-              setHelp(false);
-              if (value) setMobile(false);
-            }}
+        <div className="public-nav-shell">
+          <a
+            href="/"
+            className="public-brand"
+            onClick={(event) => jump(event, "home")}
+            aria-label="EA Cloud homepage"
           >
-            <DropdownMenuTrigger asChild>
-              <button className="public-icon-button" aria-label="Account menu">
+            <img src={logo} alt="" width="44" height="44" />
+            <span>
+              EA CLOUD<span className="public-brand-dot">.</span>
+            </span>
+          </a>
+          <nav className="public-nav-links" aria-label="Website navigation">
+            {sections.map((item) => (
+              <a
+                key={item.id}
+                href={item.href}
+                onClick={(event) => jump(event, item.id)}
+                aria-current={
+                  path === "/" && active === item.id ? "location" : undefined
+                }
+              >
+                {item.label}
+              </a>
+            ))}
+          </nav>
+          <div className="public-nav-actions">
+            <a className="public-get-app" href="/ea-app/">
+              Get App
+              <ArrowUpRight size={15} />
+            </a>
+            {compact ? (
+              <button
+                ref={mobileAccount}
+                type="button"
+                className="public-icon-button"
+                aria-label="Account menu"
+                aria-expanded={mobilePanel.panel === "account"}
+                aria-haspopup="dialog"
+                onClick={() => mobilePanel.open("account")}
+              >
                 <UserRound size={22} strokeWidth={1.6} />
               </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent
-              className="public-account-menu"
-              align="end"
-              sideOffset={16}
-              collisionPadding={12}
-            >
-              <DropdownMenuItem asChild>
-                <a href="/admin/login">
-                  Sign In
-                  <ArrowUpRight size={15} />
-                </a>
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <a href="/register">
-                  Sign Up
-                  <ArrowUpRight size={15} />
-                </a>
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                onSelect={(event) => {
-                  event.preventDefault();
-                  setHelp(!help);
+            ) : (
+              <DropdownMenu
+                modal={false}
+                open={account}
+                onOpenChange={(value) => {
+                  setAccount(value);
+                  setHelp(false);
                 }}
-                aria-expanded={help}
-                aria-controls="public-help-menu"
               >
-                Help
-                <ChevronDown
-                  size={15}
-                  style={{ transform: help ? "rotate(180deg)" : undefined }}
-                />
-              </DropdownMenuItem>
-              {help && (
-                <div
-                  id="public-help-menu"
-                  role="group"
-                  aria-label="Help options"
-                  className="public-help-options"
+                <DropdownMenuTrigger asChild>
+                  <button
+                    className="public-icon-button"
+                    aria-label="Account menu"
+                  >
+                    <UserRound size={22} strokeWidth={1.6} />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent
+                  className="public-account-menu"
+                  align="end"
+                  sideOffset={16}
+                  collisionPadding={12}
                 >
                   <DropdownMenuItem asChild>
-                    <a href="/#help" onClick={(event) => jump(event, "help")}>
-                      Frequently asked questions
+                    <a href="/admin/login">
+                      Sign In
+                      <ArrowUpRight size={15} />
                     </a>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
-                    <a
-                      href="/#access-help"
-                      onClick={(event) => jump(event, "access-help")}
-                    >
-                      License &amp; access help
+                    <a href="/register">
+                      Sign Up
+                      <ArrowUpRight size={15} />
                     </a>
                   </DropdownMenuItem>
-                </div>
-              )}
-            </DropdownMenuContent>
-          </DropdownMenu>
-          <button
-            className="public-icon-button public-mobile-toggle"
-            aria-label={mobile ? "Close navigation" : "Open navigation"}
-            aria-expanded={mobile}
-            aria-controls="public-mobile-nav"
-            onClick={() => {
-              setMobile(!mobile);
-              setAccount(false);
-            }}
-          >
-            {mobile ? <X size={22} /> : <Menu size={22} />}
-          </button>
-        </div>
-      </div>
-      {mobile && (
-        <nav
-          id="public-mobile-nav"
-          className="public-mobile-nav"
-          aria-label="Mobile website navigation"
-          onKeyDown={(event) => {
-            if (event.key === "Escape") {
-              setMobile(false);
-              document
-                .querySelector<HTMLButtonElement>(".public-mobile-toggle")
-                ?.focus();
-            }
-          }}
-        >
-          {sections.map((item) => (
-            <a
-              key={item.id}
-              href={item.href}
-              onClick={(event) => jump(event, item.id)}
-              aria-current={
-                path === "/" && active === item.id ? "location" : undefined
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    onSelect={(event) => {
+                      event.preventDefault();
+                      setHelp(!help);
+                    }}
+                    aria-expanded={help}
+                    aria-controls="public-help-menu"
+                  >
+                    Help
+                    <ChevronDown
+                      size={15}
+                      style={{ transform: help ? "rotate(180deg)" : undefined }}
+                    />
+                  </DropdownMenuItem>
+                  {help && (
+                    <div
+                      id="public-help-menu"
+                      role="group"
+                      aria-label="Help options"
+                      className="public-help-options"
+                    >
+                      <DropdownMenuItem asChild>
+                        <a
+                          href="/#help"
+                          onClick={(event) => jump(event, "help")}
+                        >
+                          Frequently asked questions
+                        </a>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <a
+                          href="/#access-help"
+                          onClick={(event) => jump(event, "access-help")}
+                        >
+                          License &amp; access help
+                        </a>
+                      </DropdownMenuItem>
+                    </div>
+                  )}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
+            <button
+              ref={mobileMenu}
+              type="button"
+              className="public-icon-button public-mobile-toggle"
+              aria-label={
+                mobilePanel.panel === "navigation"
+                  ? "Close navigation"
+                  : "Open navigation"
               }
+              aria-expanded={mobilePanel.panel === "navigation"}
+              aria-controls="public-mobile-nav"
+              onClick={() => {
+                setAccount(false);
+                mobilePanel.open("navigation");
+              }}
             >
-              {item.label}
-              <ArrowUpRight size={16} />
-            </a>
-          ))}
-        </nav>
+              {mobilePanel.panel === "navigation" ? (
+                <X size={22} />
+              ) : (
+                <Menu size={22} />
+              )}
+            </button>
+          </div>
+        </div>
+      </header>
+      {compact && (
+        <MobilePublicPanel
+          kind={mobilePanel.panel}
+          active={path === "/" ? active : ""}
+          trigger={panelTrigger}
+          onDismiss={() => mobilePanel.close()}
+          onSelect={selectMobile}
+        />
       )}
-    </header>
+    </>
   );
 }

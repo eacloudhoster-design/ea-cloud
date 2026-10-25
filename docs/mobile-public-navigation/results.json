@@ -1,0 +1,696 @@
+{
+  "baseline": "13f770e6f26b20f1b201452479dc544dba7d660c",
+  "scope": "public website mobile navigation only",
+  "typescript": "passed",
+  "publicProductionBuild": "passed; existing Vite warnings remain",
+  "combinedOutputVerification": "passed",
+  "fullMobileAndDesktopRun": {
+    "mobile": [
+      {
+        "viewport": {
+          "width": 390,
+          "height": 844
+        },
+        "logoCentre": true,
+        "headerOnlyThreeElements": true,
+        "accountBounds": {
+          "x": 0,
+          "y": 480.5,
+          "width": 390,
+          "height": 363.5
+        },
+        "scrollPreserved": true,
+        "backForwardAndEscape": true,
+        "touchHandleAndPanelSwipe": true,
+        "smallPullSnapback": true,
+        "helpLinks": true,
+        "englishOnlyTrueAvailability": true,
+        "hamburgerAllDestinations": true,
+        "signInSignUp": true,
+        "responsiveCleanup": true
+      },
+      {
+        "viewport": {
+          "width": 320,
+          "height": 568
+        },
+        "logoCentre": true,
+        "headerOnlyThreeElements": true,
+        "accountBounds": {
+          "x": 0,
+          "y": 204.5,
+          "width": 320,
+          "height": 363.5
+        },
+        "scrollPreserved": true,
+        "backForwardAndEscape": true,
+        "touchHandleAndPanelSwipe": true,
+        "smallPullSnapback": true,
+        "helpLinks": true,
+        "englishOnlyTrueAvailability": true,
+        "hamburgerAllDestinations": true,
+        "signInSignUp": true,
+        "responsiveCleanup": true
+      },
+      {
+        "viewport": {
+          "width": 430,
+          "height": 932
+        },
+        "logoCentre": true,
+        "headerOnlyThreeElements": true,
+        "accountBounds": {
+          "x": 0,
+          "y": 568.5,
+          "width": 430,
+          "height": 363.5
+        },
+        "scrollPreserved": true,
+        "backForwardAndEscape": true,
+        "touchHandleAndPanelSwipe": true,
+        "smallPullSnapback": true,
+        "helpLinks": true,
+        "englishOnlyTrueAvailability": true,
+        "hamburgerAllDestinations": true,
+        "signInSignUp": true,
+        "responsiveCleanup": true
+      },
+      {
+        "viewport": {
+          "width": 844,
+          "height": 390
+        },
+        "logoCentre": true,
+        "headerOnlyThreeElements": true,
+        "accountBounds": {
+          "x": 0,
+          "y": 94,
+          "width": 844,
+          "height": 296
+        },
+        "scrollPreserved": true,
+        "backForwardAndEscape": true,
+        "touchHandleAndPanelSwipe": true,
+        "smallPullSnapback": true,
+        "helpLinks": true,
+        "englishOnlyTrueAvailability": true,
+        "hamburgerAllDestinations": true,
+        "signInSignUp": true,
+        "responsiveCleanup": true
+      }
+    ],
+    "desktop": [
+      {
+        "viewport": {
+          "width": 1440,
+          "height": 1000
+        },
+        "pixelIdentical": true,
+        "sha256": "22b2bac5bb4c9a56ab4d81a4142f62341baf14dd08a138b508fae5e4947e17c2"
+      },
+      {
+        "viewport": {
+          "width": 1024,
+          "height": 900
+        },
+        "pixelIdentical": true,
+        "sha256": "e7d19c66dfad521cf067cfbe2d84bdd3d55617ca40f9386ea2dad238c9b990bb"
+      },
+      {
+        "viewport": {
+          "width": 768,
+          "height": 1024
+        },
+        "pixelIdentical": true,
+        "sha256": "e44e4ffc2ce0c89717ba54e4a57cd274fafa4726cb46eadd52770c1b4d69985a"
+      }
+    ],
+    "physicalDevices": false,
+    "translations": "English implemented; Portuguese/Spanish explicitly unavailable, not fake selections."
+  },
+  "final390Run": {
+    "mobile": [
+      {
+        "viewport": {
+          "width": 390,
+          "height": 844
+        },
+        "logoCentre": true,
+        "headerOnlyThreeElements": true,
+        "accountBounds": {
+          "x": 0,
+          "y": 480.5,
+          "width": 390,
+          "height": 363.5
+        },
+        "scrollPreserved": true,
+        "backForwardAndEscape": true,
+        "touchHandleAndPanelSwipe": true,
+        "smallPullSnapback": true,
+        "helpLinks": true,
+        "englishOnlyTrueAvailability": true,
+        "hamburgerAllDestinations": true,
+        "signInSignUp": true,
+        "responsiveCleanup": true
+      }
+    ],
+    "desktop": [
+      {
+        "viewport": {
+          "width": 1440,
+          "height": 1000
+        },
+        "pixelIdentical": true,
+        "sha256": "22b2bac5bb4c9a56ab4d81a4142f62341baf14dd08a138b508fae5e4947e17c2"
+      },
+      {
+        "viewport": {
+          "width": 1024,
+          "height": 900
+        },
+        "pixelIdentical": true,
+        "sha256": "e7d19c66dfad521cf067cfbe2d84bdd3d55617ca40f9386ea2dad238c9b990bb"
+      },
+      {
+        "viewport": {
+          "width": 768,
+          "height": 1024
+        },
+        "pixelIdentical": true,
+        "sha256": "e44e4ffc2ce0c89717ba54e4a57cd274fafa4726cb46eadd52770c1b4d69985a"
+      }
+    ],
+    "physicalDevices": false,
+    "translations": "English implemented; Portuguese/Spanish explicitly unavailable, not fake selections."
+  },
+  "final320NativeScrollRun": {
+    "mobile": [
+      {
+        "viewport": {
+          "width": 320,
+          "height": 568
+        },
+        "logoCentre": true,
+        "headerOnlyThreeElements": true,
+        "accountBounds": {
+          "x": 0,
+          "y": 204.5,
+          "width": 320,
+          "height": 363.5
+        },
+        "scrollPreserved": true,
+        "backForwardAndEscape": true,
+        "touchHandleAndPanelSwipe": true,
+        "smallPullSnapback": true,
+        "helpLinks": true,
+        "englishOnlyTrueAvailability": true,
+        "hamburgerAllDestinations": true,
+        "signInSignUp": true,
+        "responsiveCleanup": true
+      }
+    ],
+    "desktop": [
+      {
+        "viewport": {
+          "width": 1440,
+          "height": 1000
+        },
+        "pixelIdentical": true,
+        "sha256": "22b2bac5bb4c9a56ab4d81a4142f62341baf14dd08a138b508fae5e4947e17c2"
+      },
+      {
+        "viewport": {
+          "width": 1024,
+          "height": 900
+        },
+        "pixelIdentical": true,
+        "sha256": "e7d19c66dfad521cf067cfbe2d84bdd3d55617ca40f9386ea2dad238c9b990bb"
+      },
+      {
+        "viewport": {
+          "width": 768,
+          "height": 1024
+        },
+        "pixelIdentical": true,
+        "sha256": "e44e4ffc2ce0c89717ba54e4a57cd274fafa4726cb46eadd52770c1b4d69985a"
+      }
+    ],
+    "physicalDevices": false,
+    "translations": "English implemented; Portuguese/Spanish explicitly unavailable, not fake selections."
+  },
+  "visibleOpeningMotionRun": {
+    "mobile": [
+      {
+        "viewport": {
+          "width": 390,
+          "height": 844
+        },
+        "logoCentre": true,
+        "headerOnlyThreeElements": true,
+        "accountBounds": {
+          "x": 0,
+          "y": 480.5,
+          "width": 390,
+          "height": 363.5
+        },
+        "openingFrames": [
+          {
+            "wait": 0,
+            "x": 0,
+            "y": 778.5496826171875,
+            "width": 390,
+            "height": 363.5
+          },
+          {
+            "wait": 80,
+            "x": 0,
+            "y": 533.8370361328125,
+            "width": 390,
+            "height": 363.5
+          },
+          {
+            "wait": 120,
+            "x": 0,
+            "y": 485.0904235839844,
+            "width": 390,
+            "height": 363.5000305175781
+          },
+          {
+            "wait": 160,
+            "x": 0,
+            "y": 480.5,
+            "width": 390,
+            "height": 363.5
+          }
+        ],
+        "scrollPreserved": true,
+        "backForwardAndEscape": true,
+        "touchHandleAndPanelSwipe": true,
+        "smallPullSnapback": true,
+        "helpLinks": true,
+        "englishOnlyTrueAvailability": true,
+        "hamburgerAllDestinations": true,
+        "signInSignUp": true,
+        "responsiveCleanup": true
+      }
+    ],
+    "desktop": [
+      {
+        "viewport": {
+          "width": 1440,
+          "height": 1000
+        },
+        "pixelIdentical": true,
+        "sha256": "22b2bac5bb4c9a56ab4d81a4142f62341baf14dd08a138b508fae5e4947e17c2"
+      },
+      {
+        "viewport": {
+          "width": 1024,
+          "height": 900
+        },
+        "pixelIdentical": true,
+        "sha256": "e7d19c66dfad521cf067cfbe2d84bdd3d55617ca40f9386ea2dad238c9b990bb"
+      },
+      {
+        "viewport": {
+          "width": 768,
+          "height": 1024
+        },
+        "pixelIdentical": true,
+        "sha256": "e44e4ffc2ce0c89717ba54e4a57cd274fafa4726cb46eadd52770c1b4d69985a"
+      }
+    ],
+    "physicalDevices": false,
+    "translations": "English implemented; Portuguese/Spanish explicitly unavailable, not fake selections."
+  },
+  "publicRegression": {
+    "viewports": [
+      {
+        "viewport": {
+          "width": 1440,
+          "height": 1000
+        },
+        "hero": {
+          "x": 0,
+          "y": 0,
+          "width": 1440,
+          "height": 1000
+        },
+        "accountBounds": {
+          "x": 1152.0999755859375,
+          "y": 72,
+          "width": 229.9000244140625,
+          "height": 160.5500030517578
+        },
+        "composition": [
+          {
+            "id": "s2tone",
+            "rect": {
+              "x": 675.3831176757812,
+              "y": 203.01812744140625,
+              "width": 277.4798583984375,
+              "height": 529.245849609375,
+              "top": 203.01812744140625,
+              "right": 952.8629760742188,
+              "bottom": 732.2639770507812,
+              "left": 675.3831176757812
+            },
+            "z": 1,
+            "image": "http://127.0.0.1:5216/showcase/s2tone-360.webp",
+            "fit": "contain",
+            "filter": "none"
+          },
+          {
+            "id": "matrix",
+            "rect": {
+              "x": 895.828125,
+              "y": 143.8828125,
+              "width": 296.34375,
+              "height": 632.28125,
+              "top": 143.8828125,
+              "right": 1192.171875,
+              "bottom": 776.1640625,
+              "left": 895.828125
+            },
+            "z": 3,
+            "image": "http://127.0.0.1:5216/showcase/matrix-360.webp",
+            "fit": "contain",
+            "filter": "none"
+          },
+          {
+            "id": "regular",
+            "rect": {
+              "x": 1135.168212890625,
+              "y": 203.01812744140625,
+              "width": 277.47998046875,
+              "height": 529.245849609375,
+              "top": 203.01812744140625,
+              "right": 1412.648193359375,
+              "bottom": 732.2639770507812,
+              "left": 1135.168212890625
+            },
+            "z": 2,
+            "image": "http://127.0.0.1:5216/showcase/regular-360.webp",
+            "fit": "contain",
+            "filter": "none"
+          }
+        ],
+        "staggeredEntrance": [
+          {
+            "opacity": "1",
+            "delay": "0.34s"
+          },
+          {
+            "opacity": "1",
+            "delay": "0.12s"
+          },
+          {
+            "opacity": "1",
+            "delay": "0.54s"
+          }
+        ],
+        "dropdownToggleOutsideEscapeHelp": true,
+        "navigationAndCTAs": true,
+        "loginAndRegistrationHandlers": true,
+        "existingAppEntry": true,
+        "horizontalOverflow": false
+      },
+      {
+        "viewport": {
+          "width": 768,
+          "height": 1024
+        },
+        "hero": {
+          "x": 0,
+          "y": 0,
+          "width": 768,
+          "height": 1200.515625
+        },
+        "accountBounds": {
+          "x": 505.7309265136719,
+          "y": 72.90516662597656,
+          "width": 231.26907348632812,
+          "height": 161.50608825683594
+        },
+        "composition": [
+          {
+            "id": "s2tone",
+            "rect": {
+              "x": 60.591773986816406,
+              "y": 520.0924072265625,
+              "width": 243.68167114257812,
+              "height": 463.88006591796875,
+              "top": 520.0924072265625,
+              "right": 304.27344512939453,
+              "bottom": 983.9724731445312,
+              "left": 60.591773986816406
+            },
+            "z": 1,
+            "image": "http://127.0.0.1:5216/showcase/s2tone-360.webp",
+            "fit": "contain",
+            "filter": "none"
+          },
+          {
+            "id": "matrix",
+            "rect": {
+              "x": 253.796875,
+              "y": 467.53125,
+              "width": 260.390625,
+              "height": 554.4375,
+              "top": 467.53125,
+              "right": 514.1875,
+              "bottom": 1021.96875,
+              "left": 253.796875
+            },
+            "z": 3,
+            "image": "http://127.0.0.1:5216/showcase/matrix-360.webp",
+            "fit": "contain",
+            "filter": "none"
+          },
+          {
+            "id": "regular",
+            "rect": {
+              "x": 463.7265625,
+              "y": 520.0924072265625,
+              "width": 243.681640625,
+              "height": 463.88006591796875,
+              "top": 520.0924072265625,
+              "right": 707.408203125,
+              "bottom": 983.9724731445312,
+              "left": 463.7265625
+            },
+            "z": 2,
+            "image": "http://127.0.0.1:5216/showcase/regular-360.webp",
+            "fit": "contain",
+            "filter": "none"
+          }
+        ],
+        "staggeredEntrance": [
+          {
+            "opacity": "1",
+            "delay": "0.34s"
+          },
+          {
+            "opacity": "1",
+            "delay": "0.12s"
+          },
+          {
+            "opacity": "1",
+            "delay": "0.54s"
+          }
+        ],
+        "dropdownToggleOutsideEscapeHelp": true,
+        "navigationAndCTAs": true,
+        "loginAndRegistrationHandlers": true,
+        "existingAppEntry": true,
+        "horizontalOverflow": false
+      },
+      {
+        "viewport": {
+          "width": 390,
+          "height": 844
+        },
+        "hero": {
+          "x": 0,
+          "y": 0,
+          "width": 390,
+          "height": 930.75
+        },
+        "accountBounds": {
+          "x": 0,
+          "y": 778.066650390625,
+          "width": 390,
+          "height": 363.5
+        },
+        "composition": [
+          {
+            "id": "s2tone",
+            "rect": {
+              "x": 17.490798950195312,
+              "y": 513.8738403320312,
+              "width": 134.18336486816406,
+              "height": 253.96075439453125,
+              "top": 513.8738403320312,
+              "right": 151.67416381835938,
+              "bottom": 767.8345947265625,
+              "left": 17.490798950195312
+            },
+            "z": 1,
+            "image": "http://127.0.0.1:5216/showcase/s2tone-360.webp",
+            "fit": "contain",
+            "filter": "none"
+          },
+          {
+            "id": "matrix",
+            "rect": {
+              "x": 123.171875,
+              "y": 483.828125,
+              "width": 143.625,
+              "height": 303.96875,
+              "top": 483.828125,
+              "right": 266.796875,
+              "bottom": 787.796875,
+              "left": 123.171875
+            },
+            "z": 3,
+            "image": "http://127.0.0.1:5216/showcase/matrix-360.webp",
+            "fit": "contain",
+            "filter": "none"
+          },
+          {
+            "id": "regular",
+            "rect": {
+              "x": 238.3258514404297,
+              "y": 513.8738403320312,
+              "width": 134.18333435058594,
+              "height": 253.96075439453125,
+              "top": 513.8738403320312,
+              "right": 372.5091857910156,
+              "bottom": 767.8345947265625,
+              "left": 238.3258514404297
+            },
+            "z": 2,
+            "image": "http://127.0.0.1:5216/showcase/regular-360.webp",
+            "fit": "contain",
+            "filter": "none"
+          }
+        ],
+        "staggeredEntrance": [
+          {
+            "opacity": "1",
+            "delay": "0.34s"
+          },
+          {
+            "opacity": "1",
+            "delay": "0.12s"
+          },
+          {
+            "opacity": "1",
+            "delay": "0.54s"
+          }
+        ],
+        "dropdownToggleOutsideEscapeHelp": true,
+        "navigationAndCTAs": true,
+        "loginAndRegistrationHandlers": true,
+        "existingAppEntry": true,
+        "horizontalOverflow": false
+      },
+      {
+        "viewport": {
+          "width": 320,
+          "height": 568
+        },
+        "hero": {
+          "x": 0,
+          "y": 0,
+          "width": 320,
+          "height": 895.890625
+        },
+        "accountBounds": {
+          "x": 0,
+          "y": 568,
+          "width": 320,
+          "height": 363.5
+        },
+        "composition": [
+          {
+            "id": "s2tone",
+            "rect": {
+              "x": 14.880240440368652,
+              "y": 537.5481567382812,
+              "width": 109.74102020263672,
+              "height": 206.64569091796875,
+              "top": 537.5481567382812,
+              "right": 124.62126064300537,
+              "bottom": 744.19384765625,
+              "left": 14.880240440368652
+            },
+            "z": 1,
+            "image": "http://127.0.0.1:5216/showcase/s2tone-360.webp",
+            "fit": "contain",
+            "filter": "none"
+          },
+          {
+            "id": "matrix",
+            "rect": {
+              "x": 101.1875,
+              "y": 512.765625,
+              "width": 117.59375,
+              "height": 247.609375,
+              "top": 512.765625,
+              "right": 218.78125,
+              "bottom": 760.375,
+              "left": 101.1875
+            },
+            "z": 3,
+            "image": "http://127.0.0.1:5216/showcase/matrix-360.webp",
+            "fit": "contain",
+            "filter": "none"
+          },
+          {
+            "id": "regular",
+            "rect": {
+              "x": 195.3787384033203,
+              "y": 537.5481567382812,
+              "width": 109.74101257324219,
+              "height": 206.64569091796875,
+              "top": 537.5481567382812,
+              "right": 305.1197509765625,
+              "bottom": 744.19384765625,
+              "left": 195.3787384033203
+            },
+            "z": 2,
+            "image": "http://127.0.0.1:5216/showcase/regular-360.webp",
+            "fit": "contain",
+            "filter": "none"
+          }
+        ],
+        "staggeredEntrance": [
+          {
+            "opacity": "1",
+            "delay": "0.34s"
+          },
+          {
+            "opacity": "1",
+            "delay": "0.12s"
+          },
+          {
+            "opacity": "1",
+            "delay": "0.54s"
+          }
+        ],
+        "dropdownToggleOutsideEscapeHelp": true,
+        "navigationAndCTAs": true,
+        "loginAndRegistrationHandlers": true,
+        "existingAppEntry": true,
+        "horizontalOverflow": false
+      }
+    ],
+    "reducedMotion": true,
+    "sessionPreserved": true,
+    "backend": "API fixtures; no real accounts created",
+    "physicalDevices": false
+  },
+  "productionDeployment": false,
+  "physicalDevices": false
+}

@@ -180,7 +180,8 @@
 .public-mobile-nav {
   display: none;
 }
-@media (max-width: 760px) {
+@media (max-width: 760px),
+  (max-width: 960px) and (max-height: 500px) and (hover: none) and (pointer: coarse) {
   .public-nav-shell {
     height: 72px;
     grid-template-columns: 1fr auto;
@@ -266,5 +267,49 @@
   .public-account-menu {
     animation: none !important;
     transition: none !important;
+  }
+}
+
+/* Mobile only: three balanced header elements; the desktop shell is untouched. */
+@media (max-width: 760px),
+  (max-width: 960px) and (max-height: 500px) and (hover: none) and (pointer: coarse) {
+  .public-nav-shell {
+    position: relative;
+    grid-template-columns: 1fr auto 1fr;
+    padding-left: max(16px, env(safe-area-inset-left));
+    padding-right: max(16px, env(safe-area-inset-right));
+  }
+  .public-brand {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    gap: 0;
+  }
+  .public-brand > span {
+    display: none;
+  }
+  .public-brand img {
+    width: 64px;
+    height: 64px;
+    object-fit: contain;
+  }
+  .public-nav-actions {
+    grid-column: 3;
+    justify-self: end;
+    gap: 0;
+  }
+  .public-header .public-get-app {
+    display: none;
+  }
+  .public-mobile-toggle {
+    position: absolute;
+    left: max(16px, env(safe-area-inset-left));
+    top: 50%;
+    transform: translateY(-50%);
+  }
+  .public-header .public-icon-button {
+    width: 44px;
+    height: 44px;
   }
 }
