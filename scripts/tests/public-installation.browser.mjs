@@ -25,6 +25,8 @@ try {
       isMobile: touch,
     });
     await context.route("https://fonts.**", (r) => r.abort());
+    // Installation-guide tests start with a saved rejection; consent itself has dedicated coverage.
+    await context.addInitScript(() => localStorage.setItem("ea-cloud:privacy-consent:v1", JSON.stringify({version:1,functional:false,analytics:false,marketing:false,expiresAt:Date.now()+86400000})));
     const page = await context.newPage();
     page.setDefaultTimeout(12000);
     const errors = [];

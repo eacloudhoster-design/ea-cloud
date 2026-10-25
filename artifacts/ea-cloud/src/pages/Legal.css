@@ -1,0 +1,321 @@
+.legal-page {
+  min-height: 85svh;
+  padding: 140px 24px 80px;
+  background:
+    radial-gradient(ellipse at 80% 0%, #5c101c30, transparent 55%), #070709;
+  color: #e7e4e6;
+}
+.legal-shell {
+  max-width: 1000px;
+  margin: auto;
+}
+.legal-page a,
+.legal-footer a {
+  color: #f27c86;
+  text-underline-offset: 4px;
+}
+.legal-page a:hover,
+.legal-footer a:hover {
+  color: white;
+}
+.legal-eyebrow {
+  margin-top: 40px;
+  color: #ef5363;
+  letter-spacing: 0.18em;
+  font-size: 12px;
+}
+.legal-page h1 {
+  font-family: Orbitron, sans-serif;
+  font-size: clamp(24px, 4vw, 42px);
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+.legal-subtitle {
+  font-size: 18px;
+  color: #b6aeb4;
+  margin: 18px 0;
+}
+.legal-date {
+  font-size: 13px;
+  color: #a49ba4;
+}
+.legal-nav,
+.legal-footer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 22px;
+  margin: 28px 0;
+}
+.legal-nav a[aria-current="page"] {
+  color: white;
+  border-bottom: 1px solid #fa5264;
+}
+.legal-card,
+.legal-review {
+  padding: 26px;
+  border: 1px solid #ffffff14;
+  border-radius: 18px;
+  background: #111014aa;
+  margin: 20px 0;
+}
+.legal-card h2 {
+  font-size: 20px;
+  font-weight: 600;
+  margin-bottom: 14px;
+}
+.legal-card p,
+.legal-review p {
+  line-height: 1.8;
+  margin: 12px 0;
+  color: #c5bfc6;
+  overflow-wrap: anywhere;
+}
+.legal-review {
+  border-color: #ef536340;
+  background: #4d101020;
+  font-size: 14px;
+}
+.legal-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+.legal-grid .legal-card {
+  margin: 0;
+  transition:
+    border-color 0.2s,
+    transform 0.2s;
+}
+.legal-grid a:hover {
+  border-color: #ed4555;
+  transform: translateY(-2px);
+}
+.legal-page button,
+.privacy-banner button {
+  background: #42151d;
+  border: 1px solid #f0637455;
+  border-radius: 10px;
+  padding: 11px 16px;
+  color: white;
+  cursor: pointer;
+}
+.legal-page button:hover,
+.privacy-banner button:hover {
+  background: #64212c;
+}
+.legal-page button:disabled {
+  opacity: 0.5;
+  cursor: wait;
+}
+.legal-page :focus-visible,
+.privacy-banner :focus-visible {
+  outline: 2px solid #ff8390;
+  outline-offset: 4px;
+}
+.legal-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 24px;
+}
+.privacy-switch {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 22px 0;
+  border-bottom: 1px solid #ffffff12;
+}
+.privacy-switch small {
+  display: block;
+  color: #aaa0ab;
+  font-size: 14px;
+  line-height: 1.7;
+  margin-top: 5px;
+}
+.privacy-switch input {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 44px;
+  height: 26px;
+  border: 1px solid #ffffff35;
+  border-radius: 99px;
+  background: #29232b;
+  flex-shrink: 0;
+  position: relative;
+  cursor: pointer;
+}
+.privacy-switch input::before {
+  content: "";
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  top: 3px;
+  left: 3px;
+  border-radius: 50%;
+  background: #d6cbd4;
+  transition: transform 0.18s ease;
+}
+.privacy-switch input:checked {
+  background: #a5283c;
+  border-color: #ee6174;
+}
+.privacy-switch input:checked::before {
+  transform: translateX(18px);
+  background: white;
+}
+.privacy-switch input:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+@media (prefers-reduced-motion: reduce) {
+  .privacy-switch input::before {
+    transition: none;
+  }
+}
+
+.privacy-form label {
+  display: block;
+  margin: 20px 0;
+}
+.privacy-form input:not([type="checkbox"]),
+.privacy-form select,
+.privacy-form textarea {
+  display: block;
+  width: 100%;
+  background: #08080b;
+  border: 1px solid #ffffff30;
+  border-radius: 9px;
+  padding: 12px;
+  color: white;
+  margin-top: 8px;
+}
+.privacy-form .privacy-confirm {
+  display: flex;
+  align-items: start;
+  gap: 12px;
+  line-height: 1.6;
+}
+.privacy-confirm input {
+  margin-top: 6px;
+  accent-color: #ef5363;
+}
+.legal-table-scroll {
+  overflow: auto;
+  max-width: 100%;
+}
+.legal-page table {
+  border-collapse: collapse;
+  min-width: 760px;
+  font-size: 13px;
+}
+.legal-page td,
+.legal-page th {
+  text-align: left;
+  padding: 14px 12px;
+  border-bottom: 1px solid #ffffff1a;
+  vertical-align: top;
+  max-width: 240px;
+  overflow-wrap: anywhere;
+}
+.legal-footer {
+  justify-content: center;
+  font-size: 12px;
+  padding: 0 24px;
+  margin: 26px auto 0;
+  max-width: 1100px;
+}
+.privacy-banner {
+  position: fixed;
+  bottom: max(12px, env(safe-area-inset-bottom));
+  left: 50%;
+  transform: translateX(-50%);
+  width: calc(100% - 24px);
+  max-width: 1000px;
+  max-height: 55svh;
+  overflow: auto;
+  background: #100c10f5;
+  border: 1px solid #ef536370;
+  box-shadow: 0 0 32px #e9344520;
+  backdrop-filter: blur(12px);
+  border-radius: 18px;
+  padding: 20px;
+  z-index: 45;
+  color: white;
+  font-size: 14px;
+  line-height: 1.6;
+}
+.privacy-banner > div {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 14px;
+}
+.privacy-banner a {
+  color: #ff8c98;
+  text-decoration: underline;
+}
+.privacy-banner p {
+  margin: 0;
+}
+.privacy-banner p[role="alert"] {
+  margin-top: 10px;
+}
+@media (max-width: 600px) {
+  .legal-page {
+    padding: 110px 16px 50px;
+  }
+  .legal-card,
+  .legal-review {
+    padding: 20px;
+  }
+  .legal-grid {
+    grid-template-columns: 1fr;
+  }
+  .legal-nav {
+    font-size: 13px;
+    gap: 12px 16px;
+  }
+  .privacy-banner {
+    padding: 14px;
+    font-size: 12px;
+  }
+  .privacy-banner button {
+    font-size: 12px;
+    padding: 9px 10px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .legal-grid .legal-card {
+    transition: none;
+  }
+}
+
+.public-help-collapse {
+  display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    grid-template-rows 0.22s ease,
+    opacity 0.18s ease,
+    visibility 0s 0.22s;
+}
+.public-help-collapse[data-open="true"] {
+  grid-template-rows: 1fr;
+  opacity: 1;
+  visibility: visible;
+  transition:
+    grid-template-rows 0.22s ease,
+    opacity 0.18s ease;
+}
+.public-help-clip {
+  min-height: 0;
+  overflow: hidden;
+}
+@media (prefers-reduced-motion: reduce) {
+  .public-help-collapse {
+    transition: none !important;
+  }
+}

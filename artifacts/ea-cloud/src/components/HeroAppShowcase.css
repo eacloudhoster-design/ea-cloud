@@ -8,7 +8,8 @@
   aspect-ratio: 1/1.05;
   z-index: 1;
   isolation: isolate;
-  pointer-events: none;
+  touch-action: pan-y pinch-zoom;
+  user-select: none;
 }
 .showcase-ambient {
   position: absolute;
@@ -27,39 +28,73 @@
   border-radius: 50%;
   background: radial-gradient(ellipse, #e9344525, transparent 70%);
 }
+.showcase-scene {
+  position: absolute;
+  inset: 0;
+  transform: translate3d(var(--carousel-drag, 0px), 0, 0);
+  transition: transform 0.2s ease-out;
+}
+.hero-showcase[data-dragging] .showcase-scene {
+  transition: none;
+}
 .showcase-phone {
   position: absolute;
   margin: 0;
-  transform-style: preserve-3d;
-}
-.showcase-phone--centre {
   width: 42%;
   left: 29%;
   top: 2%;
+  transform-style: preserve-3d;
+  transition: transform 750ms cubic-bezier(0.22, 0.61, 0.36, 1);
+  will-change: transform;
+}
+.showcase-phone--centre {
+  transform: translate3d(0, 0, 0) perspective(1000px) rotateY(0deg) rotate(0deg)
+    scale(1);
   z-index: 3;
 }
 .showcase-phone--left {
-  width: 34%;
-  left: 1%;
-  top: 12%;
+  transform: translate3d(-76.19%, 2%, 0) perspective(1000px) rotateY(12deg)
+    rotate(5deg) scale(0.809524);
   z-index: 1;
-  transform: perspective(1000px) rotateY(12deg) rotate(5deg);
 }
 .showcase-phone--right {
-  width: 34%;
-  right: 1%;
-  top: 12%;
+  transform: translate3d(76.19%, 2%, 0) perspective(1000px) rotateY(-12deg)
+    rotate(-5deg) scale(0.809524);
   z-index: 2;
-  transform: perspective(1000px) rotateY(-12deg) rotate(-5deg);
+}
+.showcase-phone[data-wrapping] {
+  z-index: 0;
+}
+.showcase-card-select {
+  display: block;
+  width: 100%;
+  padding: 0;
+  margin: 0;
+  border: 0;
+  background: transparent;
+  cursor: grab;
+  text-align: inherit;
+  color: inherit;
+  border-radius: inherit;
+}
+.hero-showcase[data-dragging] .showcase-card-select {
+  cursor: grabbing;
+}
+.showcase-card-select:focus-visible {
+  outline: none;
+}
+.showcase-card-select:focus-visible .showcase-phone-frame {
+  outline: 2px solid #ff737b;
+  outline-offset: 4px;
 }
 .showcase-entrance {
   animation: showcase-centre-enter 1s 0.12s cubic-bezier(0.2, 0.65, 0.2, 1) both;
 }
-.showcase-phone--left .showcase-entrance {
+.showcase-entrance--s2tone {
   animation-name: showcase-left-enter;
   animation-delay: 0.34s;
 }
-.showcase-phone--right .showcase-entrance {
+.showcase-entrance--regular {
   animation-name: showcase-right-enter;
   animation-delay: 0.54s;
 }
@@ -81,11 +116,11 @@
     0 0 28px #e934452b,
     inset 0 1px 1px #ffffff33;
 }
-.showcase-phone--left .showcase-phone-frame {
+.showcase-phone[data-interface="s2tone"] .showcase-phone-frame {
   animation-delay: 1.6s;
   animation-duration: 9s;
 }
-.showcase-phone--right .showcase-phone-frame {
+.showcase-phone[data-interface="regular"] .showcase-phone-frame {
   animation-delay: 2s;
   animation-duration: 8.6s;
 }
@@ -199,4 +234,63 @@
 .hero-showcase[data-ready="false"] .showcase-phone-frame,
 .hero-showcase[data-ready="false"] .showcase-ambient {
   animation-play-state: paused;
+}
+
+.hero-showcase[data-running="false"] .showcase-phone-frame {
+  animation-play-state: paused;
+}
+.showcase-controls {
+  position: absolute;
+  bottom: 1%;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+.showcase-indicators {
+  display: flex;
+  gap: 0;
+}
+.showcase-indicators button,
+.showcase-autoplay {
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  border: 0;
+  background: transparent;
+  padding: 0;
+  border-radius: 50%;
+  cursor: pointer;
+  color: #9d8589;
+}
+.showcase-indicators span {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #66616a;
+  transition:
+    background 0.2s,
+    box-shadow 0.2s;
+}
+.showcase-indicators button[aria-pressed="true"] span {
+  background: #ef3943;
+  box-shadow: 0 0 7px #ef394370;
+}
+.showcase-controls button:hover {
+  background: #ffffff09;
+}
+.showcase-controls button:focus-visible {
+  outline: 2px solid #ff737b;
+  outline-offset: 1px;
+}
+.showcase-autoplay:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+.showcase-ambient {
+  pointer-events: none;
 }

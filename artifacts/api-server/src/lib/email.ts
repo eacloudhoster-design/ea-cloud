@@ -382,3 +382,17 @@ export async function sendTestEmail(toEmail: string): Promise<void> {
     }),
   });
 }
+
+/** Privacy messages go only to the business-confirmed administrator inbox.
+ * No requester email/message/password is added to logs; receipt requires SMTP acceptance. */
+export async function sendPrivacyRequestEmail(request: {id:string;email:string;kind:string;message:string}, testTransport?: {sendMail:(mail:any)=>Promise<any>}) {
+  const configured = testTransport ? {transporter:testTransport,from:"local-test@example.invalid"} : getTransporter();
+  const recipient = "eacloudhoster@gmail.com";
+  const info = await configured.transporter.sendMail({
+    from: `EA Cloud <${configured.from}>`, to:recipient, replyTo:request.email,
+    subject:`EA Cloud privacy request ${request.id}`,
+    text:`Request ID: ${request.id}\nType: ${request.kind}\nReply email: ${request.email}\n\n${request.message}\n\nVerify identity before disclosure or account changes. Receipt does not verify the requester or authorise deletion.`,
+  });
+  const accepted = Array.isArray(info.accepted) && info.accepted.some((value:any)=>String(typeof value==='string'?value:value?.address).toLowerCase()===recipient);
+  if(!accepted) throw new Error("Privacy email acceptance was not confirmed");
+}

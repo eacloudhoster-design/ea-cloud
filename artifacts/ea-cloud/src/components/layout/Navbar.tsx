@@ -1,3 +1,4 @@
+import { helpLinks } from "@/privacy/legal-links";
 import { useEffect, useRef, useState } from "react";
 import MobilePublicPanel from "./MobilePublicPanel";
 import { usePublicMobilePanel } from "@/hooks/use-public-mobile-panel";
@@ -111,7 +112,8 @@ export function Navbar() {
           return;
         }
       }
-      if (href === "/ea-app/") window.location.assign(href);
+      if (href === "/ea-app/" || href.startsWith("mailto:"))
+        window.location.assign(href);
       else navigate(href);
     });
   };
@@ -129,9 +131,6 @@ export function Navbar() {
             aria-label="EA Cloud homepage"
           >
             <img src={logo} alt="" width="44" height="44" />
-            <span>
-              EA CLOUD<span className="public-brand-dot">.</span>
-            </span>
           </a>
           <nav className="public-nav-links" aria-label="Website navigation">
             {sections.map((item) => (
@@ -214,31 +213,31 @@ export function Navbar() {
                       style={{ transform: help ? "rotate(180deg)" : undefined }}
                     />
                   </DropdownMenuItem>
-                  {help && (
-                    <div
-                      id="public-help-menu"
-                      role="group"
-                      aria-label="Help options"
-                      className="public-help-options"
-                    >
-                      <DropdownMenuItem asChild>
-                        <a
-                          href="/#help"
-                          onClick={(event) => jump(event, "help")}
-                        >
-                          Frequently asked questions
-                        </a>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem asChild>
-                        <a
-                          href="/#access-help"
-                          onClick={(event) => jump(event, "access-help")}
-                        >
-                          License &amp; access help
-                        </a>
-                      </DropdownMenuItem>
+                  <div
+                    className="public-help-collapse"
+                    data-open={help}
+                    aria-hidden={!help}
+                    inert={!help}
+                  >
+                    <div className="public-help-clip">
+                      <div
+                        id="public-help-menu"
+                        role="group"
+                        aria-label="Help options"
+                        className="public-help-options"
+                      >
+                        {helpLinks.map((item) => (
+                          <DropdownMenuItem
+                            key={item.href}
+                            asChild
+                            disabled={!help}
+                          >
+                            <a href={item.href}>{item.label}</a>
+                          </DropdownMenuItem>
+                        ))}
+                      </div>
                     </div>
-                  )}
+                  </div>
                 </DropdownMenuContent>
               </DropdownMenu>
             )}

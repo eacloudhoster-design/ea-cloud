@@ -1,3 +1,5 @@
+import { PrivacyProvider } from "./privacy/PrivacyProvider";
+import Legal from "./pages/Legal";
 import ClientStartup from "./components/ClientStartup";
 import { Switch, Route } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -87,6 +89,7 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <ClientAuthProvider>
+          <PrivacyProvider>
           <ClientStartup>
           <div className="dark">
             <Switch>
@@ -150,6 +153,8 @@ function App() {
               </Route>
 
               {/* ── Public Pages ── */}
+              <Route path="/legal/:page">{params => <PublicLayout><Legal page={params.page}/></PublicLayout>}</Route>
+              <Route path="/legal"><PublicLayout><Legal/></PublicLayout></Route>
               <Route path="/register">
                 <PublicLayout><Register /></PublicLayout>
               </Route>
@@ -161,6 +166,7 @@ function App() {
             </Switch>
           </div>
           </ClientStartup>
+          </PrivacyProvider>
         </ClientAuthProvider>
       </AuthProvider>
     </QueryClientProvider>
