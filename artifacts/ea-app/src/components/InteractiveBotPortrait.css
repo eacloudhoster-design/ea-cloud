@@ -1,7 +1,7 @@
 .interactive-portrait-slot {
   position: relative;
   flex-shrink: 0;
-  touch-action: manipulation;
+  touch-action: pan-y pinch-zoom;
   outline: none;
   user-select: none;
   -webkit-user-select: none;

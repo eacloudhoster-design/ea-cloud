@@ -9,7 +9,7 @@ import {
 import { motion, useReducedMotion } from "framer-motion";
 import { useApp, type ShapeStyle } from "@/context/AppContext";
 import "./InteractiveBotPortrait.css";
-/** A zero-height hidden slot plus capture-based hit testing, not an overlay over controls. */
+/** Persistent layout slot; hidden portraits restore through capture-based hit testing. */
 export default function InteractiveBotPortrait({
   size,
   margin = 0,
@@ -179,7 +179,6 @@ export default function InteractiveBotPortrait({
       ref={slot}
       data-portrait-interactive
       data-hidden={hidden}
-      data-no-interface-swipe
       className="interactive-portrait-slot"
       role="button"
       tabIndex={enabled ? 0 : -1}
@@ -213,7 +212,7 @@ export default function InteractiveBotPortrait({
         )
       }
       initial={false}
-      animate={{ height: hidden ? 0 : size, marginBottom: hidden ? 0 : margin }}
+      animate={{ height: size, marginBottom: margin }}
       transition={{ duration, ease: [0.22, 0.68, 0, 1] }}
     >
       {(!hidden || retain) && (

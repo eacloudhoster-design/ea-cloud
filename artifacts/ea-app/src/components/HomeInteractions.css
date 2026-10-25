@@ -55,15 +55,15 @@ html[data-ea-ios-standalone-layout] .ea-startup-home[data-visible="true"] .ea-ap
   touch-action: pan-y pinch-zoom;
 }
 .ea-home-swipe-next {
-  animation: ea-home-slide-next 250ms ease-out;
+  animation: ea-home-slide-next 300ms ease-out;
 }
 .ea-home-swipe-previous {
-  animation: ea-home-slide-previous 250ms ease-out;
+  animation: ea-home-slide-previous 300ms ease-out;
 }
 @keyframes ea-home-slide-next {
   from {
-    opacity: 0.45;
-    transform: translateX(40px);
+    opacity: 0;
+    transform: translateX(100%);
   }
   to {
     opacity: 1;
@@ -72,8 +72,8 @@ html[data-ea-ios-standalone-layout] .ea-startup-home[data-visible="true"] .ea-ap
 }
 @keyframes ea-home-slide-previous {
   from {
-    opacity: 0.45;
-    transform: translateX(-40px);
+    opacity: 0;
+    transform: translateX(-100%);
   }
   to {
     opacity: 1;

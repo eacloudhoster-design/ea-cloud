@@ -195,6 +195,26 @@ try {
         "neural",
         "mentor default for unsaved interface",
       );
+      const geometry = () =>
+        page.locator("[data-home-swipe-surface]").evaluate((el) =>
+          [
+            ...el.querySelectorAll(
+              "[data-bot-name], button, [data-matrix-branding], [data-matrix-functions], p",
+            ),
+          ]
+            .filter((node) => !node.closest("[data-portrait-interactive]"))
+            .map((node) => {
+              const r = node.getBoundingClientRect();
+              return {
+                text: node.textContent,
+                x: r.x,
+                y: r.y,
+                width: r.width,
+                height: r.height,
+              };
+            }),
+        );
+      const positions = await geometry();
       const before = await frame.boundingBox(),
         src = await frame.locator("img").getAttribute("src"),
         name = await page.locator("[data-bot-name=primary]").boundingBox();
@@ -220,6 +240,13 @@ try {
       assert.equal(await frame.getAttribute("data-identity"), "same-frame");
       assert.equal(await frame.locator("img").getAttribute("src"), src);
       assert.deepEqual(await frame.boundingBox(), before);
+      // Hide and restore the circular shape too, preserving all sibling positions.
+      await double();
+      await pause();
+      assert.deepEqual(await geometry(), positions);
+      await double(await restorePoint());
+      await pause();
+      assert.equal(await frame.getAttribute("data-robot-shape"), "orbit");
       await tap();
       await pause();
       assert.equal(await frame.getAttribute("data-robot-shape"), "neural");
@@ -233,11 +260,19 @@ try {
       );
       await pause();
       assert.equal(await frame.count(), 0);
-      assert.equal((await slot.boundingBox()).height, 0);
-      assert.ok(
-        (await page.locator("[data-bot-name=primary]").boundingBox()).y <
-          name.y - 100,
-        "None collapses original portrait space",
+      assert.equal(
+        (await slot.boundingBox()).height,
+        style === "regular" ? 290 : style === "matrix" ? 260 : 230,
+      );
+      assert.deepEqual(
+        await page.locator("[data-bot-name=primary]").boundingBox(),
+        name,
+        "Hiding preserves bot-name geometry",
+      );
+      assert.deepEqual(
+        await geometry(),
+        positions,
+        "Hiding preserves every sibling's geometry",
       );
       assert.deepEqual(await nav.boundingBox(), navBox);
       if (device.width === 390)

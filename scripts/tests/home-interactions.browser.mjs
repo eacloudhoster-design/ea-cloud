@@ -33,12 +33,17 @@ try {
       socket.onMessage(() => {}),
     );
     await context.addInitScript(() => {
+      // Gesture/geometry tests do not load the unrelated neural voice model.
+      // Voice triggers are covered by the separate announcement regression suite.
+      Object.defineProperty(window, "AudioContext", { value: undefined });
+      Object.defineProperty(window, "webkitAudioContext", { value: undefined });
       if (!localStorage.getItem("appClientToken"))
         localStorage.setItem(
           "appClientToken",
           btoa("7:client:isolated-home-test"),
         );
     });
+    let copyingEnabled = false;
     await context.route("**/*", async (route) => {
       const url = new URL(route.request().url());
       // Use only the locally served app and isolated API fixtures.
@@ -55,7 +60,8 @@ try {
         route.request().method() === "PATCH"
       ) {
         writes.push(JSON.parse(route.request().postData()));
-        return route.fulfill({ json: { ok: true } });
+        copyingEnabled = writes.at(-1).copyingEnabled;
+        return route.fulfill({ json: { copyingEnabled } });
       }
       if (url.pathname === "/api/app/symbol-configs") data = [];
       if (url.pathname === "/api/app/me")
@@ -69,7 +75,7 @@ try {
           eas: [],
         };
       if (url.pathname === "/api/app/trading-controls")
-        data = { mt5Connected: false, copyingEnabled: false };
+        data = { mt5Connected: false, copyingEnabled };
       if (url.pathname === "/api/app/executions") data = [];
       if (url.pathname === "/api/app/activity") data = { events: [] };
       if (url.pathname === "/api/app/activity/snapshot")
@@ -141,7 +147,7 @@ try {
         type: "touchEnd",
         touchPoints: [],
       });
-      await page.waitForTimeout(300);
+      await page.waitForTimeout(400);
     };
     const swipe = async (direction) => {
       await surface.evaluate((el) => (el.scrollTop = 0));
@@ -162,6 +168,60 @@ try {
       await swipe("previous");
       assert.equal(await style(), expected);
     }
+    // Every interface accepts a swipe originating inside its portrait.
+    for (const [label, current, next] of [
+      ["Regular Interface", "regular", "matrix"],
+      ["The Matrix Interface", "matrix", "s2tone"],
+      ["S2tone_", "s2tone", "regular"],
+    ]) {
+      await select(label);
+      const b = await page.locator("[data-portrait-interactive]").boundingBox();
+      await touch(
+        b.x + b.width / 2,
+        Math.min(b.y + 65, viewport.height / 2 - 20),
+        -100,
+        0,
+      );
+      assert.equal(await style(), next, current + " upper portrait swipe");
+      await swipe("previous");
+      assert.equal(await style(), current);
+    }
+    // Start in the portrait, away from either screen edge. Touch movement must
+    // navigate, never select a different shape. Lower-half gestures stay local.
+    await select("Regular Interface");
+    const portrait = page.locator("[data-portrait-interactive]");
+    const box = await portrait.boundingBox();
+    const shapeBeforeSwipe = await page
+      .locator("[data-robot-shape]")
+      .getAttribute("data-robot-shape");
+    await touch(
+      box.x + box.width / 2,
+      Math.min(box.y + 70, viewport.height / 2 - 20),
+      -100,
+      0,
+    );
+    assert.equal(await style(), "matrix");
+    await swipe("previous");
+    assert.equal(
+      await page.locator("[data-robot-shape]").getAttribute("data-robot-shape"),
+      shapeBeforeSwipe,
+    );
+    await touch(45, viewport.height * 0.65, 100, 0);
+    assert.equal(await style(), "regular");
+    await page
+      .getByRole("button", { name: "Open live trading activity", exact: true })
+      .click();
+    await touch(45, 130, 100, 0);
+    assert.equal(
+      await style(),
+      "regular",
+      "Expanded activity panel blocks Home swipes",
+    );
+    await page
+      .getByRole("dialog", { name: "Live trading activity monitor" })
+      .getByRole("button", { name: /close/i })
+      .click();
+    await select("The Matrix Interface");
     await settings();
     assert.equal(
       await page
@@ -366,6 +426,9 @@ try {
       await page.waitForTimeout(100);
       assert.equal(writes.length, writeCount + 1);
       assert.deepEqual(writes.at(-1), { copyingEnabled: true });
+      await page
+        .getByRole("button", { name: "Close trading activity", exact: true })
+        .click();
       await action("Stop").click();
       await page.waitForTimeout(100);
       assert.deepEqual(writes.at(-1), { copyingEnabled: false });
@@ -414,7 +477,7 @@ try {
     const animations = await page.evaluate(() => window.__homeAnimations);
     assert.ok(animations.some((a) => a.name === "ea-home-slide-next"));
     assert.ok(animations.some((a) => a.name === "ea-home-slide-previous"));
-    assert.ok(animations.every((a) => a.duration === "0.25s"));
+    assert.ok(animations.every((a) => a.duration === "0.3s"));
     // Hidden preference survives layout changes, reload, reopening and account switches.
     await page
       .getByRole("button", { name: "Hide background image", exact: true })
@@ -482,7 +545,15 @@ try {
         .evaluate((el) => getComputedStyle(el).opacity),
       "0",
     );
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await swipe("next");
+    assert.equal(await style(), "matrix");
+    assert.equal(
+      await surface.evaluate((el) => getComputedStyle(el).animationName),
+      "none",
+    );
     assert.deepEqual(errors, []);
+    console.log("PASS upper-half swipes and Home regressions", viewport.width);
     await context.close();
   }
   writeFileSync(
