@@ -1,0 +1,22 @@
+{
+  "source_crop_rgb_identical": true,
+  "near_black_background_alpha_removed": true,
+  "viewports": [
+    {
+      "width": 1440,
+      "pixels_outside_heading_identical": true
+    },
+    {
+      "width": 820,
+      "pixels_outside_heading_identical": true
+    },
+    {
+      "width": 390,
+      "pixels_outside_heading_identical": true
+    },
+    {
+      "width": 320,
+      "pixels_outside_heading_identical": true
+    }
+  ]
+}

@@ -26,7 +26,18 @@ try {
     });
     await context.route("https://fonts.**", (r) => r.abort());
     // Installation-guide tests start with a saved rejection; consent itself has dedicated coverage.
-    await context.addInitScript(() => localStorage.setItem("ea-cloud:privacy-consent:v1", JSON.stringify({version:1,functional:false,analytics:false,marketing:false,expiresAt:Date.now()+86400000})));
+    await context.addInitScript(() =>
+      localStorage.setItem(
+        "ea-cloud:privacy-consent:v1",
+        JSON.stringify({
+          version: 1,
+          functional: false,
+          analytics: false,
+          marketing: false,
+          expiresAt: Date.now() + 86400000,
+        }),
+      ),
+    );
     const page = await context.newPage();
     page.setDefaultTimeout(12000);
     const errors = [];
@@ -35,21 +46,26 @@ try {
     await page.evaluate(() => document.fonts.ready);
     await page.waitForTimeout(1700);
     const type = await page.evaluate(() => ({
-      title: getComputedStyle(document.querySelector("#hero-title")).fontFamily,
+      titleAsset: document.querySelector("#hero-title img").getAttribute("src"),
+      titleFit: getComputedStyle(document.querySelector("#hero-title img"))
+        .objectFit,
       paragraph: getComputedStyle(document.querySelector(".hero-description"))
         .fontFamily,
       nav: getComputedStyle(document.querySelector(".public-nav-links a"))
         .fontFamily,
-      dot: getComputedStyle(document.querySelector(".hero-title-period")).color,
-      loaded: document.fonts.check('900 36px "EA Cloud Hero"'),
+      periodCount: document.querySelectorAll(".hero-title-period").length,
+      loaded:
+        document.querySelector("#hero-title img").complete &&
+        document.querySelector("#hero-title img").naturalWidth > 0,
       headingWidth: document.querySelector("#hero-title").scrollWidth,
       headingClient: document.querySelector("#hero-title").clientWidth,
     }));
-    assert(type.title.includes("EA Cloud Hero"));
+    assert.equal(type.titleAsset, "/ea-cloud-wordmark.png");
+    assert.equal(type.titleFit, "contain");
     assert(type.loaded);
     assert(!type.paragraph.includes("EA Cloud Hero"));
     assert(!type.nav.includes("EA Cloud Hero"));
-    assert.equal(type.dot, "rgb(239, 57, 67)");
+    assert.equal(type.periodCount, 0);
     assert.equal(
       await page.evaluate(() => document.documentElement.scrollWidth),
       viewport.width,
@@ -173,7 +189,7 @@ try {
     ),
   );
   console.log(
-    "PASS: scoped licensed hero font and real iOS/Android web-app installation guidance.",
+    "PASS: original hero lettering and real iOS/Android web-app installation guidance.",
   );
 } finally {
   await browser.close();

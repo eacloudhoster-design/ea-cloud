@@ -130,10 +130,10 @@ try {
         "all screenshots in viewport",
       );
     }
-    const typography = await page
-      .locator("#hero-title")
-      .evaluate((el) => getComputedStyle(el).fontFamily);
-    assert(typography.includes("EA Cloud Hero"));
+    assert.equal(
+      await page.locator("#hero-title img").getAttribute("src"),
+      "/ea-cloud-wordmark.png",
+    );
     const entrance = await page
       .locator(".showcase-entrance")
       .evaluateAll((els) =>
