@@ -1,0 +1,60 @@
+{
+  "results": [
+    {
+      "width": 1440,
+      "headerDirectionAndJitter": true,
+      "headerDurationMs": 300,
+      "fadeSamples": [
+        1,
+        0.7828,
+        0.2148
+      ],
+      "reverseProgress": true,
+      "readingBandClear": true,
+      "installationAndMenuPin": true,
+      "mobileAuthHeaderless": true,
+      "touchSwipe": false,
+      "nativeTouchScroll": false,
+      "featureReadabilityAndFaq": true
+    },
+    {
+      "width": 390,
+      "headerDirectionAndJitter": true,
+      "headerDurationMs": 300,
+      "fadeSamples": [
+        1,
+        0.7866,
+        0.2167
+      ],
+      "reverseProgress": true,
+      "readingBandClear": true,
+      "installationAndMenuPin": true,
+      "mobileAuthHeaderless": true,
+      "touchSwipe": true,
+      "nativeTouchScroll": true,
+      "featureReadabilityAndFaq": true
+    },
+    {
+      "width": 320,
+      "headerDirectionAndJitter": true,
+      "headerDurationMs": 300,
+      "fadeSamples": [
+        1,
+        0.7802,
+        0.2186
+      ],
+      "reverseProgress": true,
+      "readingBandClear": true,
+      "installationAndMenuPin": true,
+      "mobileAuthHeaderless": true,
+      "touchSwipe": true,
+      "nativeTouchScroll": true,
+      "featureReadabilityAndFaq": true
+    }
+  ],
+  "reducedMotion": true,
+  "simulatedCapabilityFallback": true,
+  "limitations": [
+    "Chromium desktop/touch emulation; physical Android Chrome and iPhone Safari unavailable."
+  ]
+}
