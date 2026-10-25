@@ -1,3 +1,4 @@
+import { helpLinks } from "@/privacy/legal-links";
 import {
   useCallback,
   useEffect,
@@ -143,26 +144,32 @@ export default function MobilePublicPanel({
                       className={help ? "is-expanded" : ""}
                     />
                   </button>
-                  {help && (
-                    <div
-                      id="mobile-public-help"
-                      className="public-sheet-help"
-                      role="group"
-                      aria-label="Help options"
-                    >
-                      <a href="/#help" onClick={link("/#help", "help")}>
-                        Frequently asked questions
-                        <ArrowUpRight size={15} />
-                      </a>
-                      <a
-                        href="/#access-help"
-                        onClick={link("/#access-help", "access-help")}
+                  <div
+                    className="public-help-collapse"
+                    data-open={help}
+                    aria-hidden={!help}
+                    inert={!help}
+                  >
+                    <div className="public-help-clip">
+                      <div
+                        id="mobile-public-help"
+                        className="public-sheet-help"
+                        role="group"
+                        aria-label="Help options"
                       >
-                        License &amp; access help
-                        <ArrowUpRight size={15} />
-                      </a>
+                        {helpLinks.map((item) => (
+                          <a
+                            key={item.href}
+                            href={item.href}
+                            onClick={link(item.href)}
+                          >
+                            {item.label}
+                            <ArrowUpRight size={15} />
+                          </a>
+                        ))}
+                      </div>
                     </div>
-                  )}
+                  </div>
                 </div>
                 <div className="public-sheet-language">
                   <button

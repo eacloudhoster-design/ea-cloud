@@ -1,0 +1,13 @@
+{
+  "origin": "http://127.0.0.1:5220",
+  "results": [
+    "Desktop: 5s autoplay complete loop, stable image DOM, manual timer reset, mouse drag, original assets loaded, Help links, direct legal routes, font consent/persistence/withdrawal/expiry, privacy form error and success contract.",
+    "390px touch viewport: legal routes without overflow; actual CDP swipe, mobile Help navigation; reduced motion disables autoplay.",
+    "320px touch viewport: legal routes without overflow; actual CDP swipe, mobile Help navigation; reduced motion disables autoplay.",
+    "768px touch viewport: legal routes without overflow; reduced motion disables autoplay."
+  ],
+  "limitations": [
+    "Chromium touch emulation, not physical Safari/iOS.",
+    "Browser privacy delivery uses fixture responses; actual server/SMTP acceptance contract tested separately with local test transport. No live email or deployment tested."
+  ]
+}

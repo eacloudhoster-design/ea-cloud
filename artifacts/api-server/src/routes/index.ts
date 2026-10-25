@@ -1,3 +1,4 @@
+import privacyRouter from "./privacy";
 import webPushRouter from "./web-push";
 import { requireAppSession } from "../middlewares/app-session";
 import assistantRouter from "./assistant";
@@ -38,6 +39,7 @@ router.use("/app", (req, res, next) => {
   void requireAppSession(req, res, next);
 });
 
+router.use(privacyRouter);
 router.use(healthRouter);
 router.use(assistantRouter);
 router.use(webPushRouter);
