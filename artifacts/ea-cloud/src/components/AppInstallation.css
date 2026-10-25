@@ -1,0 +1,136 @@
+.public-install-buttons {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+  margin-top: 26px;
+}
+.public-install-buttons .public-cta {
+  justify-content: space-between;
+  min-width: 240px;
+  cursor: pointer;
+  gap: 18px;
+}
+.public-install-android {
+  background: #110b0d;
+  border: 1px solid #a9353e;
+  color: #f6f1f2;
+}
+.public-install-android:hover {
+  border-color: #f2545e;
+  box-shadow: 0 0 24px #ef394324;
+  background: #1b0d11;
+}
+.public-install-dialog {
+  z-index: 65;
+  width: calc(100% - 32px);
+  max-width: 520px;
+  max-height: calc(100svh - 40px);
+  overflow: auto;
+  border-radius: 18px !important;
+  border: 1px solid #633039;
+  background: #0d0c0f;
+  color: #eeeef2;
+  box-shadow: 0 20px 100px #000b;
+  padding: 30px;
+  gap: 18px;
+}
+.public-install-label {
+  font:
+    9px ui-monospace,
+    monospace;
+  letter-spacing: 0.15em;
+  color: #f66b73;
+  margin: 0;
+}
+.public-install-dialog h2 {
+  font:
+    650 25px/1.25 Inter,
+    Arial,
+    sans-serif;
+  letter-spacing: -0.025em;
+}
+.public-install-dialog [id][data-state] {
+  scroll-margin: 16px;
+}
+.public-install-dialog > p {
+  font-size: 12px;
+  line-height: 1.8;
+  color: #93939e;
+}
+.public-install-dialog ol {
+  list-style: decimal;
+  padding-left: 20px;
+  display: grid;
+  gap: 16px;
+  font-size: 12px;
+  line-height: 1.8;
+  color: #a7a7b0;
+}
+.public-install-dialog strong {
+  font-weight: 600;
+  color: #f0f0f4;
+}
+.public-install-dialog .public-cta {
+  justify-self: start;
+}
+.public-install-address {
+  display: grid;
+  gap: 7px;
+  font-size: 10px;
+  letter-spacing: 0.03em;
+  color: #9696a0;
+}
+.public-install-address input {
+  width: 100%;
+  min-width: 0;
+  padding: 10px 12px;
+  border: 1px solid #ffffff22;
+  border-radius: 6px;
+  background: #ffffff06;
+  color: #dddde6;
+  font:
+    11px ui-monospace,
+    monospace;
+}
+.public-copy-address {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  justify-self: start;
+  font-size: 11px;
+  color: #eaa5ac;
+  cursor: pointer;
+  padding: 5px 0;
+}
+.public-install-dialog .public-install-note {
+  font-size: 10px;
+  line-height: 1.7;
+  margin: 0;
+}
+.public-install-dialog :focus-visible {
+  outline: 2px solid #ff6269;
+  outline-offset: 4px;
+}
+@media (max-width: 760px) {
+  .public-install-buttons {
+    align-items: stretch;
+  }
+  .public-install-buttons .public-cta {
+    width: 100%;
+    min-width: 0;
+  }
+  .public-install-dialog {
+    padding: 26px 22px;
+  }
+  .public-install-dialog h2 {
+    font-size: 22px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .public-install-dialog,
+  .public-install-dialog * {
+    animation: none !important;
+    transition: none !important;
+  }
+}
