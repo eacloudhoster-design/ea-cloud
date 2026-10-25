@@ -300,7 +300,7 @@ function EACloudApp({ onReady, startupComplete }: { onReady: (ready: boolean) =>
         <BackgroundAnimation effect={backgroundAnimation} color={accentColor} active={activeTab === "home"} />
 
         <div data-home-screen className="ea-nav-screen absolute inset-0 z-[2]" style={{ opacity: activeTab === "home" ? 1 : 0 }} inert={activeTab !== "home" || settingsClosing}>
-          <HomeTab homeNavigationRequest={homeNavigationRequest} swipeEnabled={!showChartScanner} onOpenChartScanner={() => setShowChartScanner(true)} />
+          <HomeTab onOpenSettings={() => navigate("settings")} homeNavigationRequest={homeNavigationRequest} swipeEnabled={!showChartScanner} onOpenChartScanner={() => setShowChartScanner(true)} />
         </div>
 
         {!showChartScanner && (activeTab === "settings" || settingsClosing) && (

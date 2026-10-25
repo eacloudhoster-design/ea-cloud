@@ -22,6 +22,7 @@ const INTERFACE_OPTIONS: { id: InterfaceStyle; label: string; desc: string }[] =
   { id: "regular", label: "Regular Interface", desc: "Default 2-column layout" },
   { id: "matrix", label: "The Matrix Interface", desc: "3 buttons in row layout" },
   { id: "s2tone", label: "S2tone_", desc: "Double outline with circle controls" },
+  { id: "lumo", label: "Lumo", desc: "Portrait glass with capsule trading controls" },
 ];
 
 const SHAPE_OPTIONS: { id: ShapeStyle; label: string; desc: string }[] = [

@@ -15,12 +15,13 @@ const {createHash}=await import('node:crypto');const byHash=Object.fromEntries(p
 const fixtureWav=text=>{const data=Buffer.from(text+'\0'.repeat(Buffer.byteLength(text)%2)),h=Buffer.alloc(44);h.write('RIFF');h.writeUInt32LE(36+data.length,4);h.write('WAVEfmt ',8);h.writeUInt32LE(16,16);h.writeUInt16LE(1,20);h.writeUInt16LE(1,22);h.writeUInt32LE(24000,24);h.writeUInt32LE(48000,28);h.writeUInt16LE(2,32);h.writeUInt16LE(16,34);h.write('data',36);h.writeUInt32LE(data.length,40);return Buffer.concat([h,data]);};
 try{
  for(const name of ['Mentor Alpha','Mentor Beta']){
+  const lumo=name==='Mentor Beta';
   const spoken=[],writes=[];let connected=false,running=false,failBot=false,scanFail=false,quotaBlocked=false,executions=[],failSymbol=false,symbolPosts=0;
   const context=await browser.newContext({viewport:name==='Mentor Alpha'?{width:390,height:844}:{width:1280,height:900},hasTouch:true,isMobile:name==='Mentor Alpha'});
-  await context.addInitScript(({blocked,neural})=>{
+  await context.addInitScript(({blocked,neural,lumo})=>{
    localStorage.setItem('appClientToken',btoa('7:client:fixture'));
    localStorage.setItem('ea-cloud:client:7:voice',JSON.stringify({enabled:false,provider:'neural'}));
-   localStorage.setItem('ea-cloud:client:7:home-appearance',JSON.stringify({interfaceStyle:'regular',accentColor:'#00c9ed',showBg:true,backgroundAnimation:'none'}));
+   localStorage.setItem('ea-cloud:client:7:home-appearance',JSON.stringify({interfaceStyle:lumo?'lumo':'regular',accentColor:'#00c9ed',showBg:true,backgroundAnimation:'none'}));
    window.__speech={calls:[],attempts:[],active:0,max:0,blocked};
    window.SpeechSynthesisUtterance=class{constructor(){throw Error('System speech is forbidden');}};
    Object.defineProperty(window,'speechSynthesis',{configurable:true,get(){throw Error('System speech is forbidden');}});
@@ -41,7 +42,7 @@ try{
     terminate(){clearTimeout(this.timer);}
    };
    window.SpeechRecognition=class{constructor(){throw Error('Microphone must never be used');}};
-  },{blocked:name==='Mentor Alpha',neural});
+  },{blocked:name==='Mentor Alpha',neural,lumo});
   const sockets=[];await context.routeWebSocket('**/api/ws?*',socket=>sockets.push(socket));
   await context.route('https://fonts.**',r=>r.abort());
   await context.route('**/voice-image-*.jpg',r=>r.fulfill({body:image,contentType:'image/jpeg'}));
@@ -62,23 +63,24 @@ try{
   const page=await context.newPage();page.setDefaultTimeout(15000);const errors=[];page.on('pageerror',e=>errors.push(e.message));
   await page.goto(origin+'/ea-app/');await page.locator('.ea-startup').waitFor({state:'visible'});assert.equal(await page.evaluate(()=>window.__speech.attempts.length),0,'no voice before splash finishes');await page.locator('.ea-startup').waitFor({state:'detached'});if(name==='Mentor Alpha'&&neural)await page.waitForTimeout(100);else await page.waitForFunction(()=>window.__speech.attempts.length>0);assert.ok((await page.evaluate(()=>window.__speech.attempts)).every(attempt=>!attempt.splash));
   const speech=()=>page.evaluate(()=>window.__speech.calls);
+  const botControl=label=>lumo?page.getByRole('button',{name:label,exact:true}):page.getByText(label.toUpperCase(),{exact:true}).locator('..').locator('button');
   assert.equal((await speech()).length,name==='Mentor Alpha'?0:1,'automatic welcome wherever permitted; blocked browsers await gesture');
   const nav=page.locator('.ea-app-viewport > .ea-glass-navigation');const originalNav=await nav.boundingBox();
   await nav.getByRole('button',{name:'Settings',exact:true}).tap();await page.waitForTimeout(80);
   assert.equal((await speech()).filter(t=>t.text===`Welcome to ${name}.`).length,1,'earliest existing gesture unlocks welcome');
   assert.equal(await page.getByRole('button',{name:'Voice Assistant',exact:true}).count(),0);assert.equal(await page.getByRole('button',{name:'Microphone',exact:true}).count(),0);assert.equal(await page.locator('.ea-voice-controls').count(),0);
   await nav.getByRole('button',{name:'Home',exact:true}).tap();
-  failBot=true;await page.getByText('START',{exact:true}).locator('..').locator('button').click();await page.waitForFunction(()=>window.__speech.calls.some(t=>t.text==='Bot activation failed.')).catch(async error=>{console.log('failure details',JSON.stringify({speech:await speech(),writes,errors}));throw error;});assert.ok((await speech()).some(t=>t.text==='Bot activation failed.'));assert.ok(!(await speech()).some(t=>t.text==='Robot started.'));await page.getByRole('button',{name:'Close trading activity',exact:true}).click();
-  failBot=false;await page.getByText('START',{exact:true}).locator('..').locator('button').click();await page.waitForFunction(()=>window.__speech.calls.some(t=>t.text==='Robot started.'));assert.ok((await speech()).some(t=>t.text==='Robot started.'));assert.equal(await page.getByRole('dialog',{name:'Live trading activity monitor'}).count(),1);assert.ok(!(await speech()).some(t=>t.text==='Connected to trade server.'));connected=true;await page.getByRole('button',{name:'Refresh activity',exact:true}).click();await page.waitForFunction(()=>window.__speech.calls.some(t=>t.text==='Ready to trade.'));assert.ok((await speech()).some(t=>t.text==='Connected to trade server.'));await page.getByRole('button',{name:'Close trading activity',exact:true}).click();
-  failBot=true;await page.getByText('STOP',{exact:true}).locator('..').locator('button').click();await page.waitForFunction(()=>window.__speech.calls.some(t=>t.text==='Bot deactivation failed.'));assert.ok(!(await speech()).some(t=>t.text==='Robot stopped.'));failBot=false;
-  await page.getByText('STOP',{exact:true}).locator('..').locator('button').click();await page.waitForTimeout(100);assert.ok((await speech()).some(t=>t.text==='Robot stopped.'));
+  failBot=true;await botControl('Start').click();await page.waitForFunction(()=>window.__speech.calls.some(t=>t.text==='Bot activation failed.')).catch(async error=>{console.log('failure details',JSON.stringify({speech:await speech(),writes,errors}));throw error;});assert.ok((await speech()).some(t=>t.text==='Bot activation failed.'));assert.ok(!(await speech()).some(t=>t.text==='Robot started.'));await page.getByRole('button',{name:'Close trading activity',exact:true}).click();
+  failBot=false;await botControl('Start').click();await page.waitForFunction(()=>window.__speech.calls.some(t=>t.text==='Robot started.'));assert.ok((await speech()).some(t=>t.text==='Robot started.'));assert.equal(await page.getByRole('dialog',{name:'Live trading activity monitor'}).count(),1);assert.ok(!(await speech()).some(t=>t.text==='Connected to trade server.'));connected=true;await page.getByRole('button',{name:'Refresh activity',exact:true}).click();await page.waitForFunction(()=>window.__speech.calls.some(t=>t.text==='Ready to trade.'));assert.ok((await speech()).some(t=>t.text==='Connected to trade server.'));await page.getByRole('button',{name:'Close trading activity',exact:true}).click();
+  failBot=true;await botControl('Stop').click();await page.waitForFunction(()=>window.__speech.calls.some(t=>t.text==='Bot deactivation failed.'));assert.ok(!(await speech()).some(t=>t.text==='Robot stopped.'));failBot=false;
+  await botControl('Stop').click();await page.waitForTimeout(100);assert.ok((await speech()).some(t=>t.text==='Robot stopped.'));
   const trade={id:99,status:'pending',signalKind:'OPEN',action:'BUY',symbol:'XAUUSD',ticket:null,retcode:null,updatedAt:new Date().toISOString()};
   for(const socket of sockets)socket.send(JSON.stringify({type:'TRADE_EXECUTION',execution:trade}));await page.waitForTimeout(80);assert.ok(!(await speech()).some(t=>/buy execution/.test(t.text)));
   trade.status='success';trade.ticket='verified-ticket';trade.retcode=10009;
   for(const socket of sockets)socket.send(JSON.stringify({type:'TRADE_EXECUTION',execution:trade}));await page.waitForTimeout(80);
   for(const socket of sockets)socket.send(JSON.stringify({type:'TRADE_EXECUTION',execution:trade}));await page.waitForTimeout(80);assert.equal((await speech()).filter(t=>/confirmed a buy execution for gold/.test(t.text)).length,1);
   for(const socket of sockets)socket.send(JSON.stringify({type:'TRADE_EXECUTION',execution:{...trade,id:100,status:'failed'}}));await page.waitForTimeout(80);assert.ok((await speech()).some(t=>/Trade execution failed/.test(t.text)));
-  await page.getByText('SYMBOLS',{exact:true}).locator('..').locator('button').click();await page.getByRole('button',{name:'XAUUSD',exact:true}).click();await page.getByRole('button',{name:/Select your broker/}).click();await page.getByRole('button',{name:'XAUUSD',exact:true}).last().click();await page.getByPlaceholder('e.g. 0.05').fill('0.05');failSymbol=true;
+  await (lumo?page.getByRole('button',{name:'Quotes',exact:true}):page.getByText('SYMBOLS',{exact:true}).locator('..').locator('button')).click();await page.getByRole('button',{name:'XAUUSD',exact:true}).click();await page.getByRole('button',{name:/Select your broker/}).click();await page.getByRole('button',{name:'XAUUSD',exact:true}).last().click();await page.getByPlaceholder('e.g. 0.05').fill('0.05');failSymbol=true;
   await page.getByRole('button',{name:'Save',exact:true}).click();
   await page.getByText('Symbol save failed',{exact:true}).waitFor();
   assert.equal((await speech()).filter(t=>t.text==='Symbol configured.').length,0);

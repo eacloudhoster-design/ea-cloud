@@ -1,3 +1,4 @@
+import LumoLayout from "@/components/LumoLayout";
 import { confirmSymbolSave } from "@/lib/symbol-save";
 import ModeImage from "@/components/ModeImage";
 import { useInterfaceSwipe } from "@/hooks/use-interface-swipe";
@@ -27,11 +28,12 @@ function ChipIcon({ size = 24, color = "currentColor", style }: { size?: number;
 
 interface HomeTabProps {
   homeNavigationRequest?: number;
+  onOpenSettings?: () => void;
   swipeEnabled?: boolean;
   onOpenChartScanner?: () => void;
 }
 
-export default function HomeTab({ onOpenChartScanner, swipeEnabled = true, homeNavigationRequest = 0 }: HomeTabProps) {
+export default function HomeTab({ onOpenSettings, onOpenChartScanner, swipeEnabled = true, homeNavigationRequest = 0 }: HomeTabProps) {
   const {
     botRunning, setBotRunning, accentColor, interfaceStyle, setInterfaceStyle, activeTab, shapeStyle,
     eaName, eaTagline, eaSymbols, bgImageUrl, showBg, setShowBg, clientToken,
@@ -78,10 +80,10 @@ export default function HomeTab({ onOpenChartScanner, swipeEnabled = true, homeN
         {...swipe.handlers}
         data-home-swipe-surface
         className={`ea-home-swipe-surface absolute inset-0 overflow-y-auto ${swipe.direction ? `ea-home-swipe-${swipe.direction}` : ""}`}
-        style={{ paddingBottom: 88, scrollbarWidth: "none", WebkitOverflowScrolling: "touch" } as React.CSSProperties}
+        style={{ paddingBottom: interfaceStyle === "lumo" ? "calc(var(--ea-nav-clearance, 90px) + 20px)" : 88, scrollbarWidth: "none", WebkitOverflowScrolling: "touch" } as React.CSSProperties}
       >
         {/* Regular and S2tone headers belong to the same scrolling content. */}
-        {interfaceStyle !== "matrix" && (
+        {interfaceStyle !== "matrix" && interfaceStyle !== "lumo" && (
           <div
             className="relative z-10 flex items-center justify-between px-4"
             style={{ paddingTop: "max(16px, var(--ea-content-safe-top,env(safe-area-inset-top)))", paddingBottom: 8, background: "transparent" }}
@@ -132,7 +134,9 @@ export default function HomeTab({ onOpenChartScanner, swipeEnabled = true, homeN
         {/* ── REGULAR — large glowing circle ── */}
         {interfaceStyle === "regular" && <RegularLayout {...sharedLayoutProps} />}
 
-        <div style={{ height: 80 }} />
+        {interfaceStyle === "lumo" && <LumoLayout onOpenSettings={onOpenSettings} onOpenQuotes={() => setShowQuotes(true)} onRemove={() => setShowRemoveConfirm(true)} onOpenActivity={() => window.dispatchEvent(new Event("ea:open-trading-activity"))} />}
+
+        {interfaceStyle !== "lumo" && <div style={{ height: 80 }} />}
       </div>
 
       {/* ── Fixed overlays ── */}

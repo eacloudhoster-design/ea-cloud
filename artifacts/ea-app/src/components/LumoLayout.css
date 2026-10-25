@@ -1,0 +1,314 @@
+/* Lumo-only presentation; existing layouts and the shared dock are untouched. */
+.ea-lumo {
+  --lumo-line: color-mix(in srgb, var(--lumo-accent) 52%, transparent);
+  --lumo-glow: color-mix(in srgb, var(--lumo-accent) 26%, transparent);
+  position: relative;
+  width: min(100%, 600px);
+  margin-inline: auto;
+  padding: 16px 18px 0;
+  color: #fff;
+}
+.ea-lumo .lumo-portrait {
+  position: relative;
+  isolation: isolate;
+  aspect-ratio: 7 / 10;
+  border-radius: clamp(24px, 7vw, 38px);
+  border: 1px solid var(--lumo-line);
+  box-shadow:
+    0 -2px 16px var(--lumo-glow),
+    inset 0 1px 0 #ffffff16;
+  background: #09090c;
+}
+.ea-lumo .lumo-portrait-image,
+.ea-lumo .lumo-portrait-shade {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+  pointer-events: none;
+}
+.ea-lumo .lumo-portrait-image {
+  object-fit: cover;
+  object-position: center;
+}
+.ea-lumo .lumo-portrait-shade {
+  background: linear-gradient(
+    180deg,
+    #00000018 0%,
+    transparent 50%,
+    #00000012 68%,
+    #000000b8 100%
+  );
+}
+.ea-lumo .lumo-menu {
+  position: absolute;
+  z-index: 2;
+  top: 3px;
+  left: -5px;
+  width: 43px;
+  height: 43px;
+  display: grid;
+  place-items: center;
+  border: 1px solid #ffffff1c;
+  border-radius: 16px;
+  background: linear-gradient(145deg, #3e393bcc, #151216e8);
+  box-shadow:
+    inset 0 1px 2px #ffffff35,
+    0 5px 15px #0008;
+  backdrop-filter: blur(16px);
+  color: #e9e5e6;
+}
+.ea-lumo .lumo-menu svg {
+  width: 22px;
+  height: 22px;
+}
+.ea-lumo .lumo-identity {
+  position: absolute;
+  z-index: 2;
+  top: -1px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  max-width: calc(100% - 104px);
+  padding: 5px 13px 5px 5px;
+  border-radius: 999px;
+  border: 1px solid var(--lumo-line);
+  background: linear-gradient(115deg, #454349db, #242029de);
+  box-shadow:
+    0 0 16px var(--lumo-glow),
+    inset 0 1px 1px #ffffff28;
+  backdrop-filter: blur(18px);
+}
+.ea-lumo .lumo-identity > img {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex: 0 0 auto;
+}
+.ea-lumo .lumo-identity-text {
+  min-width: 0;
+}
+.ea-lumo .lumo-identity .ea-bot-name {
+  margin: 0;
+  font-size: 10px;
+  font-weight: 800;
+  line-height: 1.3;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  overflow-wrap: anywhere;
+}
+.ea-lumo .lumo-status {
+  display: block;
+  margin-top: 3px;
+  font-size: 7px;
+  line-height: 1.3;
+  font-weight: 700;
+  letter-spacing: 0.17em;
+  text-transform: uppercase;
+  color: var(--lumo-accent);
+}
+.ea-lumo .lumo-name {
+  position: absolute;
+  z-index: 1;
+  left: 0;
+  right: 0;
+  bottom: 26px;
+  margin: 0;
+  padding-inline: 12px;
+  text-align: center;
+  font-size: clamp(26px, 8.2vw, 46px);
+  font-weight: 800;
+  line-height: 1.13;
+  letter-spacing: 0.025em;
+  overflow-wrap: anywhere;
+  text-shadow: 0 3px 8px #000c;
+  text-transform: none;
+}
+.ea-lumo .lumo-controls {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: center;
+  gap: 4px;
+  min-height: 118px;
+  margin-top: 26px;
+  padding: 14px 16px;
+  border-radius: 999px;
+  border: 1px solid var(--lumo-line);
+  background: linear-gradient(125deg, #242024dc, #0b070be8);
+  box-shadow:
+    0 -3px 22px var(--lumo-glow),
+    0 9px 20px #0005,
+    inset 0 1px 1px #ffffff16;
+  backdrop-filter: blur(20px);
+}
+.ea-lumo .lumo-control-reflection {
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 72%;
+  opacity: 0.12;
+  pointer-events: none;
+}
+.ea-lumo .lumo-action {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: #f2eeee;
+  font-size: 11px;
+  line-height: 1.2;
+  letter-spacing: 0.11em;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+.ea-lumo .lumo-action-icon {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  color: var(--lumo-accent);
+  border: 1px solid #ffffff18;
+  border-radius: 50%;
+  background: linear-gradient(140deg, #ffffff1c, #ffffff06);
+  box-shadow: inset 0 1px 2px #fff2;
+}
+.ea-lumo .lumo-action-icon svg {
+  width: 20px;
+  height: 20px;
+  stroke-width: 1.8;
+}
+.ea-lumo .lumo-toggle .lumo-action-icon {
+  width: 58px;
+  height: 58px;
+  border: 2px solid var(--lumo-accent);
+  background: radial-gradient(circle, var(--lumo-glow), #08070b 74%);
+  box-shadow:
+    0 0 15px var(--lumo-glow),
+    inset 0 1px 2px #fff2;
+}
+.ea-lumo .lumo-toggle .lumo-action-icon svg {
+  width: 23px;
+  height: 23px;
+  filter: drop-shadow(0 0 5px var(--lumo-accent));
+}
+.ea-lumo .lumo-powered {
+  display: table;
+  max-width: 100%;
+  margin: 30px auto 18px;
+  padding: 8px 18px;
+  border-radius: 999px;
+  border: 1px solid #ffffff0b;
+  background: #171015a3;
+  backdrop-filter: blur(12px);
+  color: #ffffff80;
+  font-size: 12px;
+  text-align: center;
+}
+.ea-lumo .lumo-powered strong {
+  color: var(--lumo-accent);
+  font-weight: 700;
+}
+.ea-lumo .lumo-information {
+  border: 1px solid var(--lumo-line);
+  border-radius: 28px;
+  background: linear-gradient(130deg, #24171bd6, #100c10de);
+  padding: 19px 23px;
+  box-shadow:
+    0 -2px 15px var(--lumo-glow),
+    inset 0 1px 0 #ffffff0c;
+  backdrop-filter: blur(18px);
+  overflow-wrap: anywhere;
+}
+.ea-lumo .lumo-information-name {
+  margin: 0;
+  font-size: 21px;
+  font-weight: 750;
+}
+.ea-lumo .lumo-tagline {
+  font-size: 12px;
+  color: #ffffff80;
+  margin: 5px 0 16px;
+}
+.ea-lumo dl {
+  margin: 17px 0;
+  font-size: 12px;
+}
+.ea-lumo dl > div {
+  display: flex;
+  gap: 16px;
+  justify-content: space-between;
+  padding-block: 9px;
+  border-bottom: 1px solid #ffffff0d;
+}
+.ea-lumo dt {
+  color: #ffffff80;
+  flex: 0 0 80px;
+}
+.ea-lumo dd {
+  margin: 0;
+  text-align: right;
+}
+.ea-lumo .lumo-activity-link {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 12px 0 0;
+  border: 0;
+  background: transparent;
+  color: var(--lumo-accent);
+  font-size: 12px;
+  font-weight: 600;
+}
+.ea-lumo button {
+  touch-action: manipulation;
+  cursor: pointer;
+  transition:
+    filter 160ms ease,
+    scale 160ms ease;
+}
+.ea-lumo button:active {
+  scale: 0.97;
+}
+.ea-lumo button:focus-visible {
+  outline: 2px solid var(--lumo-accent);
+  outline-offset: 4px;
+}
+@media (max-width: 350px) {
+  .ea-lumo {
+    padding-inline: 12px;
+  }
+  .ea-lumo .lumo-identity {
+    gap: 5px;
+    padding-right: 9px;
+    max-width: calc(100% - 92px);
+  }
+  .ea-lumo .lumo-identity .ea-bot-name {
+    font-size: 9px;
+  }
+  .ea-lumo .lumo-controls {
+    padding-inline: 10px;
+  }
+  .ea-lumo .lumo-action {
+    font-size: 10px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ea-lumo button {
+    transition: none;
+  }
+}
