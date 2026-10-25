@@ -117,6 +117,8 @@ export function Navbar() {
       else navigate(href);
     });
   };
+  // Authentication pages have no mobile website chrome or portal overlays.
+  if (compact && (path === "/register" || path === "/admin/login")) return null;
   return (
     <>
       <header className="public-header">

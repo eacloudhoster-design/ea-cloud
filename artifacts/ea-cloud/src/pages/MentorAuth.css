@@ -1,0 +1,7 @@
+/* Match the public header's mobile mode; desktop form spacing stays unchanged. */
+@media (max-width: 760px),
+  (max-width: 960px) and (max-height: 500px) and (hover: none) and (pointer: coarse) {
+  .mentor-register-page {
+    padding-top: max(24px, env(safe-area-inset-top));
+  }
+}

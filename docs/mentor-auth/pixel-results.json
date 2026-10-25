@@ -1,0 +1,10 @@
+[
+  {
+    "route": "register",
+    "desktop_pixels_outside_logo_unchanged": true
+  },
+  {
+    "route": "signin",
+    "desktop_pixels_outside_logo_unchanged": true
+  }
+]
