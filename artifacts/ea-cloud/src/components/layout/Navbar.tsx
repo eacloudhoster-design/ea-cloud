@@ -4,7 +4,7 @@ import MobilePublicPanel from "./MobilePublicPanel";
 import { usePublicMobilePanel } from "@/hooks/use-public-mobile-panel";
 import { useLocation } from "wouter";
 import { UserRound, Menu, X, ArrowUpRight, ChevronDown } from "lucide-react";
-import { logo } from "@/lib/branding";
+import { navigationLogo } from "@/lib/branding";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -130,7 +130,7 @@ export function Navbar() {
             onClick={(event) => jump(event, "home")}
             aria-label="EA Cloud homepage"
           >
-            <img src={logo} alt="" width="44" height="44" />
+            <img src={navigationLogo} alt="" width="44" height="44" />
           </a>
           <nav className="public-nav-links" aria-label="Website navigation">
             {sections.map((item) => (

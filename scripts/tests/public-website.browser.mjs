@@ -49,7 +49,7 @@ try {
     assert.equal(await page.locator(".public-brand").getAttribute("href"), "/");
     assert.equal(
       await page.locator(".public-brand img").getAttribute("src"),
-      "/ea-cloud-logo.jpeg",
+      "/ea-cloud-nav-logo.png",
     );
     assert.equal(
       await page.locator(".public-header .lucide-search").count(),
