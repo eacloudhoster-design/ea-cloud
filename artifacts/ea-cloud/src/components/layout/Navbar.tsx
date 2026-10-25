@@ -19,6 +19,8 @@ const sections = [
   { label: "Home", href: "/", id: "home" },
   { label: "App", href: "/#download", id: "download" },
   { label: "Features", href: "/#features", id: "features" },
+  { label: "FAQ", href: "/#help", id: "help" },
+  { label: "Support", href: "/#support", id: "support" },
 ];
 export function Navbar() {
   const [path, navigate] = useLocation();
