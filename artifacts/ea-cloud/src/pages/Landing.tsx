@@ -1,27 +1,55 @@
-import { useRef } from "react";
-import { Link } from "wouter";
-import { motion } from "framer-motion";
-import { logo } from "@/lib/branding";
-import { Button } from "@/components/ui/button";
-import { ChevronDown, Shield, TrendingUp, BarChart3, Bot, Copy, Brain, Users, Zap, MessageCircle, Download } from "lucide-react";
+import { useEffect, useRef } from "react";
+import {
+  ArrowUpRight,
+  ArrowDown,
+  Copy,
+  ScanLine,
+  Layers3,
+  Users,
+  SlidersHorizontal,
+  MoveUpRight,
+} from "lucide-react";
+import CinematicLogo from "@/components/CinematicLogo";
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import "./Landing.css";
 
 const features = [
-  { icon: TrendingUp, title: "Home Dashboard Access", desc: "Real-time overview of all trading activity and performance metrics." },
-  { icon: BarChart3, title: "Portfolio Overview", desc: "Track your complete portfolio with live P&L, drawdown, and balance updates." },
-  { icon: Zap, title: "Advanced Trading Tools", desc: "Precision tools built for professional traders — entries, exits, and risk management." },
-  { icon: Brain, title: "Analytics", desc: "Deep performance analytics with historical data, win rates, and trade breakdowns." },
-  { icon: Copy, title: "Copy Trading", desc: "Automatically copy signals from expert mentors directly to your MT4/MT5 account." },
-  { icon: Bot, title: "AI Chart Scanner", desc: "Proprietary AI scans market structures and delivers high-probability trade setups." },
-  { icon: Users, title: "Learn From Experienced Mentors", desc: "Access proven strategies from vetted mentors with real verified track records." },
-  { icon: Shield, title: "Automated Trading Experience", desc: "Set and forget — EA Cloud runs autonomously while you focus on what matters." },
+  {
+    icon: Copy,
+    title: "Automated Copy Trading",
+    desc: "Connect with mentors and follow supported trading strategies through EA Cloud’s copy-trading infrastructure.",
+    tag: "CONNECTED STRATEGIES",
+  },
+  {
+    icon: ScanLine,
+    title: "AI Chart Scanner",
+    desc: "Analyse trading charts and explore structured trade setups using the AI-powered chart scanner.",
+    tag: "INTELLIGENT ANALYSIS",
+  },
+  {
+    icon: Layers3,
+    title: "MetaTrader 5 Integration",
+    desc: "Manage supported MT5 account connections through EA Cloud.",
+    tag: "SEAMLESS CONNECTIONS",
+  },
+  {
+    icon: Users,
+    title: "Mentor Management",
+    desc: "Give mentors tools to manage their trading services and connected clients.",
+    tag: "BUILT FOR MENTORS",
+  },
+  {
+    icon: SlidersHorizontal,
+    title: "Premium User Interfaces",
+    desc: "Explore EA Cloud’s customisable trading interfaces, themes and interactive controls.",
+    tag: "YOUR TRADING SPACE",
+  },
 ];
-
 const faqs = [
   {
     q: "Is EA Cloud a trading robot?",
@@ -42,194 +70,251 @@ const faqs = [
 ];
 
 export default function Landing() {
-  const downloadRef = useRef<HTMLDivElement>(null);
-
-  const scrollToDownload = () => {
-    downloadRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
-
+  const root = useRef<HTMLElement>(null);
+  const atmosphere = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const reduced = matchMedia("(prefers-reduced-motion: reduce)");
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries)
+          if (entry.isIntersecting) {
+            entry.target.classList.add("is-revealed");
+            observer.unobserve(entry.target);
+          }
+      },
+      { threshold: 0.12 },
+    );
+    root.current
+      ?.querySelectorAll("[data-reveal]")
+      .forEach((el) => observer.observe(el));
+    let frame = 0;
+    const paint = () => {
+      frame = 0;
+      if (atmosphere.current)
+        atmosphere.current.style.transform = reduced.matches
+          ? "none"
+          : `translate3d(0,${Math.min(scrollY * 0.13, 130)}px,0)`;
+    };
+    const scroll = () => {
+      if (!frame) frame = requestAnimationFrame(paint);
+    };
+    window.addEventListener("scroll", scroll, { passive: true });
+    reduced.addEventListener("change", paint);
+    const hash = window.location.hash.slice(1);
+    if (hash)
+      requestAnimationFrame(() =>
+        document.getElementById(hash)?.scrollIntoView(),
+      );
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("scroll", scroll);
+      reduced.removeEventListener("change", paint);
+      cancelAnimationFrame(frame);
+    };
+  }, []);
   return (
-    <div className="min-h-screen bg-[#080810] text-white overflow-x-hidden">
-      {/* Animated background grid */}
-      <div className="fixed inset-0 pointer-events-none z-0"
-        style={{ backgroundImage: "radial-gradient(ellipse at 50% 0%, rgba(227,30,36,0.12) 0%, transparent 60%), linear-gradient(rgba(227,30,36,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(227,30,36,0.03) 1px, transparent 1px)", backgroundSize: "auto, 60px 60px, 60px 60px" }} />
-
-      {/* Hero */}
-      <section className="relative min-h-screen flex flex-col items-center justify-center px-6 pt-24 pb-16">
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
-          className="mb-8"
-          style={{ animation: "float 4s ease-in-out infinite" }}
-        >
-          <div className="relative">
-            <div className="absolute inset-0 rounded-full bg-primary/30 blur-2xl scale-150" />
-            <img src={logo} alt="EA Cloud" className="relative w-28 h-28 rounded-full object-cover ring-2 ring-primary/50 shadow-[0_0_40px_rgba(227,30,36,0.5)]" />
+    <main ref={root} id="public-content" className="cinematic-site">
+      <section
+        id="home"
+        className="cinematic-hero"
+        aria-labelledby="hero-title"
+      >
+        <div className="hero-atmosphere" ref={atmosphere} aria-hidden="true">
+          <div className="hero-orbit" />
+          <div className="hero-grid" />
+        </div>
+        <div className="hero-art">
+          <CinematicLogo />
+          <div className="art-caption" aria-hidden="true">
+            <span>EA CLOUD / ORIGINAL IDENTITY</span>
+            <span>CONNECTED. INTELLIGENT. AUTOMATED.</span>
           </div>
-        </motion.div>
-
-        <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, delay: 0.2 }} className="text-center max-w-4xl">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-primary/30 bg-primary/10 text-primary text-sm font-medium mb-6 backdrop-blur-sm">
-            <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-            AI-Powered Copy Trading Ecosystem
-          </div>
-          <h1 className="text-5xl md:text-7xl font-black tracking-tight mb-6 bg-gradient-to-b from-white via-white to-white/50 bg-clip-text text-transparent">
-            Professional Trading<br />Made Simple
-          </h1>
-          <p className="text-lg md:text-xl text-white/60 max-w-2xl mx-auto mb-10 leading-relaxed">
-            EA Cloud connects expert mentors with aspiring traders through intelligent copy trading. Sync signals in real time, manage clients, and trade with confidence.
+        </div>
+        <div className="hero-copy">
+          <p className="public-eyebrow hero-enter">
+            <span /> THE NEXT CHAPTER OF TRADING
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link href="/register">
-              <Button size="lg" className="bg-primary hover:bg-primary/90 text-white px-8 py-4 text-base font-semibold shadow-[0_0_30px_rgba(227,30,36,0.5)] hover:shadow-[0_0_50px_rgba(227,30,36,0.7)] transition-all duration-300 h-auto">
-                Become a Mentor
-              </Button>
-            </Link>
-            <Link href="/admin/login">
-              <Button size="lg" variant="outline" className="border-white/20 text-white hover:bg-white/5 px-8 py-4 text-base font-semibold h-auto backdrop-blur-sm">
-                Already a Member? Sign In
-              </Button>
-            </Link>
+          <h1 id="hero-title" className="hero-enter">
+            EA CLOUD<span className="hero-title-period">.</span>
+          </h1>
+          <h2 className="hero-enter">
+            The Future of <br />
+            Automated Trading
+          </h2>
+          <div className="hero-description hero-enter">
+            <p>
+              EA Cloud is a modern trading platform that connects traders with
+              experienced mentors through automated copy trading, intelligent
+              chart analysis and seamless account management.
+            </p>
+            <p>
+              Access your trading tools, manage your connections and explore a
+              smarter trading experience in one place.
+            </p>
           </div>
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 1.5 }}
-          className="absolute bottom-10 flex flex-col items-center gap-2 text-white/30 cursor-pointer"
-          onClick={scrollToDownload}
-        >
-          <span className="text-xs uppercase tracking-widest">Scroll to explore</span>
-          <ChevronDown className="w-5 h-5 animate-bounce" />
-        </motion.div>
-      </section>
-
-      {/* App CTA Banner */}
-      <section className="py-16 px-6 relative">
-        <div className="max-w-4xl mx-auto">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            whileInView={{ opacity: 1, scale: 1 }}
-            viewport={{ once: true }}
-            className="relative rounded-2xl border border-primary/20 bg-gradient-to-r from-primary/10 via-black to-blue-900/10 p-10 text-center backdrop-blur-sm overflow-hidden"
+          <div className="public-cta-row hero-enter">
+            <a href="/ea-app/" className="public-cta public-cta-primary">
+              Get App
+              <ArrowUpRight size={18} />
+            </a>
+            <a href="/register" className="public-cta public-cta-secondary">
+              Become a Mentor
+              <ArrowUpRight size={17} />
+            </a>
+          </div>
+        </div>
+        <div className="hero-baseline">
+          <span>BUILT FOR A CONNECTED TRADING EXPERIENCE</span>
+          <a
+            href="#download"
+            onClick={(event) => {
+              event.preventDefault();
+              document.getElementById("download")?.scrollIntoView({
+                behavior: matchMedia("(prefers-reduced-motion: reduce)").matches
+                  ? "instant"
+                  : "smooth",
+              });
+            }}
           >
-            <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-transparent to-blue-500/5" />
-            <div className="relative">
-              <Download className="w-10 h-10 text-primary mx-auto mb-4" />
-              <h2 className="text-3xl font-bold mb-3">Download the EA Cloud App Now</h2>
-              <p className="text-white/60 mb-6">Trade on the go. The EA Cloud mobile app puts your trading terminal in your pocket.</p>
-              <Button onClick={() => window.location.assign("/ea-app/")} size="lg" className="bg-primary hover:bg-primary/80 px-10 py-4 h-auto text-base font-semibold shadow-[0_0_20px_rgba(227,30,36,0.4)] transition-all duration-300">
-                Get App
-              </Button>
-            </div>
-          </motion.div>
+            Explore EA Cloud
+            <ArrowDown size={16} />
+          </a>
+          <span>01 — INTRODUCTION</span>
         </div>
       </section>
-
-      {/* Download Section */}
-      <section ref={downloadRef} id="download" className="py-20 px-6">
-        <div className="max-w-4xl mx-auto text-center">
-          <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
-            <h2 className="text-4xl font-bold mb-4">Get the App</h2>
-            <p className="text-white/50 mb-10">Available on iOS and Android. Free to download.</p>
-            <div className="flex flex-col sm:flex-row gap-6 justify-center">
-              {/* iOS */}
-              <motion.a
-                whileHover={{ scale: 1.05, y: -4 }}
-                whileTap={{ scale: 0.97 }}
-                href="/ea-app/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-4 px-8 py-4 rounded-xl border border-white/15 bg-white/5 backdrop-blur-sm hover:border-primary/40 hover:bg-primary/5 transition-all duration-300 group"
-              >
-                <div className="text-left">
-                  <div className="text-xs text-white/50 uppercase tracking-wider">Tap to open</div>
-                  <div className="text-lg font-semibold">Get iOS App</div>
-                </div>
-              </motion.a>
-
-              {/* Android */}
-              <motion.a
-                whileHover={{ scale: 1.05, y: -4 }}
-                whileTap={{ scale: 0.97 }}
-                href="/ea-app/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-4 px-8 py-4 rounded-xl border border-white/15 bg-white/5 backdrop-blur-sm hover:border-primary/40 hover:bg-primary/5 transition-all duration-300 group"
-              >
-                <div className="text-left">
-                  <div className="text-xs text-white/50 uppercase tracking-wider">Tap to open</div>
-                  <div className="text-lg font-semibold">Get Android App</div>
-                </div>
-              </motion.a>
-            </div>
-          </motion.div>
+      <section
+        id="download"
+        className="public-section public-app-section"
+        aria-labelledby="app-title"
+      >
+        <div data-reveal>
+          <p className="public-eyebrow">01 / THE PLATFORM</p>
+          <h2 id="app-title">
+            Your trading world.
+            <br />
+            <span>One connected space.</span>
+          </h2>
+        </div>
+        <div data-reveal className="app-section-copy">
+          <p>
+            From mentor connections to chart analysis, bring your trading tools
+            together with EA Cloud. Open the existing app on your phone or
+            desktop and continue through your account-access flow.
+          </p>
+          <a href="/ea-app/" className="public-cta public-cta-primary">
+            Open EA Cloud
+            <ArrowUpRight size={18} />
+          </a>
+          <span className="public-small-note">
+            For mobile &amp; desktop · Existing access requirements apply
+          </span>
         </div>
       </section>
-
-      {/* Features */}
-      <section id="features" className="py-20 px-6">
-        <div className="max-w-6xl mx-auto">
-          <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="text-center mb-14">
-            <h2 className="text-4xl font-bold mb-4">Everything You Need to Trade Smart</h2>
-            <p className="text-white/50 max-w-xl mx-auto">A complete ecosystem for modern copy trading — built for mentors and clients alike.</p>
-          </motion.div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {features.map((feature, i) => (
-              <motion.div
-                key={feature.title}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.08 }}
-                whileHover={{ y: -6, scale: 1.02 }}
-                className="group relative rounded-xl border border-white/8 bg-white/3 backdrop-blur-sm p-6 overflow-hidden cursor-default hover:border-primary/30 hover:bg-primary/5 transition-all duration-300"
-              >
-                <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                <feature.icon className="w-8 h-8 text-primary mb-4 relative z-10" />
-                <h3 className="font-semibold text-sm text-white mb-2 relative z-10">{feature.title}</h3>
-                <p className="text-xs text-white/50 leading-relaxed relative z-10">{feature.desc}</p>
-              </motion.div>
-            ))}
+      <section
+        id="features"
+        className="public-section public-features"
+        aria-labelledby="features-title"
+      >
+        <div data-reveal className="public-section-heading">
+          <div>
+            <p className="public-eyebrow">02 / THE ECOSYSTEM</p>
+            <h2 id="features-title">
+              Intelligent tools.
+              <br />
+              <span>Connected possibilities.</span>
+            </h2>
           </div>
+          <p>
+            Built around the way you trade.
+            <br />
+            Designed to work together.
+          </p>
+        </div>
+        <div className="public-feature-grid">
+          {features.map((feature, index) => (
+            <article
+              data-reveal
+              className="public-feature-card"
+              key={feature.title}
+            >
+              <div className="feature-top">
+                <feature.icon size={28} strokeWidth={1.35} />
+                <span>0{index + 1}</span>
+              </div>
+              <span className="feature-tag">{feature.tag}</span>
+              <h3>{feature.title}</h3>
+              <p>{feature.desc}</p>
+            </article>
+          ))}
+          <a
+            href="/register"
+            data-reveal
+            className="public-feature-card feature-mentor"
+          >
+            <span className="feature-tag">BUILD YOUR COMMUNITY</span>
+            <h3>
+              Share your experience.
+              <br />
+              Become a mentor.
+            </h3>
+            <span className="feature-mentor-link">
+              Explore mentor registration
+              <MoveUpRight size={22} />
+            </span>
+          </a>
         </div>
       </section>
-
-      {/* FAQ */}
-      <section className="py-20 px-6">
-        <div className="max-w-3xl mx-auto">
-          <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="text-center mb-12">
-            <h2 className="text-4xl font-bold mb-4">Everything You Need To Know<br />About EA Cloud</h2>
-          </motion.div>
-          <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
-            <Accordion type="single" collapsible className="space-y-3">
-              {faqs.map((faq, i) => (
-                <AccordionItem
-                  key={i}
-                  value={`item-${i}`}
-                  className="border border-white/10 rounded-xl bg-white/3 backdrop-blur-sm px-6 overflow-hidden"
-                >
-                  <AccordionTrigger className="text-left font-semibold py-5 hover:no-underline hover:text-primary transition-colors">
-                    {faq.q}
-                  </AccordionTrigger>
-                  <AccordionContent className="text-white/60 pb-5 leading-relaxed">
-                    {faq.a}
-                  </AccordionContent>
-                </AccordionItem>
-              ))}
-            </Accordion>
-          </motion.div>
+      <section
+        id="help"
+        className="public-section public-help-section"
+        aria-labelledby="help-title"
+      >
+        <div data-reveal>
+          <p className="public-eyebrow">03 / A LITTLE CLARITY</p>
+          <h2 id="help-title">
+            Before you
+            <br />
+            <span>get started.</span>
+          </h2>
+          <p className="help-intro">
+            A few things to know about EA Cloud.
+            <br />
+            Find answers to the essentials.
+          </p>
+        </div>
+        <div data-reveal>
+          <Accordion type="single" collapsible className="public-faq">
+            {faqs.map((faq, index) => (
+              <AccordionItem
+                key={faq.q}
+                value={`faq-${index}`}
+                id={index === 2 ? "access-help" : undefined}
+              >
+                <AccordionTrigger>{faq.q}</AccordionTrigger>
+                <AccordionContent>{faq.a}</AccordionContent>
+              </AccordionItem>
+            ))}
+          </Accordion>
         </div>
       </section>
-
-      <style>{`
-        @keyframes float {
-          0%, 100% { transform: translateY(0px); }
-          50% { transform: translateY(-16px); }
-        }
-      `}</style>
-    </div>
+      <section className="public-closing public-section" data-reveal>
+        <p className="public-eyebrow">YOUR NEXT MOVE</p>
+        <h2>
+          A smarter trading
+          <br />
+          experience starts here.
+        </h2>
+        <div className="public-cta-row">
+          <a href="/ea-app/" className="public-cta public-cta-primary">
+            Get App
+            <ArrowUpRight size={18} />
+          </a>
+          <a href="/register" className="public-cta public-cta-secondary">
+            Become a Mentor
+            <ArrowUpRight size={17} />
+          </a>
+        </div>
+      </section>
+    </main>
   );
 }

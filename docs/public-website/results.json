@@ -1,0 +1,155 @@
+{
+  "viewports": [
+    {
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "hero": {
+        "x": 0,
+        "y": 0,
+        "width": 1440,
+        "height": 1000
+      },
+      "accountBounds": {
+        "x": 1152.0999755859375,
+        "y": 72,
+        "width": 229.9000244140625,
+        "height": 160.5500030517578
+      },
+      "outlineAndIndependentEyes": {
+        "first": {
+          "offset": "0.885187px",
+          "left": "0.369963",
+          "right": "0.242475"
+        },
+        "later": {
+          "offset": "0.774094px",
+          "left": "0.549992",
+          "right": "0.418815"
+        }
+      },
+      "dropdownToggleOutsideEscapeHelp": true,
+      "navigationAndCTAs": true,
+      "loginAndRegistrationHandlers": true,
+      "existingAppEntry": true,
+      "horizontalOverflow": false
+    },
+    {
+      "viewport": {
+        "width": 768,
+        "height": 1024
+      },
+      "hero": {
+        "x": 0,
+        "y": 0,
+        "width": 768,
+        "height": 1024
+      },
+      "accountBounds": {
+        "x": 505.72796630859375,
+        "y": 72.90713500976562,
+        "width": 231.27203369140625,
+        "height": 161.50816345214844
+      },
+      "outlineAndIndependentEyes": {
+        "first": {
+          "offset": "0.909278px",
+          "left": "0.312595",
+          "right": "0.6"
+        },
+        "later": {
+          "offset": "0.798155px",
+          "left": "0.540913",
+          "right": "0.363573"
+        }
+      },
+      "dropdownToggleOutsideEscapeHelp": true,
+      "navigationAndCTAs": true,
+      "loginAndRegistrationHandlers": true,
+      "existingAppEntry": true,
+      "horizontalOverflow": false
+    },
+    {
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "hero": {
+        "x": 0,
+        "y": 0,
+        "width": 390,
+        "height": 844
+      },
+      "accountBounds": {
+        "x": 98.90347290039062,
+        "y": 66.77456665039062,
+        "width": 234.09652709960938,
+        "height": 163.4806365966797
+      },
+      "outlineAndIndependentEyes": {
+        "first": {
+          "offset": "0.907412px",
+          "left": "0.3166",
+          "right": "0.6"
+        },
+        "later": {
+          "offset": "0.796312px",
+          "left": "0.542239",
+          "right": "0.367738"
+        }
+      },
+      "dropdownToggleOutsideEscapeHelp": true,
+      "navigationAndCTAs": true,
+      "loginAndRegistrationHandlers": true,
+      "existingAppEntry": true,
+      "horizontalOverflow": false
+    },
+    {
+      "viewport": {
+        "width": 320,
+        "height": 568
+      },
+      "hero": {
+        "x": 0,
+        "y": 0,
+        "width": 320,
+        "height": 782.84375
+      },
+      "accountBounds": {
+        "x": 44.10000228881836,
+        "y": 64,
+        "width": 229.89999771118164,
+        "height": 160.5500030517578
+      },
+      "outlineAndIndependentEyes": {
+        "first": {
+          "offset": "0.909271px",
+          "left": "0.31261",
+          "right": "0.6"
+        },
+        "later": {
+          "offset": "0.798167px",
+          "left": "0.540904",
+          "right": "0.363548"
+        }
+      },
+      "dropdownToggleOutsideEscapeHelp": true,
+      "navigationAndCTAs": true,
+      "loginAndRegistrationHandlers": true,
+      "existingAppEntry": true,
+      "horizontalOverflow": false
+    }
+  ],
+  "reducedMotion": true,
+  "sessionPreserved": true,
+  "backend": "API fixtures; no real accounts created",
+  "physicalDevices": false,
+  "baseline": "902b59641581f44e77b0611771477b8bee3feb55",
+  "typescript": "passed",
+  "publicProductionBuild": "passed",
+  "appProductionBuild": "passed",
+  "combinedOutputVerification": "passed",
+  "deployment": "not deployed",
+  "referenceImages": "Not present in this upload; implementation follows supplied written brief."
+}
