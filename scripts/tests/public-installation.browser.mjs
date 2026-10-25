@@ -153,7 +153,7 @@ try {
       manualCopyFallback: true,
       modalCloseAndFocus: true,
       overflow: false,
-      screenshotShowcase: "blocked: original three screenshots not attached",
+      scope: "typography and installation guidance",
     });
     await context.close();
   }
@@ -171,7 +171,7 @@ try {
     ),
   );
   console.log(
-    "PASS: scoped licensed hero font and real iOS/Android web-app installation guidance. Showcase remains blocked by missing exact images.",
+    "PASS: scoped licensed hero font and real iOS/Android web-app installation guidance.",
   );
 } finally {
   await browser.close();

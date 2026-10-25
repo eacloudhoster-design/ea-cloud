@@ -32,7 +32,12 @@ try {
     page.on("pageerror", (e) => errors.push(e.message));
     await context.route("**/api/**", (r) => r.fulfill({ json: [] }));
     await page.goto(origin);
-    await page.locator(".cinematic-logo image").waitFor();
+    await page.locator(".hero-showcase img").first().waitFor();
+    await page
+      .locator(".hero-showcase img")
+      .evaluateAll((images) =>
+        Promise.all(images.map((image) => image.decode())),
+      );
     const initial = await page.locator(".hero-copy").boundingBox();
     await page.waitForTimeout(1800);
     const settled = await page.locator(".hero-copy").boundingBox();
@@ -62,9 +67,16 @@ try {
       "/ea-app/",
     );
     assert.equal(
-      await page.locator(".cinematic-logo image").getAttribute("href"),
-      "/ea-cloud-logo.jpeg",
+      await page.locator(".cinematic-logo,.hero-art").count(),
+      0,
+      "large hero logo is removed",
     );
+    assert.equal(
+      await page.locator(".hero-showcase").count(),
+      1,
+      "one showcase, no lower duplicate",
+    );
+    assert.equal(await page.locator(".hero-showcase img").count(), 3);
     const hero = await page.locator(".cinematic-hero").boundingBox();
     assert(hero.height >= viewport.height);
     assert.equal(
@@ -72,33 +84,69 @@ try {
       viewport.width,
     );
     const nav = await page.locator(".public-header").boundingBox(),
-      art = await page.locator(".hero-art").boundingBox(),
+      art = await page.locator(".hero-showcase").boundingBox(),
       cta = await page.locator(".hero-copy .public-cta-row").boundingBox();
-    assert(art.y >= nav.height - 1, "logo does not overlap navigation");
+    assert(art.y >= nav.height - 1, "showcase does not overlap navigation");
     if (viewport.width <= 1100)
-      assert(art.y + art.height <= cta.y, "stacked logo does not overlap CTA");
+      assert(
+        art.y >= cta.y + cta.height,
+        "mobile introduction and CTAs come before showcase",
+      );
     await page.screenshot({ path: `${output}/${viewport.width}-hero.png` });
-    const light = () =>
-      page.evaluate(() => ({
-        offset: getComputedStyle(document.querySelector(".cinematic-energy"))
-          .strokeDashoffset,
-        left: getComputedStyle(document.querySelector(".cinematic-eye-left"))
-          .opacity,
-        right: getComputedStyle(document.querySelector(".cinematic-eye-right"))
-          .opacity,
-      }));
-    const t1 = await light();
-    await page.waitForTimeout(1000);
-    const t2 = await light();
-    assert.notEqual(
-      t1.offset,
-      t2.offset,
-      "energy physically travels along original outline",
+    const composition = await page
+      .locator(".showcase-phone")
+      .evaluateAll((els) =>
+        els.map((el) => ({
+          id: el.dataset.interface,
+          rect: el.getBoundingClientRect().toJSON(),
+          z: Number(getComputedStyle(el).zIndex),
+          image: el.querySelector("img").currentSrc,
+          fit: getComputedStyle(el.querySelector("img")).objectFit,
+          filter: getComputedStyle(el.querySelector("img")).filter,
+        })),
+      );
+    const left = composition.find((s) => s.id === "s2tone"),
+      centre = composition.find((s) => s.id === "matrix"),
+      right = composition.find((s) => s.id === "regular");
+    assert(
+      left.rect.x < centre.rect.x && centre.rect.x < right.rect.x,
+      "left to right order",
     );
-    assert.notEqual(t1.left, t2.left, "eye glow animates");
-    assert.notEqual(t2.left, t2.right, "independent eye timing");
+    assert(
+      centre.rect.width > left.rect.width &&
+        centre.rect.width > right.rect.width,
+      "Matrix largest",
+    );
+    assert(centre.z > left.z && centre.z > right.z, "Matrix in foreground");
+    assert(
+      left.rect.right > centre.rect.left && centre.rect.right > right.rect.left,
+      "slight overlap",
+    );
+    for (const screen of composition) {
+      assert.equal(screen.fit, "contain");
+      assert.equal(screen.filter, "none");
+      assert(
+        screen.rect.x >= -1 && screen.rect.right <= viewport.width + 1,
+        "all screenshots in viewport",
+      );
+    }
+    const typography = await page
+      .locator("#hero-title")
+      .evaluate((el) => getComputedStyle(el).fontFamily);
+    assert(typography.includes("EA Cloud Hero"));
+    const entrance = await page
+      .locator(".showcase-entrance")
+      .evaluateAll((els) =>
+        els.map((el) => ({
+          opacity: getComputedStyle(el).opacity,
+          delay: getComputedStyle(el).animationDelay,
+        })),
+      );
+    assert(entrance.every((e) => e.opacity === "1"));
+    assert(entrance[1].delay !== entrance[0].delay, "staggered entrance");
+    await page.waitForTimeout(1000);
     await page.screenshot({
-      path: `${output}/${viewport.width}-logo-later.png`,
+      path: `${output}/${viewport.width}-showcase-later.png`,
     });
     const activate = (locator) => (touch ? locator.tap() : locator.click());
     const account = page.getByRole("button", { name: "Account menu" });
@@ -119,7 +167,7 @@ try {
     await menu.waitFor({ state: "hidden" });
     assert(await account.evaluate((el) => el === document.activeElement));
     await activate(account);
-    await activate(page.locator("#hero-title"));
+    await activate(page.locator(".hero-description p").last());
     await menu.waitFor({ state: "hidden" });
     await activate(account);
     await activate(page.getByRole("menuitem", { name: "Help", exact: true }));
@@ -254,7 +302,8 @@ try {
       viewport,
       hero,
       accountBounds: mr,
-      outlineAndIndependentEyes: { first: t1, later: t2 },
+      composition,
+      staggeredEntrance: entrance,
       dropdownToggleOutsideEscapeHelp: true,
       navigationAndCTAs: true,
       loginAndRegistrationHandlers: true,
@@ -272,7 +321,7 @@ try {
   await page.goto(origin);
   await page.waitForTimeout(300);
   const animations = await page
-    .locator(".cinematic-logo,.cinematic-eye,.cinematic-energy,.hero-enter")
+    .locator(".showcase-entrance,.showcase-phone-frame,.hero-enter")
     .evaluateAll((els) => els.map((el) => getComputedStyle(el).animationName));
   assert(animations.every((name) => name === "none"));
   await page.locator("#features").scrollIntoViewIfNeeded();
@@ -330,7 +379,7 @@ try {
     ),
   );
   console.log(
-    "PASS: public website desktop/mobile, animated logo, account menu, navigation, form routes, app entry, reduced motion and session preservation.",
+    "PASS: public website desktop/mobile, layered screenshot showcase, account menu, navigation, form routes, app entry, reduced motion and session preservation.",
   );
 } finally {
   await browser.close();

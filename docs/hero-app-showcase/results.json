@@ -1,13 +1,2772 @@
 {
-  "status": "PARTIAL / BLOCKED: exact three interface screenshots were not attached",
-  "baseline": "65e2399",
-  "heroShowcaseImplemented": false,
-  "originalHeroLogo": "retained until the replacement source images are supplied",
+  "status": "COMPLETE: actual uploaded screenshot showcase verified",
+  "baseline": "108b6f850e0b6f48358fdc549fc44b4cacb264ba",
+  "heroShowcaseImplemented": true,
+  "oldHeroLogoMounted": false,
+  "originalPNGsPreserved": true,
+  "fullResolutionWebPPixelEquality": "passed for all three originals",
   "typescript": "passed",
-  "publicProductionBuild": "passed with existing Vite warnings",
-  "fontLicenseIncludedInBuild": true,
-  "fontSha256": "ce87e6a1b1955bbc7b1d2d1c30fb5b53af5e34edb5b93a33e28068054892ef74",
-  "installationChecks": {
+  "publicProductionBuild": "passed; existing Vite warnings remain",
+  "combinedOutputVerification": "passed for / and /ea-app/",
+  "animationAndAssets": {
+    "assetManifest": {
+      "source": "User uploaded image.zip, 25 October 2026",
+      "originals": "PNG bytes preserved exactly",
+      "displayVariants": "Proportional resized WebP files; lossless WebP encoding, no crop, recolour or artwork edits",
+      "images": [
+        {
+          "interface": "matrix",
+          "original": "matrix.png",
+          "sha256": "ddebb9220917c02bc5ea30565f1351d059fcb2e07734e8958ff585a3cba5fca2",
+          "width": 739,
+          "height": 1600,
+          "variants": [
+            {
+              "file": "matrix-360.webp",
+              "width": 360,
+              "height": 779,
+              "bytes": 271102
+            },
+            {
+              "file": "matrix-540.webp",
+              "width": 540,
+              "height": 1169,
+              "bytes": 507960
+            },
+            {
+              "file": "matrix-739.webp",
+              "width": 739,
+              "height": 1600,
+              "bytes": 808140
+            }
+          ]
+        },
+        {
+          "interface": "s2tone",
+          "original": "s2tone.png",
+          "sha256": "e6787bdb9c6c2460edad2c48ab0643b03e505411c341e496ffa26ca2628864b4",
+          "width": 739,
+          "height": 1600,
+          "variants": [
+            {
+              "file": "s2tone-360.webp",
+              "width": 360,
+              "height": 779,
+              "bytes": 263850
+            },
+            {
+              "file": "s2tone-540.webp",
+              "width": 540,
+              "height": 1169,
+              "bytes": 481908
+            },
+            {
+              "file": "s2tone-739.webp",
+              "width": 739,
+              "height": 1600,
+              "bytes": 743250
+            }
+          ]
+        },
+        {
+          "interface": "regular",
+          "original": "regular.png",
+          "sha256": "c00f4ba813ea0945fad1bded1135a0ee1d450692786ee0c43d720e1a739f851b",
+          "width": 739,
+          "height": 1600,
+          "variants": [
+            {
+              "file": "regular-360.webp",
+              "width": 360,
+              "height": 779,
+              "bytes": 309364
+            },
+            {
+              "file": "regular-540.webp",
+              "width": 540,
+              "height": 1169,
+              "bytes": 583434
+            },
+            {
+              "file": "regular-739.webp",
+              "width": 739,
+              "height": 1600,
+              "bytes": 935994
+            }
+          ]
+        }
+      ]
+    },
+    "viewports": [
+      {
+        "viewport": {
+          "width": 1440,
+          "height": 1000
+        },
+        "frames": [
+          {
+            "time": 0,
+            "phones": [
+              {
+                "id": "s2tone",
+                "opacity": 0,
+                "transform": "matrix(0.96, 0, 0, 0.96, -28, 14)",
+                "loaded": true
+              },
+              {
+                "id": "matrix",
+                "opacity": 0,
+                "transform": "matrix(0.9, 0, 0, 0.9, 0, 20)",
+                "loaded": true
+              },
+              {
+                "id": "regular",
+                "opacity": 0,
+                "transform": "matrix(0.96, 0, 0, 0.96, 28, 14)",
+                "loaded": true
+              }
+            ]
+          },
+          {
+            "time": 83.29999999999995,
+            "phones": [
+              {
+                "id": "s2tone",
+                "opacity": 0,
+                "transform": "matrix(0.96, 0, 0, 0.96, -28, 14)",
+                "loaded": true
+              },
+              {
+                "id": "matrix",
+                "opacity": 0,
+                "transform": "matrix(0.9, 0, 0, 0.9, 0, 20)",
+                "loaded": true
+              },
+              {
+                "id": "regular",
+                "opacity": 0,
+                "transform": "matrix(0.96, 0, 0, 0.96, 28, 14)",
+                "loaded": true
+              }
+            ]
+          },
+          {
+            "time": 166.5999999999999,
+            "phones": [
+              {
+                "id": "s2tone",
+                "opacity": 0,
+                "transform": "matrix(0.96, 0, 0, 0.96, -28, 14)",
+                "loaded": true
+              },
+              {
+                "id": "matrix",
+                "opacity": 0.0437125,
+                "transform": "matrix(0.904371, 0, 0, 0.904371, 0, 19.1257)",
+                "loaded": true
+              },
+              {
+                "id": "regular",
+                "opacity": 0,
+                "transform": "matrix(0.96, 0, 0, 0.96, 28, 14)",
+                "loaded": true
+              }
+            ]
+          },
+          {
+            "time": 249.9000000000001,
+            "phones": [
+              {
+                "id": "s2tone",
+                "opacity": 0,
+                "transform": "matrix(0.96, 0, 0, 0.96, -28, 14)",
+                "loaded": true
+              },
+              {
+                "id": "matrix",
+                "opacity": 0.328958,
+                "transform": "matrix(0.932896, 0, 0, 0.932896, 0, 13.4208)",
+                "loaded": true
+              },
+              {
+                "id": "regular",
+                "opacity": 0,
+                "transform": "matrix(0.96, 0, 0, 0.96, 28, 14)",
+                "loaded": true
+              }
+            ]
+          },
+          {
+            "time": 333.29999999999995,
+            "phones": [
+              {
+                "id": "s2tone",
+                "opacity": 0,
+                "transform": "matrix(0.96, 0, 0, 0.96, -28, 14)",
+                "loaded": true
+              },
+              {
+                "id": "matrix",
+                "opacity": 0.57158,
+                "transform": "matrix(0.957158, 0, 0, 0.957158, 0, 8.5684)",
+                "loaded": true
+              },
+              {
+                "id": "regular",
+                "opacity": 0,
+                "transform": "matrix(0.96, 0, 0, 0.96, 28, 14)",
+                "loaded": true
+              }
+            ]
+          },
+          {
+            "time": 416.5999999999999,
+            "phones": [
+              {
+                "id": "s2tone",
+                "opacity": 0.14547,
+                "transform": "matrix(0.965819, 0, 0, 0.965819, -23.9269, 11.9634)",
+                "loaded": true
+              },
+              {
+                "id": "matrix",
+                "opacity": 0.727401,
+                "transform": "matrix(0.97274, 0, 0, 0.97274, 0, 5.45197)",
+                "loaded": true
+              },
+              {
+                "id": "regular",
+                "opacity": 0,
+                "transform": "matrix(0.96, 0, 0, 0.96, 28, 14)",
+                "loaded": true
+              }
+            ]
+          },
+          {
+            "time": 499.9000000000001,
+            "phones": [
+              {
+                "id": "s2tone",
+                "opacity": 0.42578,
+                "transform": "matrix(0.977031, 0, 0, 0.977031, -16.0782, 8.03908)",
+                "loaded": true
+              },
+              {
+                "id": "matrix",
+                "opacity": 0.823403,
+                "transform": "matrix(0.98234, 0, 0, 0.98234, 0, 3.53194)",
+                "loaded": true
+              },
+              {
+                "id": "regular",
+                "opacity": 0,
+                "transform": "matrix(0.96, 0, 0, 0.96, 28, 14)",
+                "loaded": true
+              }
+            ]
+          },
+          {
+            "time": 583.3,
+            "phones": [
+              {
+                "id": "s2tone",
+                "opacity": 0.636788,
+                "transform": "matrix(0.985472, 0, 0, 0.985472, -10.1699, 5.08497)",
+                "loaded": true
+              },
+              {
+                "id": "matrix",
+                "opacity": 0.885406,
+                "transform": "matrix(0.988541, 0, 0, 0.988541, 0, 2.29188)",
+                "loaded": true
+              },
+              {
+                "id": "regular",
+                "opacity": 0.0327722,
+                "transform": "matrix(0.961311, 0, 0, 0.961311, 27.0824, 13.5412)",
+                "loaded": true
+              }
+            ]
+          },
+          {
+            "time": 683.3000000000002,
+            "phones": [
+              {
+                "id": "s2tone",
+                "opacity": 0.786595,
+                "transform": "matrix(0.991464, 0, 0, 0.991464, -5.97534, 2.98767)",
+                "loaded": true
+              },
+              {
+                "id": "matrix",
+                "opacity": 0.933513,
+                "transform": "matrix(0.993351, 0, 0, 0.993351, 0, 1.32975)",
+                "loaded": true
+              },
+              {
+                "id": "regular",
+                "opacity": 0.373235,
+                "transform": "matrix(0.974929, 0, 0, 0.974929, 17.5494, 8.77471)",
+                "loaded": true
+              }
+            ]
+          },
+          {
+            "time": 783.3000000000002,
+            "phones": [
+              {
+                "id": "s2tone",
+                "opacity": 0.872773,
+                "transform": "matrix(0.994911, 0, 0, 0.994911, -3.56236, 1.78118)",
+                "loaded": true
+              },
+              {
+                "id": "matrix",
+                "opacity": 0.963948,
+                "transform": "matrix(0.996395, 0, 0, 0.996395, 0, 0.721036)",
+                "loaded": true
+              },
+              {
+                "id": "regular",
+                "opacity": 0.636788,
+                "transform": "matrix(0.985472, 0, 0, 0.985472, 10.1699, 5.08497)",
+                "loaded": true
+              }
+            ]
+          },
+          {
+            "time": 883.3000000000002,
+            "phones": [
+              {
+                "id": "s2tone",
+                "opacity": 0.925575,
+                "transform": "matrix(0.997023, 0, 0, 0.997023, -2.0839, 1.04195)",
+                "loaded": true
+              },
+              {
+                "id": "matrix",
+                "opacity": 0.982898,
+                "transform": "matrix(0.99829, 0, 0, 0.99829, 0, 0.342049)",
+                "loaded": true
+              },
+              {
+                "id": "regular",
+                "opacity": 0.786595,
+                "transform": "matrix(0.991464, 0, 0, 0.991464, 5.97534, 2.98767)",
+                "loaded": true
+              }
+            ]
+          },
+          {
+            "time": 999.9000000000001,
+            "phones": [
+              {
+                "id": "s2tone",
+                "opacity": 0.963127,
+                "transform": "matrix(0.998525, 0, 0, 0.998525, -1.03243, 0.516216)",
+                "loaded": true
+              },
+              {
+                "id": "matrix",
+                "opacity": 0.995093,
+                "transform": "matrix(0.999509, 0, 0, 0.999509, 0, 0.0981389)",
+                "loaded": true
+              },
+              {
+                "id": "regular",
+                "opacity": 0.883343,
+                "transform": "matrix(0.995334, 0, 0, 0.995334, 3.2664, 1.6332)",
+                "loaded": true
+              }
+            ]
+          },
+          {
+            "time": 1083.3000000000002,
+            "phones": [
+              {
+                "id": "s2tone",
+                "opacity": 0.979833,
+                "transform": "matrix(0.999193, 0, 0, 0.999193, -0.564679, 0.282339)",
+                "loaded": true
+              },
+              {
+                "id": "matrix",
+                "opacity": 0.999053,
+                "transform": "matrix(0.999905, 0, 0, 0.999905, 0, 0.0189493)",
+                "loaded": true
+              },
+              {
+                "id": "regular",
+                "opacity": 0.925575,
+                "transform": "matrix(0.997023, 0, 0, 0.997023, 2.0839, 1.04195)",
+                "loaded": true
+              }
+            ]
+          },
+          {
+            "time": 1200,
+            "phones": [
+              {
+                "id": "s2tone",
+                "opacity": 0.993617,
+                "transform": "matrix(0.999745, 0, 0, 0.999745, -0.178721, 0.0893606)",
+                "loaded": true
+              },
+              {
+                "id": "matrix",
+                "opacity": 1,
+                "transform": "matrix(1, 0, 0, 1, 0, 0)",
+                "loaded": true
+              },
+              {
+                "id": "regular",
+                "opacity": 0.963152,
+                "transform": "matrix(0.998526, 0, 0, 0.998526, 1.03175, 0.515875)",
+                "loaded": true
+              }
+            ]
+          },
+          {
+            "time": 1300,
+            "phones": [
+              {
+                "id": "s2tone",
+                "opacity": 0.998958,
+                "transform": "matrix(0.999958, 0, 0, 0.999958, -0.0291728, 0.0145864)",
+                "loaded": true
+              },
+              {
+                "id": "matrix",
+                "opacity": 1,
+                "transform": "matrix(1, 0, 0, 1, 0, 0)",
+                "loaded": true
+              },
+              {
+                "id": "regular",
+                "opacity": 0.982414,
+                "transform": "matrix(0.999297, 0, 0, 0.999297, 0.492405, 0.246202)",
+                "loaded": true
+              }
+            ]
+          },
+          {
+            "time": 1416.6,
+            "phones": [
+              {
+                "id": "s2tone",
+                "opacity": 1,
+                "transform": "matrix(1, 0, 0, 1, 0, 0)",
+                "loaded": true
+              },
+              {
+                "id": "matrix",
+                "opacity": 1,
+                "transform": "matrix(1, 0, 0, 1, 0, 0)",
+                "loaded": true
+              },
+              {
+                "id": "regular",
+                "opacity": 0.994864,
+                "transform": "matrix(0.999795, 0, 0, 0.999795, 0.143818, 0.0719092)",
+                "loaded": true
+              }
+            ]
+          },
+          {
+            "time": 1583.1999999999998,
+            "phones": [
+              {
+                "id": "s2tone",
+                "opacity": 1,
+                "transform": "matrix(1, 0, 0, 1, 0, 0)",
+                "loaded": true
+              },
+              {
+                "id": "matrix",
+                "opacity": 1,
+                "transform": "matrix(1, 0, 0, 1, 0, 0)",
+                "loaded": true
+              },
+              {
+                "id": "regular",
+                "opacity": 1,
+                "transform": "matrix(1, 0, 0, 1, 0, 0)",
+                "loaded": true
+              }
+            ]
+          },
+          {
+            "time": 1683.1999999999998,
+            "phones": [
+              {
+                "id": "s2tone",
+                "opacity": 1,
+                "transform": "matrix(1, 0, 0, 1, 0, 0)",
+                "loaded": true
+              },
+              {
+                "id": "matrix",
+                "opacity": 1,
+                "transform": "matrix(1, 0, 0, 1, 0, 0)",
+                "loaded": true
+              },
+              {
+                "id": "regular",
+                "opacity": 1,
+                "transform": "matrix(1, 0, 0, 1, 0, 0)",
+                "loaded": true
+              }
+            ]
+          },
+          {
+            "time": 1833.3000000000002,
+            "phones": [
+              {
+                "id": "s2tone",
+                "opacity": 1,
+                "transform": "matrix(1, 0, 0, 1, 0, 0)",
+                "loaded": true
+              },
+              {
+                "id": "matrix",
+                "opacity": 1,
+                "transform": "matrix(1, 0, 0, 1, 0, 0)",
+                "loaded": true
+              },
+              {
+                "id": "regular",
+                "opacity": 1,
+                "transform": "matrix(1, 0, 0, 1, 0, 0)",
+                "loaded": true
+              }
+            ]
+          },
+          {
+            "time": 1933.1999999999998,
+            "phones": [
+              {
+                "id": "s2tone",
+                "opacity": 1,
+                "transform": "matrix(1, 0, 0, 1, 0, 0)",
+                "loaded": true
+              },
+              {
+                "id": "matrix",
+                "opacity": 1,
+                "transform": "matrix(1, 0, 0, 1, 0, 0)",
+                "loaded": true
+              },
+              {
+                "id": "regular",
+                "opacity": 1,
+                "transform": "matrix(1, 0, 0, 1, 0, 0)",
+                "loaded": true
+              }
+            ]
+          },
+          {
+            "time": 2099.9,
+            "phones": [
+              {
+                "id": "s2tone",
+                "opacity": 1,
+                "transform": "matrix(1, 0, 0, 1, 0, 0)",
+                "loaded": true
+              },
+              {
+                "id": "matrix",
+                "opacity": 1,
+                "transform": "matrix(1, 0, 0, 1, 0, 0)",
+                "loaded": true
+              },
+              {
+                "id": "regular",
+                "opacity": 1,
+                "transform": "matrix(1, 0, 0, 1, 0, 0)",
+                "loaded": true
+              }
+            ]
+          }
+        ],
+        "sources": [
+          {
+            "src": "/showcase/s2tone.png",
+            "selected": "http://127.0.0.1:5214/showcase/s2tone-360.webp",
+            "loaded": true,
+            "naturalWidth": 244,
+            "clientWidth": 232,
+            "clientHeight": 502,
+            "fit": "contain",
+            "filter": "none",
+            "blend": "normal"
+          },
+          {
+            "src": "/showcase/matrix.png",
+            "selected": "http://127.0.0.1:5214/showcase/matrix-360.webp",
+            "loaded": true,
+            "naturalWidth": 302,
+            "clientWidth": 288,
+            "clientHeight": 624,
+            "fit": "contain",
+            "filter": "none",
+            "blend": "normal"
+          },
+          {
+            "src": "/showcase/regular.png",
+            "selected": "http://127.0.0.1:5214/showcase/regular-360.webp",
+            "loaded": true,
+            "naturalWidth": 244,
+            "clientWidth": 232,
+            "clientHeight": 502,
+            "fit": "contain",
+            "filter": "none",
+            "blend": "normal"
+          }
+        ],
+        "fullHeroScreenshot": "1440-homepage.png",
+        "floatRuns": true
+      },
+      {
+        "viewport": {
+          "width": 1280,
+          "height": 720
+        },
+        "frames": [
+          {
+            "time": 0,
+            "phones": [
+              {
+                "id": "s2tone",
+                "opacity": 0,
+                "transform": "matrix(0.96, 0, 0, 0.96, -28, 14)",
+                "loaded": true
+              },
+              {
+                "id": "matrix",
+                "opacity": 0,
+                "transform": "matrix(0.9, 0, 0, 0.9, 0, 20)",
+                "loaded": true
+              },
+              {
+                "id": "regular",
+                "opacity": 0,
+                "transform": "matrix(0.96, 0, 0, 0.96, 28, 14)",
+                "loaded": true
+              }
+            ]
+          },
+          {
+            "time": 99.89999999999986,
+            "phones": [
+              {
+                "id": "s2tone",
+                "opacity": 0,
+                "transform": "matrix(0.96, 0, 0, 0.96, -28, 14)",
+                "loaded": true
+              },
+              {
+                "id": "matrix",
+                "opacity": 0,
+                "transform": "matrix(0.9, 0, 0, 0.9, 0, 20)",
+                "loaded": true
+              },
+              {
+                "id": "regular",
+                "opacity": 0,
+                "transform": "matrix(0.96, 0, 0, 0.96, 28, 14)",
+                "loaded": true
+              }
+            ]
+          },
+          {
+            "time": 200,
+            "phones": [
+              {
+                "id": "s2tone",
+                "opacity": 0,
+                "transform": "matrix(0.96, 0, 0, 0.96, -28, 14)",
+                "loaded": true
+              },
+              {
+                "id": "matrix",
+                "opacity": 0.157192,
+                "transform": "matrix(0.915719, 0, 0, 0.915719, 0, 16.8562)",
+                "loaded": true
+              },
+              {
+                "id": "regular",
+                "opacity": 0,
+                "transform": "matrix(0.96, 0, 0, 0.96, 28, 14)",
+                "loaded": true
+              }
+            ]
+          },
+          {
+            "time": 283.29999999999995,
+            "phones": [
+              {
+                "id": "s2tone",
+                "opacity": 0,
+                "transform": "matrix(0.96, 0, 0, 0.96, -28, 14)",
+                "loaded": true
+              },
+              {
+                "id": "matrix",
+                "opacity": 0.43616,
+                "transform": "matrix(0.943616, 0, 0, 0.943616, 0, 11.2768)",
+                "loaded": true
+              },
+              {
+                "id": "regular",
+                "opacity": 0,
+                "transform": "matrix(0.96, 0, 0, 0.96, 28, 14)",
+                "loaded": true
+              }
+            ]
+          },
+          {
+            "time": 366.60000000000014,
+            "phones": [
+              {
+                "id": "s2tone",
+                "opacity": 0,
+                "transform": "matrix(0.96, 0, 0, 0.96, -28, 14)",
+                "loaded": true
+              },
+              {
+                "id": "matrix",
+                "opacity": 0.643272,
+                "transform": "matrix(0.964327, 0, 0, 0.964327, 0, 7.13456)",
+                "loaded": true
+              },
+              {
+                "id": "regular",
+                "opacity": 0,
+                "transform": "matrix(0.96, 0, 0, 0.96, 28, 14)",
+                "loaded": true
+              }
+            ]
+          },
+          {
+            "time": 499.89999999999986,
+            "phones": [
+              {
+                "id": "s2tone",
+                "opacity": 0.425771,
+                "transform": "matrix(0.977031, 0, 0, 0.977031, -16.0784, 8.03921)",
+                "loaded": true
+              },
+              {
+                "id": "matrix",
+                "opacity": 0.8234,
+                "transform": "matrix(0.98234, 0, 0, 0.98234, 0, 3.53199)",
+                "loaded": true
+              },
+              {
+                "id": "regular",
+                "opacity": 0,
+                "transform": "matrix(0.96, 0, 0, 0.96, 28, 14)",
+                "loaded": true
+              }
+            ]
+          },
+          {
+            "time": 616.6000000000001,
+            "phones": [
+              {
+                "id": "s2tone",
+                "opacity": 0.696725,
+                "transform": "matrix(0.987869, 0, 0, 0.987869, -8.4917, 4.24585)",
+                "loaded": true
+              },
+              {
+                "id": "matrix",
+                "opacity": 0.903951,
+                "transform": "matrix(0.990395, 0, 0, 0.990395, 0, 1.92097)",
+                "loaded": true
+              },
+              {
+                "id": "regular",
+                "opacity": 0.145459,
+                "transform": "matrix(0.965818, 0, 0, 0.965818, 23.9271, 11.9636)",
+                "loaded": true
+              }
+            ]
+          },
+          {
+            "time": 699.9999999999998,
+            "phones": [
+              {
+                "id": "s2tone",
+                "opacity": 0.804285,
+                "transform": "matrix(0.992171, 0, 0, 0.992171, -5.48003, 2.74001)",
+                "loaded": true
+              },
+              {
+                "id": "matrix",
+                "opacity": 0.939608,
+                "transform": "matrix(0.993961, 0, 0, 0.993961, 0, 1.20784)",
+                "loaded": true
+              },
+              {
+                "id": "regular",
+                "opacity": 0.426078,
+                "transform": "matrix(0.977043, 0, 0, 0.977043, 16.0698, 8.0349)",
+                "loaded": true
+              }
+            ]
+          },
+          {
+            "time": 799.8999999999999,
+            "phones": [
+              {
+                "id": "s2tone",
+                "opacity": 0.883341,
+                "transform": "matrix(0.995334, 0, 0, 0.995334, -3.26645, 1.63323)",
+                "loaded": true
+              },
+              {
+                "id": "matrix",
+                "opacity": 0.96777,
+                "transform": "matrix(0.996777, 0, 0, 0.996777, 0, 0.644591)",
+                "loaded": true
+              },
+              {
+                "id": "regular",
+                "opacity": 0.668161,
+                "transform": "matrix(0.986726, 0, 0, 0.986726, 9.29148, 4.64574)",
+                "loaded": true
+              }
+            ]
+          },
+          {
+            "time": 916.6000000000001,
+            "phones": [
+              {
+                "id": "s2tone",
+                "opacity": 0.938404,
+                "transform": "matrix(0.997536, 0, 0, 0.997536, -1.72468, 0.862342)",
+                "loaded": true
+              },
+              {
+                "id": "matrix",
+                "opacity": 0.987312,
+                "transform": "matrix(0.998731, 0, 0, 0.998731, 0, 0.253769)",
+                "loaded": true
+              },
+              {
+                "id": "regular",
+                "opacity": 0.820368,
+                "transform": "matrix(0.992815, 0, 0, 0.992815, 5.0297, 2.51485)",
+                "loaded": true
+              }
+            ]
+          },
+          {
+            "time": 999.8999999999999,
+            "phones": [
+              {
+                "id": "s2tone",
+                "opacity": 0.963127,
+                "transform": "matrix(0.998525, 0, 0, 0.998525, -1.03245, 0.516226)",
+                "loaded": true
+              },
+              {
+                "id": "matrix",
+                "opacity": 0.995093,
+                "transform": "matrix(0.999509, 0, 0, 0.999509, 0, 0.0981431)",
+                "loaded": true
+              },
+              {
+                "id": "regular",
+                "opacity": 0.883341,
+                "transform": "matrix(0.995334, 0, 0, 0.995334, 3.26645, 1.63323)",
+                "loaded": true
+              }
+            ]
+          },
+          {
+            "time": 1099.8999999999999,
+            "phones": [
+              {
+                "id": "s2tone",
+                "opacity": 0.982399,
+                "transform": "matrix(0.999296, 0, 0, 0.999296, -0.492831, 0.246416)",
+                "loaded": true
+              },
+              {
+                "id": "matrix",
+                "opacity": 0.999456,
+                "transform": "matrix(0.999946, 0, 0, 0.999946, 0, 0.0108726)",
+                "loaded": true
+              },
+              {
+                "id": "regular",
+                "opacity": 0.932213,
+                "transform": "matrix(0.997289, 0, 0, 0.997289, 1.89805, 0.949024)",
+                "loaded": true
+              }
+            ]
+          },
+          {
+            "time": 1199.8999999999999,
+            "phones": [
+              {
+                "id": "s2tone",
+                "opacity": 0.993609,
+                "transform": "matrix(0.999744, 0, 0, 0.999744, -0.178952, 0.0894758)",
+                "loaded": true
+              },
+              {
+                "id": "matrix",
+                "opacity": 1,
+                "transform": "matrix(1, 0, 0, 1, 0, 0)",
+                "loaded": true
+              },
+              {
+                "id": "regular",
+                "opacity": 0.963127,
+                "transform": "matrix(0.998525, 0, 0, 0.998525, 1.03245, 0.516226)",
+                "loaded": true
+              }
+            ]
+          },
+          {
+            "time": 1299.8999999999999,
+            "phones": [
+              {
+                "id": "s2tone",
+                "opacity": 0.998955,
+                "transform": "matrix(0.999958, 0, 0, 0.999958, -0.0292575, 0.0146288)",
+                "loaded": true
+              },
+              {
+                "id": "matrix",
+                "opacity": 1,
+                "transform": "matrix(1, 0, 0, 1, 0, 0)",
+                "loaded": true
+              },
+              {
+                "id": "regular",
+                "opacity": 0.982399,
+                "transform": "matrix(0.999296, 0, 0, 0.999296, 0.492831, 0.246416)",
+                "loaded": true
+              }
+            ]
+          },
+          {
+            "time": 1399.9999999999998,
+            "phones": [
+              {
+                "id": "s2tone",
+                "opacity": 1,
+                "transform": "matrix(1, 0, 0, 1, 0, 0)",
+                "loaded": true
+              },
+              {
+                "id": "matrix",
+                "opacity": 1,
+                "transform": "matrix(1, 0, 0, 1, 0, 0)",
+                "loaded": true
+              },
+              {
+                "id": "regular",
+                "opacity": 0.993617,
+                "transform": "matrix(0.999745, 0, 0, 0.999745, 0.178728, 0.089364)",
+                "loaded": true
+              }
+            ]
+          },
+          {
+            "time": 1499.8999999999999,
+            "phones": [
+              {
+                "id": "s2tone",
+                "opacity": 1,
+                "transform": "matrix(1, 0, 0, 1, 0, 0)",
+                "loaded": true
+              },
+              {
+                "id": "matrix",
+                "opacity": 1,
+                "transform": "matrix(1, 0, 0, 1, 0, 0)",
+                "loaded": true
+              },
+              {
+                "id": "regular",
+                "opacity": 0.998955,
+                "transform": "matrix(0.999958, 0, 0, 0.999958, 0.0292575, 0.0146288)",
+                "loaded": true
+              }
+            ]
+          },
+          {
+            "time": 1599.8999999999999,
+            "phones": [
+              {
+                "id": "s2tone",
+                "opacity": 1,
+                "transform": "matrix(1, 0, 0, 1, 0, 0)",
+                "loaded": true
+              },
+              {
+                "id": "matrix",
+                "opacity": 1,
+                "transform": "matrix(1, 0, 0, 1, 0, 0)",
+                "loaded": true
+              },
+              {
+                "id": "regular",
+                "opacity": 1,
+                "transform": "matrix(1, 0, 0, 1, 0, 0)",
+                "loaded": true
+              }
+            ]
+          },
+          {
+            "time": 1699.8999999999999,
+            "phones": [
+              {
+                "id": "s2tone",
+                "opacity": 1,
+                "transform": "matrix(1, 0, 0, 1, 0, 0)",
+                "loaded": true
+              },
+              {
+                "id": "matrix",
+                "opacity": 1,
+                "transform": "matrix(1, 0, 0, 1, 0, 0)",
+                "loaded": true
+              },
+              {
+                "id": "regular",
+                "opacity": 1,
+                "transform": "matrix(1, 0, 0, 1, 0, 0)",
+                "loaded": true
+              }
+            ]
+          },
+          {
+            "time": 1799.8999999999999,
+            "phones": [
+              {
+                "id": "s2tone",
+                "opacity": 1,
+                "transform": "matrix(1, 0, 0, 1, 0, 0)",
+                "loaded": true
+              },
+              {
+                "id": "matrix",
+                "opacity": 1,
+                "transform": "matrix(1, 0, 0, 1, 0, 0)",
+                "loaded": true
+              },
+              {
+                "id": "regular",
+                "opacity": 1,
+                "transform": "matrix(1, 0, 0, 1, 0, 0)",
+                "loaded": true
+              }
+            ]
+          },
+          {
+            "time": 1916.6000000000001,
+            "phones": [
+              {
+                "id": "s2tone",
+                "opacity": 1,
+                "transform": "matrix(1, 0, 0, 1, 0, 0)",
+                "loaded": true
+              },
+              {
+                "id": "matrix",
+                "opacity": 1,
+                "transform": "matrix(1, 0, 0, 1, 0, 0)",
+                "loaded": true
+              },
+              {
+                "id": "regular",
+                "opacity": 1,
+                "transform": "matrix(1, 0, 0, 1, 0, 0)",
+                "loaded": true
+              }
+            ]
+          },
+          {
+            "time": 1999.8999999999999,
+            "phones": [
+              {
+                "id": "s2tone",
+                "opacity": 1,
+                "transform": "matrix(1, 0, 0, 1, 0, 0)",
+                "loaded": true
+              },
+              {
+                "id": "matrix",
+                "opacity": 1,
+                "transform": "matrix(1, 0, 0, 1, 0, 0)",
+                "loaded": true
+              },
+              {
+                "id": "regular",
+                "opacity": 1,
+                "transform": "matrix(1, 0, 0, 1, 0, 0)",
+                "loaded": true
+              }
+            ]
+          },
+          {
+            "time": 2099.8999999999996,
+            "phones": [
+              {
+                "id": "s2tone",
+                "opacity": 1,
+                "transform": "matrix(1, 0, 0, 1, 0, 0)",
+                "loaded": true
+              },
+              {
+                "id": "matrix",
+                "opacity": 1,
+                "transform": "matrix(1, 0, 0, 1, 0, 0)",
+                "loaded": true
+              },
+              {
+                "id": "regular",
+                "opacity": 1,
+                "transform": "matrix(1, 0, 0, 1, 0, 0)",
+                "loaded": true
+              }
+            ]
+          }
+        ],
+        "sources": [
+          {
+            "src": "/showcase/s2tone.png",
+            "selected": "http://127.0.0.1:5214/showcase/s2tone-360.webp",
+            "loaded": true,
+            "naturalWidth": 217,
+            "clientWidth": 157,
+            "clientHeight": 340,
+            "fit": "contain",
+            "filter": "none",
+            "blend": "normal"
+          },
+          {
+            "src": "/showcase/matrix.png",
+            "selected": "http://127.0.0.1:5214/showcase/matrix-360.webp",
+            "loaded": true,
+            "naturalWidth": 268,
+            "clientWidth": 196,
+            "clientHeight": 424,
+            "fit": "contain",
+            "filter": "none",
+            "blend": "normal"
+          },
+          {
+            "src": "/showcase/regular.png",
+            "selected": "http://127.0.0.1:5214/showcase/regular-360.webp",
+            "loaded": true,
+            "naturalWidth": 217,
+            "clientWidth": 157,
+            "clientHeight": 340,
+            "fit": "contain",
+            "filter": "none",
+            "blend": "normal"
+          }
+        ],
+        "fullHeroScreenshot": "1280-homepage.png",
+        "floatRuns": true
+      },
+      {
+        "viewport": {
+          "width": 390,
+          "height": 844
+        },
+        "frames": [
+          {
+            "time": 0,
+            "phones": [
+              {
+                "id": "s2tone",
+                "opacity": 0,
+                "transform": "matrix(0.96, 0, 0, 0.96, -28, 14)",
+                "loaded": true
+              },
+              {
+                "id": "matrix",
+                "opacity": 0,
+                "transform": "matrix(0.9, 0, 0, 0.9, 0, 20)",
+                "loaded": true
+              },
+              {
+                "id": "regular",
+                "opacity": 0,
+                "transform": "matrix(0.96, 0, 0, 0.96, 28, 14)",
+                "loaded": true
+              }
+            ]
+          },
+          {
+            "time": 83.40000000000009,
+            "phones": [
+              {
+                "id": "s2tone",
+                "opacity": 0,
+                "transform": "matrix(0.96, 0, 0, 0.96, -28, 14)",
+                "loaded": true
+              },
+              {
+                "id": "matrix",
+                "opacity": 0,
+                "transform": "matrix(0.9, 0, 0, 0.9, 0, 20)",
+                "loaded": true
+              },
+              {
+                "id": "regular",
+                "opacity": 0,
+                "transform": "matrix(0.96, 0, 0, 0.96, 28, 14)",
+                "loaded": true
+              }
+            ]
+          },
+          {
+            "time": 166.70000000000005,
+            "phones": [
+              {
+                "id": "s2tone",
+                "opacity": 0,
+                "transform": "matrix(0.96, 0, 0, 0.96, -28, 14)",
+                "loaded": true
+              },
+              {
+                "id": "matrix",
+                "opacity": 0,
+                "transform": "matrix(0.9, 0, 0, 0.9, 0, 20)",
+                "loaded": true
+              },
+              {
+                "id": "regular",
+                "opacity": 0,
+                "transform": "matrix(0.96, 0, 0, 0.96, 28, 14)",
+                "loaded": true
+              }
+            ]
+          },
+          {
+            "time": 266.70000000000005,
+            "phones": [
+              {
+                "id": "s2tone",
+                "opacity": 0,
+                "transform": "matrix(0.96, 0, 0, 0.96, -28, 14)",
+                "loaded": true
+              },
+              {
+                "id": "matrix",
+                "opacity": 0.272507,
+                "transform": "matrix(0.927251, 0, 0, 0.927251, 0, 14.5499)",
+                "loaded": true
+              },
+              {
+                "id": "regular",
+                "opacity": 0,
+                "transform": "matrix(0.96, 0, 0, 0.96, 28, 14)",
+                "loaded": true
+              }
+            ]
+          },
+          {
+            "time": 366.60000000000014,
+            "phones": [
+              {
+                "id": "s2tone",
+                "opacity": 0,
+                "transform": "matrix(0.96, 0, 0, 0.96, -28, 14)",
+                "loaded": true
+              },
+              {
+                "id": "matrix",
+                "opacity": 0.57135,
+                "transform": "matrix(0.957135, 0, 0, 0.957135, 0, 8.573)",
+                "loaded": true
+              },
+              {
+                "id": "regular",
+                "opacity": 0,
+                "transform": "matrix(0.96, 0, 0, 0.96, 28, 14)",
+                "loaded": true
+              }
+            ]
+          },
+          {
+            "time": 466.70000000000005,
+            "phones": [
+              {
+                "id": "s2tone",
+                "opacity": 0.203293,
+                "transform": "matrix(0.968132, 0, 0, 0.968132, -22.3078, 11.1539)",
+                "loaded": true
+              },
+              {
+                "id": "matrix",
+                "opacity": 0.750403,
+                "transform": "matrix(0.97504, 0, 0, 0.97504, 0, 4.99195)",
+                "loaded": true
+              },
+              {
+                "id": "regular",
+                "opacity": 0,
+                "transform": "matrix(0.96, 0, 0, 0.96, 28, 14)",
+                "loaded": true
+              }
+            ]
+          },
+          {
+            "time": 566.7,
+            "phones": [
+              {
+                "id": "s2tone",
+                "opacity": 0.521481,
+                "transform": "matrix(0.980859, 0, 0, 0.980859, -13.3985, 6.69927)",
+                "loaded": true
+              },
+              {
+                "id": "matrix",
+                "opacity": 0.851363,
+                "transform": "matrix(0.985136, 0, 0, 0.985136, 0, 2.97275)",
+                "loaded": true
+              },
+              {
+                "id": "regular",
+                "opacity": 0,
+                "transform": "matrix(0.96, 0, 0, 0.96, 28, 14)",
+                "loaded": true
+              }
+            ]
+          },
+          {
+            "time": 666.7,
+            "phones": [
+              {
+                "id": "s2tone",
+                "opacity": 0.722591,
+                "transform": "matrix(0.988904, 0, 0, 0.988904, -7.76745, 3.88373)",
+                "loaded": true
+              },
+              {
+                "id": "matrix",
+                "opacity": 0.912225,
+                "transform": "matrix(0.991223, 0, 0, 0.991223, 0, 1.7555)",
+                "loaded": true
+              },
+              {
+                "id": "regular",
+                "opacity": 0.203293,
+                "transform": "matrix(0.968132, 0, 0, 0.968132, 22.3078, 11.1539)",
+                "loaded": true
+              }
+            ]
+          },
+          {
+            "time": 766.7,
+            "phones": [
+              {
+                "id": "s2tone",
+                "opacity": 0.835199,
+                "transform": "matrix(0.993408, 0, 0, 0.993408, -4.61442, 2.30721)",
+                "loaded": true
+              },
+              {
+                "id": "matrix",
+                "opacity": 0.950468,
+                "transform": "matrix(0.995047, 0, 0, 0.995047, 0, 0.99065)",
+                "loaded": true
+              },
+              {
+                "id": "regular",
+                "opacity": 0.521481,
+                "transform": "matrix(0.980859, 0, 0, 0.980859, 13.3985, 6.69927)",
+                "loaded": true
+              }
+            ]
+          },
+          {
+            "time": 866.7,
+            "phones": [
+              {
+                "id": "s2tone",
+                "opacity": 0.902243,
+                "transform": "matrix(0.99609, 0, 0, 0.99609, -2.7372, 1.3686)",
+                "loaded": true
+              },
+              {
+                "id": "matrix",
+                "opacity": 0.974597,
+                "transform": "matrix(0.99746, 0, 0, 0.99746, 0, 0.508053)",
+                "loaded": true
+              },
+              {
+                "id": "regular",
+                "opacity": 0.722591,
+                "transform": "matrix(0.988904, 0, 0, 0.988904, 7.76745, 3.88373)",
+                "loaded": true
+              }
+            ]
+          },
+          {
+            "time": 966.6000000000001,
+            "phones": [
+              {
+                "id": "s2tone",
+                "opacity": 0.944112,
+                "transform": "matrix(0.997764, 0, 0, 0.997764, -1.56486, 0.782432)",
+                "loaded": true
+              },
+              {
+                "id": "matrix",
+                "opacity": 0.989215,
+                "transform": "matrix(0.998922, 0, 0, 0.998922, 0, 0.215695)",
+                "loaded": true
+              },
+              {
+                "id": "regular",
+                "opacity": 0.835114,
+                "transform": "matrix(0.993405, 0, 0, 0.993405, 4.6168, 2.3084)",
+                "loaded": true
+              }
+            ]
+          },
+          {
+            "time": 1066.6000000000001,
+            "phones": [
+              {
+                "id": "s2tone",
+                "opacity": 0.970623,
+                "transform": "matrix(0.998825, 0, 0, 0.998825, -0.822548, 0.411274)",
+                "loaded": true
+              },
+              {
+                "id": "matrix",
+                "opacity": 0.997084,
+                "transform": "matrix(0.999708, 0, 0, 0.999708, 0, 0.0583202)",
+                "loaded": true
+              },
+              {
+                "id": "regular",
+                "opacity": 0.902191,
+                "transform": "matrix(0.996088, 0, 0, 0.996088, 2.73866, 1.36933)",
+                "loaded": true
+              }
+            ]
+          },
+          {
+            "time": 1166.7,
+            "phones": [
+              {
+                "id": "s2tone",
+                "opacity": 0.986911,
+                "transform": "matrix(0.999476, 0, 0, 0.999476, -0.366489, 0.183244)",
+                "loaded": true
+              },
+              {
+                "id": "matrix",
+                "opacity": 0.999926,
+                "transform": "matrix(0.999993, 0, 0, 0.999993, 0, 0.00148262)",
+                "loaded": true
+              },
+              {
+                "id": "regular",
+                "opacity": 0.944145,
+                "transform": "matrix(0.997766, 0, 0, 0.997766, 1.56394, 0.781969)",
+                "loaded": true
+              }
+            ]
+          },
+          {
+            "time": 1250.0000000000002,
+            "phones": [
+              {
+                "id": "s2tone",
+                "opacity": 0.994864,
+                "transform": "matrix(0.999795, 0, 0, 0.999795, -0.143812, 0.0719062)",
+                "loaded": true
+              },
+              {
+                "id": "matrix",
+                "opacity": 1,
+                "transform": "matrix(1, 0, 0, 1, 0, 0)",
+                "loaded": true
+              },
+              {
+                "id": "regular",
+                "opacity": 0.967036,
+                "transform": "matrix(0.998681, 0, 0, 0.998681, 0.923002, 0.461501)",
+                "loaded": true
+              }
+            ]
+          },
+          {
+            "time": 1333.3,
+            "phones": [
+              {
+                "id": "s2tone",
+                "opacity": 0.998955,
+                "transform": "matrix(0.999958, 0, 0, 0.999958, -0.0292526, 0.0146263)",
+                "loaded": true
+              },
+              {
+                "id": "matrix",
+                "opacity": 1,
+                "transform": "matrix(1, 0, 0, 1, 0, 0)",
+                "loaded": true
+              },
+              {
+                "id": "regular",
+                "opacity": 0.9824,
+                "transform": "matrix(0.999296, 0, 0, 0.999296, 0.492806, 0.246403)",
+                "loaded": true
+              }
+            ]
+          },
+          {
+            "time": 1416.7,
+            "phones": [
+              {
+                "id": "s2tone",
+                "opacity": 1,
+                "transform": "matrix(1, 0, 0, 1, 0, 0)",
+                "loaded": true
+              },
+              {
+                "id": "matrix",
+                "opacity": 1,
+                "transform": "matrix(1, 0, 0, 1, 0, 0)",
+                "loaded": true
+              },
+              {
+                "id": "regular",
+                "opacity": 0.992202,
+                "transform": "matrix(0.999688, 0, 0, 0.999688, 0.218345, 0.109173)",
+                "loaded": true
+              }
+            ]
+          },
+          {
+            "time": 1500.0000000000002,
+            "phones": [
+              {
+                "id": "s2tone",
+                "opacity": 1,
+                "transform": "matrix(1, 0, 0, 1, 0, 0)",
+                "loaded": true
+              },
+              {
+                "id": "matrix",
+                "opacity": 1,
+                "transform": "matrix(1, 0, 0, 1, 0, 0)",
+                "loaded": true
+              },
+              {
+                "id": "regular",
+                "opacity": 0.997726,
+                "transform": "matrix(0.999909, 0, 0, 0.999909, 0.0636666, 0.0318333)",
+                "loaded": true
+              }
+            ]
+          },
+          {
+            "time": 1583.3,
+            "phones": [
+              {
+                "id": "s2tone",
+                "opacity": 1,
+                "transform": "matrix(1, 0, 0, 1, 0, 0)",
+                "loaded": true
+              },
+              {
+                "id": "matrix",
+                "opacity": 1,
+                "transform": "matrix(1, 0, 0, 1, 0, 0)",
+                "loaded": true
+              },
+              {
+                "id": "regular",
+                "opacity": 0.999898,
+                "transform": "matrix(0.999996, 0, 0, 0.999996, 0.00284938, 0.00142469)",
+                "loaded": true
+              }
+            ]
+          },
+          {
+            "time": 1666.6000000000001,
+            "phones": [
+              {
+                "id": "s2tone",
+                "opacity": 1,
+                "transform": "matrix(1, 0, 0, 1, 0, 0)",
+                "loaded": true
+              },
+              {
+                "id": "matrix",
+                "opacity": 1,
+                "transform": "matrix(1, 0, 0, 1, 0, 0)",
+                "loaded": true
+              },
+              {
+                "id": "regular",
+                "opacity": 1,
+                "transform": "matrix(1, 0, 0, 1, 0, 0)",
+                "loaded": true
+              }
+            ]
+          },
+          {
+            "time": 1750.0000000000002,
+            "phones": [
+              {
+                "id": "s2tone",
+                "opacity": 1,
+                "transform": "matrix(1, 0, 0, 1, 0, 0)",
+                "loaded": true
+              },
+              {
+                "id": "matrix",
+                "opacity": 1,
+                "transform": "matrix(1, 0, 0, 1, 0, 0)",
+                "loaded": true
+              },
+              {
+                "id": "regular",
+                "opacity": 1,
+                "transform": "matrix(1, 0, 0, 1, 0, 0)",
+                "loaded": true
+              }
+            ]
+          },
+          {
+            "time": 1833.3,
+            "phones": [
+              {
+                "id": "s2tone",
+                "opacity": 1,
+                "transform": "matrix(1, 0, 0, 1, 0, 0)",
+                "loaded": true
+              },
+              {
+                "id": "matrix",
+                "opacity": 1,
+                "transform": "matrix(1, 0, 0, 1, 0, 0)",
+                "loaded": true
+              },
+              {
+                "id": "regular",
+                "opacity": 1,
+                "transform": "matrix(1, 0, 0, 1, 0, 0)",
+                "loaded": true
+              }
+            ]
+          },
+          {
+            "time": 1916.7,
+            "phones": [
+              {
+                "id": "s2tone",
+                "opacity": 1,
+                "transform": "matrix(1, 0, 0, 1, 0, 0)",
+                "loaded": true
+              },
+              {
+                "id": "matrix",
+                "opacity": 1,
+                "transform": "matrix(1, 0, 0, 1, 0, 0)",
+                "loaded": true
+              },
+              {
+                "id": "regular",
+                "opacity": 1,
+                "transform": "matrix(1, 0, 0, 1, 0, 0)",
+                "loaded": true
+              }
+            ]
+          },
+          {
+            "time": 2000.0000000000002,
+            "phones": [
+              {
+                "id": "s2tone",
+                "opacity": 1,
+                "transform": "matrix(1, 0, 0, 1, 0, 0)",
+                "loaded": true
+              },
+              {
+                "id": "matrix",
+                "opacity": 1,
+                "transform": "matrix(1, 0, 0, 1, 0, 0)",
+                "loaded": true
+              },
+              {
+                "id": "regular",
+                "opacity": 1,
+                "transform": "matrix(1, 0, 0, 1, 0, 0)",
+                "loaded": true
+              }
+            ]
+          }
+        ],
+        "sources": [
+          {
+            "src": "/showcase/s2tone.png",
+            "selected": "http://127.0.0.1:5214/showcase/s2tone-360.webp",
+            "loaded": true,
+            "naturalWidth": 132,
+            "clientWidth": 110,
+            "clientHeight": 239,
+            "fit": "contain",
+            "filter": "none",
+            "blend": "normal"
+          },
+          {
+            "src": "/showcase/matrix.png",
+            "selected": "http://127.0.0.1:5214/showcase/matrix-360.webp",
+            "loaded": true,
+            "naturalWidth": 163,
+            "clientWidth": 138,
+            "clientHeight": 298,
+            "fit": "contain",
+            "filter": "none",
+            "blend": "normal"
+          },
+          {
+            "src": "/showcase/regular.png",
+            "selected": "http://127.0.0.1:5214/showcase/regular-360.webp",
+            "loaded": true,
+            "naturalWidth": 132,
+            "clientWidth": 110,
+            "clientHeight": 239,
+            "fit": "contain",
+            "filter": "none",
+            "blend": "normal"
+          }
+        ],
+        "fullHeroScreenshot": "390-homepage.png",
+        "floatRuns": true
+      },
+      {
+        "viewport": {
+          "width": 320,
+          "height": 568
+        },
+        "frames": [
+          {
+            "time": 0,
+            "phones": [
+              {
+                "id": "s2tone",
+                "opacity": 0,
+                "transform": "matrix(0.96, 0, 0, 0.96, -28, 14)",
+                "loaded": true
+              },
+              {
+                "id": "matrix",
+                "opacity": 0,
+                "transform": "matrix(0.9, 0, 0, 0.9, 0, 20)",
+                "loaded": true
+              },
+              {
+                "id": "regular",
+                "opacity": 0,
+                "transform": "matrix(0.96, 0, 0, 0.96, 28, 14)",
+                "loaded": true
+              }
+            ]
+          },
+          {
+            "time": 83.29999999999995,
+            "phones": [
+              {
+                "id": "s2tone",
+                "opacity": 0,
+                "transform": "matrix(0.96, 0, 0, 0.96, -28, 14)",
+                "loaded": true
+              },
+              {
+                "id": "matrix",
+                "opacity": 0,
+                "transform": "matrix(0.9, 0, 0, 0.9, 0, 20)",
+                "loaded": true
+              },
+              {
+                "id": "regular",
+                "opacity": 0,
+                "transform": "matrix(0.96, 0, 0, 0.96, 28, 14)",
+                "loaded": true
+              }
+            ]
+          },
+          {
+            "time": 166.70000000000005,
+            "phones": [
+              {
+                "id": "s2tone",
+                "opacity": 0,
+                "transform": "matrix(0.96, 0, 0, 0.96, -28, 14)",
+                "loaded": true
+              },
+              {
+                "id": "matrix",
+                "opacity": 0,
+                "transform": "matrix(0.9, 0, 0, 0.9, 0, 20)",
+                "loaded": true
+              },
+              {
+                "id": "regular",
+                "opacity": 0,
+                "transform": "matrix(0.96, 0, 0, 0.96, 28, 14)",
+                "loaded": true
+              }
+            ]
+          },
+          {
+            "time": 250,
+            "phones": [
+              {
+                "id": "s2tone",
+                "opacity": 0,
+                "transform": "matrix(0.96, 0, 0, 0.96, -28, 14)",
+                "loaded": true
+              },
+              {
+                "id": "matrix",
+                "opacity": 0.272566,
+                "transform": "matrix(0.927257, 0, 0, 0.927257, 0, 14.5487)",
+                "loaded": true
+              },
+              {
+                "id": "regular",
+                "opacity": 0,
+                "transform": "matrix(0.96, 0, 0, 0.96, 28, 14)",
+                "loaded": true
+              }
+            ]
+          },
+          {
+            "time": 333.39999999999986,
+            "phones": [
+              {
+                "id": "s2tone",
+                "opacity": 0,
+                "transform": "matrix(0.96, 0, 0, 0.96, -28, 14)",
+                "loaded": true
+              },
+              {
+                "id": "matrix",
+                "opacity": 0.53043,
+                "transform": "matrix(0.953043, 0, 0, 0.953043, 0, 9.3914)",
+                "loaded": true
+              },
+              {
+                "id": "regular",
+                "opacity": 0,
+                "transform": "matrix(0.96, 0, 0, 0.96, 28, 14)",
+                "loaded": true
+              }
+            ]
+          },
+          {
+            "time": 416.70000000000005,
+            "phones": [
+              {
+                "id": "s2tone",
+                "opacity": 0.0887673,
+                "transform": "matrix(0.963551, 0, 0, 0.963551, -25.5145, 12.7573)",
+                "loaded": true
+              },
+              {
+                "id": "matrix",
+                "opacity": 0.702236,
+                "transform": "matrix(0.970224, 0, 0, 0.970224, 0, 5.95529)",
+                "loaded": true
+              },
+              {
+                "id": "regular",
+                "opacity": 0,
+                "transform": "matrix(0.96, 0, 0, 0.96, 28, 14)",
+                "loaded": true
+              }
+            ]
+          },
+          {
+            "time": 499.89999999999986,
+            "phones": [
+              {
+                "id": "s2tone",
+                "opacity": 0.372975,
+                "transform": "matrix(0.974919, 0, 0, 0.974919, -17.5567, 8.77835)",
+                "loaded": true
+              },
+              {
+                "id": "matrix",
+                "opacity": 0.807519,
+                "transform": "matrix(0.980752, 0, 0, 0.980752, 0, 3.84961)",
+                "loaded": true
+              },
+              {
+                "id": "regular",
+                "opacity": 0,
+                "transform": "matrix(0.96, 0, 0, 0.96, 28, 14)",
+                "loaded": true
+              }
+            ]
+          },
+          {
+            "time": 583.2,
+            "phones": [
+              {
+                "id": "s2tone",
+                "opacity": 0.601736,
+                "transform": "matrix(0.984069, 0, 0, 0.984069, -11.1514, 5.57569)",
+                "loaded": true
+              },
+              {
+                "id": "matrix",
+                "opacity": 0.87489,
+                "transform": "matrix(0.987489, 0, 0, 0.987489, 0, 2.50221)",
+                "loaded": true
+              },
+              {
+                "id": "regular",
+                "opacity": 0,
+                "transform": "matrix(0.96, 0, 0, 0.96, 28, 14)",
+                "loaded": true
+              }
+            ]
+          },
+          {
+            "time": 666.5999999999999,
+            "phones": [
+              {
+                "id": "s2tone",
+                "opacity": 0.745922,
+                "transform": "matrix(0.989837, 0, 0, 0.989837, -7.1142, 3.5571)",
+                "loaded": true
+              },
+              {
+                "id": "matrix",
+                "opacity": 0.919846,
+                "transform": "matrix(0.991985, 0, 0, 0.991985, 0, 1.60307)",
+                "loaded": true
+              },
+              {
+                "id": "regular",
+                "opacity": 0.260856,
+                "transform": "matrix(0.970434, 0, 0, 0.970434, 20.696, 10.348)",
+                "loaded": true
+              }
+            ]
+          },
+          {
+            "time": 749.8999999999999,
+            "phones": [
+              {
+                "id": "s2tone",
+                "opacity": 0.835129,
+                "transform": "matrix(0.993405, 0, 0, 0.993405, -4.6164, 2.3082)",
+                "loaded": true
+              },
+              {
+                "id": "matrix",
+                "opacity": 0.950442,
+                "transform": "matrix(0.995044, 0, 0, 0.995044, 0, 0.991151)",
+                "loaded": true
+              },
+              {
+                "id": "regular",
+                "opacity": 0.521261,
+                "transform": "matrix(0.98085, 0, 0, 0.98085, 13.4047, 6.70234)",
+                "loaded": true
+              }
+            ]
+          },
+          {
+            "time": 833.3,
+            "phones": [
+              {
+                "id": "s2tone",
+                "opacity": 0.893175,
+                "transform": "matrix(0.995727, 0, 0, 0.995727, -2.9911, 1.49555)",
+                "loaded": true
+              },
+              {
+                "id": "matrix",
+                "opacity": 0.971327,
+                "transform": "matrix(0.997133, 0, 0, 0.997133, 0, 0.573465)",
+                "loaded": true
+              },
+              {
+                "id": "regular",
+                "opacity": 0.696762,
+                "transform": "matrix(0.987871, 0, 0, 0.987871, 8.49065, 4.24533)",
+                "loaded": true
+              }
+            ]
+          },
+          {
+            "time": 916.5999999999999,
+            "phones": [
+              {
+                "id": "s2tone",
+                "opacity": 0.932221,
+                "transform": "matrix(0.997289, 0, 0, 0.997289, -1.8978, 0.948901)",
+                "loaded": true
+              },
+              {
+                "id": "matrix",
+                "opacity": 0.985204,
+                "transform": "matrix(0.99852, 0, 0, 0.99852, 0, 0.295922)",
+                "loaded": true
+              },
+              {
+                "id": "regular",
+                "opacity": 0.804207,
+                "transform": "matrix(0.992168, 0, 0, 0.992168, 5.48221, 2.7411)",
+                "loaded": true
+              }
+            ]
+          },
+          {
+            "time": 999.8999999999999,
+            "phones": [
+              {
+                "id": "s2tone",
+                "opacity": 0.958906,
+                "transform": "matrix(0.998356, 0, 0, 0.998356, -1.15063, 0.575313)",
+                "loaded": true
+              },
+              {
+                "id": "matrix",
+                "opacity": 0.993871,
+                "transform": "matrix(0.999387, 0, 0, 0.999387, 0, 0.122577)",
+                "loaded": true
+              },
+              {
+                "id": "regular",
+                "opacity": 0.87272,
+                "transform": "matrix(0.994909, 0, 0, 0.994909, 3.56385, 1.78192)",
+                "loaded": true
+              }
+            ]
+          },
+          {
+            "time": 1083.3,
+            "phones": [
+              {
+                "id": "s2tone",
+                "opacity": 0.97702,
+                "transform": "matrix(0.999081, 0, 0, 0.999081, -0.64343, 0.321715)",
+                "loaded": true
+              },
+              {
+                "id": "matrix",
+                "opacity": 0.998526,
+                "transform": "matrix(0.999853, 0, 0, 0.999853, 0, 0.0294829)",
+                "loaded": true
+              },
+              {
+                "id": "regular",
+                "opacity": 0.918379,
+                "transform": "matrix(0.996735, 0, 0, 0.996735, 2.2854, 1.1427)",
+                "loaded": true
+              }
+            ]
+          },
+          {
+            "time": 1166.6000000000001,
+            "phones": [
+              {
+                "id": "s2tone",
+                "opacity": 0.988854,
+                "transform": "matrix(0.999554, 0, 0, 0.999554, -0.312093, 0.156047)",
+                "loaded": true
+              },
+              {
+                "id": "matrix",
+                "opacity": 0.999998,
+                "transform": "matrix(1, 0, 0, 1, 0, 4.18641e-05)",
+                "loaded": true
+              },
+              {
+                "id": "regular",
+                "opacity": 0.949438,
+                "transform": "matrix(0.997978, 0, 0, 0.997978, 1.41573, 0.707865)",
+                "loaded": true
+              }
+            ]
+          },
+          {
+            "time": 1249.8999999999999,
+            "phones": [
+              {
+                "id": "s2tone",
+                "opacity": 0.995959,
+                "transform": "matrix(0.999838, 0, 0, 0.999838, -0.113146, 0.0565731)",
+                "loaded": true
+              },
+              {
+                "id": "matrix",
+                "opacity": 1,
+                "transform": "matrix(1, 0, 0, 1, 0, 0)",
+                "loaded": true
+              },
+              {
+                "id": "regular",
+                "opacity": 0.970627,
+                "transform": "matrix(0.998825, 0, 0, 0.998825, 0.82245, 0.411225)",
+                "loaded": true
+              }
+            ]
+          },
+          {
+            "time": 1333.3,
+            "phones": [
+              {
+                "id": "s2tone",
+                "opacity": 0.999386,
+                "transform": "matrix(0.999975, 0, 0, 0.999975, -0.0171951, 0.00859755)",
+                "loaded": true
+              },
+              {
+                "id": "matrix",
+                "opacity": 1,
+                "transform": "matrix(1, 0, 0, 1, 0, 0)",
+                "loaded": true
+              },
+              {
+                "id": "regular",
+                "opacity": 0.984763,
+                "transform": "matrix(0.99939, 0, 0, 0.99939, 0.426645, 0.213322)",
+                "loaded": true
+              }
+            ]
+          },
+          {
+            "time": 1416.6000000000001,
+            "phones": [
+              {
+                "id": "s2tone",
+                "opacity": 1,
+                "transform": "matrix(1, 0, 0, 1, 0, 0)",
+                "loaded": true
+              },
+              {
+                "id": "matrix",
+                "opacity": 1,
+                "transform": "matrix(1, 0, 0, 1, 0, 0)",
+                "loaded": true
+              },
+              {
+                "id": "regular",
+                "opacity": 0.993611,
+                "transform": "matrix(0.999744, 0, 0, 0.999744, 0.1789, 0.0894501)",
+                "loaded": true
+              }
+            ]
+          },
+          {
+            "time": 1499.9999999999998,
+            "phones": [
+              {
+                "id": "s2tone",
+                "opacity": 1,
+                "transform": "matrix(1, 0, 0, 1, 0, 0)",
+                "loaded": true
+              },
+              {
+                "id": "matrix",
+                "opacity": 1,
+                "transform": "matrix(1, 0, 0, 1, 0, 0)",
+                "loaded": true
+              },
+              {
+                "id": "regular",
+                "opacity": 0.998407,
+                "transform": "matrix(0.999936, 0, 0, 0.999936, 0.0446087, 0.0223043)",
+                "loaded": true
+              }
+            ]
+          },
+          {
+            "time": 1583.3,
+            "phones": [
+              {
+                "id": "s2tone",
+                "opacity": 1,
+                "transform": "matrix(1, 0, 0, 1, 0, 0)",
+                "loaded": true
+              },
+              {
+                "id": "matrix",
+                "opacity": 1,
+                "transform": "matrix(1, 0, 0, 1, 0, 0)",
+                "loaded": true
+              },
+              {
+                "id": "regular",
+                "opacity": 0.999992,
+                "transform": "matrix(1, 0, 0, 1, 0.00022928, 0.00011464)",
+                "loaded": true
+              }
+            ]
+          },
+          {
+            "time": 1666.6000000000001,
+            "phones": [
+              {
+                "id": "s2tone",
+                "opacity": 1,
+                "transform": "matrix(1, 0, 0, 1, 0, 0)",
+                "loaded": true
+              },
+              {
+                "id": "matrix",
+                "opacity": 1,
+                "transform": "matrix(1, 0, 0, 1, 0, 0)",
+                "loaded": true
+              },
+              {
+                "id": "regular",
+                "opacity": 1,
+                "transform": "matrix(1, 0, 0, 1, 0, 0)",
+                "loaded": true
+              }
+            ]
+          },
+          {
+            "time": 1749.8999999999999,
+            "phones": [
+              {
+                "id": "s2tone",
+                "opacity": 1,
+                "transform": "matrix(1, 0, 0, 1, 0, 0)",
+                "loaded": true
+              },
+              {
+                "id": "matrix",
+                "opacity": 1,
+                "transform": "matrix(1, 0, 0, 1, 0, 0)",
+                "loaded": true
+              },
+              {
+                "id": "regular",
+                "opacity": 1,
+                "transform": "matrix(1, 0, 0, 1, 0, 0)",
+                "loaded": true
+              }
+            ]
+          },
+          {
+            "time": 1833.3,
+            "phones": [
+              {
+                "id": "s2tone",
+                "opacity": 1,
+                "transform": "matrix(1, 0, 0, 1, 0, 0)",
+                "loaded": true
+              },
+              {
+                "id": "matrix",
+                "opacity": 1,
+                "transform": "matrix(1, 0, 0, 1, 0, 0)",
+                "loaded": true
+              },
+              {
+                "id": "regular",
+                "opacity": 1,
+                "transform": "matrix(1, 0, 0, 1, 0, 0)",
+                "loaded": true
+              }
+            ]
+          },
+          {
+            "time": 1916.6000000000001,
+            "phones": [
+              {
+                "id": "s2tone",
+                "opacity": 1,
+                "transform": "matrix(1, 0, 0, 1, 0, 0)",
+                "loaded": true
+              },
+              {
+                "id": "matrix",
+                "opacity": 1,
+                "transform": "matrix(1, 0, 0, 1, 0, 0)",
+                "loaded": true
+              },
+              {
+                "id": "regular",
+                "opacity": 1,
+                "transform": "matrix(1, 0, 0, 1, 0, 0)",
+                "loaded": true
+              }
+            ]
+          },
+          {
+            "time": 1999.8999999999999,
+            "phones": [
+              {
+                "id": "s2tone",
+                "opacity": 1,
+                "transform": "matrix(1, 0, 0, 1, 0, 0)",
+                "loaded": true
+              },
+              {
+                "id": "matrix",
+                "opacity": 1,
+                "transform": "matrix(1, 0, 0, 1, 0, 0)",
+                "loaded": true
+              },
+              {
+                "id": "regular",
+                "opacity": 1,
+                "transform": "matrix(1, 0, 0, 1, 0, 0)",
+                "loaded": true
+              }
+            ]
+          },
+          {
+            "time": 2083.2,
+            "phones": [
+              {
+                "id": "s2tone",
+                "opacity": 1,
+                "transform": "matrix(1, 0, 0, 1, 0, 0)",
+                "loaded": true
+              },
+              {
+                "id": "matrix",
+                "opacity": 1,
+                "transform": "matrix(1, 0, 0, 1, 0, 0)",
+                "loaded": true
+              },
+              {
+                "id": "regular",
+                "opacity": 1,
+                "transform": "matrix(1, 0, 0, 1, 0, 0)",
+                "loaded": true
+              }
+            ]
+          }
+        ],
+        "sources": [
+          {
+            "src": "/showcase/s2tone.png",
+            "selected": "http://127.0.0.1:5214/showcase/s2tone-360.webp",
+            "loaded": true,
+            "naturalWidth": 108,
+            "clientWidth": 89,
+            "clientHeight": 193,
+            "fit": "contain",
+            "filter": "none",
+            "blend": "normal"
+          },
+          {
+            "src": "/showcase/matrix.png",
+            "selected": "http://127.0.0.1:5214/showcase/matrix-360.webp",
+            "loaded": true,
+            "naturalWidth": 134,
+            "clientWidth": 112,
+            "clientHeight": 242,
+            "fit": "contain",
+            "filter": "none",
+            "blend": "normal"
+          },
+          {
+            "src": "/showcase/regular.png",
+            "selected": "http://127.0.0.1:5214/showcase/regular-360.webp",
+            "loaded": true,
+            "naturalWidth": 108,
+            "clientWidth": 89,
+            "clientHeight": 193,
+            "fit": "contain",
+            "filter": "none",
+            "blend": "normal"
+          }
+        ],
+        "fullHeroScreenshot": "320-homepage.png",
+        "floatRuns": true
+      }
+    ],
+    "coldImageGate": true,
+    "physicalDevices": false
+  },
+  "publicWebsiteRegression": {
+    "viewports": [
+      {
+        "viewport": {
+          "width": 1440,
+          "height": 1000
+        },
+        "hero": {
+          "x": 0,
+          "y": 0,
+          "width": 1440,
+          "height": 1000
+        },
+        "accountBounds": {
+          "x": 1152.0999755859375,
+          "y": 72,
+          "width": 229.9000244140625,
+          "height": 160.5500030517578
+        },
+        "composition": [
+          {
+            "id": "s2tone",
+            "rect": {
+              "x": 675.3831176757812,
+              "y": 203.01812744140625,
+              "width": 277.4798583984375,
+              "height": 529.245849609375,
+              "top": 203.01812744140625,
+              "right": 952.8629760742188,
+              "bottom": 732.2639770507812,
+              "left": 675.3831176757812
+            },
+            "z": 1,
+            "image": "http://127.0.0.1:5214/showcase/s2tone-360.webp",
+            "fit": "contain",
+            "filter": "none"
+          },
+          {
+            "id": "matrix",
+            "rect": {
+              "x": 895.828125,
+              "y": 143.8828125,
+              "width": 296.34375,
+              "height": 632.28125,
+              "top": 143.8828125,
+              "right": 1192.171875,
+              "bottom": 776.1640625,
+              "left": 895.828125
+            },
+            "z": 3,
+            "image": "http://127.0.0.1:5214/showcase/matrix-360.webp",
+            "fit": "contain",
+            "filter": "none"
+          },
+          {
+            "id": "regular",
+            "rect": {
+              "x": 1135.168212890625,
+              "y": 203.01812744140625,
+              "width": 277.47998046875,
+              "height": 529.245849609375,
+              "top": 203.01812744140625,
+              "right": 1412.648193359375,
+              "bottom": 732.2639770507812,
+              "left": 1135.168212890625
+            },
+            "z": 2,
+            "image": "http://127.0.0.1:5214/showcase/regular-360.webp",
+            "fit": "contain",
+            "filter": "none"
+          }
+        ],
+        "staggeredEntrance": [
+          {
+            "opacity": "1",
+            "delay": "0.34s"
+          },
+          {
+            "opacity": "1",
+            "delay": "0.12s"
+          },
+          {
+            "opacity": "1",
+            "delay": "0.54s"
+          }
+        ],
+        "dropdownToggleOutsideEscapeHelp": true,
+        "navigationAndCTAs": true,
+        "loginAndRegistrationHandlers": true,
+        "existingAppEntry": true,
+        "horizontalOverflow": false
+      },
+      {
+        "viewport": {
+          "width": 768,
+          "height": 1024
+        },
+        "hero": {
+          "x": 0,
+          "y": 0,
+          "width": 768,
+          "height": 1200.515625
+        },
+        "accountBounds": {
+          "x": 505.73443603515625,
+          "y": 72.90284729003906,
+          "width": 231.26556396484375,
+          "height": 161.50364685058594
+        },
+        "composition": [
+          {
+            "id": "s2tone",
+            "rect": {
+              "x": 60.591773986816406,
+              "y": 520.0924072265625,
+              "width": 243.68167114257812,
+              "height": 463.88006591796875,
+              "top": 520.0924072265625,
+              "right": 304.27344512939453,
+              "bottom": 983.9724731445312,
+              "left": 60.591773986816406
+            },
+            "z": 1,
+            "image": "http://127.0.0.1:5214/showcase/s2tone-360.webp",
+            "fit": "contain",
+            "filter": "none"
+          },
+          {
+            "id": "matrix",
+            "rect": {
+              "x": 253.796875,
+              "y": 467.53125,
+              "width": 260.390625,
+              "height": 554.4375,
+              "top": 467.53125,
+              "right": 514.1875,
+              "bottom": 1021.96875,
+              "left": 253.796875
+            },
+            "z": 3,
+            "image": "http://127.0.0.1:5214/showcase/matrix-360.webp",
+            "fit": "contain",
+            "filter": "none"
+          },
+          {
+            "id": "regular",
+            "rect": {
+              "x": 463.7265625,
+              "y": 520.0924072265625,
+              "width": 243.681640625,
+              "height": 463.88006591796875,
+              "top": 520.0924072265625,
+              "right": 707.408203125,
+              "bottom": 983.9724731445312,
+              "left": 463.7265625
+            },
+            "z": 2,
+            "image": "http://127.0.0.1:5214/showcase/regular-360.webp",
+            "fit": "contain",
+            "filter": "none"
+          }
+        ],
+        "staggeredEntrance": [
+          {
+            "opacity": "1",
+            "delay": "0.34s"
+          },
+          {
+            "opacity": "1",
+            "delay": "0.12s"
+          },
+          {
+            "opacity": "1",
+            "delay": "0.54s"
+          }
+        ],
+        "dropdownToggleOutsideEscapeHelp": true,
+        "navigationAndCTAs": true,
+        "loginAndRegistrationHandlers": true,
+        "existingAppEntry": true,
+        "horizontalOverflow": false
+      },
+      {
+        "viewport": {
+          "width": 390,
+          "height": 844
+        },
+        "hero": {
+          "x": 0,
+          "y": 0,
+          "width": 390,
+          "height": 930.75
+        },
+        "accountBounds": {
+          "x": 101.73038482666016,
+          "y": 64.90552520751953,
+          "width": 231.26961517333984,
+          "height": 161.50646209716797
+        },
+        "composition": [
+          {
+            "id": "s2tone",
+            "rect": {
+              "x": 17.490798950195312,
+              "y": 513.8738403320312,
+              "width": 134.18336486816406,
+              "height": 253.96075439453125,
+              "top": 513.8738403320312,
+              "right": 151.67416381835938,
+              "bottom": 767.8345947265625,
+              "left": 17.490798950195312
+            },
+            "z": 1,
+            "image": "http://127.0.0.1:5214/showcase/s2tone-360.webp",
+            "fit": "contain",
+            "filter": "none"
+          },
+          {
+            "id": "matrix",
+            "rect": {
+              "x": 123.171875,
+              "y": 483.828125,
+              "width": 143.625,
+              "height": 303.96875,
+              "top": 483.828125,
+              "right": 266.796875,
+              "bottom": 787.796875,
+              "left": 123.171875
+            },
+            "z": 3,
+            "image": "http://127.0.0.1:5214/showcase/matrix-360.webp",
+            "fit": "contain",
+            "filter": "none"
+          },
+          {
+            "id": "regular",
+            "rect": {
+              "x": 238.3258514404297,
+              "y": 513.8738403320312,
+              "width": 134.18333435058594,
+              "height": 253.96075439453125,
+              "top": 513.8738403320312,
+              "right": 372.5091857910156,
+              "bottom": 767.8345947265625,
+              "left": 238.3258514404297
+            },
+            "z": 2,
+            "image": "http://127.0.0.1:5214/showcase/regular-360.webp",
+            "fit": "contain",
+            "filter": "none"
+          }
+        ],
+        "staggeredEntrance": [
+          {
+            "opacity": "1",
+            "delay": "0.34s"
+          },
+          {
+            "opacity": "1",
+            "delay": "0.12s"
+          },
+          {
+            "opacity": "1",
+            "delay": "0.54s"
+          }
+        ],
+        "dropdownToggleOutsideEscapeHelp": true,
+        "navigationAndCTAs": true,
+        "loginAndRegistrationHandlers": true,
+        "existingAppEntry": true,
+        "horizontalOverflow": false
+      },
+      {
+        "viewport": {
+          "width": 320,
+          "height": 568
+        },
+        "hero": {
+          "x": 0,
+          "y": 0,
+          "width": 320,
+          "height": 895.890625
+        },
+        "accountBounds": {
+          "x": 44.10000228881836,
+          "y": 64,
+          "width": 229.89999771118164,
+          "height": 160.5500030517578
+        },
+        "composition": [
+          {
+            "id": "s2tone",
+            "rect": {
+              "x": 14.880240440368652,
+              "y": 537.5481567382812,
+              "width": 109.74102020263672,
+              "height": 206.64569091796875,
+              "top": 537.5481567382812,
+              "right": 124.62126064300537,
+              "bottom": 744.19384765625,
+              "left": 14.880240440368652
+            },
+            "z": 1,
+            "image": "http://127.0.0.1:5214/showcase/s2tone-360.webp",
+            "fit": "contain",
+            "filter": "none"
+          },
+          {
+            "id": "matrix",
+            "rect": {
+              "x": 101.1875,
+              "y": 512.765625,
+              "width": 117.59375,
+              "height": 247.609375,
+              "top": 512.765625,
+              "right": 218.78125,
+              "bottom": 760.375,
+              "left": 101.1875
+            },
+            "z": 3,
+            "image": "http://127.0.0.1:5214/showcase/matrix-360.webp",
+            "fit": "contain",
+            "filter": "none"
+          },
+          {
+            "id": "regular",
+            "rect": {
+              "x": 195.3787384033203,
+              "y": 537.5481567382812,
+              "width": 109.74101257324219,
+              "height": 206.64569091796875,
+              "top": 537.5481567382812,
+              "right": 305.1197509765625,
+              "bottom": 744.19384765625,
+              "left": 195.3787384033203
+            },
+            "z": 2,
+            "image": "http://127.0.0.1:5214/showcase/regular-360.webp",
+            "fit": "contain",
+            "filter": "none"
+          }
+        ],
+        "staggeredEntrance": [
+          {
+            "opacity": "1",
+            "delay": "0.34s"
+          },
+          {
+            "opacity": "1",
+            "delay": "0.12s"
+          },
+          {
+            "opacity": "1",
+            "delay": "0.54s"
+          }
+        ],
+        "dropdownToggleOutsideEscapeHelp": true,
+        "navigationAndCTAs": true,
+        "loginAndRegistrationHandlers": true,
+        "existingAppEntry": true,
+        "horizontalOverflow": false
+      }
+    ],
+    "reducedMotion": true,
+    "sessionPreserved": true,
+    "backend": "API fixtures; no real accounts created",
+    "physicalDevices": false
+  },
+  "installationRegression": {
     "results": [
       {
         "viewport": {
@@ -29,7 +2788,7 @@
         "manualCopyFallback": true,
         "modalCloseAndFocus": true,
         "overflow": false,
-        "screenshotShowcase": "blocked: original three screenshots not attached"
+        "scope": "typography and installation guidance"
       },
       {
         "viewport": {
@@ -51,7 +2810,7 @@
         "manualCopyFallback": true,
         "modalCloseAndFocus": true,
         "overflow": false,
-        "screenshotShowcase": "blocked: original three screenshots not attached"
+        "scope": "typography and installation guidance"
       },
       {
         "viewport": {
@@ -73,159 +2832,11 @@
         "manualCopyFallback": true,
         "modalCloseAndFocus": true,
         "overflow": false,
-        "screenshotShowcase": "blocked: original three screenshots not attached"
+        "scope": "typography and installation guidance"
       }
     ],
     "physicalDevices": false,
     "nativeInstallPrompt": "No handler exists in app; manual browser installation instructions link to existing manifest-scoped app entry."
-  },
-  "existingWebsiteRegression": {
-    "viewports": [
-      {
-        "viewport": {
-          "width": 1440,
-          "height": 1000
-        },
-        "hero": {
-          "x": 0,
-          "y": 0,
-          "width": 1440,
-          "height": 1000
-        },
-        "accountBounds": {
-          "x": 1152.0999755859375,
-          "y": 72,
-          "width": 229.9000244140625,
-          "height": 160.5500030517578
-        },
-        "outlineAndIndependentEyes": {
-          "first": {
-            "offset": "0.885196px",
-            "left": "0.369938",
-            "right": "0.242472"
-          },
-          "later": {
-            "offset": "0.774089px",
-            "left": "0.549992",
-            "right": "0.418827"
-          }
-        },
-        "dropdownToggleOutsideEscapeHelp": true,
-        "navigationAndCTAs": true,
-        "loginAndRegistrationHandlers": true,
-        "existingAppEntry": true,
-        "horizontalOverflow": false
-      },
-      {
-        "viewport": {
-          "width": 768,
-          "height": 1024
-        },
-        "hero": {
-          "x": 0,
-          "y": 0,
-          "width": 768,
-          "height": 1024
-        },
-        "accountBounds": {
-          "x": 507.1000061035156,
-          "y": 72,
-          "width": 229.89999389648438,
-          "height": 160.5500030517578
-        },
-        "outlineAndIndependentEyes": {
-          "first": {
-            "offset": "0.85186px",
-            "left": "0.45489",
-            "right": "0.267522"
-          },
-          "later": {
-            "offset": "0.738904px",
-            "left": "0.704286",
-            "right": "0.490743"
-          }
-        },
-        "dropdownToggleOutsideEscapeHelp": true,
-        "navigationAndCTAs": true,
-        "loginAndRegistrationHandlers": true,
-        "existingAppEntry": true,
-        "horizontalOverflow": false
-      },
-      {
-        "viewport": {
-          "width": 390,
-          "height": 844
-        },
-        "hero": {
-          "x": 0,
-          "y": 0,
-          "width": 390,
-          "height": 844
-        },
-        "accountBounds": {
-          "x": 101.7301254272461,
-          "y": 64.90570831298828,
-          "width": 231.2698745727539,
-          "height": 161.50664520263672
-        },
-        "outlineAndIndependentEyes": {
-          "first": {
-            "offset": "0.909267px",
-            "left": "0.312617",
-            "right": "0.6"
-          },
-          "later": {
-            "offset": "0.798153px",
-            "left": "0.540915",
-            "right": "0.36358"
-          }
-        },
-        "dropdownToggleOutsideEscapeHelp": true,
-        "navigationAndCTAs": true,
-        "loginAndRegistrationHandlers": true,
-        "existingAppEntry": true,
-        "horizontalOverflow": false
-      },
-      {
-        "viewport": {
-          "width": 320,
-          "height": 568
-        },
-        "hero": {
-          "x": 0,
-          "y": 0,
-          "width": 320,
-          "height": 782.84375
-        },
-        "accountBounds": {
-          "x": 44.10000228881836,
-          "y": 64,
-          "width": 229.89999771118164,
-          "height": 160.5500030517578
-        },
-        "outlineAndIndependentEyes": {
-          "first": {
-            "offset": "0.91297px",
-            "left": "0.304944",
-            "right": "0.6"
-          },
-          "later": {
-            "offset": "0.80187px",
-            "left": "0.537909",
-            "right": "0.355277"
-          }
-        },
-        "dropdownToggleOutsideEscapeHelp": true,
-        "navigationAndCTAs": true,
-        "loginAndRegistrationHandlers": true,
-        "existingAppEntry": true,
-        "horizontalOverflow": false
-      }
-    ],
-    "reducedMotion": true,
-    "sessionPreserved": true,
-    "backend": "API fixtures; no real accounts created",
-    "physicalDevices": false
   },
   "productionDeployment": false
 }

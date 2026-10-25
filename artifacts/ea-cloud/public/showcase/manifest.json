@@ -1,0 +1,88 @@
+{
+  "source": "User uploaded image.zip, 25 October 2026",
+  "originals": "PNG bytes preserved exactly",
+  "displayVariants": "Proportional resized WebP files; lossless WebP encoding, no crop, recolour or artwork edits",
+  "images": [
+    {
+      "interface": "matrix",
+      "original": "matrix.png",
+      "sha256": "ddebb9220917c02bc5ea30565f1351d059fcb2e07734e8958ff585a3cba5fca2",
+      "width": 739,
+      "height": 1600,
+      "variants": [
+        {
+          "file": "matrix-360.webp",
+          "width": 360,
+          "height": 779,
+          "bytes": 271102
+        },
+        {
+          "file": "matrix-540.webp",
+          "width": 540,
+          "height": 1169,
+          "bytes": 507960
+        },
+        {
+          "file": "matrix-739.webp",
+          "width": 739,
+          "height": 1600,
+          "bytes": 808140
+        }
+      ]
+    },
+    {
+      "interface": "s2tone",
+      "original": "s2tone.png",
+      "sha256": "e6787bdb9c6c2460edad2c48ab0643b03e505411c341e496ffa26ca2628864b4",
+      "width": 739,
+      "height": 1600,
+      "variants": [
+        {
+          "file": "s2tone-360.webp",
+          "width": 360,
+          "height": 779,
+          "bytes": 263850
+        },
+        {
+          "file": "s2tone-540.webp",
+          "width": 540,
+          "height": 1169,
+          "bytes": 481908
+        },
+        {
+          "file": "s2tone-739.webp",
+          "width": 739,
+          "height": 1600,
+          "bytes": 743250
+        }
+      ]
+    },
+    {
+      "interface": "regular",
+      "original": "regular.png",
+      "sha256": "c00f4ba813ea0945fad1bded1135a0ee1d450692786ee0c43d720e1a739f851b",
+      "width": 739,
+      "height": 1600,
+      "variants": [
+        {
+          "file": "regular-360.webp",
+          "width": 360,
+          "height": 779,
+          "bytes": 309364
+        },
+        {
+          "file": "regular-540.webp",
+          "width": 540,
+          "height": 1169,
+          "bytes": 583434
+        },
+        {
+          "file": "regular-739.webp",
+          "width": 739,
+          "height": 1600,
+          "bytes": 935994
+        }
+      ]
+    }
+  ]
+}
