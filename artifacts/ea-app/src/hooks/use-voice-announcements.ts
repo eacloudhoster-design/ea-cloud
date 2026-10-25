@@ -2,7 +2,7 @@ import {commonNaturalAnnouncements} from "../../../../lib/api-zod/src/voice-anno
 import { useEffect, useRef } from "react";
 import type { VisualModes } from "./use-visual-modes";
 import { VoiceAnnouncementService } from "@/lib/voice-announcement-service";
-import { cleanText, modeNames, speakSymbol } from "@/lib/assistant-text";
+import { cleanText, modeNames } from "@/lib/assistant-text";
 import { scannerAnnouncement, tradeAnnouncement, mt5AttemptAnnouncement, mt5ResultAnnouncement } from "@/lib/voice-announcement-text";
 import type { AssistantEvent } from "@/lib/assistant-events";
 /** Automatic announcements; bundled Kokoro clips and private on-device synthesis only. */
@@ -56,7 +56,7 @@ export function useVoiceAnnouncements(token: string | null, ready: boolean, botN
         const text = mt5ResultAnnouncement(outcome);
         if (text) voice.announce(text, `mt5-result-${mt5Attempt}-${outcome.status}`, outcome.status === "unverified" ? 2 : 3, "mt5");
       }
-      if (detail.type === "symbol-saved") voice.announce(`${speakSymbol(detail.symbol)} configured.`, `symbol-${detail.symbol}-${Date.now()}`, 2, "symbol");
+      if (detail.type === "symbol-saved") voice.announce("Symbol configured.", `symbol-${detail.saveId ?? crypto.randomUUID()}`, 1, "symbol", true);
       if (detail.type === "scan-start") voice.announce(detail.kind === "fundamental" ? "Fundamental analysis started." : "Chart analysis started.", `scan-start-${Date.now()}`, 2, "scan");
       if (detail.type === "scan-complete") {
         const text = scannerAnnouncement(detail.record);

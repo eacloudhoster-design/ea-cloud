@@ -1,4 +1,4 @@
-import { assistantEvent } from "@/lib/assistant-events";
+import { confirmSymbolSave } from "@/lib/symbol-save";
 import ModeImage from "@/components/ModeImage";
 import { useInterfaceSwipe } from "@/hooks/use-interface-swipe";
 import BotName from "@/components/BotName";
@@ -520,6 +520,7 @@ function QuotesSheet({ accentColor, clientToken, onClose }: { accentColor: strin
   const [lotVal, setLotVal] = useState("");
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
+  const saveInFlight = useRef(false);
   const [saved, setSaved] = useState(false);
   const [symbolOpen, setSymbolOpen] = useState(false);
   const [deleting, setDeleting] = useState<string | null>(null);
@@ -554,18 +555,20 @@ function QuotesSheet({ accentColor, clientToken, onClose }: { accentColor: strin
   const closeConfig = () => { setActivePair(null); setSymbolOpen(false); };
 
   const save = async () => {
-    if (!activePair) return;
+    if (!activePair || saveInFlight.current || saved) return;
     if (!symbolVal) { setError("Please select a broker symbol."); return; }
     const lot = parseFloat(lotVal);
     if (!lotVal || isNaN(lot) || lot <= 0) { setError("Lot size must be greater than 0."); return; }
     if (!clientToken) { setError("Session expired. Please reopen the app."); return; }
 
+    saveInFlight.current = true;
+    const saveId = crypto.randomUUID();
     setSaving(true);
     setError("");
     try {
       const res = await fetch("/api/app/symbol-configs", {
         method: "PATCH",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${clientToken}` },
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${clientToken}`, "X-Symbol-Save-Id": saveId },
         body: JSON.stringify({
           configs: [{ pairName: activePair.pairName, selectedSymbol: symbolVal, customLotSize: lot.toFixed(2) }],
         }),
@@ -578,14 +581,19 @@ function QuotesSheet({ accentColor, clientToken, onClose }: { accentColor: strin
       }
       const updated = await res.json().catch(() => null);
       if (Array.isArray(updated)) setConfigs(updated as PairConfig[]);
-      if (Array.isArray(updated) && updated.some((cfg: PairConfig) => cfg.pairName === activePair.pairName && cfg.selectedSymbol === symbolVal)) assistantEvent({type:"symbol-saved", symbol:symbolVal});
+      if (!confirmSymbolSave(updated, [{pairName: activePair.pairName, selectedSymbol: symbolVal, customLotSize: lot.toFixed(2)}], res.headers.get("X-Symbol-Save-Id") || saveId)) {
+        setError("The saved symbol could not be confirmed. Reopen the symbol to check its settings.");
+        return;
+      }
       setSaved(true);
       // Configured pairs move to the Selected tab.
       closeTimer.current = setTimeout(() => { setActivePair(null); setSaved(false); setTab("selected"); }, 700);
     } catch {
       setError("Network error. Please try again.");
+    } finally {
+      saveInFlight.current = false;
+      setSaving(false);
     }
-    setSaving(false);
   };
 
   // Remove a mapping → returns the pair to Allowed Symbols.

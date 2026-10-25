@@ -123,3 +123,16 @@ export function executionNotification(row: {
   }
   return null;
 }
+
+/** A confirmed saved broker variation, never a guessed canonical symbol. */
+export function symbolConfiguredNotification(
+  symbol: string,
+): PushContent | null {
+  if (!symbol || symbol.length > 200 || /[\u0000-\u001f\u007f]/.test(symbol))
+    return null;
+  return {
+    title: "Symbol Configured",
+    body: `${symbol} configured successfully.`,
+    url: "/ea-app/?tab=home&activity=1",
+  };
+}
