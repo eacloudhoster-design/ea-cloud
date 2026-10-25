@@ -4,6 +4,7 @@ export const interfaceOrder: readonly InterfaceStyle[] = [
   "regular",
   "matrix",
   "s2tone",
+  "lumo",
 ];
 export const backgroundAnimations = [
   "none",

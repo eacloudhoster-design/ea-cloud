@@ -23,6 +23,8 @@ test("connection and ready stages require a successful save and a fresh verified
       tradeAllowed: true,
     };
   p.request();
+  // A fresh snapshot is observed at/after the request, even across clock ticks.
+  s.observedAt = p.requestedAt;
   assert.deepEqual(p.observe(s), []);
   p.saved = true;
   assert.deepEqual(p.observe({ ...s, observedAt: p.requestedAt - 1 }), []);

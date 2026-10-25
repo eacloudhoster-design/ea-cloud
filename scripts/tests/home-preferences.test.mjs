@@ -19,11 +19,12 @@ const {
     Buffer.from(bundle.outputFiles[0].text).toString("base64")
 );
 
-test("both swipe directions cycle Regular, Matrix and S2tone using the same interface identifiers", () => {
+test("both swipe directions cycle Regular, Matrix, S2tone and Lumo using the same interface identifiers", () => {
   for (const [from, next, previous] of [
-    ["regular", "matrix", "s2tone"],
+    ["regular", "matrix", "lumo"],
     ["matrix", "s2tone", "regular"],
-    ["s2tone", "regular", "matrix"],
+    ["s2tone", "lumo", "matrix"],
+    ["lumo", "regular", "s2tone"],
   ]) {
     assert.equal(adjacentInterface(from, "next"), next);
     assert.equal(adjacentInterface(from, "previous"), previous);
@@ -65,7 +66,7 @@ test("interface and background preferences survive storage, default safely and s
     backgroundAnimation: "none",
     accentColor: "#ef4444",
   });
-  for (const interfaceStyle of ["regular", "matrix", "s2tone"])
+  for (const interfaceStyle of ["regular", "matrix", "lumo"])
     for (const showBg of [true, false])
       for (const backgroundAnimation of [
         "none",
@@ -230,4 +231,26 @@ test("theme colours persist in existing appearance settings without resetting ot
       false,
     );
   }
+});
+
+test("Lumo uses existing account-scoped persistence without changing legacy defaults", () => {
+  const data = new Map(),
+    storage = {
+      getItem: (k) => data.get(k) || null,
+      setItem: (k, v) => data.set(k, v),
+    };
+  const key = homePreferenceKey(btoa("7:client:fixture"));
+  const value = {
+    interfaceStyle: "lumo",
+    accentColor: "#a855f7",
+    showBg: true,
+    backgroundAnimation: "none",
+  };
+  assert.ok(saveHomePreferences(storage, key, value));
+  assert.deepEqual(readHomePreferences(storage, key), value);
+  assert.equal(
+    readHomePreferences(storage, homePreferenceKey(btoa("8:client:fixture")))
+      .interfaceStyle,
+    "matrix",
+  );
 });

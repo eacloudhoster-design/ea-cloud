@@ -160,11 +160,11 @@ try {
       );
     };
     await select("Regular Interface");
-    for (const expected of ["matrix", "s2tone", "regular", "matrix"]) {
+    for (const expected of ["matrix", "s2tone", "lumo", "regular", "matrix"]) {
       await swipe("next");
       assert.equal(await style(), expected);
     }
-    for (const expected of ["regular", "s2tone", "matrix"]) {
+    for (const expected of ["regular", "lumo", "s2tone", "matrix"]) {
       await swipe("previous");
       assert.equal(await style(), expected);
     }
@@ -172,7 +172,7 @@ try {
     for (const [label, current, next] of [
       ["Regular Interface", "regular", "matrix"],
       ["The Matrix Interface", "matrix", "s2tone"],
-      ["S2tone_", "s2tone", "regular"],
+      ["S2tone_", "s2tone", "lumo"],
     ]) {
       await select(label);
       const b = await page.locator("[data-portrait-interactive]").boundingBox();
@@ -238,7 +238,7 @@ try {
     // Settings selection becomes the starting point for the next swipe.
     await select("S2tone_");
     await swipe("next");
-    assert.equal(await style(), "regular");
+    assert.equal(await style(), "lumo");
     await select("S2tone_");
     const rect = await surface.boundingBox();
     await surface.evaluate((el) => (el.scrollTop = 0));
