@@ -1,0 +1,287 @@
+.public-mobile-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  background: #0008;
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+  animation: public-backdrop-in 0.24s ease-out;
+}
+.public-mobile-backdrop[data-state="closed"] {
+  animation: public-backdrop-out 0.26s ease-in both;
+}
+.public-mobile-sheet {
+  position: fixed;
+  z-index: 81;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  max-height: calc(100dvh - max(94px, env(safe-area-inset-top)));
+  max-height: calc(100svh - max(94px, env(safe-area-inset-top)));
+  display: flex;
+  flex-direction: column;
+  border: 1px solid #ffffff1a;
+  border-bottom: 0;
+  border-radius: 27px 27px 0 0;
+  background: #121214;
+  color: #f4f4f6;
+  box-shadow:
+    0 -18px 70px #0008,
+    0 -1px 30px #e6374310;
+  outline: none;
+  font-family: Inter, Arial, sans-serif;
+  translate: 0 var(--sheet-drag, 0px);
+  transition: translate 0.22s cubic-bezier(0.2, 0.65, 0.2, 1);
+  animation: public-sheet-in 0.34s cubic-bezier(0.2, 0.7, 0.15, 1) both;
+  touch-action: pan-y;
+  overscroll-behavior: contain;
+  will-change: transform;
+}
+.public-mobile-sheet[data-state="closed"] {
+  animation: public-sheet-out 0.26s cubic-bezier(0.4, 0, 0.7, 0.2) both;
+}
+.public-mobile-sheet[data-dragging] {
+  transition: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.public-sheet-top {
+  position: relative;
+  flex-shrink: 0;
+  padding: 37px 25px 14px;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.public-sheet-top h2 {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  color: #9b9ba5;
+  text-transform: uppercase;
+  margin: 0;
+}
+.public-sheet-handle {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 110px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  cursor: grab;
+  touch-action: none;
+  background: none;
+  border: 0;
+}
+.public-sheet-handle span {
+  width: 37px;
+  height: 4px;
+  border-radius: 3px;
+  background: #69696f;
+}
+.public-sheet-handle:active {
+  cursor: grabbing;
+}
+.public-sheet-close {
+  position: absolute;
+  right: 16px;
+  top: 25px;
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  color: #a7a7af;
+  background: transparent;
+  cursor: pointer;
+}
+.public-sheet-close:hover {
+  background: #ffffff0b;
+  color: white;
+}
+.public-sheet-scroll {
+  overflow: auto;
+  overscroll-behavior: contain;
+  min-height: 0;
+  padding: 0 24px max(26px, calc(env(safe-area-inset-bottom) + 16px));
+  scrollbar-width: thin;
+  -webkit-overflow-scrolling: touch;
+}
+.public-sheet-account-links > a,
+.public-sheet-account-links > button,
+.public-sheet-navigation > a {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  min-height: 62px;
+  padding: 17px 1px;
+  text-align: left;
+  font-size: 18px;
+  font-weight: 500;
+  border: 0;
+  border-bottom: 1px solid #ffffff12;
+  background: none;
+  color: #f1f1f5;
+  cursor: pointer;
+  transition:
+    background 0.18s,
+    color 0.18s;
+}
+.public-sheet-account-links > a:active,
+.public-sheet-account-links > button:active,
+.public-sheet-navigation > a:active {
+  background: #e9384312;
+  color: #ff7b83;
+}
+.public-mobile-sheet svg {
+  flex-shrink: 0;
+  color: #a4a4ae;
+  transition: transform 0.2s;
+}
+.public-mobile-sheet .is-expanded {
+  transform: rotate(180deg);
+}
+.public-sheet-help {
+  padding: 6px 0 10px 13px;
+  border-left: 1px solid #c63a454d;
+  margin: 12px 0;
+}
+.public-sheet-help a {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
+  min-height: 46px;
+  padding: 10px 9px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: #bcbcc6;
+}
+.public-sheet-help a:active {
+  color: #ff7b83;
+}
+.public-sheet-language {
+  margin-top: 25px;
+  border: 1px solid #ffffff14;
+  border-radius: 13px;
+  background: #ffffff03;
+}
+.public-sheet-language > button {
+  min-height: 56px;
+  width: 100%;
+  padding: 15px 17px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  font-size: 14px;
+  color: #dddde5;
+  text-align: left;
+  cursor: pointer;
+}
+.public-sheet-language > button > span {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.public-language-options {
+  padding: 0 16px 10px;
+  border-top: 1px solid #ffffff0c;
+}
+.public-language-options > button {
+  min-height: 46px;
+  width: 100%;
+  padding: 12px 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  text-align: left;
+  color: #eeeef4;
+  cursor: pointer;
+}
+.public-language-options > button:disabled {
+  color: #767680;
+  cursor: not-allowed;
+}
+.public-language-options small {
+  font-size: 10px;
+  color: #74747e;
+}
+.public-language-options p {
+  font-size: 10px;
+  line-height: 1.7;
+  color: #8c8c97;
+  padding: 5px 0 2px;
+}
+.public-sheet-navigation .public-sheet-get-app {
+  margin-top: 20px;
+  padding: 15px 18px;
+  border: 1px solid #d748545c;
+  border-radius: 12px;
+  background: #e9384310;
+  font-size: 15px;
+}
+.public-sheet-navigation a[aria-current] {
+  color: #ff717a;
+}
+.public-mobile-sheet :focus-visible {
+  outline: 2px solid #ff6871;
+  outline-offset: 3px;
+  border-radius: 6px;
+}
+@keyframes public-sheet-in {
+  from {
+    transform: translate3d(0, 100%, 0);
+  }
+  to {
+    transform: translate3d(0, 0, 0);
+  }
+}
+@keyframes public-sheet-out {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(0, 100%, 0);
+  }
+}
+@keyframes public-backdrop-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes public-backdrop-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+@media (max-height: 520px) {
+  .public-mobile-sheet {
+    max-height: calc(100svh - 94px);
+  }
+  .public-sheet-top {
+    padding-top: 31px;
+  }
+  .public-sheet-account-links > a,
+  .public-sheet-account-links > button {
+    min-height: 54px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .public-mobile-sheet,
+  .public-mobile-backdrop,
+  .public-mobile-sheet * {
+    animation: none !important;
+    transition: none !important;
+  }
+}

@@ -151,7 +151,16 @@ try {
     const activate = (locator) => (touch ? locator.tap() : locator.click());
     const account = page.getByRole("button", { name: "Account menu" });
     await activate(account);
-    const menu = page.getByRole("menu");
+    const menu = touch
+      ? page.getByRole("dialog", { name: "Your EA Cloud account", exact: true })
+      : page.getByRole("menu");
+    const item = (name) =>
+      touch
+        ? menu.getByRole(name === "Help" ? "button" : "link", {
+            name,
+            exact: true,
+          })
+        : page.getByRole("menuitem", { name, exact: true });
     await menu.waitFor();
     const mr = await menu.boundingBox();
     assert(
@@ -160,25 +169,28 @@ try {
     );
     await page.waitForTimeout(250);
     await page.screenshot({ path: `${output}/${viewport.width}-account.png` });
-    await activate(account);
+    if (touch)
+      await menu
+        .getByRole("button", { name: "Close account panel", exact: true })
+        .tap();
+    else await activate(account);
     await menu.waitFor({ state: "hidden" });
     await activate(account);
     await page.keyboard.press("Escape");
     await menu.waitFor({ state: "hidden" });
     assert(await account.evaluate((el) => el === document.activeElement));
     await activate(account);
-    await activate(page.locator(".hero-description p").last());
+    if (touch) await page.touchscreen.tap(8, 80);
+    else await activate(page.locator(".hero-description p").last());
     await menu.waitFor({ state: "hidden" });
     await activate(account);
-    await activate(page.getByRole("menuitem", { name: "Help", exact: true }));
+    await activate(item("Help"));
     await page.getByRole("group", { name: "Help options" }).waitFor();
     await page.waitForTimeout(250);
     await page.screenshot({
       path: `${output}/${viewport.width}-help-menu.png`,
     });
-    await activate(
-      page.getByRole("menuitem", { name: "Frequently asked questions" }),
-    );
+    await activate(item("Frequently asked questions"));
     await menu.waitFor({ state: "hidden" });
     await page.waitForTimeout(1000);
     assert((await page.locator("#help").boundingBox()).y < 200);
@@ -189,10 +201,8 @@ try {
       .getByText("No, EA Cloud is not a trading robot.", { exact: false })
       .waitFor();
     await activate(account);
-    await activate(page.getByRole("menuitem", { name: "Help", exact: true }));
-    await activate(
-      page.getByRole("menuitem", { name: "License & access help" }),
-    );
+    await activate(item("Help"));
+    await activate(item("License & access help"));
     await page.waitForTimeout(1000);
     assert(
       (await page.locator("#access-help").boundingBox()).y >= nav.height - 1,
@@ -237,9 +247,7 @@ try {
     assert.equal(await page.evaluate(() => scrollY), 0);
     // Existing account routes and real form handlers, with rejected credentials/registration isolated by fixtures.
     await activate(account);
-    await activate(
-      page.getByRole("menuitem", { name: "Sign In", exact: true }),
-    );
+    await activate(item("Sign In"));
     await page.waitForURL("**/admin/login");
     await page.getByPlaceholder("admin@eacloud.com").fill("test@example.com");
     await page.locator("input[type=password]").fill("not-a-real-password");
@@ -254,9 +262,7 @@ try {
     await page.goto(origin);
     await page.waitForTimeout(1200);
     await activate(account);
-    await activate(
-      page.getByRole("menuitem", { name: "Sign Up", exact: true }),
-    );
+    await activate(item("Sign Up"));
     await page.waitForURL("**/register");
     await page.getByPlaceholder("John", { exact: true }).fill("Test");
     await page.getByPlaceholder("Doe", { exact: true }).fill("Mentor");
