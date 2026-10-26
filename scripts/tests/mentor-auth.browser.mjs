@@ -39,6 +39,12 @@ try {
         }),
       ),
     );
+    await c.route("**/api/auth/me", (r) =>
+      r.fulfill({ status: 401, json: { error: "Unauthorized" } }),
+    );
+    await c.route("**/api/app/me", (r) =>
+      r.fulfill({ status: 401, json: { error: "Unauthorized" } }),
+    );
     const p = await c.newPage();
     p.setDefaultTimeout(12000);
     const errors = [];

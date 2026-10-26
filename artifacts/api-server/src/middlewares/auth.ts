@@ -8,25 +8,13 @@ export interface AuthRequest extends Request {
 }
 
 export function requireAuth(req: AuthRequest, res: Response, next: NextFunction) {
-  const authHeader = req.headers.authorization;
-  if (!authHeader || !authHeader.startsWith("Bearer ")) {
-    res.status(401).json({ error: "Unauthorized" });
-    return;
+  const principal = (req as any).browserPrincipal;
+  if (!principal || principal.kind !== "portal") {
+    res.status(401).json({ error: "Unauthorized" }); return;
   }
-
-  const token = authHeader.slice(7);
-  try {
-    const [userId, role] = Buffer.from(token, "base64").toString().split(":");
-    if (!userId || !role) {
-      res.status(401).json({ error: "Invalid token" });
-      return;
-    }
-    req.userId = parseInt(userId);
-    req.userRole = role;
-    next();
-  } catch {
-    res.status(401).json({ error: "Invalid token" });
-  }
+  req.userId = principal.id;
+  req.userRole = principal.role;
+  next();
 }
 
 export function requireRole(role: string) {

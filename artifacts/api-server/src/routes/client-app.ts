@@ -1,3 +1,4 @@
+import { issueBrowserSession, revokeBrowserSessions, identityHint } from "../lib/browser-session";
 import {issuePushSession} from "../lib/push-session";
 import { requireAppSession } from "../middlewares/app-session";
 import { resolveAppSessionAccess } from "../lib/app-session-access";
@@ -7,9 +8,13 @@ import { eq, and, sql } from "drizzle-orm";
 import crypto from "crypto";
 
 const router = Router();
+router.post("/app/logout", async (req, res) => {
+  try { await revokeBrowserSessions(req, res); res.json({ success: true }); }
+  catch { res.status(503).json({ error: "Unable to sign out. Please retry." }); }
+});
 
 const hashPassword = (p: string) => crypto.createHash("sha256").update(p + "ea_cloud_salt_2024").digest("hex");
-const makeToken = (id: number) => Buffer.from(`${id}:client:${Date.now()}`).toString("base64");
+
 
 export const requireClientAuth = async (req: any, res: any, next: any) => {
   const auth = req.headers.authorization as string | undefined;
@@ -94,7 +99,7 @@ router.post("/app/register", async (req, res) => {
       status: "pending",
     }).returning();
 
-    const token = makeToken(client.id);
+    const token = await issueBrowserSession(req, res, "client", client);
     issuePushSession(res,client.id,token);
     res.status(201).json({ client: toClientDto(client), token });
   } catch (err) {
@@ -126,7 +131,7 @@ router.post(["/app/login", "/app/login-by-email"], async (req, res) => {
         sessionAccess = "app";
       }
     }
-    const token = makeToken(client.id);
+    const token = await issueBrowserSession(req, res, "client", client);
     issuePushSession(res,client.id,token);
     res.json({ client: toClientDto(verified), token, sessionAccess });
   } catch (err) {
@@ -148,7 +153,7 @@ router.get("/app/me", requireClientAuth, async (req: any, res) => {
         if (client.licenseKey || access.code !== "LICENCE_NOT_LINKED") { res.status(401).json({ ...access, code: `SESSION_${access.code}` }); return; }
       } else verified = { ...client, mentorId: access.mentorId, licenseKey: access.licenseKey };
     }
-    res.json(toClientDto(verified));
+    res.json({ ...toClientDto(verified), token: identityHint(client.id, "client") });
   } catch (err) {
     req.log.error({ err }, "AppGetMe error");
     res.status(500).json({ error: "Internal server error" });
