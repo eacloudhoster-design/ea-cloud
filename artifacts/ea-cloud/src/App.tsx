@@ -45,11 +45,11 @@ const queryClient = new QueryClient({
 });
 
 function AdminLayout({ children }: { children: React.ReactNode }) {
+  const { token, user, isLoading } = useAuth();
   usePortalRedirect();
-  const { token, user } = useAuth();
   const { data: profile } = useGetProfile({ query: { queryKey: getGetProfileQueryKey(), enabled: !!token } });
   const bgImage = profile?.backgroundImageUrl;
-  if (!user || user.role === "superadmin") return null;
+  if(isLoading || !user || !["approved","active"].includes(user.status) || !["mentor","admin"].includes(user.role)) return <div role="status" className="min-h-screen bg-black text-white flex items-center justify-center">Verifying session…</div>;
   return (
     <div
       className="min-h-screen text-white relative"
@@ -68,9 +68,9 @@ function AdminLayout({ children }: { children: React.ReactNode }) {
 }
 
 function SuperAdminLayout({ children }: { children: React.ReactNode }) {
+  const {user,isLoading} = useAuth();
   usePortalRedirect();
-  const { user } = useAuth();
-  if (user?.role !== "superadmin") return null;
+  if(isLoading || !user || !["approved","active"].includes(user.status) || user.role !== "superadmin") return <div role="status" className="min-h-screen bg-black text-white flex items-center justify-center">Verifying session…</div>;
   return (
     <div className="min-h-screen text-white" style={{ background: "#08080f" }}>
       <SuperAdminSidebar />

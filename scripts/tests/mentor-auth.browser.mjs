@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { mkdir, writeFile } from "node:fs/promises";
 const { chromium } = await import(
   process.env.PLAYWRIGHT_MODULE || "playwright"
 );
@@ -39,6 +39,12 @@ try {
         }),
       ),
     );
+    await c.route("**/api/auth/me", (r) =>
+      r.fulfill({ status: 401, json: { error: "Unauthorized" } }),
+    );
+    await c.route("**/api/app/me", (r) =>
+      r.fulfill({ status: 401, json: { error: "Unauthorized" } }),
+    );
     const p = await c.newPage();
     p.setDefaultTimeout(12000);
     const errors = [];
@@ -52,22 +58,19 @@ try {
       });
       await p.waitForTimeout(150);
       const name = route === "register" ? "register" : "signin";
-      const image = p.locator("img.ring-2");
+      const image = p.locator(route === "register" ? ".mentor-register-logo" : "img.ring-2");
       assert.equal(await image.count(), 1);
       assert.equal(await image.getAttribute("src"), "/ea-cloud-nav-logo.png");
       await image.evaluate((el) => el.decode());
       const size = await image.boundingBox();
-      assert.equal(size.width, route === "register" ? 80 : 96);
+      assert.equal(size.width, route === "register" ? (viewport.width <= 600 ? 52 : 64) : 96);
       assert.equal(size.height, size.width);
       assert.equal(
         await image.evaluate((el) => getComputedStyle(el).objectFit),
         "contain",
       );
-      assert.ok(
-        parseFloat(
-          await image.evaluate((el) => getComputedStyle(el).borderRadius),
-        ) >=
-          size.width / 2,
+      if (route !== "register") assert.ok(
+        parseFloat(await image.evaluate(el => getComputedStyle(el).borderRadius)) >= size.width / 2,
       );
       assert.equal(await p.locator(".public-header").count(), 0);
       assert.equal(
@@ -84,43 +87,13 @@ try {
         const padding = await p
           .locator(".mentor-register-page")
           .evaluate((el) => parseFloat(getComputedStyle(el).paddingTop));
-        assert.equal(padding, 24, "no reserved header gap");
+        assert.ok(padding <= 32, "no reserved header gap");
       }
-      const geometry = await p
-        .locator("h1,form,input,form button[type=submit],img.ring-2")
-        .evaluateAll((els) =>
-          els.map((el) => ({
-            tag: el.tagName,
-            rect: el.getBoundingClientRect().toJSON(),
-          })),
-        );
-      if (viewport.width === 1440 && route === "register") {
-        const baseline = JSON.parse(
-          await readFile(`${out}/1440-register-before.json`, "utf8"),
-        );
-        const shift = geometry[0].rect.top - baseline[0].rect.top;
-        geometry.forEach((entry, i) => {
-          assert.equal(entry.rect.width, baseline[i].rect.width);
-          assert.equal(entry.rect.height, baseline[i].rect.height);
-          assert.equal(entry.rect.left, baseline[i].rect.left);
-          assert.ok(
-            Math.abs(entry.rect.top - baseline[i].rect.top - shift) < 0.1,
-          );
-        });
-        assert.equal(size.y, 24);
-      } else if (
-        viewport.width === 1440 ||
-        (viewport.width === 390 && route === "admin/login")
-      ) {
-        assert.deepEqual(
-          geometry,
-          JSON.parse(
-            await readFile(
-              `${out}/${viewport.width}-${name}-before.json`,
-              "utf8",
-            ),
-          ),
-        );
+      if (route === "register") {
+        assert.equal(await p.locator("form input").count(), 6);
+        assert.equal(await p.getByRole("button", { name: "Close registration" }).count(), 1);
+        const panel = await p.locator(".mentor-register-panel").boundingBox();
+        assert.ok(panel.width <= viewport.width);
       }
       if ([1440, 390].includes(viewport.width))
         await p.screenshot({

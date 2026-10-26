@@ -40,7 +40,6 @@ export function clearPushSession(res: any) {
   res.clearCookie(cookieName, options);
 }
 export function requirePushSession(req: any, res: any, next: any) {
-  if (req.verifiedSession?.kind === "client" && req.verifiedSession.id === req.clientId) { next(); return; }
   const fail = () => {
     req.log?.warn?.(
       { event: "web_push_login_required", code: "PUSH_LOGIN_REQUIRED" },

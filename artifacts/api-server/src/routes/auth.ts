@@ -1,4 +1,4 @@
-import { issueSession, revokeBrowserSessions } from "../lib/browser-session";
+import { issueBrowserSession, revokeBrowserSessions } from "../lib/browser-session";
 import { Router } from "express";
 import { db, usersTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
@@ -17,7 +17,6 @@ const router = Router();
 function hashPassword(password: string): string {
   return createHash("sha256").update(password + "ea_cloud_salt_2024").digest("hex");
 }
-
 
 router.post("/auth/login", authLimiter, async (req, res) => {
   try {
@@ -48,7 +47,7 @@ router.post("/auth/login", authLimiter, async (req, res) => {
       return;
     }
 
-    const token = await issueSession(req, res, user, "portal");
+    const token = await issueBrowserSession(req, res, "portal", user);
     res.json({
       user: {
         id: user.id,
@@ -113,7 +112,7 @@ router.post("/auth/register", authLimiter, async (req, res) => {
       req.log.warn({ emailErr, mentorId: user.id }, "Application-received email failed to send"),
     );
 
-    const token = ""; // Pending registrations do not grant an authenticated session.
+    const token = await issueBrowserSession(req, res, "portal", user);
     res.status(201).json({
       user: {
         id: user.id, email: user.email, firstName: user.firstName,
@@ -128,7 +127,10 @@ router.post("/auth/register", authLimiter, async (req, res) => {
   }
 });
 
-router.post("/auth/logout", revokeBrowserSessions);
+router.post("/auth/logout", async (req, res) => {
+  try { await revokeBrowserSessions(req, res); res.json({ success: true }); }
+  catch { res.status(503).json({ error: "Unable to sign out. Please retry." }); }
+});
 
 router.get("/auth/me", requireAuth, async (req: AuthRequest, res) => {
   try {

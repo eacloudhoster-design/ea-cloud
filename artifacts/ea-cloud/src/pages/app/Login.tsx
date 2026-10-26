@@ -8,17 +8,18 @@ import { loginErrorMessage } from "@/lib/login-error";
 import defaultRobot from "/default-robot.jpg";
 
 export default function AppLogin() {
-  const { login, client } = useClientAuth();
+  const { login, client, loading: restoringSession } = useClientAuth();
   const [, setLocation] = useLocation();
   const [form, setForm] = useState({ email: "", password: "" });
   const [showPw, setShowPw] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
+  if (restoringSession) return <div role="status" className="min-h-screen bg-black text-white flex items-center justify-center">Verifying session…</div>;
   if (client) {
-    if (client.status === "pending") setLocation("/app/pending");
-    else if (client.status === "approved" && !client.licenseKey) setLocation("/app/activate");
-    else if (client.status === "approved" && client.licenseKey) setLocation("/app/dashboard");
+    if (client.status === "pending") setLocation("/app/pending", {replace:true});
+    else if (client.status === "approved" && !client.licenseKey) setLocation("/app/activate", {replace:true});
+    else if (client.status === "approved" && client.licenseKey) setLocation("/app/dashboard", {replace:true});
   }
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -29,9 +30,9 @@ export default function AppLogin() {
       const res = await appFetch("/app/login", { method: "POST", body: JSON.stringify(form) });
       const { client: c, token } = res as { client: AppClient; token: string };
       login(token, c);
-      if (c.status === "pending") setLocation("/app/pending");
-      else if (c.status === "approved" && !c.licenseKey) setLocation("/app/activate");
-      else setLocation("/app/dashboard");
+      if (c.status === "pending") setLocation("/app/pending", {replace:true});
+      else if (c.status === "approved" && !c.licenseKey) setLocation("/app/activate", {replace:true});
+      else setLocation("/app/dashboard", {replace:true});
     } catch (err: any) {
       setError(loginErrorMessage(err));
     } finally {

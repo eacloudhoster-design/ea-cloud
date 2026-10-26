@@ -1,181 +1,213 @@
+import { EventEmitter } from "node:events";
 import { createHash, randomBytes } from "node:crypto";
-import type { Request, Response, NextFunction } from "express";
 import { pool } from "@workspace/db";
-import { clearPushSession } from "./push-session";
+import type { Request, Response, NextFunction } from "express";
 
-export type SessionKind = "client" | "portal";
-const duration = 30 * 86400000;
-const names = { client: "ea_client_session", portal: "ea_portal_session" };
-const digest = (value: string) =>
+export const browserSessionEvents = new EventEmitter();
+export type SessionKind = "portal" | "client";
+export const sessionCookie = (kind: SessionKind) => `ea_${kind}_session`;
+const idleMs = 30 * 86400000,
+  absoluteMs = 90 * 86400000;
+const hash = (value: string) =>
   createHash("sha256").update(value).digest("hex");
-const options = (req: Request) => ({
+export const identityHint = (id: number, role: string) =>
+  Buffer.from(`${id}:${role}:cookie`).toString("base64");
+const cookieOptions = {
   httpOnly: true,
-  secure: process.env.NODE_ENV === "production" || req.secure,
+  secure: true,
   sameSite: "lax" as const,
-  path: "/",
-});
-export function cookieValue(
+  path: "/api",
+};
+export function readSessionCookie(
   req: { headers: { cookie?: string } },
   kind: SessionKind,
 ) {
-  const value = req.headers.cookie
-    ?.split(";")
+  const value = String(req.headers.cookie || "")
+    .split(";")
     .map((x) => x.trim())
-    .find((x) => x.startsWith(names[kind] + "="))
-    ?.slice(names[kind].length + 1);
-  try {
-    return value ? decodeURIComponent(value) : null;
-  } catch {
-    return null;
-  }
+    .find((x) => x.startsWith(sessionCookie(kind) + "="))
+    ?.slice(sessionCookie(kind).length + 1);
+  return value && /^[a-f0-9]{64}$/.test(value) ? value : null;
 }
-export async function issueSession(
+export function trustedBrowserOrigin(req: any) {
+  const origin = req.headers.origin;
+  if (!origin) return req.headers["sec-fetch-site"] !== "cross-site";
+  const allowed = [
+    process.env.PUBLIC_WEBSITE_ORIGIN,
+    ...(process.env.AUTH_ALLOWED_ORIGINS || "").split(","),
+    `${req.protocol}://${req.get("host")}`,
+  ].filter(Boolean);
+  return allowed.some((value) => {
+    try {
+      return new URL(value!).origin === origin;
+    } catch {
+      return false;
+    }
+  });
+}
+export async function issueBrowserSession(
   req: Request,
   res: Response,
-  account: { id: number; password: string; role?: string },
+  kind: SessionKind,
+  account: { id: number; role?: string; password: string },
+) {
+  const token = randomBytes(32).toString("hex"),
+    now = Date.now();
+  // Replace only the current browser's session of this kind, preventing fixation.
+  const old = readSessionCookie(req, kind);
+  if (old) {
+    await pool.query("DELETE FROM browser_sessions WHERE token_hash=$1", [
+      hash(old),
+    ]);
+    browserSessionEvents.emit("revoke", hash(old));
+  }
+  await pool.query(
+    "INSERT INTO browser_sessions(token_hash,kind,account_id,credential_hash,expires_at,absolute_expires_at,last_seen_at) VALUES($1,$2,$3,$4,$5,$6,$7)",
+    [
+      hash(token),
+      kind,
+      account.id,
+      hash(account.password),
+      new Date(now + idleMs),
+      new Date(now + absoluteMs),
+      new Date(now),
+    ],
+  );
+  res.cookie(sessionCookie(kind), token, { ...cookieOptions, maxAge: idleMs });
+  res.setHeader("Cache-Control", "no-store");
+  return identityHint(account.id, kind === "client" ? "client" : account.role!);
+}
+export async function verifyBrowserSession(
+  req: { headers: { cookie?: string } },
   kind: SessionKind,
 ) {
-  const token = randomBytes(32).toString("base64url");
-  // Replace this browser's prior session without terminating sessions on other devices.
-  const prior = cookieValue(req, kind);
-  const connection = await pool.connect();
-  try {
-    await connection.query("BEGIN");
-    await connection.query(
-      "INSERT INTO auth_sessions (token_hash,account_id,kind,role,credential_hash,expires_at) VALUES ($1,$2,$3,$4,$5,$6)",
-      [
-        digest(token),
-        account.id,
-        kind,
-        account.role || "client",
-        digest(account.password),
-        new Date(Date.now() + duration),
-      ],
-    );
-    if (prior)
-      await connection.query(
-        "UPDATE auth_sessions SET revoked_at=now() WHERE token_hash=$1",
-        [digest(prior)],
-      );
-    await connection.query("COMMIT");
-  } catch (error) {
-    await connection.query("ROLLBACK");
-    throw error;
-  } finally {
-    connection.release();
-  }
-  res.cookie(names[kind], token, { ...options(req), maxAge: duration });
-  res.setHeader("Cache-Control", "no-store");
-  return token;
-}
-export async function resolveSession(
-  token: string | null,
-  expected?: SessionKind,
-) {
-  if (!token || !/^[A-Za-z0-9_-]{43}$/.test(token)) return null;
-  const {
-    rows: [session],
-  } = await pool.query(
-    "SELECT * FROM auth_sessions WHERE token_hash=$1 AND revoked_at IS NULL AND expires_at > now()",
-    [digest(token)],
+  const token = readSessionCookie(req, kind);
+  if (!token) return null;
+  const result = await pool.query(
+    "SELECT * FROM browser_sessions WHERE token_hash=$1 AND kind=$2 AND expires_at>now() AND absolute_expires_at>now()",
+    [hash(token), kind],
   );
-  if (!session || (expected && session.kind !== expected)) return null;
-  const table = session.kind === "client" ? "app_access" : "users";
-  const {
-    rows: [account],
-  } = await pool.query(`SELECT * FROM ${table} WHERE id=$1`, [
+  const session = result.rows[0];
+  if (!session) return null;
+  const table = kind === "client" ? "app_access" : "users";
+  const { rows } = await pool.query(`SELECT * FROM ${table} WHERE id=$1`, [
     session.account_id,
   ]);
+  const account = rows[0];
   if (
     !account ||
-    digest(account.password) !== session.credential_hash ||
-    (session.kind === "portal" &&
-      (account.status !== "approved" || account.role !== session.role)) ||
-    (session.kind === "client" &&
-      !["approved", "pending"].includes(account.status))
-  )
+    session.credential_hash !== hash(account.password) ||
+    !["pending", "approved", "active"].includes(account.status) ||
+    (kind === "portal" &&
+      !["mentor", "admin", "superadmin"].includes(account.role))
+  ) {
+    await pool.query("DELETE FROM browser_sessions WHERE token_hash=$1", [
+      hash(token),
+    ]);
     return null;
+  }
   return {
-    id: account.id as number,
-    role: session.role as string,
-    kind: session.kind as SessionKind,
-    tokenHash: session.token_hash as string,
-    createdAt: new Date(session.created_at).getTime(),
+    id: account.id,
+    role: kind === "client" ? "client" : account.role,
+    status: account.status,
+    hash: hash(token),
+    token,
+    session,
+    kind,
   };
 }
-export type VerifiedSession = NonNullable<
-  Awaited<ReturnType<typeof resolveSession>>
->;
-export function sameOrigin(req: Request) {
-  const origin = req.get("origin");
-  if (req.get("sec-fetch-site") === "cross-site") return false;
-  if (!origin) return !req.headers.cookie; // Native bearer clients don't send browser cookies.
-  try {
-    return (
-      new URL(origin).host === (req.get("x-forwarded-host") || req.get("host"))
-    );
-  } catch {
-    return false;
+export async function revokeBrowserSessions(req: Request, res: Response) {
+  for (const kind of ["portal", "client"] as const) {
+    const value = readSessionCookie(req, kind);
+    if (value) {
+      if (kind === "portal")
+        await pool.query(
+          "DELETE FROM scanner_admin_sessions WHERE user_id IN (SELECT account_id FROM browser_sessions WHERE token_hash=$1 AND kind='portal')",
+          [hash(value)],
+        );
+      await pool.query("DELETE FROM browser_sessions WHERE token_hash=$1", [
+        hash(value),
+      ]);
+      browserSessionEvents.emit("revoke", hash(value));
+    }
+    res.clearCookie(sessionCookie(kind), cookieOptions);
   }
+  // Remove any independently confirmed scanner administration session too.
+  const scanner = req.headers.authorization?.slice(7);
+  if (scanner?.startsWith("easc_"))
+    await pool.query("DELETE FROM scanner_admin_sessions WHERE token_hash=$1", [
+      hash(scanner),
+    ]);
+  res.clearCookie("ea_push_session", {
+    ...cookieOptions,
+    sameSite: "strict",
+    path: "/api/app/push",
+  });
+  res.setHeader("Cache-Control", "no-store");
 }
-// All legacy route decoders are behind this boundary. Never forward caller-supplied
-// base64 identities: only a verified database session can produce an internal identity.
-export async function browserSession(
+/** The sole browser credential boundary. Legacy identity strings are never credentials.
+ * Existing feature handlers receive an internal identity header ONLY after cookie verification.
+ * Scanner management retains its independently verified short-lived step-up credential.
+ */
+export async function browserSessionMiddleware(
   req: Request,
   res: Response,
   next: NextFunction,
 ) {
-  res.setHeader("Cache-Control", "no-store");
-  const bearer = req.headers.authorization?.startsWith("Bearer ")
-    ? req.headers.authorization.slice(7)
-    : null;
-  delete req.headers.authorization;
-  if (!["GET", "HEAD", "OPTIONS"].includes(req.method) && !sameOrigin(req)) {
-    res.status(403).json({ error: "Cross-origin request denied" });
+  const scannerStepUp = /^\/superadmin\/scanner(?:\/|$)/.test(req.path);
+  if (
+    !["GET", "HEAD", "OPTIONS"].includes(req.method) &&
+    !trustedBrowserOrigin(req)
+  ) {
+    res.status(403).json({ error: "Request origin is not allowed." });
     return;
   }
-  const clientMarker =
-    bearer === "cookie-client" ||
-    !!(
-      bearer &&
-      /^[1-9]\d*:client:cookie$/.test(Buffer.from(bearer, "base64").toString())
-    );
-  const kind: SessionKind =
-    clientMarker ||
-    req.path.startsWith("/app/") ||
-    req.path.startsWith("/client/")
-      ? "client"
-      : "portal";
-  const marker = bearer === "cookie-portal" || clientMarker;
-  const token = bearer && !marker ? bearer : cookieValue(req, kind);
+  if (scannerStepUp) {
+    next();
+    return;
+  }
+  delete req.headers.authorization;
+  const kind = /^\/(?:app|client)(?:\/|$)/.test(req.path) ? "client" : "portal";
   try {
-    const session = await resolveSession(token, kind);
-    if (session) {
-      (req as Request & { verifiedSession?: VerifiedSession }).verifiedSession =
-        session;
-      req.headers.authorization = `Bearer ${Buffer.from(`${session.id}:${session.role}:${session.createdAt}`).toString("base64")}`;
+    const principal = await verifyBrowserSession(req, kind);
+    if (principal) {
+      res.setHeader("Cache-Control", "no-store");
+      // Pending accounts may inspect their identity/setup, never portal resources.
+      if (
+        kind === "portal" &&
+        principal.status === "pending" &&
+        !["/auth/me", "/auth/logout", "/auth/login", "/auth/register"].includes(
+          req.path,
+        )
+      ) {
+        res.status(403).json({ error: "Account approval required." });
+        return;
+      }
+      (req as any).browserPrincipal = principal;
+      req.headers.authorization = `Bearer ${identityHint(principal.id, principal.role)}`;
+      if (
+        Date.now() - new Date(principal.session.last_seen_at).getTime() >
+        86400000
+      ) {
+        const expires = Math.min(
+          Date.now() + idleMs,
+          new Date(principal.session.absolute_expires_at).getTime(),
+        );
+        await pool.query(
+          "UPDATE browser_sessions SET expires_at=$2,last_seen_at=now() WHERE token_hash=$1",
+          [principal.hash, new Date(expires)],
+        );
+        res.cookie(sessionCookie(kind), principal.token, {
+          ...cookieOptions,
+          maxAge: expires - Date.now(),
+        });
+      }
     }
     next();
-  } catch (err) {
-    next(err);
-  } // Storage outages never clear the browser session.
-}
-export async function revokeBrowserSessions(req: Request, res: Response) {
-  const tokens = [
-    cookieValue(req, "client"),
-    cookieValue(req, "portal"),
-  ].filter((x): x is string => !!x);
-  const session = (req as Request & { verifiedSession?: VerifiedSession })
-    .verifiedSession;
-  const hashes = tokens.map(digest);
-  if (session) hashes.push(session.tokenHash);
-  if (hashes.length)
-    await pool.query(
-      "UPDATE auth_sessions SET revoked_at=now() WHERE token_hash=ANY($1::text[])",
-      [hashes],
-    );
-  for (const kind of ["client", "portal"] as const)
-    res.clearCookie(names[kind], options(req));
-  clearPushSession(res);
-  res.json({ success: true });
+  } catch {
+    // Do not erase valid cookies during database/network outages.
+    res
+      .status(503)
+      .json({ error: "Session verification is unavailable. Please retry." });
+  }
 }

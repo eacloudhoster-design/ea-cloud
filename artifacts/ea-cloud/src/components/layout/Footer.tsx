@@ -22,7 +22,13 @@ export function Footer() {
           <a href="#" className="hover:text-primary transition-colors">
             <SiX className="w-5 h-5" />
           </a>
-          <a href="#" className="hover:text-primary transition-colors">
+          <a
+            href="https://www.instagram.com/ea_cloud_hoster/"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="EA Cloud on Instagram (opens in a new tab)"
+            className="hover:text-primary transition-colors"
+          >
             <SiInstagram className="w-5 h-5" />
           </a>
           <a href="#" className="hover:text-primary transition-colors">

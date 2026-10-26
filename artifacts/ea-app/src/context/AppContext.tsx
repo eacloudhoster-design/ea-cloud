@@ -8,6 +8,7 @@ export type InterfaceStyle = "regular" | "matrix" | "s2tone" | "lumo";
 export type ShapeStyle = "orbit" | "neural" | "none";
 
 export interface AppSettings {
+  signOut?: () => Promise<void>;
   visualModes?: VisualModes;
   activeTab: Tab;
   botRunning: boolean;

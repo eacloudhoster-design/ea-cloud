@@ -33,7 +33,7 @@ const router: IRouter = Router();
 
 // Account setup remains available before activation. Scanner is an existing
 // independently entitled product and retains its own authentication/quota policy.
-const setup = new Set(["/login", "/login-by-email", "/register", "/me", "/activate", "/mentor-config", "/logout"]);
+const setup = new Set(["/logout","/login", "/login-by-email", "/register", "/me", "/activate", "/mentor-config"]);
 router.use("/app", (req, res, next) => {
   if (setup.has(req.path.replace(/\/$/, "")) || req.path === "/scanner" || req.path.startsWith("/scanner/")) { next(); return; }
   void requireAppSession(req, res, next);

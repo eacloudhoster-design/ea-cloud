@@ -1,3 +1,4 @@
+import { browserSessionMiddleware } from "./lib/browser-session";
 import express, { type Express } from "express";
 import cors from "cors";
 import helmet from "helmet";
@@ -5,7 +6,6 @@ import pinoHttp from "pino-http";
 import path from "path";
 import fs from "fs";
 import router from "./routes";
-import { browserSession } from "./lib/browser-session";
 import { logger } from "./lib/logger";
 import { globalLimiter } from "./lib/rate-limit";
 
@@ -55,6 +55,6 @@ app.use(express.urlencoded({ extended: true, limit: "256kb" }));
 app.use("/api", globalLimiter);
 
 app.use("/api/uploads", express.static(path.join(process.cwd(), "uploads")));
-app.use("/api", browserSession, router);
+app.use("/api", browserSessionMiddleware, router);
 
 export default app;

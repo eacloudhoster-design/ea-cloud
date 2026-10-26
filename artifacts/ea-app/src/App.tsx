@@ -11,7 +11,7 @@ import "@/components/HomeInteractions.css";
 import {useFontPreference} from "@/hooks/use-font-preference";
 import {useShapePreference} from "@/hooks/use-shape-preference";
 import TradingActivityMonitor from "@/components/TradingActivityMonitor";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { AppContext, AppSettings } from "@/context/AppContext";
 import HomeTab from "@/pages/HomeTab";
 import MetaTraderTab from "@/pages/MetaTraderTab";
@@ -41,6 +41,7 @@ function EACloudApp({ onReady, startupComplete }: { onReady: (ready: boolean) =>
   const [loadError, setLoadError] = useState("");
   const [brandingReady, setBrandingReady] = useState(false);
   const [brandingAttempt, setBrandingAttempt] = useState(0);
+  const authAttempt = useRef(0);
   const [clientToken, setClientToken] = useState<string | null>(null);
   const [clientStatus, setClientStatus] = useState<"pending" | "rejected" | "approved">("pending");
 
@@ -80,10 +81,15 @@ function EACloudApp({ onReady, startupComplete }: { onReady: (ready: boolean) =>
   const [mentorId, setMentorId] = useState<number|null>(null);
   const [mentorImageUrl, setBgImageUrl] = useState<string | null>(null);
 
-  // On mount: verify the persistent HttpOnly session before showing authentication.
+  // Always ask the server: the persistent HttpOnly cookie is the credential.
   useEffect(() => {
-    for (const key of ["token", "app_token", "appClientToken"]) { try { localStorage.removeItem(key); } catch {} }
-    void validateToken("cookie-client");
+    try { localStorage.removeItem("appClientToken"); } catch {}
+    void validateToken("");
+    const restore = () => { if (!document.hidden) void validateToken(""); };
+    window.addEventListener("pageshow", restore);
+    const channel = typeof BroadcastChannel !== "undefined" ? new BroadcastChannel("ea-cloud-auth") : null;
+    if (channel) channel.onmessage = restore;
+    return () => { channel?.close(); window.removeEventListener("pageshow", restore); };
   }, []);
 
   // Once the user is on the dashboard with a token, fetch mentor-specific config
@@ -122,13 +128,16 @@ function EACloudApp({ onReady, startupComplete }: { onReady: (ready: boolean) =>
   }, [authStage, clientToken, brandingAttempt]);
 
   const validateToken = async (token: string) => {
+    const current = ++authAttempt.current;
     try {
       setAuthStage("loading");
       setLoadError("");
       const client = await requestJson("/api/app/me", { headers: { Authorization: `Bearer ${token}` } });
-      setClientToken(btoa(`${client.id}:client:cookie`));
+      if(current !== authAttempt.current) return;
+      setClientToken(client.token || token);
       routeByStatus(client.status, client.licenseKey ?? null);
     } catch (err) {
+      if(current !== authAttempt.current) return;
       if ((err as { status?: number }).status === 401) { clearAuth(); return; }
       setLoadError((err as Error).message || "Unable to connect. Please retry.");
       setAuthStage("error");
@@ -143,7 +152,16 @@ function EACloudApp({ onReady, startupComplete }: { onReady: (ready: boolean) =>
     else { setAuthStage("access"); }
   };
 
+  const signOut = async () => {
+    try {
+      await requestJson("/api/app/logout", { method:"POST", headers:{"Content-Type":"application/json"},body:"{}" });
+      try { for(const key of ["token","app_token","appClientToken"]) localStorage.removeItem(key); } catch {}
+      clearAuth();
+      if(typeof BroadcastChannel !== "undefined"){const c=new BroadcastChannel("ea-cloud-auth");c.postMessage("logout");c.close();}
+    } catch { window.alert("Unable to sign out securely. Please retry."); }
+  };
   const clearAuth = () => {
+    authAttempt.current++;
     try { localStorage.removeItem("appClientToken"); } catch {}
     setClientToken(null);
     setBrandingReady(false);
@@ -151,15 +169,6 @@ function EACloudApp({ onReady, startupComplete }: { onReady: (ready: boolean) =>
     setMentorId(null);
     setMentorShape(undefined);
     setAuthStage("access");
-  };
-
-  const signOut = async () => {
-    try {
-      const res = await fetch("/api/app/logout", { method: "POST" });
-      if (!res.ok) throw new Error("Sign out failed");
-      try { localStorage.setItem("ea:signout", String(Date.now())); } catch {}
-      clearAuth();
-    } catch { setLoadError("Unable to sign out. Please retry."); setAuthStage("error"); }
   };
 
   useEffect(() => {
@@ -177,15 +186,13 @@ function EACloudApp({ onReady, startupComplete }: { onReady: (ready: boolean) =>
     };
     window.addEventListener("ea:session-invalidated", invalid);
     window.addEventListener("focus", check);
-    window.addEventListener("pageshow", check);
-    const signedOut = (event: StorageEvent) => { if (event.key === "ea:signout") window.location.reload(); };
-    window.addEventListener("storage", signedOut);
     document.addEventListener("visibilitychange", check);
     const timer = window.setInterval(check, 20000);
-    return () => { alive = false; clearInterval(timer); window.removeEventListener("ea:session-invalidated", invalid); window.removeEventListener("focus", check); window.removeEventListener("pageshow", check); window.removeEventListener("storage", signedOut); document.removeEventListener("visibilitychange", check); };
+    return () => { alive = false; clearInterval(timer); window.removeEventListener("ea:session-invalidated", invalid); window.removeEventListener("focus", check); document.removeEventListener("visibilitychange", check); };
   }, [authStage, clientToken]);
 
   const handleAuthenticated = (token: string, status: string, licenseKey: string | null) => {
+    authAttempt.current++;
     setClientToken(token);
     routeByStatus(status, licenseKey);
   };
@@ -225,7 +232,7 @@ function EACloudApp({ onReady, startupComplete }: { onReady: (ready: boolean) =>
     mtConnected, setMtConnected,
     eaName, eaTagline, eaSymbols, bgImageUrl,
     showBg, setShowBg, backgroundAnimation, setBackgroundAnimation,
-    clientToken,
+    clientToken, signOut,
   };
 
   const backgroundSrc = bgImageUrl || robotBg;
@@ -244,7 +251,7 @@ function EACloudApp({ onReady, startupComplete }: { onReady: (ready: boolean) =>
           <p>{loadError}</p>
           <button className="mt-4 rounded-xl bg-red-500 px-5 py-3" onClick={() => {
             if (authStage === "app") setBrandingAttempt(v => v + 1);
-            else { try { void validateToken("cookie-client"); } catch { window.location.reload(); } }
+            else void validateToken("");
           }}>Retry</button>
         </div> : <img src={eaLogo} alt="Preparing EA Cloud" style={{ width: "min(39.375vw, 157.5px)", height: "auto" }} />}
       </div>
@@ -331,7 +338,7 @@ function EACloudApp({ onReady, startupComplete }: { onReady: (ready: boolean) =>
           inert={activeTab !== "settings"}
           style={{ width: "88%", opacity: activeTab === "settings" ? 1 : 0, pointerEvents: activeTab === "settings" ? "auto" : "none" }}
         >
-          <SettingsTab onLogout={signOut} onOpenChartScanner={() => setShowChartScanner(true)} />
+          <SettingsTab onOpenChartScanner={() => setShowChartScanner(true)} />
         </div>
 
         <TradingActivityMonitor />

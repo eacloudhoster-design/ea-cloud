@@ -14,7 +14,6 @@ import { eaLogo } from "@/lib/branding";
 
 interface SettingsTabProps {
   onOpenChartScanner?: () => void;
-  onLogout?: () => void;
 }
 
 type OpenSection = "interface" | "shape" | "colour" | "font" | "manipulation" | "animation" | null;
@@ -48,8 +47,8 @@ const SHAPE_ICONS: Record<ShapeStyle, React.ReactNode> = {
   neural: <div className="w-8 h-8 rounded-xl border-2 border-current" />,
 };
 
-export default function SettingsTab({ onOpenChartScanner, onLogout }: SettingsTabProps) {
-  const { clientToken, backgroundAnimation, setBackgroundAnimation, accentColor, setAccentColor, interfaceStyle, setInterfaceStyle, shapeStyle, setShapeStyle, activeTab, botFont="Inter", setBotFont } = useApp();
+export default function SettingsTab({ onOpenChartScanner }: SettingsTabProps) {
+  const { signOut, clientToken, backgroundAnimation, setBackgroundAnimation, accentColor, setAccentColor, interfaceStyle, setInterfaceStyle, shapeStyle, setShapeStyle, activeTab, botFont="Inter", setBotFont } = useApp();
   useEffect(()=>{if(clientToken)void prepareWebPush()?.catch(()=>{});},[clientToken]);
   const [open, setOpen] = useState<OpenSection>(null);
 
@@ -212,8 +211,6 @@ export default function SettingsTab({ onOpenChartScanner, onLogout }: SettingsTa
           </div>
         </AccordionItem>
 
-        {onLogout && <button type="button" onClick={onLogout} className="w-full px-4 py-3 rounded-2xl border border-red-500/20 text-red-400 text-sm">Sign Out</button>}
-
         {/* Live Chart */}
         <button
           className="w-full h-[52px] rounded-full flex items-center justify-center gap-2 font-semibold active:scale-[0.98] transition-transform"
@@ -222,6 +219,8 @@ export default function SettingsTab({ onOpenChartScanner, onLogout }: SettingsTa
           <LineChart size={18} />
           Live Chart
         </button>
+        <a href="/admin/login" className="block px-4 py-3 text-sm text-white/70">Admin Portal</a>
+        <button type="button" onClick={() => void signOut?.()} className="w-full px-4 py-3 text-left text-sm text-red-400">Sign Out</button>
       </div>
 
       {/* Floating bot avatar */}

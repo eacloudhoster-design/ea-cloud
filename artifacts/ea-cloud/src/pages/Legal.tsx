@@ -392,15 +392,11 @@ export default function Legal({ page }: { page?: string }) {
             </div>
             <section className="legal-card">
               <h2>Contact EA Cloud</h2>
-              <p>
-                South Africa · Business address: 123 Albatross, Thornton, Cape
-                Town, 7460, South Africa.
-              </p>
+              <p>South Africa</p>
               <a href={`mailto:${email}`}>{email}</a>
               <p>
-                No Information Officer has been formally designated. Use this
-                email for privacy enquiries. Business registration details are
-                pending confirmation.
+                Business registration details are pending confirmation. For
+                privacy enquiries, please use the contact email above.
               </p>
             </section>
           </>
@@ -409,7 +405,18 @@ export default function Legal({ page }: { page?: string }) {
           (page === "terms" ? terms : privacy).map((section) => (
             <section className="legal-card" key={section.title}>
               <h2>{section.title}</h2>
-              <p>{section.text}</p>
+              <p>
+                {section.title === "14. Business contact" ||
+                section.title === "Who is responsible" ? (
+                  <>
+                    {section.text.split(email)[0]}
+                    <a href={`mailto:${email}`}>{email}</a>
+                    {section.text.split(email)[1]}
+                  </>
+                ) : (
+                  section.text
+                )}
+              </p>
             </section>
           ))}
         {page === "privacy" && (

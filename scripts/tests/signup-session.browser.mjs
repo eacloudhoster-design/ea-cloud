@@ -159,7 +159,7 @@ try {
   assert.equal(appLogin.status(), 200);
   await page.goto(origin + "/admin/dashboard");
   await page
-    .getByRole("link", { name: "Back to App", exact: true })
+    .getByRole("link", { name: /Back to App/ })
     .first()
     .click();
   await page.waitForURL("**/ea-app/");
@@ -230,7 +230,7 @@ try {
   await context?.close();
   await browser.close();
   await pool.query(
-    "DELETE FROM auth_sessions WHERE (kind='portal' AND account_id IN (SELECT id FROM users WHERE email LIKE $1)) OR (kind='client' AND account_id IN (SELECT id FROM app_access WHERE email LIKE $1))",
+    "DELETE FROM browser_sessions WHERE (kind='portal' AND account_id IN (SELECT id FROM users WHERE email LIKE $1)) OR (kind='client' AND account_id IN (SELECT id FROM app_access WHERE email LIKE $1))",
     [`${prefix}%`],
   );
   await pool.query("DELETE FROM app_access WHERE email LIKE $1", [

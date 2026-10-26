@@ -1,19 +1,19 @@
 import { type Request, type Response, type NextFunction } from "express";
-import type { VerifiedSession } from "../lib/browser-session";
+import { db, usersTable } from "@workspace/db";
+import { eq } from "drizzle-orm";
 
 export interface AuthRequest extends Request {
-  verifiedSession?: VerifiedSession;
   userId?: number;
   userRole?: string;
 }
 
 export function requireAuth(req: AuthRequest, res: Response, next: NextFunction) {
-  const session = req.verifiedSession;
-  if (!session || session.kind !== "portal") {
+  const principal = (req as any).browserPrincipal;
+  if (!principal || principal.kind !== "portal") {
     res.status(401).json({ error: "Unauthorized" }); return;
   }
-  req.userId = session.id;
-  req.userRole = session.role;
+  req.userId = principal.id;
+  req.userRole = principal.role;
   next();
 }
 

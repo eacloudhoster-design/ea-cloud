@@ -1,4 +1,7 @@
-import { cookieValue, resolveSession } from "./lib/browser-session";
+import {
+  verifyBrowserSession,
+  browserSessionEvents,
+} from "./lib/browser-session";
 import { resolveAppSessionAccess } from "./lib/app-session-access";
 import { WebSocketServer, WebSocket } from "ws";
 import { type IncomingMessage } from "http";
@@ -10,7 +13,8 @@ interface ClientConnection {
   ws: WebSocket;
   clientId: number;
   mentorId: number | null;
-  credential: string;
+  cookie: string;
+  sessionHash: string;
 }
 
 const connections = new Map<WebSocket, ClientConnection>();
@@ -19,22 +23,60 @@ export function createWsServer(server: import("http").Server) {
   const wss = new WebSocketServer({ server, path: "/api/ws" });
 
   wss.on("connection", async (ws: WebSocket, req: IncomingMessage) => {
-    const url = new URL(req.url ?? "", `http://localhost`);
-    const supplied = url.searchParams.get("token");
-    const credential = supplied && /^[A-Za-z0-9_-]{43}$/.test(supplied) ? supplied : cookieValue(req, "client");
+    const principal = await verifyBrowserSession(req, "client").catch(
+      () => null,
+    );
+    const origin = req.headers.origin;
+    // WebSocket handshakes must originate from the same public host or an explicitly trusted origin.
+    const sameHost =
+      origin &&
+      (() => {
+        try {
+          return new URL(origin).host === req.headers.host;
+        } catch {
+          return false;
+        }
+      })();
+    const allowed = [
+      process.env.PUBLIC_WEBSITE_ORIGIN,
+      ...(process.env.AUTH_ALLOWED_ORIGINS || "").split(","),
+    ]
+      .filter(Boolean)
+      .map((value) => value!.trim());
+    if (!principal || (origin && !sameHost && !allowed.includes(origin))) {
+      ws.close(1008, "Sign in required");
+      return;
+    }
     let clientId: number | null = null;
     let mentorId: number | null = null;
     try {
-      const origin = req.headers.origin;
-      if (origin && new URL(origin).host !== (req.headers["x-forwarded-host"] || req.headers.host)) { ws.close(1008, "Origin denied"); return; }
-      const session = await resolveSession(credential, "client");
-      if (!session) { ws.close(1008, "Sign in required"); return; }
-      const [client] = await db.select().from(appAccessTable).where(eq(appAccessTable.id, session.id)).limit(1);
+      const [client] = await db
+        .select()
+        .from(appAccessTable)
+        .where(eq(appAccessTable.id, principal.id))
+        .limit(1);
       const access = await resolveAppSessionAccess(client);
-      if ("code" in access) { ws.close(1008, "Application session is no longer valid"); return; }
-      clientId = client.id; mentorId = access.mentorId;
-      connections.set(ws, { ws, clientId, mentorId, credential: credential! });
-    } catch { ws.close(1013, "Session check unavailable. Retry shortly"); return; }
+      if ("code" in access) {
+        ws.close(1008, "Application session is no longer valid");
+        return;
+      }
+      clientId = client.id;
+      mentorId = access.mentorId;
+    } catch {
+      ws.close(1013, "Session check unavailable. Retry shortly");
+      return;
+    }
+
+    if (clientId !== null) {
+      connections.set(ws, {
+        ws,
+        clientId,
+        mentorId,
+        cookie: req.headers.cookie || "",
+        sessionHash: principal.hash,
+      });
+      logger.info({ clientId, mentorId }, "WS client connected");
+    }
 
     ws.on("message", (data) => {
       try {
@@ -70,16 +112,47 @@ export function createWsServer(server: import("http").Server) {
     try {
       for (const [ws, connection] of connections) {
         try {
-          if (!await resolveSession(connection.credential, "client")) { connections.delete(ws); ws.close(1008, "Session ended"); continue; }
-          const [client] = await db.select().from(appAccessTable).where(eq(appAccessTable.id, connection.clientId)).limit(1);
+          const session = await verifyBrowserSession(
+            { headers: { cookie: connection.cookie } },
+            "client",
+          );
+          if (!session) {
+            connections.delete(ws);
+            ws.close(1008, "Session ended");
+            continue;
+          }
+          const [client] = await db
+            .select()
+            .from(appAccessTable)
+            .where(eq(appAccessTable.id, connection.clientId))
+            .limit(1);
           const access = await resolveAppSessionAccess(client);
-          if ("code" in access || access.mentorId !== connection.mentorId) { connections.delete(ws); ws.close(1008, "Application session is no longer valid"); }
-        } catch { connections.delete(ws); ws.close(1013, "Session check unavailable. Retry shortly"); }
+          if ("code" in access || access.mentorId !== connection.mentorId) {
+            connections.delete(ws);
+            ws.close(1008, "Application session is no longer valid");
+          }
+        } catch {
+          connections.delete(ws);
+          ws.close(1013, "Session check unavailable. Retry shortly");
+        }
       }
-    } finally { checking = false; }
+    } finally {
+      checking = false;
+    }
   }, 20000);
   validation.unref();
-  wss.on("close", () => clearInterval(validation));
+  const revoked = (hash: string) => {
+    for (const [ws, connection] of connections)
+      if (connection.sessionHash === hash) {
+        connections.delete(ws);
+        ws.close(1008, "Session ended");
+      }
+  };
+  browserSessionEvents.on("revoke", revoked);
+  wss.on("close", () => {
+    clearInterval(validation);
+    browserSessionEvents.off("revoke", revoked);
+  });
 
   logger.info("WebSocket server initialised at /api/ws");
   return wss;
