@@ -58,19 +58,23 @@ try {
       });
       await p.waitForTimeout(150);
       const name = route === "register" ? "register" : "signin";
-      const image = p.locator(route === "register" ? ".mentor-register-logo" : "img.ring-2");
+      const image = p.locator(
+        route === "register" ? ".mentor-register-logo" : ".mentor-login-logo",
+      );
       assert.equal(await image.count(), 1);
       assert.equal(await image.getAttribute("src"), "/ea-cloud-nav-logo.png");
       await image.evaluate((el) => el.decode());
       const size = await image.boundingBox();
-      assert.equal(size.width, route === "register" ? (viewport.width <= 600 ? 52 : 64) : 96);
-      assert.equal(size.height, size.width);
+      if (route === "register") {
+        assert.equal(size.width, viewport.width <= 600 ? 52 : 64);
+        assert.equal(size.height, size.width);
+      } else {
+        assert.ok(size.width > 140 && size.width <= 460);
+        assert.ok(Math.abs(size.width / size.height - 1254 / 692) < 0.01);
+      }
       assert.equal(
         await image.evaluate((el) => getComputedStyle(el).objectFit),
         "contain",
-      );
-      if (route !== "register") assert.ok(
-        parseFloat(await image.evaluate(el => getComputedStyle(el).borderRadius)) >= size.width / 2,
       );
       assert.equal(await p.locator(".public-header").count(), 0);
       assert.equal(
@@ -91,7 +95,10 @@ try {
       }
       if (route === "register") {
         assert.equal(await p.locator("form input").count(), 6);
-        assert.equal(await p.getByRole("button", { name: "Close registration" }).count(), 1);
+        assert.equal(
+          await p.getByRole("button", { name: "Close registration" }).count(),
+          1,
+        );
         const panel = await p.locator(".mentor-register-panel").boundingBox();
         assert.ok(panel.width <= viewport.width);
       }

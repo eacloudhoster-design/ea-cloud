@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Link, useLocation } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
-import { navigationLogo as logo } from "@/lib/branding";
+import { navigationLogo as logo, authBackground } from "@/lib/branding";
 import "./MentorAuth.css";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -222,7 +222,12 @@ export default function Register() {
   }
 
   return (
-    <div className="mentor-register-page">
+    <div
+      className="mentor-register-page"
+      style={{
+        backgroundImage: `linear-gradient(rgba(0,0,0,.4), rgba(0,0,0,.4)), url("${authBackground}")`,
+      }}
+    >
       <section
         className="mentor-register-panel"
         aria-labelledby="register-heading"

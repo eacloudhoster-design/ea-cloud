@@ -1,0 +1,9 @@
+[
+  "1440×1000: layout, required fields, password toggle, submission/loading/error/pending/approved states, links, close and reduced motion passed",
+  "1920×1080: layout, required fields, password toggle, submission/loading/error/pending/approved states, links, close and reduced motion passed",
+  "820×1000: layout, required fields, password toggle, submission/loading/error/pending/approved states, links, close and reduced motion passed",
+  "Short mobile viewport: password and LOGIN remain reachable by scrolling",
+  "390×844: layout, required fields, password toggle, submission/loading/error/pending/approved states, links, close and reduced motion passed",
+  "320×568: layout, required fields, password toggle, submission/loading/error/pending/approved states, links, close and reduced motion passed",
+  "844×390: layout, required fields, password toggle, submission/loading/error/pending/approved states, links, close and reduced motion passed"
+]

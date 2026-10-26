@@ -8,9 +8,9 @@ A routing regression was also corrected: `/api/client/*` MT5 routes now select t
 
 ## Background and screenshots
 
-The supplied geometric image has repeated Magnific watermarks. Following the request, it was neither included nor modified. The page currently has a plain black background. Once a licensed, unwatermarked asset is supplied, add it to public assets and set `--mentor-register-background: url(...)` on `.mentor-register-page`; cover sizing and centering are ready. The Sony references informed layout only.
+The original watermarked background was excluded. The later sign-in/sign-up visual redesign uses the new, unwatermarked artwork supplied in `web.zip` on both pages. The source asset is copied byte-for-byte to `artifacts/ea-cloud/public/ea-cloud-auth-background.png`; no watermark removal or approximation is used. The Sony references inform layout only.
 
-Desktop and mobile screenshots are in `validation/20261026-signup-sessions/`. The responsive registration tests now check the new panel and cloud icon instead of comparing to obsolete geometry snapshots from the previous design. They also preserve the sign-in form contract and public-header scope checks.
+Current screenshots and visual validation are in `premium-auth/README.md`. The images in `validation/20261026-signup-sessions/` document the earlier registration-only state. Responsive tests check the new panel and cloud icon rather than obsolete geometry snapshots, and preserve the submission contract and public-header scope checks.
 
 ## Rollout and session behavior
 
