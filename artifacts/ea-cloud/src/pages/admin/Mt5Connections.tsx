@@ -66,7 +66,7 @@ export default function Mt5Connections() {
 
   const fetchHistory = useCallback(async () => {
     try {
-      const token = localStorage.getItem("token");
+      const token = "cookie-portal";
       const res = await fetch("/api/admin/mt5/connections", {
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -96,7 +96,7 @@ export default function Mt5Connections() {
 
     setSubmitting(true);
     try {
-      const token = localStorage.getItem("token");
+      const token = "cookie-portal";
       const res = await fetch("/api/admin/mt5/connect", {
         method: "POST",
         headers: {

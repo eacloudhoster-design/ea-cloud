@@ -71,7 +71,7 @@ export default function AdminProfile() {
     setRegenLoading(true);
     setRegenError("");
     try {
-      const token = localStorage.getItem("token");
+      const token = "cookie-portal";
       const res = await fetch("/api/admin/regenerate-api-key", {
         method: "POST",
         headers: { Authorization: `Bearer ${token}` },
@@ -100,7 +100,7 @@ export default function AdminProfile() {
     setUploadError("");
     setUploading(true);
     try {
-      const token = localStorage.getItem("token");
+      const token = "cookie-portal";
       const metaRes = await fetch("/api/storage/uploads/request-url", {
         method: "POST",
         headers: {

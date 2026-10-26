@@ -26,7 +26,7 @@ export default function SetupMethod() {
     setDownloading(true);
     setDownloadError("");
     try {
-      const token = localStorage.getItem("token");
+      const token = "cookie-portal";
       const res = await fetch("/api/admin/copier/download", {
         headers: { Authorization: `Bearer ${token}` },
       });

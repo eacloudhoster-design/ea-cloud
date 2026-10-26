@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useLocation, useSearch } from "wouter";
 import { motion } from "framer-motion";
 import { loginErrorMessage } from "@/lib/login-error";
@@ -14,7 +14,8 @@ export default function AdminLogin() {
   const [, setLocation] = useLocation();
   const search = useSearch();
   const justApproved = new URLSearchParams(search).get("approved") === "1";
-  const { login } = useAuth();
+  const { login, user, isLoading } = useAuth();
+  useEffect(() => { if (!isLoading && user) setLocation(user.role === "superadmin" ? "/superadmin/dashboard" : "/admin/dashboard", { replace: true }); }, [user, isLoading, setLocation]);
   const loginMutation = useLogin();
   const [form, setForm] = useState({ email: "", password: "" });
   const [error, setError] = useState("");

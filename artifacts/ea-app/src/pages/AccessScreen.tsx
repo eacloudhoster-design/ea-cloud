@@ -71,8 +71,8 @@ export default function AccessScreen({ onAuthenticated }: AccessScreenProps) {
         return;
       }
       if (!res.ok) { setError(data.error || "Registration failed"); return; }
-      localStorage.setItem("appClientToken", data.token);
-      onAuthenticated(data.token, data.client.status, data.client.licenseKey);
+      try { localStorage.removeItem("appClientToken"); } catch {}
+      onAuthenticated(btoa(`${data.client.id}:client:cookie`), data.client.status, data.client.licenseKey);
     } catch {
       setError("Connection error. Please try again.");
     } finally { setLoading(false); }
@@ -90,8 +90,8 @@ export default function AccessScreen({ onAuthenticated }: AccessScreenProps) {
       });
       const data = await res.json();
       if (!res.ok) { setError(data.error || "Account not found"); return; }
-      localStorage.setItem("appClientToken", data.token);
-      onAuthenticated(data.token, data.client.status, data.client.licenseKey);
+      try { localStorage.removeItem("appClientToken"); } catch {}
+      onAuthenticated(btoa(`${data.client.id}:client:cookie`), data.client.status, data.client.licenseKey);
     } catch {
       setError("Connection error. Please try again.");
     } finally { setLoading(false); }

@@ -1,0 +1,12 @@
+[
+  "Registration layout and required-field validation: 1440×1080",
+  "Registration layout and required-field validation: 390×844",
+  "Registration layout and required-field validation: 320×568",
+  "Registration layout and required-field validation: 844×390",
+  "Existing duplicate-email API error displayed",
+  "Real Create Account submission preserves mentor role, fields and pending approval",
+  "Sign in link, portal login, refresh and close button preserve authenticated session",
+  "Admin Portal → Back to App → browser Back restores both authorized sessions",
+  "Full Chromium close/reopen restores portal and trading-app cookies without credentials",
+  "Sign Out invalidates app and portal; browser Back cannot reopen protected portal"
+]

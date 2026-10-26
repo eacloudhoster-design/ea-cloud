@@ -69,6 +69,7 @@ export function SuperAdminSidebar() {
             <div className="text-[10px] text-purple-400/50 truncate">Super Admin</div>
           </div>
         </div>
+        <a href="/ea-app/" className="flex items-center gap-3 px-3 py-2.5 text-sm text-white/60 hover:text-white">Back to App</a>
         <motion.button
           whileHover={{ x: 4 }}
           onClick={logout}

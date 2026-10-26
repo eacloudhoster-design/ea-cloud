@@ -14,6 +14,7 @@ import { eaLogo } from "@/lib/branding";
 
 interface SettingsTabProps {
   onOpenChartScanner?: () => void;
+  onLogout?: () => void;
 }
 
 type OpenSection = "interface" | "shape" | "colour" | "font" | "manipulation" | "animation" | null;
@@ -47,7 +48,7 @@ const SHAPE_ICONS: Record<ShapeStyle, React.ReactNode> = {
   neural: <div className="w-8 h-8 rounded-xl border-2 border-current" />,
 };
 
-export default function SettingsTab({ onOpenChartScanner }: SettingsTabProps) {
+export default function SettingsTab({ onOpenChartScanner, onLogout }: SettingsTabProps) {
   const { clientToken, backgroundAnimation, setBackgroundAnimation, accentColor, setAccentColor, interfaceStyle, setInterfaceStyle, shapeStyle, setShapeStyle, activeTab, botFont="Inter", setBotFont } = useApp();
   useEffect(()=>{if(clientToken)void prepareWebPush()?.catch(()=>{});},[clientToken]);
   const [open, setOpen] = useState<OpenSection>(null);
@@ -210,6 +211,8 @@ export default function SettingsTab({ onOpenChartScanner }: SettingsTabProps) {
             ))}
           </div>
         </AccordionItem>
+
+        {onLogout && <button type="button" onClick={onLogout} className="w-full px-4 py-3 rounded-2xl border border-red-500/20 text-red-400 text-sm">Sign Out</button>}
 
         {/* Live Chart */}
         <button

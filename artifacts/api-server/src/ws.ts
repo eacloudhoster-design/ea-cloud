@@ -1,3 +1,4 @@
+import { cookieValue, resolveSession } from "./lib/browser-session";
 import { resolveAppSessionAccess } from "./lib/app-session-access";
 import { WebSocketServer, WebSocket } from "ws";
 import { type IncomingMessage } from "http";
@@ -9,6 +10,7 @@ interface ClientConnection {
   ws: WebSocket;
   clientId: number;
   mentorId: number | null;
+  credential: string;
 }
 
 const connections = new Map<WebSocket, ClientConnection>();
@@ -18,33 +20,21 @@ export function createWsServer(server: import("http").Server) {
 
   wss.on("connection", async (ws: WebSocket, req: IncomingMessage) => {
     const url = new URL(req.url ?? "", `http://localhost`);
-    const token = url.searchParams.get("token");
-
+    const supplied = url.searchParams.get("token");
+    const credential = supplied && /^[A-Za-z0-9_-]{43}$/.test(supplied) ? supplied : cookieValue(req, "client");
     let clientId: number | null = null;
     let mentorId: number | null = null;
-
-    if (token) {
-      try {
-        const decoded = Buffer.from(token, "base64").toString();
-        const [idStr, role] = decoded.split(":");
-        if (role === "client" && /^[1-9]\d*$/.test(idStr) && Number.isSafeInteger(Number(idStr)) && Number(idStr) <= 2147483647) {
-          const id = parseInt(idStr);
-          const [client] = await db.select()
-            .from(appAccessTable).where(eq(appAccessTable.id, id)).limit(1);
-          const access = await resolveAppSessionAccess(client);
-          if ("code" in access) { ws.close(1008, "Application session is no longer valid"); return; }
-          if (client) { clientId = client.id; mentorId = access.mentorId; }
-        }
-      } catch {
-        ws.close(1013, "Session check unavailable. Retry shortly");
-        return;
-      }
-    }
-
-    if (clientId !== null) {
-      connections.set(ws, { ws, clientId, mentorId });
-      logger.info({ clientId, mentorId }, "WS client connected");
-    }
+    try {
+      const origin = req.headers.origin;
+      if (origin && new URL(origin).host !== (req.headers["x-forwarded-host"] || req.headers.host)) { ws.close(1008, "Origin denied"); return; }
+      const session = await resolveSession(credential, "client");
+      if (!session) { ws.close(1008, "Sign in required"); return; }
+      const [client] = await db.select().from(appAccessTable).where(eq(appAccessTable.id, session.id)).limit(1);
+      const access = await resolveAppSessionAccess(client);
+      if ("code" in access) { ws.close(1008, "Application session is no longer valid"); return; }
+      clientId = client.id; mentorId = access.mentorId;
+      connections.set(ws, { ws, clientId, mentorId, credential: credential! });
+    } catch { ws.close(1013, "Session check unavailable. Retry shortly"); return; }
 
     ws.on("message", (data) => {
       try {
@@ -80,6 +70,7 @@ export function createWsServer(server: import("http").Server) {
     try {
       for (const [ws, connection] of connections) {
         try {
+          if (!await resolveSession(connection.credential, "client")) { connections.delete(ws); ws.close(1008, "Session ended"); continue; }
           const [client] = await db.select().from(appAccessTable).where(eq(appAccessTable.id, connection.clientId)).limit(1);
           const access = await resolveAppSessionAccess(client);
           if ("code" in access || access.mentorId !== connection.mentorId) { connections.delete(ws); ws.close(1008, "Application session is no longer valid"); }

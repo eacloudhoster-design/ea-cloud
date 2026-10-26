@@ -1,3 +1,4 @@
+import { issueSession, revokeBrowserSessions } from "../lib/browser-session";
 import {issuePushSession} from "../lib/push-session";
 import { requireAppSession } from "../middlewares/app-session";
 import { resolveAppSessionAccess } from "../lib/app-session-access";
@@ -9,7 +10,7 @@ import crypto from "crypto";
 const router = Router();
 
 const hashPassword = (p: string) => crypto.createHash("sha256").update(p + "ea_cloud_salt_2024").digest("hex");
-const makeToken = (id: number) => Buffer.from(`${id}:client:${Date.now()}`).toString("base64");
+
 
 export const requireClientAuth = async (req: any, res: any, next: any) => {
   const auth = req.headers.authorization as string | undefined;
@@ -94,7 +95,7 @@ router.post("/app/register", async (req, res) => {
       status: "pending",
     }).returning();
 
-    const token = makeToken(client.id);
+    const token = await issueSession(req, res, client, "client");
     issuePushSession(res,client.id,token);
     res.status(201).json({ client: toClientDto(client), token });
   } catch (err) {
@@ -113,6 +114,8 @@ router.post(["/app/login", "/app/login-by-email"], async (req, res) => {
     const [client] = await db.select().from(appAccessTable)
       .where(and(eq(appAccessTable.email, email.toLowerCase()), eq(appAccessTable.password, hashPassword(password)))).limit(1);
     if (!client) { res.status(401).json({ error: "Invalid credentials" }); return; }
+    if (!["approved", "pending"].includes(client.status)) { res.status(403).json({ error: "Account access is unavailable" }); return; }
+    if (!["approved", "pending"].includes(client.status)) { res.status(403).json({ error: "Account access is unavailable" }); return; }
 
     // Credentials may open the existing activation screen, but only a verified
     // licence opens the app. This keeps renewals possible after session revocation.
@@ -126,7 +129,7 @@ router.post(["/app/login", "/app/login-by-email"], async (req, res) => {
         sessionAccess = "app";
       }
     }
-    const token = makeToken(client.id);
+    const token = await issueSession(req, res, client, "client");
     issuePushSession(res,client.id,token);
     res.json({ client: toClientDto(verified), token, sessionAccess });
   } catch (err) {
@@ -134,6 +137,8 @@ router.post(["/app/login", "/app/login-by-email"], async (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 });
+
+router.post("/app/logout", revokeBrowserSessions);
 
 // Get me
 router.get("/app/me", requireClientAuth, async (req: any, res) => {

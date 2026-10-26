@@ -1,3 +1,4 @@
+import { issueSession, revokeBrowserSessions } from "../lib/browser-session";
 import { Router } from "express";
 import { db, usersTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
@@ -17,9 +18,6 @@ function hashPassword(password: string): string {
   return createHash("sha256").update(password + "ea_cloud_salt_2024").digest("hex");
 }
 
-function generateToken(userId: number, role: string): string {
-  return Buffer.from(`${userId}:${role}:${Date.now()}`).toString("base64");
-}
 
 router.post("/auth/login", authLimiter, async (req, res) => {
   try {
@@ -50,7 +48,7 @@ router.post("/auth/login", authLimiter, async (req, res) => {
       return;
     }
 
-    const token = generateToken(user.id, user.role);
+    const token = await issueSession(req, res, user, "portal");
     res.json({
       user: {
         id: user.id,
@@ -115,7 +113,7 @@ router.post("/auth/register", authLimiter, async (req, res) => {
       req.log.warn({ emailErr, mentorId: user.id }, "Application-received email failed to send"),
     );
 
-    const token = generateToken(user.id, user.role);
+    const token = ""; // Pending registrations do not grant an authenticated session.
     res.status(201).json({
       user: {
         id: user.id, email: user.email, firstName: user.firstName,
@@ -130,9 +128,7 @@ router.post("/auth/register", authLimiter, async (req, res) => {
   }
 });
 
-router.post("/auth/logout", (_req, res) => {
-  res.json({ success: true });
-});
+router.post("/auth/logout", revokeBrowserSessions);
 
 router.get("/auth/me", requireAuth, async (req: AuthRequest, res) => {
   try {
