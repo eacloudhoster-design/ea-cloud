@@ -63,7 +63,7 @@ export default function Mt5ConnectInput() {
   const fetchAccounts = useCallback(async (isManual = false) => {
     if (isManual) setRefreshing(true);
     try {
-      const token = localStorage.getItem("token");
+      const token = "cookie-portal";
       const res = await fetch("/api/admin/mt5/accounts", {
         headers: { Authorization: `Bearer ${token}` },
       });

@@ -10,7 +10,7 @@ export default function EaModeImageEditor({eaId, name, onClose}:{eaId:number;nam
   const [error,setError]=useState(""),[message,setMessage]=useState("");
   const alive=useRef(true), urls=useRef<string[]>([]), pending=useRef(false);
   const api=async(url:string,init:RequestInit={})=>{
-    const token=localStorage.getItem("token");
+    const token="cookie-portal";
     const response=await fetch(url,{...init,cache:"no-store",signal:AbortSignal.timeout(30000),headers:{...(token?{Authorization:`Bearer ${token}`}:{ }),...init.headers}});
     if(!response.ok){const data=await response.json().catch(()=>({}));throw new Error(data.error||"Image request failed. Please retry.");}
     return response;

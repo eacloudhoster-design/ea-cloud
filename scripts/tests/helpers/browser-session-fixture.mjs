@@ -154,6 +154,9 @@ export async function sessionFixture() {
   app.get("/api/app/session-test", api.requireAppSession, (req, res) =>
     res.json({ id: req.clientId }),
   );
+  app.get("/api/client/session-test", api.requireAppSession, (req, res) =>
+    res.json({ id: req.clientId }),
+  );
   app.get("/api/app/ea-mode-images", api.requireAppSession, (_req, res) =>
     res.json({ eas: [] }),
   );

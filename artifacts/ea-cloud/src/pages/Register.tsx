@@ -7,9 +7,15 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useRegister } from "@workspace/api-client-react";
-import { Loader2, Clock, CheckCircle2, Mail, RefreshCw } from "lucide-react";
+import { Loader2, Clock, CheckCircle2, Mail, RefreshCw, X } from "lucide-react";
 
-function PendingApprovalScreen({ name, email }: { name: string; email: string }) {
+function PendingApprovalScreen({
+  name,
+  email,
+}: {
+  name: string;
+  email: string;
+}) {
   const [, setLocation] = useLocation();
   const [checking, setChecking] = useState(false);
   const [lastChecked, setLastChecked] = useState<Date>(new Date());
@@ -18,9 +24,11 @@ function PendingApprovalScreen({ name, email }: { name: string; email: string })
   const checkStatus = async () => {
     setChecking(true);
     try {
-      const res = await fetch(`/api/auth/status?email=${encodeURIComponent(email)}`);
+      const res = await fetch(
+        `/api/auth/status?email=${encodeURIComponent(email)}`,
+      );
       if (res.ok) {
-        const { status } = await res.json() as { status: string };
+        const { status } = (await res.json()) as { status: string };
         setLastChecked(new Date());
         if (status === "approved") {
           setLocation("/admin/login?approved=1");
@@ -34,16 +42,32 @@ function PendingApprovalScreen({ name, email }: { name: string; email: string })
   useEffect(() => {
     // Poll every 30 seconds
     intervalRef.current = setInterval(checkStatus, 30000);
-    return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
+    return () => {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+    };
   }, [email]);
 
   return (
     <div className="min-h-screen bg-[#080810] flex items-center justify-center px-4">
-      <div className="fixed inset-0 pointer-events-none" style={{ backgroundImage: "radial-gradient(ellipse at 50% 50%, rgba(245,158,11,0.06) 0%, transparent 60%)" }} />
-      <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.5 }} className="w-full max-w-md">
-
+      <div
+        className="fixed inset-0 pointer-events-none"
+        style={{
+          backgroundImage:
+            "radial-gradient(ellipse at 50% 50%, rgba(245,158,11,0.06) 0%, transparent 60%)",
+        }}
+      />
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.5 }}
+        className="w-full max-w-md"
+      >
         {/* Floating icon */}
-        <motion.div animate={{ y: [0, -10, 0] }} transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }} className="flex justify-center mb-8">
+        <motion.div
+          animate={{ y: [0, -10, 0] }}
+          transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+          className="flex justify-center mb-8"
+        >
           <div className="relative">
             <div className="absolute inset-0 rounded-full bg-amber-500/20 blur-2xl scale-150" />
             <div className="relative w-20 h-20 rounded-full bg-amber-500/10 border border-amber-500/30 flex items-center justify-center">
@@ -57,7 +81,9 @@ function PendingApprovalScreen({ name, email }: { name: string; email: string })
           <div className="bg-amber-500/8 border-b border-amber-500/15 px-8 py-5 text-center">
             <div className="flex items-center justify-center gap-2 mb-1">
               <CheckCircle2 className="w-4 h-4 text-green-400" />
-              <span className="text-green-400 text-sm font-medium">Account Created Successfully</span>
+              <span className="text-green-400 text-sm font-medium">
+                Account Created Successfully
+              </span>
             </div>
             <h2 className="text-xl font-bold text-white">Welcome, {name}!</h2>
           </div>
@@ -68,10 +94,13 @@ function PendingApprovalScreen({ name, email }: { name: string; email: string })
               <div className="flex gap-3 items-start">
                 <Clock className="w-5 h-5 text-amber-400 flex-shrink-0 mt-0.5" />
                 <div>
-                  <p className="text-amber-300 font-semibold text-sm mb-2">Pending Super Admin Approval</p>
+                  <p className="text-amber-300 font-semibold text-sm mb-2">
+                    Pending Super Admin Approval
+                  </p>
                   <p className="text-amber-200/70 text-sm leading-relaxed">
-                    Your approval is pending from the super admin. You will be notified once approved.
-                    Please check back within 24 hours. Admin will approve you within 24 hours.
+                    Your approval is pending from the super admin. You will be
+                    notified once approved. Please check back within 24 hours.
+                    Admin will approve you within 24 hours.
                   </p>
                 </div>
               </div>
@@ -80,7 +109,10 @@ function PendingApprovalScreen({ name, email }: { name: string; email: string })
             <div className="rounded-xl border border-white/8 bg-white/3 p-4 mb-6 flex gap-3 items-start">
               <Mail className="w-4 h-4 text-blue-400 flex-shrink-0 mt-0.5" />
               <p className="text-white/50 text-xs leading-relaxed">
-                You'll receive an email at <span className="text-white/80 font-medium">{email}</span> as soon as your account is approved. Check your inbox and spam folder.
+                You'll receive an email at{" "}
+                <span className="text-white/80 font-medium">{email}</span> as
+                soon as your account is approved. Check your inbox and spam
+                folder.
               </p>
             </div>
 
@@ -90,24 +122,51 @@ function PendingApprovalScreen({ name, email }: { name: string; email: string })
               <div className="flex items-center gap-1.5">
                 <AnimatePresence mode="wait">
                   {checking ? (
-                    <motion.div key="checking" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                    <motion.div
+                      key="checking"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                    >
                       <RefreshCw className="w-3 h-3 text-amber-400 animate-spin" />
                     </motion.div>
                   ) : (
-                    <motion.div key="idle" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="w-2 h-2 rounded-full bg-amber-500/50" />
+                    <motion.div
+                      key="idle"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      className="w-2 h-2 rounded-full bg-amber-500/50"
+                    />
                   )}
                 </AnimatePresence>
-                <span>Last checked {lastChecked.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</span>
+                <span>
+                  Last checked{" "}
+                  {lastChecked.toLocaleTimeString([], {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
+                </span>
               </div>
             </div>
 
             <div className="flex gap-3">
-              <Button onClick={checkStatus} disabled={checking} className="flex-1 h-10 bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/20 text-sm gap-2">
-                {checking ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
+              <Button
+                onClick={checkStatus}
+                disabled={checking}
+                className="flex-1 h-10 bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/20 text-sm gap-2"
+              >
+                {checking ? (
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                ) : (
+                  <RefreshCw className="w-3.5 h-3.5" />
+                )}
                 Check Status
               </Button>
               <Link href="/admin/login" className="flex-1">
-                <Button className="w-full h-10 bg-white/5 hover:bg-white/10 text-white/50 border border-white/8 text-sm">Back to Login</Button>
+                <Button className="w-full h-10 bg-white/5 hover:bg-white/10 text-white/50 border border-white/8 text-sm">
+                  Back to Login
+                </Button>
               </Link>
             </div>
           </div>
@@ -119,7 +178,24 @@ function PendingApprovalScreen({ name, email }: { name: string; email: string })
 
 export default function Register() {
   const registerMutation = useRegister();
-  const [form, setForm] = useState({ firstName: "", lastName: "", email: "", password: "", mentorName: "", phone: "" });
+  const [, setLocation] = useLocation();
+  const close = () => {
+    if (
+      document.referrer &&
+      new URL(document.referrer).origin === window.location.origin &&
+      window.history.length > 1
+    )
+      window.history.back();
+    else setLocation("/");
+  };
+  const [form, setForm] = useState({
+    firstName: "",
+    lastName: "",
+    email: "",
+    password: "",
+    mentorName: "",
+    phone: "",
+  });
   const [error, setError] = useState("");
   const [registered, setRegistered] = useState(false);
   const [registeredEmail, setRegisteredEmail] = useState("");
@@ -140,65 +216,186 @@ export default function Register() {
   };
 
   if (registered) {
-    return <PendingApprovalScreen name={registeredName} email={registeredEmail} />;
+    return (
+      <PendingApprovalScreen name={registeredName} email={registeredEmail} />
+    );
   }
 
   return (
-    <div className="mentor-register-page min-h-screen bg-[#080810] flex items-center justify-center px-4 py-20">
-      <div className="fixed inset-0 pointer-events-none" style={{ backgroundImage: "radial-gradient(ellipse at 50% 0%, rgba(227,30,36,0.1) 0%, transparent 60%)" }} />
-      <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }} className="w-full max-w-md">
-        <div className="text-center mb-8">
-          <motion.div animate={{ y: [0, -8, 0] }} transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }} className="inline-block mb-4">
-            <div className="relative">
-              <div className="absolute inset-0 rounded-full bg-primary/30 blur-xl scale-150" />
-              <img src={logo} alt="EA Cloud" className="relative w-20 h-20 rounded-full object-contain bg-black p-0.5 ring-2 ring-primary/50 shadow-[0_0_30px_rgba(227,30,36,0.5)]" />
-            </div>
-          </motion.div>
-          <h1 className="text-2xl font-bold text-white">Create Mentor Account</h1>
-          <p className="text-white/50 text-sm mt-1">Join the EA Cloud mentor network</p>
+    <div className="mentor-register-page">
+      <section
+        className="mentor-register-panel"
+        aria-labelledby="register-heading"
+      >
+        <div className="mentor-register-topbar">
+          <img src={logo} alt="EA Cloud" className="mentor-register-logo" />
+          <button
+            type="button"
+            onClick={close}
+            aria-label="Close registration"
+            className="mentor-register-close"
+          >
+            <X aria-hidden="true" size={24} />
+          </button>
         </div>
-
-        <div className="relative rounded-2xl border border-[#00ff88]/25 bg-white/3 backdrop-blur-md p-8 shadow-[0_0_40px_rgba(0,255,136,0.07),inset_0_1px_0_rgba(255,255,255,0.05)]">
-          <div className="absolute inset-px rounded-2xl border border-[#00ff88]/10 pointer-events-none" />
+        <div className="mentor-register-content">
+          <header className="mentor-register-heading">
+            <h1 id="register-heading">Create Mentor Account</h1>
+            <p>Join the EA Cloud mentor network</p>
+          </header>
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="grid grid-cols-2 gap-3">
+            <div className="mentor-register-names grid grid-cols-2 gap-4">
               <div>
-                <Label className="text-white/70 text-xs mb-1.5 block">First Name</Label>
-                <Input value={form.firstName} onChange={e => setForm(f => ({ ...f, firstName: e.target.value }))} placeholder="John" required className="bg-white/5 border-white/10 text-white placeholder:text-white/25 focus:border-primary/50 focus:ring-primary/20" />
+                <Label
+                  htmlFor="register-firstName"
+                  className="text-white/70 text-xs mb-1.5 block"
+                >
+                  First Name
+                </Label>
+                <Input
+                  id="register-firstName"
+                  name="firstName"
+                  autoComplete="given-name"
+                  value={form.firstName}
+                  onChange={(e) =>
+                    setForm((f) => ({ ...f, firstName: e.target.value }))
+                  }
+                  placeholder="John"
+                  required
+                  className="bg-white/5 border-white/10 text-white placeholder:text-white/25 focus:border-primary/50 focus:ring-primary/20"
+                />
               </div>
               <div>
-                <Label className="text-white/70 text-xs mb-1.5 block">Last Name</Label>
-                <Input value={form.lastName} onChange={e => setForm(f => ({ ...f, lastName: e.target.value }))} placeholder="Doe" required className="bg-white/5 border-white/10 text-white placeholder:text-white/25 focus:border-primary/50 focus:ring-primary/20" />
+                <Label
+                  htmlFor="register-lastName"
+                  className="text-white/70 text-xs mb-1.5 block"
+                >
+                  Last Name
+                </Label>
+                <Input
+                  id="register-lastName"
+                  name="lastName"
+                  autoComplete="family-name"
+                  value={form.lastName}
+                  onChange={(e) =>
+                    setForm((f) => ({ ...f, lastName: e.target.value }))
+                  }
+                  placeholder="Doe"
+                  required
+                  className="bg-white/5 border-white/10 text-white placeholder:text-white/25 focus:border-primary/50 focus:ring-primary/20"
+                />
               </div>
             </div>
             <div>
-              <Label className="text-white/70 text-xs mb-1.5 block">Mentor Name</Label>
-              <Input value={form.mentorName} onChange={e => setForm(f => ({ ...f, mentorName: e.target.value }))} placeholder="Your trading handle" required className="bg-white/5 border-white/10 text-white placeholder:text-white/25 focus:border-primary/50 focus:ring-primary/20" />
+              <Label
+                htmlFor="register-mentorName"
+                className="text-white/70 text-xs mb-1.5 block"
+              >
+                Mentor Name
+              </Label>
+              <Input
+                id="register-mentorName"
+                name="mentorName"
+                autoComplete="nickname"
+                value={form.mentorName}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, mentorName: e.target.value }))
+                }
+                placeholder="Your trading handle"
+                required
+                className="bg-white/5 border-white/10 text-white placeholder:text-white/25 focus:border-primary/50 focus:ring-primary/20"
+              />
             </div>
             <div>
-              <Label className="text-white/70 text-xs mb-1.5 block">Email Address</Label>
-              <Input type="email" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} placeholder="you@example.com" required className="bg-white/5 border-white/10 text-white placeholder:text-white/25 focus:border-primary/50 focus:ring-primary/20" />
+              <Label
+                htmlFor="register-email"
+                className="text-white/70 text-xs mb-1.5 block"
+              >
+                Email Address
+              </Label>
+              <Input
+                id="register-email"
+                name="email"
+                autoComplete="email"
+                type="email"
+                value={form.email}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, email: e.target.value }))
+                }
+                placeholder="you@example.com"
+                required
+                className="bg-white/5 border-white/10 text-white placeholder:text-white/25 focus:border-primary/50 focus:ring-primary/20"
+              />
             </div>
             <div>
-              <Label className="text-white/70 text-xs mb-1.5 block">Phone Number</Label>
-              <Input value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))} placeholder="+1 234 567 8900" className="bg-white/5 border-white/10 text-white placeholder:text-white/25 focus:border-primary/50 focus:ring-primary/20" />
+              <Label
+                htmlFor="register-phone"
+                className="text-white/70 text-xs mb-1.5 block"
+              >
+                Phone Number
+              </Label>
+              <Input
+                id="register-phone"
+                name="phone"
+                autoComplete="tel"
+                type="tel"
+                value={form.phone}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, phone: e.target.value }))
+                }
+                placeholder="+1 234 567 8900"
+                className="bg-white/5 border-white/10 text-white placeholder:text-white/25 focus:border-primary/50 focus:ring-primary/20"
+              />
             </div>
             <div>
-              <Label className="text-white/70 text-xs mb-1.5 block">Password</Label>
-              <Input type="password" value={form.password} onChange={e => setForm(f => ({ ...f, password: e.target.value }))} placeholder="••••••••••" required className="bg-white/5 border-white/10 text-white placeholder:text-white/25 focus:border-primary/50 focus:ring-primary/20" />
+              <Label
+                htmlFor="register-password"
+                className="text-white/70 text-xs mb-1.5 block"
+              >
+                Password
+              </Label>
+              <Input
+                id="register-password"
+                name="password"
+                autoComplete="new-password"
+                type="password"
+                value={form.password}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, password: e.target.value }))
+                }
+                placeholder="••••••••••"
+                required
+                className="bg-white/5 border-white/10 text-white placeholder:text-white/25 focus:border-primary/50 focus:ring-primary/20"
+              />
             </div>
-            {error && <p className="text-red-400 text-xs text-center bg-red-500/10 rounded-lg py-2 px-3 border border-red-500/20">{error}</p>}
-            <Button type="submit" disabled={registerMutation.isPending} className="w-full h-11 bg-gradient-to-r from-primary to-[#ff5f63] hover:from-primary/90 hover:to-[#ff5f63]/90 text-white font-semibold shadow-[0_0_20px_rgba(227,30,36,0.4)] transition-all duration-300 mt-2">
-              {registerMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : "Create Account"}
+            {error && (
+              <p
+                role="alert"
+                className="text-red-400 text-xs text-center bg-red-500/10 rounded-lg py-2 px-3 border border-red-500/20"
+              >
+                {error}
+              </p>
+            )}
+            <Button
+              type="submit"
+              disabled={registerMutation.isPending}
+              className="w-full h-11 bg-gradient-to-r from-primary to-[#ff5f63] hover:from-primary/90 hover:to-[#ff5f63]/90 text-white font-semibold shadow-[0_0_20px_rgba(227,30,36,0.4)] transition-all duration-300 mt-2"
+            >
+              {registerMutation.isPending ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                "Create Account"
+              )}
             </Button>
           </form>
-          <p className="text-center text-white/40 text-xs mt-5">
-            Already have an account?{" "}
-            <Link href="/admin/login" className="text-primary hover:text-primary/80 transition-colors">Sign in</Link>
+          <p className="mentor-register-signin">
+            Already have an account? <Link href="/admin/login">Sign in</Link>
+          </p>
+          <p className="mentor-register-approval">
+            Account requires approval before portal access is granted.
           </p>
         </div>
-        <p className="text-center text-white/20 text-xs mt-4">Account requires approval before portal access is granted.</p>
-      </motion.div>
+      </section>
     </div>
   );
 }

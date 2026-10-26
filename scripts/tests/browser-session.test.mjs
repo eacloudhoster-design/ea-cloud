@@ -121,6 +121,9 @@ test(
         200,
       );
       const clientCookie = await login("client@example.invalid", true);
+      assert.equal((await call("/api/client/session-test", { headers: { cookie: clientCookie } })).status, 200);
+      assert.equal((await call("/api/client/session-test", { headers: { cookie } })).status, 401);
+
       assert.equal(
         (await call("/api/app/me", { headers: { cookie: clientCookie } }))
           .status,

@@ -161,7 +161,7 @@ function App() {
               <Route path="/legal/:page">{params => <PublicLayout><Legal page={params.page}/></PublicLayout>}</Route>
               <Route path="/legal"><PublicLayout><Legal/></PublicLayout></Route>
               <Route path="/register">
-                <PublicLayout><Register /></PublicLayout>
+                <Register />
               </Route>
               <Route path="/">
                 <PublicLayout><Landing /></PublicLayout>

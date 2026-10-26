@@ -167,7 +167,7 @@ export async function browserSessionMiddleware(
     return;
   }
   delete req.headers.authorization;
-  const kind = /^\/app(?:\/|$)/.test(req.path) ? "client" : "portal";
+  const kind = /^\/(?:app|client)(?:\/|$)/.test(req.path) ? "client" : "portal";
   try {
     const principal = await verifyBrowserSession(req, kind);
     if (principal) {

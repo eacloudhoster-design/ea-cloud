@@ -1,12 +1,206 @@
-/* Desktop Sign Up starts below the browser UI, without the former header offset. */
+/* Registration only. Awaiting the licensed, unwatermarked background asset.
+   Set --mentor-register-background to its url() once supplied. */
 .mentor-register-page {
-  padding-top: max(24px, env(safe-area-inset-top));
-  align-items: flex-start;
+  min-height: 100svh;
+  padding: max(32px, env(safe-area-inset-top))
+    max(20px, env(safe-area-inset-right)) max(32px, env(safe-area-inset-bottom))
+    max(20px, env(safe-area-inset-left));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #080808;
+  background-image: var(--mentor-register-background, none);
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+  color: #fff;
 }
-/* Keep the existing mobile Sign Up alignment and spacing exactly as before. */
-@media (max-width: 760px),
-  (max-width: 960px) and (max-height: 500px) and (hover: none) and (pointer: coarse) {
+.mentor-register-panel {
+  position: relative;
+  max-height: calc(100dvh - 64px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-color: #67252a #080808;
+  width: min(100%, 760px);
+  background: rgba(3, 3, 3, 0.97);
+  border: 1px solid #542025;
+  border-radius: 22px;
+  box-shadow:
+    0 24px 100px #000a,
+    0 0 45px #e31e240d;
+  animation: mentor-register-enter 0.35s ease-out both;
+}
+.mentor-register-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 24px 28px 0;
+}
+.mentor-register-logo {
+  width: 64px;
+  height: 64px;
+  object-fit: contain;
+}
+.mentor-register-close {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  color: #aaa;
+  border: 1px solid #333;
+  border-radius: 50%;
+  background: #111;
+  cursor: pointer;
+  transition:
+    color 0.2s,
+    border-color 0.2s;
+}
+.mentor-register-close:hover {
+  color: white;
+  border-color: #e31e24;
+}
+.mentor-register-close:focus-visible,
+.mentor-register-signin a:focus-visible {
+  outline: 2px solid #ff555b;
+  outline-offset: 4px;
+}
+.mentor-register-content {
+  padding: 16px 64px 38px;
+}
+.mentor-register-heading {
+  margin-bottom: 32px;
+  text-align: center;
+}
+.mentor-register-heading h1 {
+  font-size: clamp(24px, 3vw, 32px);
+  font-weight: 650;
+  letter-spacing: -0.035em;
+  line-height: 1.25;
+}
+.mentor-register-heading p {
+  color: #a3a3a3;
+  font-size: 14px;
+  margin-top: 10px;
+}
+.mentor-register-page form {
+  display: grid;
+  gap: 20px;
+}
+.mentor-register-page form > * {
+  margin: 0;
+}
+.mentor-register-page label {
+  color: #c8c8c8;
+  font-size: 13px;
+  margin-bottom: 9px;
+}
+.mentor-register-page input {
+  height: 50px;
+  width: 100%;
+  min-width: 0;
+  background: #101010;
+  border: 1px solid #353535;
+  border-radius: 8px;
+  color: #fff;
+  font-size: 16px;
+  padding: 12px 15px;
+  transition:
+    border-color 0.2s,
+    box-shadow 0.2s;
+}
+.mentor-register-page input::placeholder {
+  color: #707070;
+}
+.mentor-register-page input:focus-visible {
+  border-color: #ee3840;
+  outline: none;
+  box-shadow: 0 0 0 3px #e31e2426;
+}
+.mentor-register-page button[type="submit"] {
+  height: 52px;
+  margin-top: 8px;
+  border: 1px solid #ff5960;
+  border-radius: 9px;
+  background: linear-gradient(110deg, #d6121b, #f2353e);
+  color: #fff;
+  font-size: 15px;
+  font-weight: 650;
+  box-shadow: 0 4px 24px #e31e242b;
+  transition:
+    box-shadow 0.2s,
+    transform 0.2s;
+}
+.mentor-register-page button[type="submit"]:hover {
+  box-shadow: 0 4px 32px #e31e2459;
+}
+.mentor-register-page button[type="submit"]:active {
+  transform: translateY(1px);
+}
+.mentor-register-signin {
+  margin-top: 24px;
+  text-align: center;
+  font-size: 13px;
+  color: #aaa;
+}
+.mentor-register-signin a {
+  color: #ff545d;
+  margin-left: 4px;
+}
+.mentor-register-signin a:hover {
+  text-decoration: underline;
+}
+.mentor-register-approval {
+  text-align: center;
+  color: #888;
+  font-size: 11px;
+  line-height: 1.6;
+  padding-top: 24px;
+  margin-top: 24px;
+  border-top: 1px solid #222;
+}
+@keyframes mentor-register-enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@media (max-width: 600px) {
   .mentor-register-page {
-    align-items: center;
+    padding: max(12px, env(safe-area-inset-top)) 12px
+      max(12px, env(safe-area-inset-bottom));
+    align-items: flex-start;
+  }
+  .mentor-register-panel {
+    border-radius: 16px;
+    max-height: none;
+  }
+  .mentor-register-topbar {
+    padding: 16px 16px 0;
+  }
+  .mentor-register-logo {
+    width: 52px;
+    height: 52px;
+  }
+  .mentor-register-content {
+    padding: 24px 24px 28px;
+  }
+  .mentor-register-heading {
+    text-align: left;
+    margin-bottom: 28px;
+  }
+  .mentor-register-names {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .mentor-register-page *,
+  .mentor-register-panel {
+    animation: none !important;
+    transition: none !important;
   }
 }
