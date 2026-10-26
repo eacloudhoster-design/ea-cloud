@@ -1,0 +1,15 @@
+{
+  "portalLogin": true,
+  "refresh": true,
+  "browserProcessRestart": true,
+  "backToApp": true,
+  "returnToPortal": true,
+  "browserBack": true,
+  "temporaryFailurePreservesCookie": true,
+  "logoutRevokesBoth": true,
+  "protectedBackDenied": true,
+  "mobileTouchLogout": true,
+  "limitations": [
+    "Chromium desktop/touch emulation, not physical iOS/Android or actual installed-PWA lifecycle."
+  ]
+}

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useLocation, useSearch } from "wouter";
 import { motion } from "framer-motion";
 import { loginErrorMessage } from "@/lib/login-error";
@@ -14,7 +14,8 @@ export default function AdminLogin() {
   const [, setLocation] = useLocation();
   const search = useSearch();
   const justApproved = new URLSearchParams(search).get("approved") === "1";
-  const { login } = useAuth();
+  const { login, user, isLoading: restoringSession } = useAuth();
+  useEffect(() => { if(!restoringSession && user?.status === "approved") setLocation(user.role === "superadmin" ? "/superadmin/dashboard" : "/admin/dashboard", {replace:true}); },[user,restoringSession,setLocation]);
   const loginMutation = useLogin();
   const [form, setForm] = useState({ email: "", password: "" });
   const [error, setError] = useState("");
@@ -27,7 +28,7 @@ export default function AdminLogin() {
     try {
       const result = await loginMutation.mutateAsync({ data: { ...form, role: "mentor" } });
       login(result.user, result.token);
-      setLocation(result.user.role === "superadmin" ? "/superadmin/dashboard" : "/admin/dashboard");
+      setLocation(result.user.role === "superadmin" ? "/superadmin/dashboard" : "/admin/dashboard", {replace:true});
     } catch (err: unknown) {
       const msg = loginErrorMessage(err);
       if (msg === "pending_approval") {
@@ -37,6 +38,8 @@ export default function AdminLogin() {
       }
     }
   };
+
+  if(restoringSession || user?.status === "approved") return <div role="status" className="min-h-screen bg-black text-white flex items-center justify-center">Verifying session…</div>;
 
   return (
     <div className="min-h-screen bg-[#080810] flex items-center justify-center px-4">

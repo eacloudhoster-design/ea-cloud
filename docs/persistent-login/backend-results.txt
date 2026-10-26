@@ -1,0 +1,17 @@
+✔ mentor and superadmin credentials authenticate and read their identity (117.054447ms)
+✔ incorrect passwords and pending accounts stay denied (13.418775ms)
+✔ both client login URLs require the correct password (70.115141ms)
+﹣ admin bootstrap creates once and never replaces an existing password or role (0.342539ms) # CLI bootstrap requires a disposable PostgreSQL TCP endpoint; unit coverage runs separately
+✔ valid configuration normalizes email and preserves the exact password (2.327713ms)
+✔ configuration failures name the exact variable without exposing its value (2.172913ms)
+✔ nested Drizzle errors expose only allowlisted driver codes and explanations (0.565059ms)
+✔ aggregate, cyclic and unknown errors cannot leak raw provider messages (0.410474ms)
+✔ persistent cookie sessions, revocation, expiry, renewal and role isolation (4800.715622ms)
+ℹ tests 9
+ℹ suites 0
+ℹ pass 8
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 1
+ℹ todo 0
+ℹ duration_ms 10223.199115

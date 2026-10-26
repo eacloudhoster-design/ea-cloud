@@ -1,4 +1,11 @@
-import { createContext, useContext, useEffect, useState, ReactNode } from "react";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  useRef,
+  ReactNode,
+} from "react";
 import { useLocation } from "wouter";
 
 export interface AppClient {
@@ -31,6 +38,8 @@ export async function appFetch(path: string, options: RequestInit = {}) {
   const token = localStorage.getItem(APP_TOKEN_KEY);
   const res = await fetch(`${BASE}${path}`, {
     ...options,
+    signal: options.signal || AbortSignal.timeout(15000),
+    cache: "no-store",
     headers: {
       "Content-Type": "application/json",
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
@@ -44,42 +53,131 @@ export async function appFetch(path: string, options: RequestInit = {}) {
 
 export function ClientAuthProvider({ children }: { children: ReactNode }) {
   const [client, setClient] = useState<AppClient | null>(null);
-  const [token, setToken] = useState<string | null>(localStorage.getItem(APP_TOKEN_KEY));
+  const [token, setToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [returnVerification, setReturnVerification] = useState(false);
+  const [unavailable, setUnavailable] = useState(false);
+  const generation = useRef(0);
   const [, setLocation] = useLocation();
 
   useEffect(() => {
-    if (!token) { setLoading(false); return; }
-    appFetch("/app/me")
-      .then((c: AppClient) => { setClient(c); setLoading(false); })
-      .catch(() => { localStorage.removeItem(APP_TOKEN_KEY); setToken(null); setLoading(false); });
-  }, [token]);
+    let alive = true;
+    try {
+      localStorage.removeItem(APP_TOKEN_KEY);
+    } catch {}
+    const check = async (event?: Event) => {
+      if (
+        event?.type === "pageshow" &&
+        (event as PageTransitionEvent).persisted
+      ) {
+        setLoading(true);
+        setReturnVerification(true);
+      }
+      const current = generation.current;
+      try {
+        const c = await appFetch("/app/me");
+        if (alive && current === generation.current) {
+          setClient(c);
+          setToken(c.token);
+          setLoading(false);
+          setUnavailable(false);
+        }
+      } catch (error) {
+        if (
+          alive &&
+          current === generation.current &&
+          [401, 403].includes((error as { status: number }).status)
+        ) {
+          setClient(null);
+          setToken(null);
+          setLoading(false);
+          setUnavailable(false);
+        } else if (alive && current === generation.current)
+          setUnavailable(true);
+      }
+    };
+    void check();
+    window.addEventListener("focus", check);
+    window.addEventListener("pageshow", check);
+    window.addEventListener("ea:auth-changed", check);
+    const timer = setInterval(() => void check(), 30000);
+    const channel =
+      typeof BroadcastChannel !== "undefined"
+        ? new BroadcastChannel("ea-cloud-auth")
+        : null;
+    if (channel) channel.onmessage = check;
+    return () => {
+      alive = false;
+      clearInterval(timer);
+      channel?.close();
+      window.removeEventListener("focus", check);
+      window.removeEventListener("pageshow", check);
+      window.removeEventListener("ea:auth-changed", check);
+    };
+  }, []);
 
   const login = (t: string, c: AppClient) => {
-    localStorage.setItem(APP_TOKEN_KEY, t);
+    generation.current++;
+    setLoading(false);
+
     setToken(t);
     setClient(c);
   };
 
-  const logout = () => {
-    localStorage.removeItem(APP_TOKEN_KEY);
-    setToken(null);
-    setClient(null);
-    setLocation("/app");
+  const logout = async () => {
+    try {
+      await appFetch("/app/logout", { method: "POST", body: "{}" });
+      generation.current++;
+      try {
+        for (const key of ["token", "app_token", "appClientToken"])
+          localStorage.removeItem(key);
+      } catch {}
+      setToken(null);
+      setClient(null);
+      if (typeof BroadcastChannel !== "undefined") {
+        const c = new BroadcastChannel("ea-cloud-auth");
+        c.postMessage("logout");
+        c.close();
+      }
+      window.dispatchEvent(new Event("ea:auth-changed"));
+      setLocation("/app", { replace: true });
+    } catch {
+      window.alert("Unable to sign out securely. Please retry.");
+    }
   };
 
   const updateClient = (c: AppClient) => setClient(c);
 
   return (
-    <ClientAuthContext.Provider value={{ client, token, loading, login, logout, updateClient }}>
-      {children}
+    <ClientAuthContext.Provider
+      value={{ client, token, loading, login, logout, updateClient }}
+    >
+      {loading &&
+      (unavailable || returnVerification) &&
+      /^\/app(?:\/|$)/.test(window.location.pathname) ? (
+        <div
+          role="status"
+          className="min-h-screen bg-black text-white flex items-center justify-center"
+        >
+          <button
+            onClick={() => window.dispatchEvent(new Event("ea:auth-changed"))}
+          >
+            {unavailable
+              ? "Unable to verify your session. Retry"
+              : "Verifying session…"}
+          </button>
+        </div>
+      ) : (
+        children
+      )}
     </ClientAuthContext.Provider>
   );
 }
 
 export function useClientAuth() {
   const ctx = useContext(ClientAuthContext);
-  if (!ctx) throw new Error("useClientAuth must be used inside ClientAuthProvider");
+  if (!ctx)
+    throw new Error("useClientAuth must be used inside ClientAuthProvider");
   return ctx;
 }
 
@@ -88,9 +186,21 @@ export function useClientRedirect() {
   const [, setLocation] = useLocation();
   useEffect(() => {
     if (loading) return;
-    if (!client) { setLocation("/app"); return; }
-    if (client.status === "rejected") { setLocation("/app/rejected"); return; }
-    if (client.status === "pending") { setLocation("/app/pending"); return; }
-    if (client.status === "approved" && !client.licenseKey) { setLocation("/app/activate"); return; }
+    if (!client) {
+      setLocation("/app", { replace: true });
+      return;
+    }
+    if (client.status === "rejected") {
+      setLocation("/app/rejected", { replace: true });
+      return;
+    }
+    if (client.status === "pending") {
+      setLocation("/app/pending", { replace: true });
+      return;
+    }
+    if (client.status === "approved" && !client.licenseKey) {
+      setLocation("/app/activate", { replace: true });
+      return;
+    }
   }, [client, loading, setLocation]);
 }

@@ -48,7 +48,7 @@ const SHAPE_ICONS: Record<ShapeStyle, React.ReactNode> = {
 };
 
 export default function SettingsTab({ onOpenChartScanner }: SettingsTabProps) {
-  const { clientToken, backgroundAnimation, setBackgroundAnimation, accentColor, setAccentColor, interfaceStyle, setInterfaceStyle, shapeStyle, setShapeStyle, activeTab, botFont="Inter", setBotFont } = useApp();
+  const { signOut, clientToken, backgroundAnimation, setBackgroundAnimation, accentColor, setAccentColor, interfaceStyle, setInterfaceStyle, shapeStyle, setShapeStyle, activeTab, botFont="Inter", setBotFont } = useApp();
   useEffect(()=>{if(clientToken)void prepareWebPush()?.catch(()=>{});},[clientToken]);
   const [open, setOpen] = useState<OpenSection>(null);
 
@@ -219,6 +219,8 @@ export default function SettingsTab({ onOpenChartScanner }: SettingsTabProps) {
           <LineChart size={18} />
           Live Chart
         </button>
+        <a href="/admin/login" className="block px-4 py-3 text-sm text-white/70">Admin Portal</a>
+        <button type="button" onClick={() => void signOut?.()} className="w-full px-4 py-3 text-left text-sm text-red-400">Sign Out</button>
       </div>
 
       {/* Floating bot avatar */}

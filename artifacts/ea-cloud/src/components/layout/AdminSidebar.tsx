@@ -62,6 +62,7 @@ export function AdminSidebar() {
             <div className="text-[10px] text-white/30 truncate">{user?.email}</div>
           </div>
         </div>
+        <a href="/ea-app/" className="flex items-center gap-3 px-3 py-2.5 text-sm text-white/50 hover:text-white">← Back to App</a>
         <motion.button
           whileHover={{ x: 4 }}
           onClick={logout}

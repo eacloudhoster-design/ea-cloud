@@ -6,7 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { AuthProvider } from "./contexts/AuthContext";
 import { ClientAuthProvider } from "./contexts/ClientAuthContext";
 import { useGetProfile, getGetProfileQueryKey } from "@workspace/api-client-react";
-import { useAuth } from "./contexts/AuthContext";
+import { useAuth, usePortalRedirect } from "./contexts/AuthContext";
 import { Navbar } from "./components/layout/Navbar";
 import { Footer } from "./components/layout/Footer";
 import { AdminSidebar } from "./components/layout/AdminSidebar";
@@ -45,9 +45,11 @@ const queryClient = new QueryClient({
 });
 
 function AdminLayout({ children }: { children: React.ReactNode }) {
-  const { token } = useAuth();
+  const { token, user, isLoading } = useAuth();
+  usePortalRedirect();
   const { data: profile } = useGetProfile({ query: { queryKey: getGetProfileQueryKey(), enabled: !!token } });
   const bgImage = profile?.backgroundImageUrl;
+  if(isLoading || !user || !["approved","active"].includes(user.status) || !["mentor","admin"].includes(user.role)) return <div role="status" className="min-h-screen bg-black text-white flex items-center justify-center">Verifying session…</div>;
   return (
     <div
       className="min-h-screen text-white relative"
@@ -66,6 +68,9 @@ function AdminLayout({ children }: { children: React.ReactNode }) {
 }
 
 function SuperAdminLayout({ children }: { children: React.ReactNode }) {
+  const {user,isLoading} = useAuth();
+  usePortalRedirect();
+  if(isLoading || !user || !["approved","active"].includes(user.status) || user.role !== "superadmin") return <div role="status" className="min-h-screen bg-black text-white flex items-center justify-center">Verifying session…</div>;
   return (
     <div className="min-h-screen text-white" style={{ background: "#08080f" }}>
       <SuperAdminSidebar />

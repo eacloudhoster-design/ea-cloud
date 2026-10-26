@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { motion } from "framer-motion";
 import { loginErrorMessage } from "@/lib/login-error";
@@ -12,7 +12,8 @@ import { Loader2, ShieldCheck } from "lucide-react";
 
 export default function SuperAdminLogin() {
   const [, setLocation] = useLocation();
-  const { login } = useAuth();
+  const { login, user, isLoading: restoringSession } = useAuth();
+  useEffect(() => { if(!restoringSession && user?.status === "approved") setLocation(user.role === "superadmin" ? "/superadmin/dashboard" : "/admin/dashboard", {replace:true}); },[user,restoringSession,setLocation]);
   const loginMutation = useLogin();
   const [form, setForm] = useState({ email: "", password: "" });
   const [error, setError] = useState("");
@@ -27,11 +28,13 @@ export default function SuperAdminLogin() {
         return;
       }
       login(result.user, result.token);
-      setLocation("/superadmin/dashboard");
+      setLocation("/superadmin/dashboard", {replace:true});
     } catch (err: unknown) {
       setError(loginErrorMessage(err));
     }
   };
+
+  if(restoringSession || user?.status === "approved") return <div role="status" className="min-h-screen bg-black text-white flex items-center justify-center">Verifying session…</div>;
 
   return (
     <div className="min-h-screen flex items-center justify-center px-4" style={{ background: "radial-gradient(ellipse at top, #0d0820 0%, #080810 50%, #000 100%)" }}>
