@@ -6,3 +6,6 @@ export const navigationLogo = `${import.meta.env.BASE_URL}ea-cloud-nav-logo.png`
 
 // Original red-and-chrome lettering, extracted only for the homepage heading.
 export const homepageWordmark = `${import.meta.env.BASE_URL}ea-cloud-wordmark.png`;
+
+// User-supplied, unwatermarked geometric artwork shared by the mentor auth pages.
+export const authBackground = `${import.meta.env.BASE_URL}ea-cloud-auth-background.png`;

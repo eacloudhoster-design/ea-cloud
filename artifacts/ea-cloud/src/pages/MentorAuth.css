@@ -1,5 +1,4 @@
-/* Registration only. Awaiting the licensed, unwatermarked background asset.
-   Set --mentor-register-background to its url() once supplied. */
+/* Scoped mentor authentication styles. Both pages use the supplied geometric artwork. */
 .mentor-register-page {
   min-height: 100svh;
   padding: max(32px, env(safe-area-inset-top))
@@ -9,7 +8,6 @@
   align-items: center;
   justify-content: center;
   background-color: #080808;
-  background-image: var(--mentor-register-background, none);
   background-size: cover;
   background-position: center;
   background-attachment: fixed;
@@ -202,5 +200,386 @@
   .mentor-register-panel {
     animation: none !important;
     transition: none !important;
+  }
+}
+
+/* The admin/mentor sign-in uses the existing authentication contract. */
+.mentor-login-page {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  min-height: 100svh;
+  background-color: #050505;
+  background-size: cover;
+  background-position: center;
+  color: #fff;
+}
+.mentor-login-close {
+  position: fixed;
+  top: max(26px, env(safe-area-inset-top));
+  right: max(28px, env(safe-area-inset-right));
+  z-index: 5;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  color: #b6b6b6;
+  border-radius: 50%;
+  transition:
+    color 0.2s,
+    background-color 0.2s;
+}
+.mentor-login-close:hover {
+  color: #fff;
+  background: #ffffff0d;
+}
+.mentor-login-page a:focus-visible,
+.mentor-login-page button:focus-visible {
+  outline: 2px solid #ff5359;
+  outline-offset: 5px;
+}
+.mentor-login-brand {
+  position: sticky;
+  top: 0;
+  height: 100svh;
+  display: grid;
+  place-items: center;
+  isolation: isolate;
+  overflow: hidden;
+  background-size: cover;
+  background-position: center;
+  border-right: 1px solid #401115;
+}
+.mentor-login-brand::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    ellipse at center,
+    #000c 0%,
+    #0005 40%,
+    #0003 65%,
+    #0006 100%
+  );
+  z-index: -1;
+}
+.mentor-login-brand::after {
+  content: "";
+  position: absolute;
+  inset: -40%;
+  z-index: -1;
+  pointer-events: none;
+  background: linear-gradient(
+    135deg,
+    transparent 44%,
+    #ff393907 47%,
+    #ff393922 49%,
+    #ff393907 51%,
+    transparent 54%
+  );
+  animation: mentor-login-light 12s ease-in-out infinite;
+}
+.mentor-login-emblem {
+  position: relative;
+  width: min(70%, 460px);
+  line-height: 0;
+  filter: drop-shadow(0 0 22px #d2132155);
+}
+.mentor-login-logo {
+  width: 100%;
+  height: auto;
+  object-fit: contain;
+  /* Trim only the existing asset's outer black matte; keep the original icon intact. */
+  clip-path: polygon(
+    50% 2%,
+    58% 4%,
+    64% 13%,
+    68% 22%,
+    75% 25%,
+    80% 34%,
+    82% 40%,
+    88% 44%,
+    91% 54%,
+    96% 61%,
+    99% 71%,
+    99% 82%,
+    96% 91%,
+    89% 97%,
+    63% 97%,
+    59% 100%,
+    50% 98%,
+    41% 100%,
+    37% 97%,
+    12% 97%,
+    5% 92%,
+    1% 82%,
+    1% 71%,
+    5% 61%,
+    10% 54%,
+    12% 46%,
+    19% 40%,
+    22% 31%,
+    28% 25%,
+    34% 22%,
+    38% 13%,
+    43% 5%
+  );
+}
+.mentor-login-eyes {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  pointer-events: none;
+  filter: brightness(2.4) saturate(1.2);
+  mix-blend-mode: screen;
+  animation: mentor-login-eyes 5s ease-in-out infinite;
+}
+.mentor-login-eyes-left {
+  clip-path: polygon(32% 52%, 45% 67%, 35% 62%);
+}
+.mentor-login-eyes-right {
+  clip-path: polygon(67% 52%, 54% 67%, 64% 62%);
+}
+.mentor-login-main {
+  min-width: 0;
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 110px clamp(40px, 6vw, 112px) 44px;
+  background: #050505;
+}
+.mentor-login-form-content {
+  width: min(100%, 440px);
+  margin-block: auto;
+  padding-block: 32px 56px;
+}
+.mentor-login-form-content h1 {
+  font-size: clamp(28px, 2.6vw, 36px);
+  font-weight: 550;
+  line-height: 1.25;
+  letter-spacing: -0.035em;
+  margin-bottom: 42px;
+}
+.mentor-login-form {
+  display: grid;
+  gap: 26px;
+}
+.mentor-login-form label {
+  display: block;
+  margin-bottom: 11px;
+  color: #bcbcbc;
+  font-size: 14px;
+  font-weight: 400;
+}
+.mentor-login-form input {
+  width: 100%;
+  height: 56px;
+  min-width: 0;
+  padding: 15px 17px;
+  border: 1px solid #444;
+  border-radius: 7px;
+  background: #0c0c0c;
+  color: #fff;
+  font-size: 16px;
+  transition:
+    border-color 0.2s,
+    box-shadow 0.2s;
+}
+.mentor-login-form input::placeholder {
+  color: #666;
+}
+.mentor-login-form input:focus-visible {
+  border-color: #f3464d;
+  outline: 0;
+  box-shadow: 0 0 0 3px #e31e2420;
+}
+.mentor-login-password {
+  position: relative;
+}
+.mentor-login-password input {
+  padding-right: 55px;
+}
+.mentor-login-password button {
+  position: absolute;
+  right: 6px;
+  top: 6px;
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  color: #999;
+  border-radius: 5px;
+  cursor: pointer;
+}
+.mentor-login-password button:hover {
+  color: #fff;
+}
+.mentor-login-form .mentor-login-submit {
+  width: 100%;
+  height: 54px;
+  margin-top: 10px;
+  background: linear-gradient(110deg, #d50e1c, #f6313d);
+  border: 1px solid #ff4851;
+  border-radius: 8px;
+  box-shadow: 0 5px 24px #e31e2426;
+  color: #fff;
+  font-size: 15px;
+  font-weight: 650;
+  letter-spacing: 0.06em;
+  transition:
+    box-shadow 0.2s,
+    transform 0.2s;
+}
+.mentor-login-form .mentor-login-submit:hover {
+  box-shadow: 0 5px 32px #e31e2455;
+}
+.mentor-login-form .mentor-login-submit:active {
+  transform: translateY(1px);
+}
+.mentor-login-create {
+  text-align: center;
+  margin-top: 28px;
+  color: #999;
+  font-size: 13px;
+  line-height: 1.8;
+}
+.mentor-login-create a {
+  color: #ff515b;
+  margin-left: 4px;
+}
+.mentor-login-create a:hover,
+.mentor-login-support:hover {
+  text-decoration: underline;
+}
+.mentor-login-support {
+  padding: 12px;
+  font-size: 13px;
+  color: #999;
+  text-underline-offset: 4px;
+}
+.mentor-login-notice {
+  display: flex;
+  gap: 12px;
+  border: 1px solid;
+  border-radius: 8px;
+  padding: 16px;
+  font-size: 12px;
+  line-height: 1.6;
+}
+.mentor-login-notice svg {
+  flex-shrink: 0;
+  margin-top: 3px;
+}
+.mentor-login-notice p:first-child {
+  font-weight: 600;
+  font-size: 13px;
+  margin-bottom: 3px;
+}
+.mentor-login-approved {
+  color: #a3e7ba;
+  border-color: #346746;
+  background: #17302166;
+  margin-bottom: 24px;
+}
+.mentor-login-pending {
+  color: #e9c17e;
+  border-color: #6a4b26;
+  background: #30241666;
+}
+.mentor-login-error {
+  padding: 12px 15px;
+  border: 1px solid #7b2a30;
+  border-radius: 7px;
+  background: #35131766;
+  color: #ff9ba0;
+  font-size: 13px;
+  line-height: 1.6;
+}
+@keyframes mentor-login-eyes {
+  0%,
+  100% {
+    opacity: 0.12;
+  }
+  50% {
+    opacity: 0.8;
+  }
+}
+@keyframes mentor-login-light {
+  0%,
+  100% {
+    opacity: 0.15;
+    transform: translate(-18%, 18%);
+  }
+  50% {
+    opacity: 0.6;
+    transform: translate(18%, -18%);
+  }
+}
+@media (max-width: 899px) {
+  .mentor-login-page {
+    display: flex;
+    flex-direction: column;
+    background-attachment: fixed;
+  }
+  .mentor-login-brand {
+    flex-shrink: 0;
+    position: relative;
+    height: clamp(200px, 30svh, 280px);
+    border-right: 0;
+    border-bottom: 1px solid #57141a;
+  }
+  .mentor-login-emblem {
+    width: min(54%, 260px);
+  }
+  .mentor-login-close {
+    top: max(16px, env(safe-area-inset-top));
+    right: max(16px, env(safe-area-inset-right));
+    background: #07070799;
+  }
+  .mentor-login-main {
+    flex: 1;
+    min-height: auto;
+    padding: 0 28px max(20px, env(safe-area-inset-bottom));
+    background: #050505f2;
+  }
+  .mentor-login-form-content {
+    padding-block: 40px 26px;
+  }
+  .mentor-login-form-content h1 {
+    font-size: 28px;
+    margin-bottom: 32px;
+  }
+  .mentor-login-form {
+    gap: 23px;
+  }
+  .mentor-login-form input {
+    height: 54px;
+  }
+  .mentor-login-password button {
+    top: 5px;
+  }
+  .mentor-login-support {
+    margin-top: 10px;
+  }
+}
+@media (max-width: 359px) {
+  .mentor-login-main {
+    padding-inline: 22px;
+  }
+  .mentor-login-form-content h1 {
+    font-size: 26px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .mentor-login-page *,
+  .mentor-login-page *::before,
+  .mentor-login-page *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+  .mentor-login-eyes {
+    opacity: 0.3;
   }
 }

@@ -1,34 +1,54 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation, useSearch } from "wouter";
-import { motion } from "framer-motion";
 import { loginErrorMessage } from "@/lib/login-error";
-import { navigationLogo as logo } from "@/lib/branding";
+import { navigationLogo as logo, authBackground } from "@/lib/branding";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useLogin } from "@workspace/api-client-react";
 import { useAuth } from "@/contexts/AuthContext";
-import { Loader2, Clock, CheckCircle2 } from "lucide-react";
+import { Loader2, Clock, CheckCircle2, X, Eye, EyeOff } from "lucide-react";
+
+import { helpLinks } from "@/privacy/legal-links";
+import "../MentorAuth.css";
 
 export default function AdminLogin() {
   const [, setLocation] = useLocation();
   const search = useSearch();
   const justApproved = new URLSearchParams(search).get("approved") === "1";
   const { login, user, isLoading: restoringSession } = useAuth();
-  useEffect(() => { if(!restoringSession && user?.status === "approved") setLocation(user.role === "superadmin" ? "/superadmin/dashboard" : "/admin/dashboard", {replace:true}); },[user,restoringSession,setLocation]);
+  useEffect(() => {
+    if (!restoringSession && user?.status === "approved")
+      setLocation(
+        user.role === "superadmin"
+          ? "/superadmin/dashboard"
+          : "/admin/dashboard",
+        { replace: true },
+      );
+  }, [user, restoringSession, setLocation]);
   const loginMutation = useLogin();
   const [form, setForm] = useState({ email: "", password: "" });
   const [error, setError] = useState("");
   const [isPending, setIsPending] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const supportHref =
+    helpLinks.find((link) => link.label === "Support")?.href ?? "/#support";
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     setIsPending(false);
     try {
-      const result = await loginMutation.mutateAsync({ data: { ...form, role: "mentor" } });
+      const result = await loginMutation.mutateAsync({
+        data: { ...form, role: "mentor" },
+      });
       login(result.user, result.token);
-      setLocation(result.user.role === "superadmin" ? "/superadmin/dashboard" : "/admin/dashboard", {replace:true});
+      setLocation(
+        result.user.role === "superadmin"
+          ? "/superadmin/dashboard"
+          : "/admin/dashboard",
+        { replace: true },
+      );
     } catch (err: unknown) {
       const msg = loginErrorMessage(err);
       if (msg === "pending_approval") {
@@ -39,68 +59,158 @@ export default function AdminLogin() {
     }
   };
 
-  if(restoringSession || user?.status === "approved") return <div role="status" className="min-h-screen bg-black text-white flex items-center justify-center">Verifying session…</div>;
+  if (restoringSession || user?.status === "approved")
+    return (
+      <div
+        role="status"
+        className="min-h-screen bg-black text-white flex items-center justify-center"
+      >
+        Verifying session…
+      </div>
+    );
 
   return (
-    <div className="min-h-screen bg-[#080810] flex items-center justify-center px-4">
-      <div className="fixed inset-0 pointer-events-none" style={{ backgroundImage: "radial-gradient(ellipse at 30% 20%, rgba(227,30,36,0.12) 0%, transparent 50%), radial-gradient(ellipse at 70% 80%, rgba(0,100,255,0.08) 0%, transparent 50%)" }} />
-      <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.5 }} className="w-full max-w-sm">
-        <motion.div animate={{ y: [0, -10, 0] }} transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }} className="flex justify-center mb-8">
-          <div className="relative">
-            <div className="absolute inset-0 rounded-full bg-primary/40 blur-2xl scale-200" />
-            <img src={logo} alt="EA Cloud" className="relative w-24 h-24 rounded-full object-contain bg-black p-0.5 ring-2 ring-primary/60 shadow-[0_0_50px_rgba(227,30,36,0.6)]" />
-          </div>
-        </motion.div>
-
-        <div className="relative rounded-2xl overflow-hidden">
-          {/* Glowing border */}
-          <div className="absolute inset-0 rounded-2xl" style={{ background: "linear-gradient(135deg, rgba(0,255,136,0.3), rgba(0,255,136,0.05), transparent 60%)", padding: "1px" }}>
-            <div className="w-full h-full rounded-2xl bg-[#0e0e16]" />
-          </div>
-          <div className="relative z-10 p-8" style={{ background: "rgba(14,14,22,0.95)", borderRadius: "1rem", border: "1px solid rgba(0,255,136,0.2)", boxShadow: "0 0 40px rgba(0,255,136,0.08), 0 0 80px rgba(0,0,0,0.5)" }}>
-            <div className="text-center mb-6">
-              <h1 className="text-2xl font-bold text-white tracking-wide">EA Cloud Admin Portal</h1>
-              <p className="text-white/40 text-xs mt-2 uppercase tracking-widest">Welcome — Login to access your dashboard</p>
-            </div>
-            {justApproved && (
-              <motion.div initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} className="rounded-lg border border-green-500/30 bg-green-500/10 p-4 flex gap-3 items-start mb-4">
-                <CheckCircle2 className="w-4 h-4 text-green-400 mt-0.5 flex-shrink-0" />
-                <div>
-                  <p className="text-green-300 text-sm font-semibold">Account Approved!</p>
-                  <p className="text-green-300/60 text-xs mt-0.5">Your account has been approved. You can now log in below.</p>
-                </div>
-              </motion.div>
-            )}
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <Label className="text-white/60 text-xs mb-2 block uppercase tracking-wider">Email</Label>
-                <Input type="email" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} placeholder="admin@eacloud.com" required className="bg-black/40 border-white/10 text-white placeholder:text-white/20 focus:border-[#00ff88]/50 h-11" />
-              </div>
-              <div>
-                <Label className="text-white/60 text-xs mb-2 block uppercase tracking-wider">Password</Label>
-                <Input type="password" value={form.password} onChange={e => setForm(f => ({ ...f, password: e.target.value }))} placeholder="••••••••" required className="bg-black/40 border-white/10 text-white placeholder:text-white/20 focus:border-[#00ff88]/50 h-11" />
-              </div>
-              {isPending && (
-                <motion.div initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-4 flex gap-3 items-start">
-                  <Clock className="w-4 h-4 text-amber-400 mt-0.5 flex-shrink-0" />
-                  <div>
-                    <p className="text-amber-300 text-sm font-semibold">Pending Super Admin Approval</p>
-                    <p className="text-amber-300/60 text-xs mt-0.5">Your account is under review. You'll be able to log in once a super admin approves it.</p>
-                  </div>
-                </motion.div>
-              )}
-              {error && <p className="text-red-400 text-xs text-center">{error}</p>}
-              <Button type="submit" disabled={loginMutation.isPending} className="w-full h-11 bg-gradient-to-r from-[#1a6bff] to-[#e31e24] hover:opacity-90 text-white font-bold tracking-wider shadow-[0_0_20px_rgba(26,107,255,0.3)] transition-all duration-300 mt-1">
-                {loginMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : "LOGIN"}
-              </Button>
-            </form>
-            <p className="text-center text-white/30 text-xs mt-5">
-              <Link href="/register" className="hover:text-white/60 transition-colors uppercase tracking-wider">Don't have an account?</Link>
-            </p>
-          </div>
+    <div
+      className="mentor-login-page"
+      style={{ backgroundImage: `url("${authBackground}")` }}
+    >
+      <Link href="/" aria-label="Close sign in" className="mentor-login-close">
+        <X size={26} aria-hidden="true" />
+      </Link>
+      <section
+        className="mentor-login-brand"
+        aria-label="EA Cloud"
+        style={{ backgroundImage: `url("${authBackground}")` }}
+      >
+        <div className="mentor-login-emblem">
+          <img src={logo} alt="EA Cloud" className="mentor-login-logo" />
+          <img
+            src={logo}
+            alt=""
+            aria-hidden="true"
+            className="mentor-login-eyes mentor-login-eyes-left"
+          />
+          <img
+            src={logo}
+            alt=""
+            aria-hidden="true"
+            className="mentor-login-eyes mentor-login-eyes-right"
+          />
         </div>
-        <p className="text-center text-white/15 text-xs mt-6 uppercase tracking-widest">Black by Code. Red by Choice.</p>
-      </motion.div>
+      </section>
+      <main className="mentor-login-main">
+        <div className="mentor-login-form-content">
+          <h1>Sign in to EA Cloud</h1>
+          {justApproved && (
+            <div
+              role="status"
+              className="mentor-login-notice mentor-login-approved"
+            >
+              <CheckCircle2 size={18} aria-hidden="true" />
+              <div>
+                <p>Account Approved!</p>
+                <p>Your account has been approved. You can now log in below.</p>
+              </div>
+            </div>
+          )}
+          <form
+            onSubmit={handleSubmit}
+            className="mentor-login-form"
+            aria-label="Sign in to EA Cloud"
+          >
+            <div>
+              <Label htmlFor="mentor-login-email">Email Address</Label>
+              <Input
+                id="mentor-login-email"
+                name="email"
+                autoComplete="email"
+                type="email"
+                value={form.email}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, email: e.target.value }))
+                }
+                placeholder="admin@eacloud.com"
+                required
+              />
+            </div>
+            <div>
+              <Label htmlFor="mentor-login-password">Password</Label>
+              <div className="mentor-login-password">
+                <Input
+                  id="mentor-login-password"
+                  name="password"
+                  autoComplete="current-password"
+                  type={showPassword ? "text" : "password"}
+                  value={form.password}
+                  onChange={(e) =>
+                    setForm((f) => ({ ...f, password: e.target.value }))
+                  }
+                  placeholder="••••••••"
+                  required
+                />
+                <button
+                  type="button"
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                  aria-pressed={showPassword}
+                  aria-controls="mentor-login-password"
+                  onClick={() => setShowPassword((value) => !value)}
+                >
+                  {showPassword ? (
+                    <EyeOff size={20} aria-hidden="true" />
+                  ) : (
+                    <Eye size={20} aria-hidden="true" />
+                  )}
+                </button>
+              </div>
+            </div>
+            {isPending && (
+              <div
+                role="status"
+                className="mentor-login-notice mentor-login-pending"
+              >
+                <Clock size={18} aria-hidden="true" />
+                <div>
+                  <p>Pending Super Admin Approval</p>
+                  <p>
+                    Your account is under review. You'll be able to log in once
+                    a super admin approves it.
+                  </p>
+                </div>
+              </div>
+            )}
+            {error && (
+              <p role="alert" className="mentor-login-error">
+                {error}
+              </p>
+            )}
+            <Button
+              type="submit"
+              disabled={loginMutation.isPending}
+              aria-busy={loginMutation.isPending}
+              className="mentor-login-submit"
+            >
+              {loginMutation.isPending ? (
+                <>
+                  <Loader2
+                    className="animate-spin"
+                    size={18}
+                    aria-hidden="true"
+                  />
+                  <span>Signing in…</span>
+                </>
+              ) : (
+                "LOGIN"
+              )}
+            </Button>
+          </form>
+          <p className="mentor-login-create">
+            Don't have an account? <Link href="/register">Create one</Link>
+          </p>
+        </div>
+        <a href={supportHref} className="mentor-login-support">
+          Help / Support
+        </a>
+      </main>
     </div>
   );
 }
