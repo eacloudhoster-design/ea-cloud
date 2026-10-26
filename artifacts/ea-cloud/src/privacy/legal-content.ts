@@ -55,13 +55,13 @@ export const terms: Section[] = [
   },
   {
     title: "14. Business contact",
-    text: "Business name: EA Cloud. Country: South Africa. Business contact address: 123 Albatross, Thornton, Cape Town, 7460, South Africa. General support and privacy enquiries: eacloudhoster@gmail.com. Business registration details are not yet confirmed. This is the confirmed business contact address, not a separate Information Officer address.",
+    text: "Business name: EA Cloud. Country: South Africa. General support and privacy enquiries: eacloudhoster@gmail.com. Business registration details are not yet confirmed.",
   },
 ];
 export const privacy: Section[] = [
   {
     title: "Who is responsible",
-    text: "EA Cloud operates from South Africa. Contact eacloudhoster@gmail.com for support or privacy enquiries. Business address: 123 Albatross, Thornton, Cape Town, 7460, South Africa. Business registration details and formal Information Officer designation are pending confirmation. No separate personal or residential address for a Privacy Officer is published.",
+    text: "EA Cloud operates from South Africa. For support or privacy enquiries, contact eacloudhoster@gmail.com. Business registration details and formal Information Officer designation are pending confirmation.",
   },
   {
     title: "Information in the reviewed implementation",
