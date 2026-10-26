@@ -12,6 +12,7 @@ import { Loader2, Clock, CheckCircle2, X, Eye, EyeOff } from "lucide-react";
 import { helpLinks } from "@/privacy/legal-links";
 import "../MentorAuth.css";
 import MentorLoginArtwork from "./MentorLoginArtwork";
+import { MobileLoginBackdrop, MobileLoginCloud } from "./MobileLoginArtwork";
 
 export default function AdminLogin() {
   const [, setLocation] = useLocation();
@@ -75,6 +76,7 @@ export default function AdminLogin() {
       className="mentor-login-page"
       style={{ backgroundImage: `url("${authBackground}")` }}
     >
+      <MobileLoginBackdrop />
       <Link href="/" aria-label="Close sign in" className="mentor-login-close">
         <X size={26} aria-hidden="true" />
       </Link>
@@ -84,10 +86,17 @@ export default function AdminLogin() {
         style={{ backgroundImage: `url("${authBackground}")` }}
       >
         <MentorLoginArtwork logo={logo} />
+        <MobileLoginCloud />
       </section>
       <main className="mentor-login-main">
         <div className="mentor-login-form-content">
-          <h1>Sign in to EA Cloud</h1>
+          <h1>
+            <span className="mentor-desktop-title">Sign in to EA Cloud</span>
+            <span className="mentor-mobile-title">EA Cloud Admin Portal</span>
+          </h1>
+          <p className="mentor-mobile-welcome">
+            Welcome — Login to access your dashboard
+          </p>
           {justApproved && (
             <div
               role="status"

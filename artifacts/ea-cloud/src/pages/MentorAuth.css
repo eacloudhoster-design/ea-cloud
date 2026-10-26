@@ -655,3 +655,225 @@
     opacity: 0;
   }
 }
+
+/* Mobile enhancement only: the existing desktop/tablet artwork and form stay intact. */
+.mentor-mobile-backdrop,
+.mentor-mobile-cloud,
+.mentor-mobile-title,
+.mentor-mobile-welcome {
+  display: none;
+}
+@media (max-width: 760px),
+  (max-width: 960px) and (max-height: 500px) and (hover: none) and (pointer: coarse) {
+  .mentor-login-page {
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    isolation: isolate;
+    justify-content: center;
+    align-items: center;
+    padding: max(28px, env(safe-area-inset-top))
+      max(12px, env(safe-area-inset-right))
+      max(24px, env(safe-area-inset-bottom))
+      max(12px, env(safe-area-inset-left));
+    background-attachment: fixed;
+  }
+  .mentor-mobile-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    background-image: inherit;
+    background-size: cover;
+    background-position: center;
+    background-color: #050505;
+    pointer-events: none;
+  }
+  .mentor-mobile-backdrop::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(#0004, #0006);
+  }
+  .mentor-mobile-neon {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+  }
+  .mentor-login-brand {
+    position: relative;
+    top: auto;
+    z-index: 2;
+    width: min(100%, 460px);
+    height: auto;
+    overflow: visible;
+    margin-bottom: -30px;
+    border: 0;
+    background: none !important;
+  }
+  .mentor-login-brand::before {
+    content: none;
+  }
+  .mentor-login-brand > .mentor-login-neon,
+  .mentor-login-brand > .mentor-login-ambient,
+  .mentor-login-brand > .mentor-login-emblem {
+    display: none;
+  }
+  .mentor-mobile-cloud {
+    display: block;
+    position: relative;
+    width: min(68vw, 260px);
+    aspect-ratio: 1688 / 932;
+    line-height: 0;
+    border: 0;
+    background: none;
+  }
+  .mentor-login-mobile-logo {
+    display: block;
+    width: 100%;
+    height: auto;
+    object-fit: contain;
+    filter: drop-shadow(0 0 16px #e31e2438);
+  }
+  .mentor-mobile-cloud-effects {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+  }
+  .mentor-mobile-eye-dim {
+    opacity: 0.98;
+  }
+  .mentor-mobile-eye {
+    opacity: 0.08;
+    animation: mentor-mobile-eye-power 3.6s ease-in-out infinite;
+  }
+  .mentor-mobile-circuit {
+    fill: none;
+    stroke: #ff6171;
+    stroke-width: 3;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-dasharray: 7 93;
+    stroke-dashoffset: 100;
+    opacity: 0;
+    animation: mentor-mobile-circuit-flow 4.8s linear var(--circuit-delay)
+      infinite;
+  }
+  .mentor-mobile-circuit-halo {
+    stroke: #ff1538;
+    stroke-width: 12;
+    filter: url(#mentor-mobile-circuit-glow);
+  }
+  .mentor-login-main {
+    position: relative;
+    z-index: 1;
+    flex: 0 0 auto;
+    width: min(100%, 460px);
+    min-height: 0;
+    padding: 66px 24px 18px;
+    border: 1px solid #67252c;
+    border-radius: 17px;
+    background: #050505f2;
+    box-shadow:
+      0 12px 50px #0008,
+      0 0 32px #e31e2417;
+  }
+  .mentor-login-form-content {
+    width: 100%;
+    margin: 0;
+    padding: 0;
+  }
+  .mentor-login-form-content h1 {
+    text-align: center;
+    font-size: clamp(21px, 5.7vw, 26px);
+    font-weight: 650;
+    letter-spacing: -0.025em;
+    margin: 0;
+  }
+  .mentor-desktop-title {
+    display: none;
+  }
+  .mentor-mobile-title {
+    display: inline;
+  }
+  .mentor-mobile-welcome {
+    display: block;
+    margin: 10px 0 25px;
+    text-align: center;
+    color: #999;
+    font-size: 10px;
+    line-height: 1.7;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .mentor-login-form {
+    gap: 21px;
+  }
+  .mentor-login-form input {
+    height: 52px;
+  }
+  .mentor-login-password button {
+    top: 4px;
+  }
+  .mentor-login-form .mentor-login-submit {
+    height: 52px;
+    margin-top: 5px;
+    background: linear-gradient(110deg, #d10c1d, #f22a38);
+  }
+  .mentor-login-create {
+    margin-top: 22px;
+    font-size: 12px;
+  }
+  .mentor-login-support {
+    margin-top: 12px;
+    padding: 12px;
+    font-size: 12px;
+  }
+}
+@keyframes mentor-mobile-eye-power {
+  0%,
+  8% {
+    opacity: 0.08;
+  }
+  28% {
+    opacity: 0.65;
+  }
+  42%,
+  52% {
+    opacity: 1;
+  }
+  73% {
+    opacity: 0.3;
+  }
+  84%,
+  100% {
+    opacity: 0;
+  }
+}
+@keyframes mentor-mobile-circuit-flow {
+  0% {
+    stroke-dashoffset: 100;
+    opacity: 0;
+  }
+  16%,
+  70% {
+    opacity: 0.8;
+  }
+  100% {
+    stroke-dashoffset: 0;
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .mentor-mobile-eye {
+    animation: none !important;
+    opacity: 0.7;
+  }
+  .mentor-mobile-circuit {
+    animation: none !important;
+    opacity: 0;
+  }
+}
