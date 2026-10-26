@@ -59,10 +59,19 @@ try {
       await p.waitForTimeout(150);
       const name = route === "register" ? "register" : "signin";
       const image = p.locator(
-        route === "register" ? ".mentor-register-logo" : ".mentor-login-logo",
+        route === "register"
+          ? ".mentor-register-logo"
+          : ".mentor-login-logo:visible,.mentor-login-mobile-logo:visible",
       );
       assert.equal(await image.count(), 1);
-      assert.equal(await image.getAttribute("src"), "/ea-cloud-nav-logo.png");
+      assert.equal(
+        await image.getAttribute("src"),
+        route === "admin/login" &&
+          (viewport.width <= 760 ||
+            (mobile && viewport.width <= 960 && viewport.height <= 500))
+          ? "/ea-cloud-mobile-cloud.png"
+          : "/ea-cloud-nav-logo.png",
+      );
       await image.evaluate((el) => el.decode());
       const size = await image.boundingBox();
       if (route === "register") {

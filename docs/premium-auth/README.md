@@ -1,5 +1,7 @@
 # Premium mentor sign-in and sign-up pages
 
+> Mobile-only follow-up: the newer request authorizes preparing a transparent variant of the approved cloud. That variant is now used for the floating phone login, while desktop stays unchanged. See [mobile login status and evidence](../mobile-login/README.md). The earlier missing-original-asset notes below describe that prior task.
+
 The Admin Portal sign-in now uses a full-screen split layout: the existing EA Cloud cloud-only icon over the supplied black/red geometric artwork on the left, and a minimal sign-in form directly on the dark right section. Mobile stacks the cloud above the form and permits vertical scrolling. The existing icon asset is reused unchanged. The later [animation follow-up](../auth-neon/README.md) removes the CSS matte crop, animates accurately positioned eye SVGs and traces the background neon strips. The original transparent cloud asset is missing, so clean logo integration remains blocked; the existing RGB matte is not disguised as transparency. Decorative effects respect reduced motion. The password visibility toggle and close control have accessible names and 44px touch targets.
 
 The mentor registration panel from PR #89 now has the actual new background. Its six fields, required/optional rules, submission, API errors and approval screen remain. The background's proportions are maintained using cover sizing.

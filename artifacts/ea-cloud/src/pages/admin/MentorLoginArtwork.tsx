@@ -2,7 +2,7 @@ import type { CSSProperties } from "react";
 
 // Traces follow bright strips in the approved 1445×1088 background. The SVG
 // uses the same centered cover transform as the CSS image at every viewport.
-const traces = [
+export const mentorNeonTraces = [
   { path: "M 0 108 L 270 378 L 648 0", duration: "9s", delay: "1.4s" },
   { path: "M 1022 0 L 850 172", duration: "11s", delay: "2.3s" },
   { path: "M 855 164 L 1278 587", duration: "10.5s", delay: "4.2s" },
@@ -36,7 +36,7 @@ export default function MentorLoginArtwork({ logo }: { logo: string }) {
             <feGaussianBlur stdDeviation="3" />
           </filter>
         </defs>
-        {traces.map((trace, index) => (
+        {mentorNeonTraces.map((trace, index) => (
           <g
             key={trace.path}
             style={

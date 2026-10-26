@@ -1,0 +1,23 @@
+{
+  "baselineCommit": "f1100ca682a8955fa4e3022709ecacf4b25732f3",
+  "comparisons": [
+    {
+      "width": 1440,
+      "height": 1000,
+      "changedPixels": 0,
+      "identical": true
+    },
+    {
+      "width": 1920,
+      "height": 1080,
+      "changedPixels": 0,
+      "identical": true
+    },
+    {
+      "width": 820,
+      "height": 1000,
+      "changedPixels": 0,
+      "identical": true
+    }
+  ]
+}

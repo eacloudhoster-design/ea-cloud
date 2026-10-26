@@ -1,0 +1,86 @@
+[
+  {
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "transparentCloud": true,
+    "panelOverlap": true,
+    "noCircleOrCssMask": true,
+    "powerCycleSeconds": 3.6,
+    "eyeOffState": true,
+    "alignedCircuitMotion": true,
+    "formAndNavigation": true,
+    "reducedMotion": true
+  },
+  {
+    "viewport": {
+      "width": 320,
+      "height": 568
+    },
+    "transparentCloud": true,
+    "panelOverlap": true,
+    "noCircleOrCssMask": true,
+    "powerCycleSeconds": 3.6,
+    "eyeOffState": true,
+    "alignedCircuitMotion": true,
+    "formAndNavigation": true,
+    "reducedMotion": true
+  },
+  {
+    "viewport": {
+      "width": 430,
+      "height": 932
+    },
+    "transparentCloud": true,
+    "panelOverlap": true,
+    "noCircleOrCssMask": true,
+    "powerCycleSeconds": 3.6,
+    "eyeOffState": true,
+    "alignedCircuitMotion": true,
+    "formAndNavigation": true,
+    "reducedMotion": true
+  },
+  {
+    "viewport": {
+      "width": 760,
+      "height": 1024
+    },
+    "transparentCloud": true,
+    "panelOverlap": true,
+    "noCircleOrCssMask": true,
+    "powerCycleSeconds": 3.6,
+    "eyeOffState": true,
+    "alignedCircuitMotion": true,
+    "formAndNavigation": true,
+    "reducedMotion": true
+  },
+  {
+    "viewport": {
+      "width": 844,
+      "height": 390
+    },
+    "transparentCloud": true,
+    "panelOverlap": true,
+    "noCircleOrCssMask": true,
+    "powerCycleSeconds": 3.6,
+    "eyeOffState": true,
+    "alignedCircuitMotion": true,
+    "formAndNavigation": true,
+    "reducedMotion": true
+  },
+  {
+    "viewport": {
+      "width": 960,
+      "height": 440
+    },
+    "transparentCloud": true,
+    "panelOverlap": true,
+    "noCircleOrCssMask": true,
+    "powerCycleSeconds": 3.6,
+    "eyeOffState": true,
+    "alignedCircuitMotion": true,
+    "formAndNavigation": true,
+    "reducedMotion": true
+  }
+]

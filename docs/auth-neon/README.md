@@ -1,5 +1,7 @@
 # Sign-in artwork animation — transparent cloud asset still required
 
+> Mobile-only follow-up: the newer request authorizes preparing a transparent variant of the approved cloud. That variant is now used for the floating phone login, while desktop stays unchanged. See [mobile login status and evidence](../mobile-login/README.md). The earlier missing-original-asset notes below describe that prior task.
+
 ## Status: logo integration is blocked
 
 The original transparent cloud-only EA Cloud logo is missing. The available `public/ea-cloud-nav-logo.png` is a 1254×692 RGB image with a baked-in black rectangular matte. `ea-cloud-logo.jpeg` is also opaque. The transparent wordmark is lettering, not the cloud icon, so it is not a replacement. Current assets, uploaded archives and available Git history were checked; no transparent cloud original was found.

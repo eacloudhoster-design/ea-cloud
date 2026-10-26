@@ -59,8 +59,7 @@ const geometry = (p) =>
 try {
   for (const viewport of [
     { width: 1440, height: 1000 },
-    { width: 390, height: 844 },
-    { width: 320, height: 568 },
+    { width: 820, height: 1000 },
     { width: 844, height: 390 },
   ]) {
     const c = await makeContext(viewport, viewport.width === 1440);

@@ -70,7 +70,13 @@ try {
     });
     await page.goto(origin + "/admin/login");
     await page
-      .getByRole("heading", { name: "Sign in to EA Cloud", exact: true })
+      .getByRole("heading", {
+        name:
+          viewport.width <= 760
+            ? "EA Cloud Admin Portal"
+            : "Sign in to EA Cloud",
+        exact: true,
+      })
       .waitFor();
     await page
       .locator(".mentor-login-logo")
@@ -91,7 +97,8 @@ try {
     if (viewport.width >= 900) {
       assert.equal(brand.width, viewport.width / 2);
       assert.equal(main.x, viewport.width / 2);
-    } else assert(main.y >= brand.height - 1);
+    } else if (viewport.width <= 760) assert(main.y < brand.y + brand.height);
+    else assert(main.y >= brand.height - 1);
     assert.equal(
       await page
         .locator(".mentor-login-eyes-left")
