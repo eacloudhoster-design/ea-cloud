@@ -11,6 +11,7 @@ import { Loader2, Clock, CheckCircle2, X, Eye, EyeOff } from "lucide-react";
 
 import { helpLinks } from "@/privacy/legal-links";
 import "../MentorAuth.css";
+import MentorLoginArtwork from "./MentorLoginArtwork";
 
 export default function AdminLogin() {
   const [, setLocation] = useLocation();
@@ -82,21 +83,7 @@ export default function AdminLogin() {
         aria-label="EA Cloud"
         style={{ backgroundImage: `url("${authBackground}")` }}
       >
-        <div className="mentor-login-emblem">
-          <img src={logo} alt="EA Cloud" className="mentor-login-logo" />
-          <img
-            src={logo}
-            alt=""
-            aria-hidden="true"
-            className="mentor-login-eyes mentor-login-eyes-left"
-          />
-          <img
-            src={logo}
-            alt=""
-            aria-hidden="true"
-            className="mentor-login-eyes mentor-login-eyes-right"
-          />
-        </div>
+        <MentorLoginArtwork logo={logo} />
       </section>
       <main className="mentor-login-main">
         <div className="mentor-login-form-content">

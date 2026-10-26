@@ -214,13 +214,14 @@ try {
       await page
         .locator(".mentor-login-eyes-left")
         .evaluate((el) => getComputedStyle(el).animationDuration),
-      "5s",
+      "6.4s",
     );
     assert.equal(
       await page
-        .locator(".mentor-login-brand")
-        .evaluate((el) => getComputedStyle(el, "::after").animationName),
-      "mentor-login-light",
+        .locator(".mentor-login-trace")
+        .first()
+        .evaluate((el) => getComputedStyle(el).animationName),
+      "mentor-neon-travel",
     );
     await page
       .getByRole("link", { name: "Close sign in", exact: true })
