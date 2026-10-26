@@ -323,22 +323,18 @@ export default function Landing() {
         className="public-section public-support-section"
         aria-labelledby="support-title"
       >
-        <div data-reveal>
-          <p className="public-eyebrow">04 / HERE TO HELP</p>
+        <div className="support-backdrop" data-reveal aria-hidden="true" />
+        <div className="support-content" data-reveal>
           <div className="public-support-heading">
             <img src={navigationLogo} alt="" width="112" height="62" />
             <h2 id="support-title">Support</h2>
           </div>
-          <p className="help-intro">
-            Need help with EA Cloud? Get in touch for assistance with account
-            access, platform tools and general questions.
+          <p className="support-description">
+            Need help with EA Cloud? Find answers to common questions, resolve
+            account issues, and get assistance with our trading platform.
           </p>
-          <a
-            href="mailto:eacloudhoster@gmail.com"
-            className="public-cta public-cta-primary"
-          >
+          <a href="mailto:eacloudhoster@gmail.com" className="support-button">
             Get Support
-            <ArrowUpRight size={18} />
           </a>
         </div>
       </section>
