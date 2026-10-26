@@ -262,84 +262,93 @@
   );
   z-index: -1;
 }
-.mentor-login-brand::after {
-  content: "";
+.mentor-login-neon {
   position: absolute;
-  inset: -40%;
+  inset: 0;
+  z-index: -1;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+.mentor-login-trace,
+.mentor-login-trace-reflection {
+  fill: none;
+  stroke: #ff3546;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.mentor-login-trace {
+  stroke-width: 2.5;
+  stroke-dasharray: 5 95;
+  stroke-dashoffset: 100;
+  opacity: 0;
+  animation: mentor-neon-travel var(--trace-duration) linear var(--trace-delay)
+    infinite;
+}
+.mentor-login-trace-reflection {
+  stroke-width: 10;
+  filter: url(#mentor-neon-soft);
+  opacity: 0;
+  animation: mentor-neon-reflection var(--trace-duration) ease-in-out
+    var(--trace-delay) infinite;
+}
+.mentor-login-ambient {
+  position: absolute;
+  inset: 0;
   z-index: -1;
   pointer-events: none;
-  background: linear-gradient(
-    135deg,
-    transparent 44%,
-    #ff393907 47%,
-    #ff393922 49%,
-    #ff393907 51%,
-    transparent 54%
-  );
-  animation: mentor-login-light 12s ease-in-out infinite;
+  background:
+    radial-gradient(ellipse at 25% 30%, #d4131733, transparent 48%),
+    radial-gradient(ellipse at 75% 75%, #d4131726, transparent 45%);
+  opacity: 0;
+  animation: mentor-ambient-light 12s ease-in-out 1.3s infinite;
 }
 .mentor-login-emblem {
   position: relative;
   width: min(70%, 460px);
+  aspect-ratio: 1254 / 692;
   line-height: 0;
-  filter: drop-shadow(0 0 22px #d2132155);
+  isolation: isolate;
+  animation: mentor-logo-startup 1.4s ease-out both;
+}
+.mentor-login-emblem::before {
+  content: "";
+  position: absolute;
+  inset: -35%;
+  z-index: -1;
+  pointer-events: none;
+  background: radial-gradient(
+    ellipse,
+    #e31e2433,
+    #e31e2410 40%,
+    transparent 68%
+  );
+  opacity: 0.6;
+  animation: mentor-logo-ambient-start 1.8s ease-out both;
 }
 .mentor-login-logo {
+  display: block;
   width: 100%;
   height: auto;
   object-fit: contain;
-  /* Trim only the existing asset's outer black matte; keep the original icon intact. */
-  clip-path: polygon(
-    50% 2%,
-    58% 4%,
-    64% 13%,
-    68% 22%,
-    75% 25%,
-    80% 34%,
-    82% 40%,
-    88% 44%,
-    91% 54%,
-    96% 61%,
-    99% 71%,
-    99% 82%,
-    96% 91%,
-    89% 97%,
-    63% 97%,
-    59% 100%,
-    50% 98%,
-    41% 100%,
-    37% 97%,
-    12% 97%,
-    5% 92%,
-    1% 82%,
-    1% 71%,
-    5% 61%,
-    10% 54%,
-    12% 46%,
-    19% 40%,
-    22% 31%,
-    28% 25%,
-    34% 22%,
-    38% 13%,
-    43% 5%
-  );
 }
 .mentor-login-eyes {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
-  object-fit: contain;
   pointer-events: none;
-  filter: brightness(2.4) saturate(1.2);
-  mix-blend-mode: screen;
-  animation: mentor-login-eyes 5s ease-in-out infinite;
 }
-.mentor-login-eyes-left {
-  clip-path: polygon(32% 52%, 45% 67%, 35% 62%);
+.mentor-login-eye {
+  opacity: 0;
+  animation: mentor-login-eyes 6.4s ease-in-out 0.75s infinite;
 }
 .mentor-login-eyes-right {
-  clip-path: polygon(67% 52%, 54% 67%, 64% 62%);
+  animation-duration: 7.1s;
+  animation-delay: 1.05s;
+}
+.mentor-login-eye-reflection {
+  opacity: 0.45;
 }
 .mentor-login-main {
   min-width: 0;
@@ -497,24 +506,79 @@
   font-size: 13px;
   line-height: 1.6;
 }
-@keyframes mentor-login-eyes {
+@keyframes mentor-logo-startup {
   0%,
-  100% {
-    opacity: 0.12;
+  12% {
+    opacity: 0;
   }
-  50% {
-    opacity: 0.8;
+  100% {
+    opacity: 1;
   }
 }
-@keyframes mentor-login-light {
+@keyframes mentor-logo-ambient-start {
+  0% {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  100% {
+    opacity: 0.6;
+    transform: scale(1);
+  }
+}
+@keyframes mentor-login-eyes {
+  0% {
+    opacity: 0;
+  }
+  16% {
+    opacity: 0.3;
+  }
+  44% {
+    opacity: 0.55;
+  }
+  64% {
+    opacity: 0.3;
+  }
+  76% {
+    opacity: 0.85;
+  }
+  88%,
+  100% {
+    opacity: 0.3;
+  }
+}
+@keyframes mentor-neon-travel {
+  0% {
+    stroke-dashoffset: 100;
+    opacity: 0;
+  }
+  12%,
+  78% {
+    opacity: 0.7;
+  }
+  100% {
+    stroke-dashoffset: 0;
+    opacity: 0;
+  }
+}
+@keyframes mentor-neon-reflection {
   0%,
   100% {
-    opacity: 0.15;
-    transform: translate(-18%, 18%);
+    opacity: 0.015;
+  }
+  40% {
+    opacity: 0.12;
+  }
+  65% {
+    opacity: 0.035;
+  }
+}
+@keyframes mentor-ambient-light {
+  0%,
+  100% {
+    opacity: 0.05;
   }
   50% {
-    opacity: 0.6;
-    transform: translate(18%, -18%);
+    opacity: 0.28;
   }
 }
 @media (max-width: 899px) {
@@ -579,7 +643,15 @@
     animation: none !important;
     transition: none !important;
   }
-  .mentor-login-eyes {
-    opacity: 0.3;
+  .mentor-login-emblem {
+    opacity: 1;
+  }
+  .mentor-login-eye {
+    opacity: 0.25;
+  }
+  .mentor-login-trace,
+  .mentor-login-trace-reflection,
+  .mentor-login-ambient {
+    opacity: 0;
   }
 }

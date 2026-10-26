@@ -1,0 +1,58 @@
+[
+  {
+    "frameSample": {
+      "frames": 43,
+      "medianMs": 33.400000000000546,
+      "p95Ms": 83.39999999999964
+    },
+    "note": "Headless Chromium with video recording; not a physical-device benchmark."
+  },
+  {
+    "viewport": {
+      "width": 1440,
+      "height": 1000
+    },
+    "eyeAlignment": true,
+    "independentEyePulse": true,
+    "tracedNeonMotion": true,
+    "formGeometryStable": true,
+    "reducedMotion": true,
+    "missingTransparentLogo": true
+  },
+  {
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "eyeAlignment": true,
+    "independentEyePulse": true,
+    "tracedNeonMotion": true,
+    "formGeometryStable": true,
+    "reducedMotion": true,
+    "missingTransparentLogo": true
+  },
+  {
+    "viewport": {
+      "width": 320,
+      "height": 568
+    },
+    "eyeAlignment": true,
+    "independentEyePulse": true,
+    "tracedNeonMotion": true,
+    "formGeometryStable": true,
+    "reducedMotion": true,
+    "missingTransparentLogo": true
+  },
+  {
+    "viewport": {
+      "width": 844,
+      "height": 390
+    },
+    "eyeAlignment": true,
+    "independentEyePulse": true,
+    "tracedNeonMotion": true,
+    "formGeometryStable": true,
+    "reducedMotion": true,
+    "missingTransparentLogo": true
+  }
+]
