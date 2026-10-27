@@ -1,0 +1,242 @@
+[
+  {
+    "viewport": {
+      "width": 1440,
+      "height": 1000
+    },
+    "transparentAlpha": {
+      "width": 1688,
+      "height": 932,
+      "corner": 0,
+      "interior": 253,
+      "clip": "none",
+      "mask": "none",
+      "blend": "normal"
+    },
+    "aligned": true,
+    "eyeOn": [
+      {
+        "opacity": "0.999621",
+        "duration": "3.6s"
+      },
+      {
+        "opacity": "0.999621",
+        "duration": "3.6s"
+      }
+    ],
+    "eyeOff": [
+      {
+        "opacity": "0",
+        "duration": "3.6s"
+      },
+      {
+        "opacity": "0",
+        "duration": "3.6s"
+      }
+    ],
+    "circuitTravel": true,
+    "backgroundTravel": true,
+    "unchangedFormGeometry": true,
+    "reducedMotion": true
+  },
+  {
+    "viewport": {
+      "width": 1920,
+      "height": 1080
+    },
+    "transparentAlpha": {
+      "width": 1688,
+      "height": 932,
+      "corner": 0,
+      "interior": 253,
+      "clip": "none",
+      "mask": "none",
+      "blend": "normal"
+    },
+    "aligned": true,
+    "eyeOn": [
+      {
+        "opacity": "0.999621",
+        "duration": "3.6s"
+      },
+      {
+        "opacity": "0.999621",
+        "duration": "3.6s"
+      }
+    ],
+    "eyeOff": [
+      {
+        "opacity": "0",
+        "duration": "3.6s"
+      },
+      {
+        "opacity": "0",
+        "duration": "3.6s"
+      }
+    ],
+    "circuitTravel": true,
+    "backgroundTravel": true,
+    "unchangedFormGeometry": true,
+    "reducedMotion": true
+  },
+  {
+    "viewport": {
+      "width": 820,
+      "height": 1000
+    },
+    "transparentAlpha": {
+      "width": 1688,
+      "height": 932,
+      "corner": 0,
+      "interior": 253,
+      "clip": "none",
+      "mask": "none",
+      "blend": "normal"
+    },
+    "aligned": true,
+    "eyeOn": [
+      {
+        "opacity": "0.999621",
+        "duration": "3.6s"
+      },
+      {
+        "opacity": "0.999621",
+        "duration": "3.6s"
+      }
+    ],
+    "eyeOff": [
+      {
+        "opacity": "0",
+        "duration": "3.6s"
+      },
+      {
+        "opacity": "0",
+        "duration": "3.6s"
+      }
+    ],
+    "circuitTravel": true,
+    "backgroundTravel": true,
+    "unchangedFormGeometry": true,
+    "reducedMotion": true
+  },
+  {
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "transparentAlpha": {
+      "width": 1688,
+      "height": 932,
+      "corner": 0,
+      "interior": 253,
+      "clip": "none",
+      "mask": "none",
+      "blend": "normal"
+    },
+    "aligned": true,
+    "eyeOn": [
+      {
+        "opacity": "0.999621",
+        "duration": "3.6s"
+      },
+      {
+        "opacity": "0.999621",
+        "duration": "3.6s"
+      }
+    ],
+    "eyeOff": [
+      {
+        "opacity": "0",
+        "duration": "3.6s"
+      },
+      {
+        "opacity": "0",
+        "duration": "3.6s"
+      }
+    ],
+    "circuitTravel": true,
+    "backgroundTravel": true,
+    "unchangedFormGeometry": true,
+    "reducedMotion": true
+  },
+  {
+    "viewport": {
+      "width": 320,
+      "height": 568
+    },
+    "transparentAlpha": {
+      "width": 1688,
+      "height": 932,
+      "corner": 0,
+      "interior": 253,
+      "clip": "none",
+      "mask": "none",
+      "blend": "normal"
+    },
+    "aligned": true,
+    "eyeOn": [
+      {
+        "opacity": "0.999621",
+        "duration": "3.6s"
+      },
+      {
+        "opacity": "0.999621",
+        "duration": "3.6s"
+      }
+    ],
+    "eyeOff": [
+      {
+        "opacity": "0",
+        "duration": "3.6s"
+      },
+      {
+        "opacity": "0",
+        "duration": "3.6s"
+      }
+    ],
+    "circuitTravel": true,
+    "backgroundTravel": true,
+    "unchangedFormGeometry": true,
+    "reducedMotion": true
+  },
+  {
+    "viewport": {
+      "width": 844,
+      "height": 390
+    },
+    "transparentAlpha": {
+      "width": 1688,
+      "height": 932,
+      "corner": 0,
+      "interior": 253,
+      "clip": "none",
+      "mask": "none",
+      "blend": "normal"
+    },
+    "aligned": true,
+    "eyeOn": [
+      {
+        "opacity": "0.999621",
+        "duration": "3.6s"
+      },
+      {
+        "opacity": "0.999621",
+        "duration": "3.6s"
+      }
+    ],
+    "eyeOff": [
+      {
+        "opacity": "0",
+        "duration": "3.6s"
+      },
+      {
+        "opacity": "0",
+        "duration": "3.6s"
+      }
+    ],
+    "circuitTravel": true,
+    "backgroundTravel": true,
+    "unchangedFormGeometry": true,
+    "reducedMotion": true
+  }
+]

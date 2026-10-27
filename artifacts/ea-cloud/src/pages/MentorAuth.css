@@ -877,3 +877,55 @@
     opacity: 0;
   }
 }
+
+/* Desktop artwork only. Existing mobile rules and assets remain unchanged. */
+@media (min-width: 761px) {
+  .mentor-login-emblem {
+    aspect-ratio: 1688 / 932;
+    animation: none;
+  }
+  .mentor-desktop-cloud-effects {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+  }
+  .mentor-desktop-eye-dim { opacity: .98; }
+  .mentor-desktop-eye {
+    opacity: .08;
+    animation: mentor-desktop-eye-power 3.6s ease-in-out infinite;
+  }
+  .mentor-desktop-circuit {
+    fill: none;
+    stroke: #ff6171;
+    stroke-width: 3;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-dasharray: 7 93;
+    stroke-dashoffset: 100;
+    opacity: 0;
+    animation: mentor-desktop-circuit-flow 4.8s linear var(--circuit-delay) infinite;
+  }
+  .mentor-desktop-circuit-halo {
+    stroke: #ff1538;
+    stroke-width: 12;
+    filter: url(#mentor-desktop-circuit-glow);
+  }
+}
+@keyframes mentor-desktop-eye-power {
+  0%, 8% { opacity: .08; }
+  28% { opacity: .65; }
+  42%, 52% { opacity: 1; }
+  73% { opacity: .3; }
+  84%, 100% { opacity: 0; }
+}
+@keyframes mentor-desktop-circuit-flow {
+  0% { stroke-dashoffset: 100; opacity: 0; }
+  16%, 70% { opacity: .8; }
+  100% { stroke-dashoffset: 0; opacity: 0; }
+}
+@media (min-width: 761px) and (prefers-reduced-motion: reduce) {
+  .mentor-desktop-eye { opacity: .7; }
+  .mentor-desktop-circuit { opacity: 0; }
+}

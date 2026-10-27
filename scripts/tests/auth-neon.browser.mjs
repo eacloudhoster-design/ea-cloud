@@ -84,52 +84,55 @@ try {
     );
     assert.equal(
       await p.locator(".mentor-login-logo").getAttribute("src"),
-      "/ea-cloud-nav-logo.png",
+      "/ea-cloud-mobile-cloud.png",
     );
     assert.equal(
       await p.locator(".mentor-login-neon").getAttribute("preserveAspectRatio"),
       "xMidYMid slice",
     );
     assert.equal(
-      await p.locator(".mentor-login-eyes").getAttribute("viewBox"),
-      "0 0 1254 692",
+      await p
+        .locator(".mentor-login-emblem .mentor-desktop-cloud-effects")
+        .getAttribute("viewBox"),
+      "0 0 1688 932",
     );
     const image = await p.locator(".mentor-login-logo").boundingBox(),
-      eyes = await p.locator(".mentor-login-eyes").boundingBox();
+      eyes = await p
+        .locator(".mentor-login-emblem .mentor-desktop-cloud-effects")
+        .boundingBox();
     assert.deepEqual(
       image,
       eyes,
       "eye coordinates scale with the unmodified logo",
     );
-    assert.equal(await p.locator(".mentor-login-trace").count(), 8);
+    assert.equal(
+      await p.locator(".mentor-login-neon .mentor-login-trace").count(),
+      8,
+    );
     const durations = await p
-      .locator(".mentor-login-eye")
+      .locator(".mentor-login-emblem .mentor-desktop-eye")
       .evaluateAll((nodes) =>
         nodes.map((el) => getComputedStyle(el).animationDuration),
       );
-    assert.deepEqual(durations, ["6.4s", "7.1s"]);
+    assert.deepEqual(durations, ["3.6s", "3.6s"]);
     const sourceBefore = await p
-      .locator(".mentor-login-trace")
+      .locator(".mentor-login-neon .mentor-login-trace")
       .first()
       .evaluate((el) => getComputedStyle(el).strokeDashoffset);
     await p.waitForTimeout(2000);
     if (viewport.width === 1440)
       await p.screenshot({ path: out + "/desktop-2s.png", fullPage: true });
     const eyeBefore = await p
-      .locator(".mentor-login-eye")
+      .locator(".mentor-login-emblem .mentor-desktop-eye")
       .evaluateAll((nodes) => nodes.map((el) => getComputedStyle(el).opacity));
     await p.waitForTimeout(1800);
     const eyeAfter = await p
-      .locator(".mentor-login-eye")
+      .locator(".mentor-login-emblem .mentor-desktop-eye")
       .evaluateAll((nodes) => nodes.map((el) => getComputedStyle(el).opacity));
-    assert.notDeepEqual(
-      eyeBefore,
-      eyeAfter,
-      "the actual eye overlays pulse independently",
-    );
+    assert.notDeepEqual(eyeBefore, eyeAfter, "the actual eye overlays pulse");
     assert.notEqual(
       await p
-        .locator(".mentor-login-trace")
+        .locator(".mentor-login-neon .mentor-login-trace")
         .first()
         .evaluate((el) => getComputedStyle(el).strokeDashoffset),
       sourceBefore,
@@ -177,7 +180,7 @@ try {
     assert(
       await p
         .locator(
-          ".mentor-login-emblem,.mentor-login-eye,.mentor-login-trace,.mentor-login-trace-reflection,.mentor-login-ambient",
+          ".mentor-login-emblem,.mentor-desktop-eye,.mentor-login-trace,.mentor-login-trace-reflection,.mentor-login-ambient",
         )
         .evaluateAll((nodes) =>
           nodes.every((el) => getComputedStyle(el).animationName === "none"),
@@ -210,7 +213,7 @@ try {
       tracedNeonMotion: true,
       formGeometryStable: true,
       reducedMotion: true,
-      missingTransparentLogo: true,
+      usesExistingPreparedTransparentLogo: true,
     });
     const video = p.video();
     await c.close();
