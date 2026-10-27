@@ -32,6 +32,12 @@ try {
       height: 915,
       ua: "Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 Chrome/130.0.0.0 Mobile Safari/537.36",
     },
+    {
+      name: "Samsung Internet UA",
+      width: 412,
+      height: 915,
+      ua: "Mozilla/5.0 (Linux; Android 14; SAMSUNG SM-S928B) AppleWebKit/537.36 Chrome/130.0.0.0 Mobile Safari/537.36 SamsungBrowser/27.0",
+    },
     { name: "small phone", width: 320, height: 568 },
     { name: "touch landscape", width: 844, height: 390 },
     {
@@ -96,9 +102,55 @@ try {
       assert.equal(await header.getAttribute("data-scroll-hidden"), "false");
       const box = await menu.boundingBox();
       assert(box.y >= 71 && box.y <= 74);
-      assert.equal(await menu.getByRole("link").count(), 6);
+      assert.equal(await menu.getByRole("link").count(), 7);
     };
     await open();
+    const fullscreen = await menu.boundingBox();
+    assert(
+      Math.abs(fullscreen.y + fullscreen.height - device.height) < 1,
+      "menu fills the viewport below the header",
+    );
+    assert.equal(
+      await menu.evaluate((el) => getComputedStyle(el).backgroundColor),
+      "rgb(5, 5, 5)",
+    );
+    assert(
+      await p.evaluate(
+        () => document.documentElement.scrollWidth <= innerWidth,
+      ),
+    );
+    const canScroll = await menu.evaluate(
+      (el) => el.scrollHeight > el.clientHeight,
+    );
+    if (canScroll) {
+      const lockedTop = await p.evaluate(() => document.body.style.top);
+      const touch = await c.newCDPSession(p);
+      const x = device.width / 2,
+        start = device.height - 60;
+      await touch.send("Input.dispatchTouchEvent", {
+        type: "touchStart",
+        touchPoints: [{ x, y: start }],
+      });
+      for (let offset = 30; offset <= 180; offset += 30) {
+        await touch.send("Input.dispatchTouchEvent", {
+          type: "touchMove",
+          touchPoints: [{ x, y: start - offset }],
+        });
+        await p.waitForTimeout(20);
+      }
+      await touch.send("Input.dispatchTouchEvent", {
+        type: "touchEnd",
+        touchPoints: [],
+      });
+      await p.waitForFunction(
+        () =>
+          document.querySelector(".public-navigation-popover").scrollTop > 0,
+      );
+      assert.equal(await p.evaluate(() => document.body.style.top), lockedTop);
+      await touch.detach();
+      await p.waitForTimeout(300);
+      await menu.evaluate((el) => el.scrollTo({ top: 0, behavior: "instant" }));
+    }
     if (device.name === "iPhone Safari UA")
       await p.screenshot({ path: out + "/menu-open.png" });
     await toggle.tap();
@@ -118,6 +170,20 @@ try {
     await menu.waitFor({ state: "hidden" });
     await p.locator(".public-navigation-layer").waitFor({ state: "detached" });
     assert.equal(new URL(p.url()).pathname, "/");
+    // Reduced-motion removal can precede native history's scroll-restoration frame.
+    await p.evaluate(
+      () =>
+        new Promise((resolve) =>
+          requestAnimationFrame(() => requestAnimationFrame(resolve)),
+        ),
+    );
+    await p.evaluate(() => scrollTo({ top: 0, behavior: "instant" }));
+    await p.evaluate(
+      () =>
+        new Promise((resolve) =>
+          requestAnimationFrame(() => requestAnimationFrame(resolve)),
+        ),
+    );
     // Native-like scroll events preserve hide-down/show-up; an open menu pins the bar.
     await p.evaluate(() => scrollTo({ top: 750, behavior: "instant" }));
     await p.waitForTimeout(400);
@@ -185,6 +251,8 @@ try {
     );
     assert.deepEqual(errors, []);
     results.push({
+      fullscreen: true,
+      independentTouchScroll: canScroll,
       device: device.name,
       engine: "Chromium touch emulation; not actual iOS WebKit",
       firstTap: true,
@@ -208,7 +276,7 @@ try {
     JSON.stringify(results, null, 2) + "\n",
   );
   console.log(
-    "PASS: six mobile configurations, tap toggle/outside/Back, all destinations, scrolling and profile",
+    "PASS: seven mobile configurations, tap toggle/outside/Back, all destinations, scrolling and profile",
   );
 } finally {
   await b.close();
