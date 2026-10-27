@@ -1,7 +1,16 @@
-import { useEffect, useRef, useState, type RefObject } from "react";
+import {
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type CSSProperties,
+  type RefObject,
+} from "react";
 import { createPortal } from "react-dom";
 import { ArrowUpRight } from "lucide-react";
 import "./MobileNavigationMenu.css";
+
+export const MOBILE_NAVIGATION_DURATION_MS = 300;
 
 type Props = {
   open: boolean;
@@ -20,6 +29,21 @@ export default function MobileNavigationMenu({
 }: Props) {
   const [present, setPresent] = useState(open);
   const panel = useRef<HTMLDivElement>(null);
+  const [headerHeight, setHeaderHeight] = useState(73);
+  useLayoutEffect(() => {
+    if (!open && !present) return;
+    const header = document.querySelector<HTMLElement>(".public-header");
+    if (!header) return;
+    const measure = () => setHeaderHeight(header.offsetHeight);
+    measure();
+    header.dataset.mobileNavigationOpen = "true";
+    const observer = new ResizeObserver(measure);
+    observer.observe(header);
+    return () => {
+      observer.disconnect();
+      delete header.dataset.mobileNavigationOpen;
+    };
+  }, [open, present]);
   const dismiss = useRef(onDismiss);
   dismiss.current = onDismiss;
   useEffect(() => {
@@ -27,7 +51,10 @@ export default function MobileNavigationMenu({
       setPresent(true);
       return;
     }
-    const t = setTimeout(() => setPresent(false), 200);
+    const duration = matchMedia("(prefers-reduced-motion: reduce)").matches
+      ? 0
+      : MOBILE_NAVIGATION_DURATION_MS;
+    const t = setTimeout(() => setPresent(false), duration);
     return () => clearTimeout(t);
   }, [open]);
   useEffect(() => {
@@ -95,14 +122,15 @@ export default function MobileNavigationMenu({
     <div
       className="public-navigation-layer"
       data-open={open}
+      style={
+        {
+          "--public-menu-duration": `${MOBILE_NAVIGATION_DURATION_MS}ms`,
+          "--public-navigation-top": `${headerHeight}px`,
+        } as CSSProperties
+      }
       inert={!open}
       aria-hidden={!open}
     >
-      <div
-        className="public-navigation-scrim"
-        onClick={onDismiss}
-        aria-hidden="true"
-      />
       <div
         ref={panel}
         className="public-navigation-popover"
@@ -123,13 +151,11 @@ export default function MobileNavigationMenu({
             { label: "FAQ", href: "/#help", id: "help" },
             { label: "Support", href: "/#support", id: "support" },
             { label: "Get App", href: "/get-app", id: undefined },
+            { label: "Become a Mentor", href: "/register", id: undefined },
           ].map((item) => (
             <a
               key={item.label}
               href={item.href}
-              className={
-                item.label === "Get App" ? "public-sheet-get-app" : undefined
-              }
               aria-current={active === item.id ? "location" : undefined}
               onClick={(event) => {
                 if (

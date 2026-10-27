@@ -1,6 +1,7 @@
 import { helpLinks } from "@/privacy/legal-links";
 import { useEffect, useRef, useState } from "react";
 import MobilePublicPanel from "./MobilePublicPanel";
+import { MOBILE_NAVIGATION_DURATION_MS } from "./MobileNavigationMenu";
 import { usePublicMobilePanel } from "@/hooks/use-public-mobile-panel";
 import { Link, useLocation } from "wouter";
 import { UserRound, Menu, X, ArrowUpRight, ChevronDown } from "lucide-react";
@@ -31,6 +32,22 @@ export function Navbar() {
       ).matches,
   );
   const mobilePanel = usePublicMobilePanel(compact);
+  const selectionTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const cancelSelection = () => {
+    if (selectionTimer.current !== null) clearTimeout(selectionTimer.current);
+    selectionTimer.current = null;
+  };
+  useEffect(() => {
+    const cancel = () => {
+      if (selectionTimer.current !== null) clearTimeout(selectionTimer.current);
+      selectionTimer.current = null;
+    };
+    window.addEventListener("popstate", cancel);
+    return () => {
+      cancel();
+      window.removeEventListener("popstate", cancel);
+    };
+  }, []);
   const mobileAccount = useRef<HTMLButtonElement>(null),
     mobileMenu = useRef<HTMLButtonElement>(null),
     panelTrigger = useRef<HTMLButtonElement | null>(null);
@@ -107,7 +124,12 @@ export function Navbar() {
     setActive(id);
   };
   const selectMobile = (href: string, section?: string) => {
-    mobilePanel.close(() => {
+    cancelSelection();
+    const animate =
+      mobilePanel.panel === "navigation" &&
+      !matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const started = performance.now();
+    const navigateAfterClose = () => {
       if (section && path === "/") {
         const target = document.getElementById(section);
         if (target) {
@@ -128,6 +150,23 @@ export function Navbar() {
       if (href === "/ea-app/" || href.startsWith("mailto:"))
         window.location.assign(href);
       else navigate(href);
+    };
+    mobilePanel.close(() => {
+      if (!animate) {
+        navigateAfterClose();
+        return;
+      }
+      // Restore body/history scrolling before selecting a section; let the exit finish first.
+      selectionTimer.current = setTimeout(
+        () => {
+          selectionTimer.current = null;
+          navigateAfterClose();
+        },
+        Math.max(
+          0,
+          MOBILE_NAVIGATION_DURATION_MS - (performance.now() - started),
+        ),
+      );
     });
   };
   // Sign Up is header-free at every size; preserve the existing mobile Sign In rule.
@@ -144,6 +183,7 @@ export function Navbar() {
             href="/"
             className="public-brand"
             onClick={(event) => {
+              if (compact) cancelSelection();
               if (
                 compact &&
                 mobilePanel.panel &&
@@ -188,7 +228,10 @@ export function Navbar() {
                 aria-label="Account menu"
                 aria-expanded={mobilePanel.panel === "account"}
                 aria-haspopup="dialog"
-                onClick={() => mobilePanel.open("account")}
+                onClick={() => {
+                  cancelSelection();
+                  mobilePanel.open("account");
+                }}
               >
                 <UserRound size={22} strokeWidth={1.6} />
               </button>
@@ -282,6 +325,7 @@ export function Navbar() {
               aria-expanded={mobilePanel.panel === "navigation"}
               aria-controls="public-mobile-nav"
               onClick={() => {
+                cancelSelection();
                 setAccount(false);
                 if (mobilePanel.panel === "navigation") mobilePanel.close();
                 else mobilePanel.open("navigation");
