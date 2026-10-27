@@ -79,6 +79,28 @@ try {
       }));
       assert.deepEqual(reference, { viewport: 390, portrait: 230, heading: "40px", controlHeight: 58, controlFont: "16px", scale: 1, rootTransform: "none" });
       console.log("PASS: original S2tone reference geometry after startup: 230px portrait, 40px heading, 58px controls at 390px viewport and scale 1");
+      await page.evaluate(() => {
+        const key = "ea-cloud:client:7:home-appearance";
+        localStorage.setItem(key, JSON.stringify({ ...JSON.parse(localStorage.getItem(key)), interfaceStyle: "matrix" }));
+      });
+      await page.reload();
+      await page.locator(".ea-startup").waitFor({ state: "detached", timeout: 30000 });
+      const portrait = page.locator("[data-portrait-interactive]");
+      await portrait.focus();
+      await page.keyboard.press("Escape");
+      await page.waitForFunction(() => {
+        const portrait = document.querySelector("[data-portrait-interactive]");
+        const branding = document.querySelector("[data-matrix-branding]");
+        const controls = document.querySelector("[data-matrix-functions]");
+        return portrait.getBoundingClientRect().height < 1 && branding.getBoundingClientRect().top > controls.getBoundingClientRect().bottom;
+      });
+      await portrait.focus();
+      await page.keyboard.press("Enter");
+      await page.waitForFunction(() => {
+        const portrait = document.querySelector("[data-portrait-interactive]");
+        return portrait.getBoundingClientRect().height > 259 && document.querySelector("[data-matrix-branding]").getBoundingClientRect().bottom < document.querySelector("[data-matrix-functions]").getBoundingClientRect().top;
+      });
+      console.log("PASS: Matrix hides/collapses portrait and moves branding below controls; restoring portrait moves branding above controls");
     }
     await context.close();
     console.log(`PASS: ${device.name}: viewport policy, fields, focus/resize, native-gesture guard and uncanceled pointer/touch events`);
