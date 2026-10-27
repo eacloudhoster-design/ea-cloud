@@ -53,7 +53,7 @@ try {
     const toggle = p.locator(".public-mobile-toggle"),
       menu = p.getByRole("dialog", { name: "Explore EA Cloud", exact: true });
     const open = async () => {
-      await p.evaluate(() => scrollBy({ top: -80, behavior: "instant" }));
+      await p.evaluate(() => scrollBy({ top: -20, behavior: "instant" }));
       await p.waitForTimeout(350);
       await toggle.tap();
       await menu.waitFor();
@@ -64,14 +64,37 @@ try {
       await menu.evaluate((el) => getComputedStyle(el).animationDuration),
       "0.3s",
     );
-    assert.equal(await menu.getByRole("link").count(), 7);
+    assert.equal(await menu.getByRole("link").count(), 5);
+    assert.deepEqual(await menu.getByRole("link").allTextContents(), [
+      "Home",
+      "App",
+      "Features",
+      "FAQ",
+      "Support",
+    ]);
+    assert(
+      (await menu
+        .getByRole("link")
+        .first()
+        .evaluate((el) => parseFloat(getComputedStyle(el).fontSize))) <= 26,
+    );
+    assert.equal(
+      await menu
+        .getByRole("link")
+        .last()
+        .evaluate((el) => getComputedStyle(el).animationDelay),
+      "0.1s",
+    );
     await p.screenshot({ path: `${out}/${viewport.width}-open.png` });
     await menu
-      .getByRole("link", { name: "Become a Mentor", exact: true })
+      .getByRole("link", { name: "Support", exact: true })
       .scrollIntoViewIfNeeded();
     assert((await menu.evaluate((el) => el.scrollTop)) >= 0);
     if (viewport.width === 320)
-      assert((await menu.evaluate((el) => el.scrollTop)) > 0);
+      assert.equal(
+        await menu.evaluate((el) => el.scrollHeight <= el.clientHeight),
+        true,
+      );
     await p.screenshot({ path: `${out}/${viewport.width}-bottom.png` });
     await toggle.tap();
     await menu.waitFor({ state: "hidden" });
@@ -104,19 +127,21 @@ try {
       );
       assert.equal(await p.evaluate(() => document.body.style.position), "");
       assert.equal(await p.evaluate(() => window.__menuDocument), "same");
-      await p.goBack();
-      await p.waitForURL("**/legal");
-    }
-    for (const [name, path, fields] of [
-      ["Get App", "/get-app", 4],
-      ["Become a Mentor", "/register", 6],
-    ]) {
+      await p.waitForTimeout(900);
       await open();
-      await menu.getByRole("link", { name, exact: true }).tap();
-      await p.waitForURL(origin + path);
-      await p.locator("input").first().waitFor();
-      assert.equal(await p.locator("input").count(), fields);
-      assert.equal(await p.evaluate(() => window.__menuDocument), "same");
+      assert.equal(
+        await menu
+          .getByRole("link", { name, exact: true })
+          .getAttribute("aria-current"),
+        "location",
+        `active ${name} at ${viewport.width}`,
+      );
+      assert.equal(await menu.locator("a[aria-current]").count(), 1);
+      if (viewport.width === 390)
+        await p.screenshot({ path: `${out}/active-${id}.png` });
+      await toggle.tap();
+      await menu.waitFor({ state: "hidden" });
+      await p.waitForTimeout(330);
       await p.goBack();
       await p.waitForURL("**/legal");
     }
@@ -137,6 +162,18 @@ try {
     );
     await toggle.tap();
     await menu.waitFor({ state: "hidden" });
+    await p.goto(origin + "/");
+    for (const [name, href] of [
+      ["Get App", "/get-app"],
+      ["Become a Mentor", "/register"],
+    ]) {
+      const link = p.getByRole("link", { name, exact: true }).first();
+      assert.equal(await link.getAttribute("href"), href);
+      await link.tap();
+      await p.waitForURL(origin + href);
+      await p.goBack();
+      await p.waitForURL(origin + "/");
+    }
     assert.deepEqual(errors, []);
     const video = p.video();
     await c.close();
@@ -144,12 +181,10 @@ try {
     results.push({
       viewport,
       fullscreen: true,
-      sevenLinks: true,
+      fiveLinks: true,
       openingAndClosingMs: 300,
       independentScroll: true,
       allSectionsFromLegal: true,
-      getApp: true,
-      mentorRegistration: true,
       noReload: true,
       backForward: true,
       reducedMotion: true,
@@ -160,7 +195,7 @@ try {
     JSON.stringify(results, null, 2) + "\n",
   );
   console.log(
-    "PASS: full-screen mobile menu, 300ms animation, scrolling, all seven destinations from another page, Back/Forward and reduced motion",
+    "PASS: full-screen mobile menu, 300ms animation, scrolling, all five destinations from another page, Back/Forward and reduced motion",
   );
 } finally {
   await b.close();

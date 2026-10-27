@@ -18,9 +18,10 @@
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
   touch-action: pan-y;
-  padding: 28px max(24px, env(safe-area-inset-right))
+  padding: 22px max(24px, env(safe-area-inset-right))
     max(40px, env(safe-area-inset-bottom)) max(24px, env(safe-area-inset-left));
-  background: #050505;
+  background:
+    radial-gradient(ellipse at 100% 15%, #650d151c, transparent 65%), #050505;
   color: #fff;
   outline: none;
   font-family: Inter, Arial, sans-serif;
@@ -28,7 +29,7 @@
     both;
 }
 .public-navigation-popover h2 {
-  margin: 0 0 20px;
+  margin: 0 0 12px;
   font-size: 11px;
   font-weight: 600;
   letter-spacing: 0.14em;
@@ -36,21 +37,22 @@
   color: #8d8d92;
 }
 .public-navigation-popover .public-sheet-navigation > a {
-  min-height: 86px;
-  padding: 24px 0;
+  position: relative;
+  min-height: 68px;
+  padding: 18px 0;
   gap: 18px;
   border-bottom: 1px solid #e6374324;
   color: #f4f4f5;
-  font-size: clamp(26px, 7.7vw, 34px);
-  font-weight: 600;
+  font-size: clamp(20px, 5.9vw, 26px);
+  font-weight: 650;
   line-height: 1.3;
   letter-spacing: -0.025em;
   transition:
     color 150ms ease,
-    background-color 150ms ease;
-}
-.public-navigation-popover .public-sheet-navigation > a:last-child {
-  border-bottom: 0;
+    background-color 150ms ease,
+    text-shadow 150ms ease;
+  animation: public-navigation-item-in 200ms ease-out both;
+  animation-delay: calc(var(--navigation-index, 0) * 25ms);
 }
 .public-navigation-popover
   .public-sheet-navigation
@@ -59,7 +61,10 @@
 }
 .public-navigation-popover svg {
   flex-shrink: 0;
-  color: #85858d;
+  color: #9b9396;
+  transition:
+    transform 160ms ease,
+    color 160ms ease;
 }
 .public-navigation-popover :focus-visible {
   outline: 2px solid #ff6871;
@@ -111,5 +116,55 @@
   .public-navigation-popover * {
     animation: none !important;
     transition: none !important;
+  }
+}
+
+.public-navigation-popover .public-sheet-navigation > a::after {
+  content: "";
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  width: 100%;
+  height: 1px;
+  background: linear-gradient(90deg, #ff4858, #ff485800);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 220ms ease;
+}
+.public-navigation-popover .public-sheet-navigation > a[aria-current]::before {
+  content: "";
+  position: absolute;
+  left: -12px;
+  width: 2px;
+  height: 18px;
+  background: #ff4956;
+  box-shadow: 0 0 9px #ff263d66;
+}
+.public-navigation-popover
+  .public-sheet-navigation
+  > a:is(:active, [aria-current], :focus-visible)::after {
+  transform: scaleX(1);
+}
+.public-navigation-popover .public-sheet-navigation > a:active {
+  text-shadow: 0 0 14px #ff304c66;
+  background-color: #ff304c05;
+}
+.public-navigation-popover .public-sheet-navigation > a:active svg {
+  transform: translateX(3px);
+  color: #ff4956;
+}
+@keyframes public-navigation-item-in {
+  from {
+    opacity: 0;
+    transform: translateY(7px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .public-navigation-popover .public-sheet-navigation > a::after {
+    transition: none;
   }
 }

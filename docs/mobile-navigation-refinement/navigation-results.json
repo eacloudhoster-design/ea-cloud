@@ -1,0 +1,44 @@
+[
+  {
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "fullscreen": true,
+    "fiveLinks": true,
+    "openingAndClosingMs": 300,
+    "independentScroll": true,
+    "allSectionsFromLegal": true,
+    "noReload": true,
+    "backForward": true,
+    "reducedMotion": true
+  },
+  {
+    "viewport": {
+      "width": 320,
+      "height": 568
+    },
+    "fullscreen": true,
+    "fiveLinks": true,
+    "openingAndClosingMs": 300,
+    "independentScroll": true,
+    "allSectionsFromLegal": true,
+    "noReload": true,
+    "backForward": true,
+    "reducedMotion": true
+  },
+  {
+    "viewport": {
+      "width": 844,
+      "height": 390
+    },
+    "fullscreen": true,
+    "fiveLinks": true,
+    "openingAndClosingMs": 300,
+    "independentScroll": true,
+    "allSectionsFromLegal": true,
+    "noReload": true,
+    "backForward": true,
+    "reducedMotion": true
+  }
+]

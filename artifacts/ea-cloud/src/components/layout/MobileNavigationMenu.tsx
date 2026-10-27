@@ -7,7 +7,6 @@ import {
   type RefObject,
 } from "react";
 import { createPortal } from "react-dom";
-import { ArrowUpRight } from "lucide-react";
 import "./MobileNavigationMenu.css";
 
 export const MOBILE_NAVIGATION_DURATION_MS = 300;
@@ -150,11 +149,10 @@ export default function MobileNavigationMenu({
             { label: "Features", href: "/#features", id: "features" },
             { label: "FAQ", href: "/#help", id: "help" },
             { label: "Support", href: "/#support", id: "support" },
-            { label: "Get App", href: "/get-app", id: undefined },
-            { label: "Become a Mentor", href: "/register", id: undefined },
-          ].map((item) => (
+          ].map((item, index) => (
             <a
               key={item.label}
+              style={{ "--navigation-index": index } as CSSProperties}
               href={item.href}
               aria-current={active === item.id ? "location" : undefined}
               onClick={(event) => {
@@ -171,7 +169,21 @@ export default function MobileNavigationMenu({
               }}
             >
               {item.label}
-              <ArrowUpRight size={19} />
+              <svg
+                width="22"
+                height="18"
+                viewBox="0 0 22 18"
+                fill="none"
+                aria-hidden="true"
+              >
+                <path
+                  d="M2 9h16M12 3l6 6-6 6M20 6v6"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  strokeLinecap="square"
+                  strokeLinejoin="miter"
+                />
+              </svg>
             </a>
           ))}
         </nav>
