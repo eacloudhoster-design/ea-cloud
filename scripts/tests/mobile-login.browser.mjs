@@ -129,12 +129,16 @@ try {
       "0px",
     );
     assert.deepEqual(
-      await p.locator(".mentor-mobile-cloud-effects").boundingBox(),
+      await p
+        .locator(".mentor-mobile-cloud .mentor-mobile-cloud-effects")
+        .boundingBox(),
       cloud,
       "circuits and eyes align with image",
     );
     const circuit = p
-      .locator(".mentor-mobile-circuit:not(.mentor-mobile-circuit-halo)")
+      .locator(
+        ".mentor-mobile-cloud .mentor-mobile-circuit:not(.mentor-mobile-circuit-halo)",
+      )
       .first();
     const offset = await circuit.evaluate(
       (el) => getComputedStyle(el).strokeDashoffset,
@@ -146,38 +150,44 @@ try {
     );
     assert.equal(
       await p
-        .locator(".mentor-mobile-circuit:not(.mentor-mobile-circuit-halo)")
+        .locator(
+          ".mentor-mobile-cloud .mentor-mobile-circuit:not(.mentor-mobile-circuit-halo)",
+        )
         .count(),
       6,
     );
     assert(
-      await p.locator(".mentor-mobile-circuit").evaluateAll((nodes) =>
-        nodes.every((el) => {
-          const b = el.getBBox();
-          return (
-            b.x >= 0 &&
-            b.y >= 0 &&
-            b.x + b.width <= 1688 &&
-            b.y + b.height <= 932
-          );
-        }),
-      ),
+      await p
+        .locator(".mentor-mobile-cloud .mentor-mobile-circuit")
+        .evaluateAll((nodes) =>
+          nodes.every((el) => {
+            const b = el.getBBox();
+            return (
+              b.x >= 0 &&
+              b.y >= 0 &&
+              b.x + b.width <= 1688 &&
+              b.y + b.height <= 932
+            );
+          }),
+        ),
     );
     if (recording) await p.waitForTimeout(7400); // Record two real 3.6-second eye power cycles.
     async function eyePhase(time) {
-      await p.locator(".mentor-mobile-eye").evaluateAll((nodes, t) => {
-        for (const el of nodes)
-          for (const animation of el.getAnimations()) {
-            animation.pause();
-            animation.currentTime = t;
-          }
-      }, time);
+      await p
+        .locator(".mentor-mobile-cloud .mentor-mobile-eye")
+        .evaluateAll((nodes, t) => {
+          for (const el of nodes)
+            for (const animation of el.getAnimations()) {
+              animation.pause();
+              animation.currentTime = t;
+            }
+        }, time);
       await p.waitForTimeout(50);
     }
     await eyePhase(1500);
     assert(
       (await p
-        .locator(".mentor-mobile-eye")
+        .locator(".mentor-mobile-cloud .mentor-mobile-eye")
         .first()
         .evaluate((el) => Number(getComputedStyle(el).opacity))) > 0.95,
     );
@@ -188,7 +198,7 @@ try {
     await eyePhase(3300);
     assert.equal(
       await p
-        .locator(".mentor-mobile-eye")
+        .locator(".mentor-mobile-cloud .mentor-mobile-eye")
         .first()
         .evaluate((el) => getComputedStyle(el).opacity),
       "0",

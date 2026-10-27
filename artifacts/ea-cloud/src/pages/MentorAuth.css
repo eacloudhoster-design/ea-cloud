@@ -306,7 +306,7 @@
 .mentor-login-emblem {
   position: relative;
   width: min(70%, 460px);
-  aspect-ratio: 1254 / 692;
+  aspect-ratio: 1688 / 932;
   line-height: 0;
   isolation: isolate;
   animation: mentor-logo-startup 1.4s ease-out both;
@@ -656,7 +656,7 @@
   }
 }
 
-/* Mobile enhancement only: the existing desktop/tablet artwork and form stay intact. */
+/* Mobile layout: floating artwork above the existing form. */
 .mentor-mobile-backdrop,
 .mentor-mobile-cloud,
 .mentor-mobile-title,
@@ -694,6 +694,16 @@
     position: absolute;
     inset: 0;
     background: linear-gradient(#0004, #0006);
+  }
+  .mentor-mobile-backdrop::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(ellipse at 25% 30%, #d4131733, transparent 48%),
+      radial-gradient(ellipse at 75% 75%, #d4131726, transparent 45%);
+    opacity: 0.05;
+    animation: mentor-ambient-light 12s ease-in-out infinite;
   }
   .mentor-mobile-neon {
     position: absolute;
@@ -874,6 +884,48 @@
   }
   .mentor-mobile-circuit {
     animation: none !important;
+    opacity: 0;
+  }
+}
+
+/* Desktop uses the same transparent artwork and native-coordinate effects. */
+.mentor-login-emblem .mentor-mobile-cloud-effects {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+.mentor-login-emblem .mentor-mobile-eye-dim {
+  opacity: 0.98;
+}
+.mentor-login-emblem .mentor-mobile-eye {
+  opacity: 0.08;
+  animation: mentor-mobile-eye-power 3.6s ease-in-out infinite;
+}
+.mentor-login-emblem .mentor-mobile-circuit {
+  fill: none;
+  stroke: #ff6171;
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 7 93;
+  stroke-dashoffset: 100;
+  opacity: 0;
+  animation: mentor-mobile-circuit-flow 4.8s linear var(--circuit-delay)
+    infinite;
+}
+.mentor-login-emblem .mentor-mobile-circuit-halo {
+  stroke: #ff1538;
+  stroke-width: 12;
+  filter: url(#mentor-desktop-circuit-glow);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mentor-login-emblem .mentor-mobile-eye {
+    opacity: 0.7;
+  }
+  .mentor-login-emblem .mentor-mobile-circuit {
     opacity: 0;
   }
 }
