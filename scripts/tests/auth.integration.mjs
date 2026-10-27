@@ -109,6 +109,19 @@ test("incorrect passwords and pending accounts stay denied", async () => {
   assert.equal(pending.status, 403);
   assert.equal((await pending.json()).error, "pending_approval");
 });
+test("session storage failure returns a server error without issuing a cookie", {
+  skip: !fixture && "Fault injection runs only against the isolated in-memory database",
+}, async () => {
+  await pool.query("ALTER TABLE browser_sessions RENAME TO unavailable_test_sessions");
+  try {
+    const result = await post("/api/auth/login", { email: email("mentor"), password });
+    assert.equal(result.status, 500);
+    assert.deepEqual(await result.json(), { error: "Internal server error" });
+    assert.equal(result.headers.get("set-cookie"), null);
+  } finally {
+    await pool.query("ALTER TABLE unavailable_test_sessions RENAME TO browser_sessions");
+  }
+});
 test("both client login URLs require the correct password", async () => {
   for (const path of ["/api/app/login", "/api/app/login-by-email"]) {
     assert.equal((await post(path, { email: email("client") })).status, 400);

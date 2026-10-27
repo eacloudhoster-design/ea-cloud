@@ -104,6 +104,12 @@ Start with:
 pnpm --filter @workspace/api-server start
 ```
 
+The start script first applies the existing browser-session migration and only
+starts the API if it succeeds. Before deploying this startup change, confirm a
+usable production backup/recovery point. For the exact Free-plan Render commands,
+backup prerequisite and verification steps, see [the session migration guide](render-session-migration.md).
+Directly running dist/index.mjs bypasses this migration step.
+
 The start script runs `node --enable-source-maps ./dist/index.mjs` from
 `artifacts/api-server`. Keep workspace runtime dependencies and externalized
 packages available; the bundle is not a standalone executable. Persist the
