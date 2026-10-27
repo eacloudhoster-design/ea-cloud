@@ -72,6 +72,10 @@ export function Navbar() {
   const [account, setAccount] = useState(false);
   const [help, setHelp] = useState(false);
   const [active, setActive] = useState("home");
+  // Body scroll locking can generate intersection entries unrelated to navigation.
+  // Keep the current section stable while the mobile overlay is visible.
+  const mobileNavigationOpen = useRef(false);
+  mobileNavigationOpen.current = mobilePanel.panel === "navigation";
   const header = useRef<HTMLElement>(null);
   useSmartPublicNavigation(
     header,
@@ -87,9 +91,10 @@ export function Navbar() {
     setAccount(false);
   }, [path, mobilePanel.close]);
   useEffect(() => {
-    if (path !== "/") return;
+    if (path !== "/" || compact) return;
     const observer = new IntersectionObserver(
       (entries) => {
+        if (mobileNavigationOpen.current) return;
         for (const entry of entries)
           if (entry.isIntersecting) setActive(entry.target.id);
       },
@@ -100,7 +105,41 @@ export function Navbar() {
       if (el) observer.observe(el);
     });
     return () => observer.disconnect();
-  }, [path]);
+  }, [path, compact]);
+  useEffect(() => {
+    if (!compact || path !== "/") return;
+    let frame = 0;
+    const measure = () => {
+      frame = 0;
+      if (
+        mobileNavigationOpen.current ||
+        document.body.style.position === "fixed"
+      )
+        return;
+      // Choose the section crossing the reading area, rather than the last
+      // IntersectionObserver entry (which can still refer to a previous section).
+      const readingLine = innerHeight * 0.35;
+      let current = "home";
+      for (const { id } of sections) {
+        const bounds = document.getElementById(id)?.getBoundingClientRect();
+        if (bounds && bounds.top <= readingLine) current = id;
+      }
+      if (innerHeight + scrollY >= document.documentElement.scrollHeight - 2)
+        current = "support";
+      setActive(current);
+    };
+    const scroll = () => {
+      if (!frame) frame = requestAnimationFrame(measure);
+    };
+    scroll();
+    window.addEventListener("scroll", scroll, { passive: true });
+    window.addEventListener("resize", scroll);
+    return () => {
+      cancelAnimationFrame(frame);
+      window.removeEventListener("scroll", scroll);
+      window.removeEventListener("resize", scroll);
+    };
+  }, [path, compact]);
   const jump = (event: React.MouseEvent<HTMLAnchorElement>, id: string) => {
     setAccount(false);
     if (
@@ -149,7 +188,10 @@ export function Navbar() {
       }
       if (href === "/ea-app/" || href.startsWith("mailto:"))
         window.location.assign(href);
-      else navigate(href);
+      else {
+        if (section) setActive(section);
+        navigate(href);
+      }
     };
     mobilePanel.close(() => {
       if (!animate) {

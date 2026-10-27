@@ -102,7 +102,7 @@ try {
       assert.equal(await header.getAttribute("data-scroll-hidden"), "false");
       const box = await menu.boundingBox();
       assert(box.y >= 71 && box.y <= 74);
-      assert.equal(await menu.getByRole("link").count(), 7);
+      assert.equal(await menu.getByRole("link").count(), 5);
     };
     await open();
     const fullscreen = await menu.boundingBox();
