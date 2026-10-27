@@ -96,10 +96,14 @@ try {
           nodes.map((el) => el.getBoundingClientRect().toJSON()),
         );
     const before = await geometry();
-    const eyes = root.locator(".mentor-mobile-eye");
+    const eyes = root.locator(
+      mobile ? ".mentor-mobile-eye" : ".mentor-desktop-eye",
+    );
     assert.equal(await eyes.count(), 2);
     const circuits = root.locator(
-      ".mentor-mobile-circuit:not(.mentor-mobile-circuit-halo)",
+      mobile
+        ? ".mentor-mobile-circuit:not(.mentor-mobile-circuit-halo)"
+        : ".mentor-desktop-circuit:not(.mentor-desktop-circuit-halo)",
     );
     assert.equal(await circuits.count(), 6);
     const neon = page.locator(
@@ -135,14 +139,14 @@ try {
       }, time);
     const on = await eyeFrame(1500);
     assert(on.every((e) => +e.opacity > 0.99 && e.duration === "3.6s"));
-    if ([1440, 390].includes(viewport.width))
+    if (viewport.width === 1440)
       await page.screenshot({
         path: `${out}/${mobile ? "mobile" : "desktop"}-eyes-on.png`,
         fullPage: true,
       });
     const off = await eyeFrame(3300);
     assert(off.every((e) => +e.opacity === 0));
-    if ([1440, 390].includes(viewport.width))
+    if (viewport.width === 1440)
       await page.screenshot({
         path: `${out}/${mobile ? "mobile" : "desktop"}-eyes-off.png`,
         fullPage: true,
@@ -170,7 +174,11 @@ try {
     await page.emulateMedia({ reducedMotion: "reduce" });
     assert(
       await root
-        .locator(".mentor-mobile-eye,.mentor-mobile-circuit")
+        .locator(
+          mobile
+            ? ".mentor-mobile-eye,.mentor-mobile-circuit"
+            : ".mentor-desktop-eye,.mentor-desktop-circuit",
+        )
         .evaluateAll((nodes) =>
           nodes.every((el) => getComputedStyle(el).animationName === "none"),
         ),

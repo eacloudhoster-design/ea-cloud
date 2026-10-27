@@ -92,13 +92,13 @@ try {
     );
     assert.equal(
       await p
-        .locator(".mentor-login-emblem .mentor-mobile-cloud-effects")
+        .locator(".mentor-login-emblem .mentor-desktop-cloud-effects")
         .getAttribute("viewBox"),
       "0 0 1688 932",
     );
     const image = await p.locator(".mentor-login-logo").boundingBox(),
       eyes = await p
-        .locator(".mentor-login-emblem .mentor-mobile-cloud-effects")
+        .locator(".mentor-login-emblem .mentor-desktop-cloud-effects")
         .boundingBox();
     assert.deepEqual(
       image,
@@ -110,7 +110,7 @@ try {
       8,
     );
     const durations = await p
-      .locator(".mentor-login-emblem .mentor-mobile-eye")
+      .locator(".mentor-login-emblem .mentor-desktop-eye")
       .evaluateAll((nodes) =>
         nodes.map((el) => getComputedStyle(el).animationDuration),
       );
@@ -123,11 +123,11 @@ try {
     if (viewport.width === 1440)
       await p.screenshot({ path: out + "/desktop-2s.png", fullPage: true });
     const eyeBefore = await p
-      .locator(".mentor-login-emblem .mentor-mobile-eye")
+      .locator(".mentor-login-emblem .mentor-desktop-eye")
       .evaluateAll((nodes) => nodes.map((el) => getComputedStyle(el).opacity));
     await p.waitForTimeout(1800);
     const eyeAfter = await p
-      .locator(".mentor-login-emblem .mentor-mobile-eye")
+      .locator(".mentor-login-emblem .mentor-desktop-eye")
       .evaluateAll((nodes) => nodes.map((el) => getComputedStyle(el).opacity));
     assert.notDeepEqual(eyeBefore, eyeAfter, "the actual eye overlays pulse");
     assert.notEqual(
@@ -180,7 +180,7 @@ try {
     assert(
       await p
         .locator(
-          ".mentor-login-emblem,.mentor-mobile-eye,.mentor-login-trace,.mentor-login-trace-reflection,.mentor-login-ambient",
+          ".mentor-login-emblem,.mentor-desktop-eye,.mentor-login-trace,.mentor-login-trace-reflection,.mentor-login-ambient",
         )
         .evaluateAll((nodes) =>
           nodes.every((el) => getComputedStyle(el).animationName === "none"),

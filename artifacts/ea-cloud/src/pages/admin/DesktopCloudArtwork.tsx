@@ -15,20 +15,20 @@ const circuits = [
   "M 1338 802 H 1149",
 ];
 
-export function CloudLogoArtwork({ desktop = false }: { desktop?: boolean }) {
-  const id = desktop ? "mentor-desktop" : "mentor-mobile";
+export function DesktopCloudArtwork() {
+  const id = "mentor-desktop";
   return (
-    <div className={desktop ? "mentor-login-emblem" : "mentor-mobile-cloud"}>
+    <div className="mentor-login-emblem">
       <img
         src={cloud}
         alt="EA Cloud"
         width="1688"
         height="932"
-        className={desktop ? "mentor-login-logo" : "mentor-login-mobile-logo"}
+        className="mentor-login-logo"
         loading="lazy"
       />
       <svg
-        className="mentor-mobile-cloud-effects"
+        className="mentor-desktop-cloud-effects"
         viewBox="0 0 1688 932"
         preserveAspectRatio="xMidYMid meet"
         aria-hidden="true"
@@ -61,8 +61,8 @@ export function CloudLogoArtwork({ desktop = false }: { desktop?: boolean }) {
         </defs>
         {eyes.map((path, index) => (
           <g key={path}>
-            <path className="mentor-mobile-eye-dim" d={path} fill="#170407" />
-            <g className={`mentor-mobile-eye mentor-mobile-eye-${index}`}>
+            <path className="mentor-desktop-eye-dim" d={path} fill="#170407" />
+            <g className={`mentor-desktop-eye mentor-desktop-eye-${index}`}>
               <path
                 d={path}
                 fill="#ff0928"
@@ -79,11 +79,15 @@ export function CloudLogoArtwork({ desktop = false }: { desktop?: boolean }) {
             style={{ "--circuit-delay": `${index * 0.47}s` } as CSSProperties}
           >
             <path
-              className="mentor-mobile-circuit mentor-mobile-circuit-halo"
+              className="mentor-desktop-circuit mentor-desktop-circuit-halo"
               d={path}
               pathLength="100"
             />
-            <path className="mentor-mobile-circuit" d={path} pathLength="100" />
+            <path
+              className="mentor-desktop-circuit"
+              d={path}
+              pathLength="100"
+            />
           </g>
         ))}
       </svg>

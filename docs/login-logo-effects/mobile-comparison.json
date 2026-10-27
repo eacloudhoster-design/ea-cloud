@@ -1,0 +1,50 @@
+{
+  "method": "Chromium touch emulation; reduced motion; viewport RGBA pixel comparison with GPU disabled",
+  "baseCommit": "3b33000b676706abb1f4ef0e8e1638ca27ef423c",
+  "originalCssPreserved": true,
+  "mobileComponentByteIdentical": true,
+  "comparisons": [
+    {
+      "width": 390,
+      "height": 844,
+      "differentPixels": 2,
+      "maxChannelDifference": 1,
+      "pixelsDifferentByMoreThanOneLevel": 0
+    },
+    {
+      "width": 320,
+      "height": 568,
+      "differentPixels": 0,
+      "maxChannelDifference": 0,
+      "pixelsDifferentByMoreThanOneLevel": 0
+    },
+    {
+      "width": 430,
+      "height": 932,
+      "differentPixels": 0,
+      "maxChannelDifference": 0,
+      "pixelsDifferentByMoreThanOneLevel": 0
+    },
+    {
+      "width": 760,
+      "height": 1024,
+      "differentPixels": 0,
+      "maxChannelDifference": 0,
+      "pixelsDifferentByMoreThanOneLevel": 0
+    },
+    {
+      "width": 844,
+      "height": 390,
+      "differentPixels": 0,
+      "maxChannelDifference": 0,
+      "pixelsDifferentByMoreThanOneLevel": 0
+    },
+    {
+      "width": 960,
+      "height": 440,
+      "differentPixels": 0,
+      "maxChannelDifference": 0,
+      "pixelsDifferentByMoreThanOneLevel": 0
+    }
+  ]
+}

@@ -1,5 +1,5 @@
 import type { CSSProperties } from "react";
-import { CloudLogoArtwork } from "./CloudLogoArtwork";
+import { DesktopCloudArtwork } from "./DesktopCloudArtwork";
 
 // Traces follow bright strips in the approved 1445×1088 background. The SVG
 // uses the same centered cover transform as the CSS image at every viewport.
@@ -58,7 +58,7 @@ export default function MentorLoginArtwork(_props: { logo: string }) {
         ))}
       </svg>
       <div className="mentor-login-ambient" aria-hidden="true" />
-      <CloudLogoArtwork desktop />
+      <DesktopCloudArtwork />
     </>
   );
 }
