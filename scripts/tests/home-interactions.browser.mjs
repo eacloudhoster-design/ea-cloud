@@ -25,6 +25,7 @@ try {
       viewport,
       isMobile: viewport.width < 500,
       hasTouch: viewport.width < 500,
+      ...(viewport.width < 500 ? { userAgent: "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 Mobile/15E148" } : {}),
     });
     const page = await context.newPage();
     const errors = [];
@@ -33,6 +34,7 @@ try {
       socket.onMessage(() => {}),
     );
     await context.addInitScript(() => {
+      Object.defineProperty(navigator, "standalone", { value: innerWidth < 500 });
       // Gesture/geometry tests do not load the unrelated neural voice model.
       // Voice triggers are covered by the separate announcement regression suite.
       Object.defineProperty(window, "AudioContext", { value: undefined });
@@ -44,6 +46,7 @@ try {
         );
     });
     let copyingEnabled = false;
+    let fixtureClientId = 7;
     await context.route("**/*", async (route) => {
       const url = new URL(route.request().url());
       // Use only the locally served app and isolated API fixtures.
@@ -65,7 +68,7 @@ try {
       }
       if (url.pathname === "/api/app/symbol-configs") data = [];
       if (url.pathname === "/api/app/me")
-        data = { status: "approved", licenseKey: "ISOLATED" };
+        data = { token: btoa(`${fixtureClientId}:client:cookie`), status: "approved", licenseKey: "ISOLATED" };
       if (url.pathname === "/api/app/dashboard")
         data = {
           mentor: {
@@ -515,12 +518,7 @@ try {
       "0",
     );
     await reopened.close();
-    await page.evaluate(() =>
-      localStorage.setItem(
-        "appClientToken",
-        btoa("8:client:isolated-home-test"),
-      ),
-    );
+    fixtureClientId = 8;
     await page.reload();
     await page.locator(".ea-startup").waitFor({ state: "detached" });
     assert.equal(await style(), "matrix");
@@ -530,12 +528,7 @@ try {
         .evaluate((el) => getComputedStyle(el).opacity),
       "1",
     );
-    await page.evaluate(() =>
-      localStorage.setItem(
-        "appClientToken",
-        btoa("7:client:isolated-home-test"),
-      ),
-    );
+    fixtureClientId = 7;
     await page.reload();
     await page.locator(".ea-startup").waitFor({ state: "detached" });
     assert.equal(await style(), "regular");
