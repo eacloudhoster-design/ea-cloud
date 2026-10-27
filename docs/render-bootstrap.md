@@ -36,10 +36,11 @@ npx --yes pnpm@10.32.1 --filter @workspace/api-server build &&
 npx --yes pnpm@10.32.1 --filter @workspace/scripts bootstrap-admin
 ```
 
-Keep the existing start command:
+Use the migration-gated start command after confirming the backup prerequisite
+in [the session migration guide](render-session-migration.md):
 
 ```sh
-cd artifacts/api-server && node --enable-source-maps dist/index.mjs
+cd artifacts/api-server && node ../../scripts/apply-browser-session-migration.mjs && node --enable-source-maps dist/index.mjs
 ```
 
 ## Interpret the new diagnostic
