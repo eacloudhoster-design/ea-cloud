@@ -1,0 +1,110 @@
+[
+  {
+    "screenshot": "admin-login-1440.png",
+    "changedPixels": 7033,
+    "pixelsChangedOutsideRequestedArea": 0,
+    "maxChannelDifferenceOutsideRequestedArea": 0,
+    "logoPanelAndControlGeometryUnchanged": true,
+    "mobileCloseHasNoLayoutBox": false,
+    "desktopClosePreserved": true
+  },
+  {
+    "screenshot": "admin-login-1920.png",
+    "changedPixels": 7033,
+    "pixelsChangedOutsideRequestedArea": 0,
+    "maxChannelDifferenceOutsideRequestedArea": 0,
+    "logoPanelAndControlGeometryUnchanged": true,
+    "mobileCloseHasNoLayoutBox": false,
+    "desktopClosePreserved": true
+  },
+  {
+    "screenshot": "admin-login-320.png",
+    "changedPixels": 1574,
+    "pixelsChangedOutsideRequestedArea": 0,
+    "maxChannelDifferenceOutsideRequestedArea": 0,
+    "logoPanelAndControlGeometryUnchanged": true,
+    "mobileCloseHasNoLayoutBox": true,
+    "desktopClosePreserved": false
+  },
+  {
+    "screenshot": "admin-login-390.png",
+    "changedPixels": 1574,
+    "pixelsChangedOutsideRequestedArea": 0,
+    "maxChannelDifferenceOutsideRequestedArea": 0,
+    "logoPanelAndControlGeometryUnchanged": true,
+    "mobileCloseHasNoLayoutBox": true,
+    "desktopClosePreserved": false
+  },
+  {
+    "screenshot": "admin-login-820.png",
+    "changedPixels": 4801,
+    "pixelsChangedOutsideRequestedArea": 0,
+    "maxChannelDifferenceOutsideRequestedArea": 0,
+    "logoPanelAndControlGeometryUnchanged": true,
+    "mobileCloseHasNoLayoutBox": false,
+    "desktopClosePreserved": true
+  },
+  {
+    "screenshot": "admin-login-844.png",
+    "changedPixels": 1574,
+    "pixelsChangedOutsideRequestedArea": 0,
+    "maxChannelDifferenceOutsideRequestedArea": 0,
+    "logoPanelAndControlGeometryUnchanged": true,
+    "mobileCloseHasNoLayoutBox": true,
+    "desktopClosePreserved": false
+  },
+  {
+    "screenshot": "register-1440.png",
+    "changedPixels": 0,
+    "pixelsChangedOutsideRequestedArea": 0,
+    "maxChannelDifferenceOutsideRequestedArea": 0,
+    "logoPanelAndControlGeometryUnchanged": true,
+    "mobileCloseHasNoLayoutBox": false,
+    "desktopClosePreserved": true
+  },
+  {
+    "screenshot": "register-1920.png",
+    "changedPixels": 0,
+    "pixelsChangedOutsideRequestedArea": 0,
+    "maxChannelDifferenceOutsideRequestedArea": 0,
+    "logoPanelAndControlGeometryUnchanged": true,
+    "mobileCloseHasNoLayoutBox": false,
+    "desktopClosePreserved": true
+  },
+  {
+    "screenshot": "register-320.png",
+    "changedPixels": 122,
+    "pixelsChangedOutsideRequestedArea": 6,
+    "maxChannelDifferenceOutsideRequestedArea": 1,
+    "logoPanelAndControlGeometryUnchanged": true,
+    "mobileCloseHasNoLayoutBox": true,
+    "desktopClosePreserved": false
+  },
+  {
+    "screenshot": "register-390.png",
+    "changedPixels": 124,
+    "pixelsChangedOutsideRequestedArea": 8,
+    "maxChannelDifferenceOutsideRequestedArea": 1,
+    "logoPanelAndControlGeometryUnchanged": true,
+    "mobileCloseHasNoLayoutBox": true,
+    "desktopClosePreserved": false
+  },
+  {
+    "screenshot": "register-820.png",
+    "changedPixels": 0,
+    "pixelsChangedOutsideRequestedArea": 0,
+    "maxChannelDifferenceOutsideRequestedArea": 0,
+    "logoPanelAndControlGeometryUnchanged": true,
+    "mobileCloseHasNoLayoutBox": false,
+    "desktopClosePreserved": true
+  },
+  {
+    "screenshot": "register-844.png",
+    "changedPixels": 118,
+    "pixelsChangedOutsideRequestedArea": 2,
+    "maxChannelDifferenceOutsideRequestedArea": 1,
+    "logoPanelAndControlGeometryUnchanged": true,
+    "mobileCloseHasNoLayoutBox": true,
+    "desktopClosePreserved": false
+  }
+]

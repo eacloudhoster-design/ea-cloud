@@ -255,8 +255,12 @@ try {
     assert.equal(await p.locator("form input").count(), 6);
     await p.getByRole("link", { name: "Sign in", exact: true }).click();
     await p.waitForURL("**/admin/login");
-    await p.getByRole("link", { name: "Close sign in", exact: true }).click();
-    await p.waitForURL(origin + "/");
+    assert.equal(
+      await p.getByRole("link", { name: "Close sign in", exact: true }).count(),
+      0,
+    );
+    assert.equal(await p.locator(".mentor-login-close").boundingBox(), null);
+    await p.goto(origin + "/");
     assert.deepEqual(errors, []);
     results.push({
       viewport,
