@@ -1,0 +1,59 @@
+{
+  "method": "Chromium reduced-motion viewport screenshots with GPU disabled; RGBA comparison",
+  "comparisons": [
+    {
+      "image": "admin-login-1440.png",
+      "differentPixels": 0,
+      "maxChannelDifference": 0,
+      "unchangedControlGeometry": true
+    },
+    {
+      "image": "admin-login-1920.png",
+      "differentPixels": 0,
+      "maxChannelDifference": 0,
+      "unchangedControlGeometry": true
+    },
+    {
+      "image": "admin-login-320.png",
+      "differentPixels": 0,
+      "maxChannelDifference": 0,
+      "unchangedControlGeometry": true
+    },
+    {
+      "image": "admin-login-390.png",
+      "differentPixels": 0,
+      "maxChannelDifference": 0,
+      "unchangedControlGeometry": true
+    },
+    {
+      "image": "admin-login-820.png",
+      "differentPixels": 0,
+      "maxChannelDifference": 0,
+      "unchangedControlGeometry": true
+    },
+    {
+      "image": "admin-login-844.png",
+      "differentPixels": 0,
+      "maxChannelDifference": 0,
+      "unchangedControlGeometry": true
+    },
+    {
+      "image": "register-1440.png",
+      "differentPixels": 0,
+      "maxChannelDifference": 0,
+      "unchangedControlGeometry": true
+    },
+    {
+      "image": "register-1920.png",
+      "differentPixels": 0,
+      "maxChannelDifference": 0,
+      "unchangedControlGeometry": true
+    },
+    {
+      "image": "register-820.png",
+      "differentPixels": 0,
+      "maxChannelDifference": 0,
+      "unchangedControlGeometry": true
+    }
+  ]
+}

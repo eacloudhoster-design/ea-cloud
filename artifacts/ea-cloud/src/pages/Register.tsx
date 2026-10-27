@@ -3,6 +3,11 @@ import { Link, useLocation } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
 import { navigationLogo as logo, authBackground } from "@/lib/branding";
 import "./MentorAuth.css";
+import "./MobileRegister.css";
+import {
+  MobileLoginBackdrop,
+  MobileLoginCloud,
+} from "./admin/MobileLoginArtwork";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -228,6 +233,15 @@ export default function Register() {
         backgroundImage: `linear-gradient(rgba(0,0,0,.4), rgba(0,0,0,.4)), url("${authBackground}")`,
       }}
     >
+      <div
+        className="mentor-register-mobile-backdrop"
+        style={{ backgroundImage: `url("${authBackground}")` }}
+      >
+        <MobileLoginBackdrop />
+      </div>
+      <div className="mentor-register-mobile-brand">
+        <MobileLoginCloud />
+      </div>
       <section
         className="mentor-register-panel"
         aria-labelledby="register-heading"
