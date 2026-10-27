@@ -1,0 +1,135 @@
+[
+  {
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "sameLogoAndSize": true,
+    "transparent": true,
+    "panelMatches": true,
+    "overlap": 30,
+    "eyesOnOffSeconds": 3.6,
+    "circuitMotion": true,
+    "backgroundMotion": true,
+    "allFieldsAccessible": true,
+    "documentScroll": true,
+    "publicNavigationWithoutReloadOrVerificationFlash": true,
+    "registrationPayload": true,
+    "errorLoadingPendingApproval": true,
+    "reducedMotion": true
+  },
+  {
+    "viewport": {
+      "width": 320,
+      "height": 568
+    },
+    "sameLogoAndSize": true,
+    "transparent": true,
+    "panelMatches": true,
+    "overlap": 30,
+    "eyesOnOffSeconds": 3.6,
+    "circuitMotion": true,
+    "backgroundMotion": true,
+    "allFieldsAccessible": true,
+    "documentScroll": true,
+    "publicNavigationWithoutReloadOrVerificationFlash": true,
+    "registrationPayload": true,
+    "errorLoadingPendingApproval": true,
+    "reducedMotion": true
+  },
+  {
+    "viewport": {
+      "width": 430,
+      "height": 932
+    },
+    "sameLogoAndSize": true,
+    "transparent": true,
+    "panelMatches": true,
+    "overlap": 30,
+    "eyesOnOffSeconds": 3.6,
+    "circuitMotion": true,
+    "backgroundMotion": true,
+    "allFieldsAccessible": true,
+    "documentScroll": true,
+    "publicNavigationWithoutReloadOrVerificationFlash": true,
+    "registrationPayload": true,
+    "errorLoadingPendingApproval": true,
+    "reducedMotion": true
+  },
+  {
+    "viewport": {
+      "width": 412,
+      "height": 915
+    },
+    "sameLogoAndSize": true,
+    "transparent": true,
+    "panelMatches": true,
+    "overlap": 30,
+    "eyesOnOffSeconds": 3.6,
+    "circuitMotion": true,
+    "backgroundMotion": true,
+    "allFieldsAccessible": true,
+    "documentScroll": true,
+    "publicNavigationWithoutReloadOrVerificationFlash": true,
+    "registrationPayload": true,
+    "errorLoadingPendingApproval": true,
+    "reducedMotion": true
+  },
+  {
+    "viewport": {
+      "width": 760,
+      "height": 1024
+    },
+    "sameLogoAndSize": true,
+    "transparent": true,
+    "panelMatches": true,
+    "overlap": 30,
+    "eyesOnOffSeconds": 3.6,
+    "circuitMotion": true,
+    "backgroundMotion": true,
+    "allFieldsAccessible": true,
+    "documentScroll": true,
+    "publicNavigationWithoutReloadOrVerificationFlash": true,
+    "registrationPayload": true,
+    "errorLoadingPendingApproval": true,
+    "reducedMotion": true
+  },
+  {
+    "viewport": {
+      "width": 844,
+      "height": 390
+    },
+    "sameLogoAndSize": true,
+    "transparent": true,
+    "panelMatches": true,
+    "overlap": 30,
+    "eyesOnOffSeconds": 3.6,
+    "circuitMotion": true,
+    "backgroundMotion": true,
+    "allFieldsAccessible": true,
+    "documentScroll": true,
+    "publicNavigationWithoutReloadOrVerificationFlash": true,
+    "registrationPayload": true,
+    "errorLoadingPendingApproval": true,
+    "reducedMotion": true
+  },
+  {
+    "viewport": {
+      "width": 960,
+      "height": 440
+    },
+    "sameLogoAndSize": true,
+    "transparent": true,
+    "panelMatches": true,
+    "overlap": 30,
+    "eyesOnOffSeconds": 3.6,
+    "circuitMotion": true,
+    "backgroundMotion": true,
+    "allFieldsAccessible": true,
+    "documentScroll": true,
+    "publicNavigationWithoutReloadOrVerificationFlash": true,
+    "registrationPayload": true,
+    "errorLoadingPendingApproval": true,
+    "reducedMotion": true
+  }
+]
