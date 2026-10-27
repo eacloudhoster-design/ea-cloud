@@ -1,6 +1,15 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
+/* Restrict browser page scaling only in the installed iOS client. Native pans
+   and child pointer gestures (including panel resize) remain available. */
+html[data-ea-ios-standalone-zoom] {
+  touch-action: pan-x pan-y;
+}
+html[data-ea-ios-standalone-zoom] .get-app-field input {
+  font-size: 16px;
+}
+
 @layer base {
   html, body {
     background: #000;

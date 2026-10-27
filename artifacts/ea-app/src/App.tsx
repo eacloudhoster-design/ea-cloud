@@ -4,6 +4,7 @@ import ModeImage from "@/components/ModeImage";
 import { useVisualModes } from "@/hooks/use-visual-modes";
 import { usePwaBackground } from "@/hooks/use-pwa-background";
 import { useIosStandaloneLayout } from "@/hooks/use-ios-standalone-layout";
+import { useIosStandaloneZoom } from "@/hooks/use-ios-standalone-zoom";
 import { useBotStatus } from "@/hooks/use-bot-status";
 import BackgroundAnimation from "@/components/BackgroundAnimation";
 import {useHomePreferences} from "@/hooks/use-home-preferences";
@@ -30,6 +31,7 @@ import { eaLogo, robotBg } from "@/lib/branding";
 type AuthStage = "loading" | "error" | "access" | "pending" | "rejected" | "activate" | "app";
 
 export default function App() {
+  useIosStandaloneZoom();
   const [ready, setReady] = useState(false);
   const [startupComplete, setStartupComplete] = useState(false);
   const finishStartup = useCallback(() => setStartupComplete(true), []);

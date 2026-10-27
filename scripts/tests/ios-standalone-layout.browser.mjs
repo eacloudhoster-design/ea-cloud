@@ -27,7 +27,7 @@ try{for(const device of cases){
   await context.route('**/stripe-mentor.jpg',r=>r.fulfill({body:picture,contentType:'image/jpeg'}));
   await context.route('**/api/**',r=>{
     const path=new URL(r.request().url()).pathname;
-    const json=path.endsWith('/app/me')?{id:7,status:'approved',licenseKey:'VALID'}:path.endsWith('/app/dashboard')?{mentor:{id:5,robotName:'Viewport Test EA',backgroundImageUrl:'/stripe-mentor.jpg'},eas:[]}:path.endsWith('/app/ea-mode-images')?{eas:[{id:11,name:'Viewport Test EA',images:Array(4).fill('/stripe-mentor.jpg')}]}:path.endsWith('/trading-controls')?{copyingEnabled:false}:path.endsWith('/activity/snapshot')?{observedAt:Date.now(),connected:false,engine:false,robotEnabled:false,account:null,symbols:[]}:path.endsWith('/scanner/status')?{configured:true}:path.endsWith('/scanner/history')?{records:[],hasMore:false}:[];
+    const json=path.endsWith('/app/me')?{id:7,token:btoa('7:client:cookie'),status:'approved',licenseKey:'VALID'}:path.endsWith('/app/dashboard')?{mentor:{id:5,robotName:'Viewport Test EA',backgroundImageUrl:'/stripe-mentor.jpg'},eas:[]}:path.endsWith('/app/ea-mode-images')?{eas:[{id:11,name:'Viewport Test EA',images:Array(4).fill('/stripe-mentor.jpg')}]}:path.endsWith('/trading-controls')?{copyingEnabled:false}:path.endsWith('/activity/snapshot')?{observedAt:Date.now(),connected:false,engine:false,robotEnabled:false,account:null,symbols:[]}:path.endsWith('/scanner/status')?{configured:true}:path.endsWith('/scanner/history')?{records:[],hasMore:false}:[];
     return r.fulfill({json});
   });
   const page=await context.newPage();page.setDefaultTimeout(15000);const errors=[];page.on('pageerror',error=>errors.push(error.message));
@@ -80,8 +80,8 @@ try{for(const device of cases){
   await page.setViewportSize({width:device.width,height:device.height});await check();
   await page.waitForTimeout(350);await page.screenshot({path:`${output}/${device.name}-reopened.png`});
   // Existing session teardown must not leave standalone layout on the sign-in UI.
-  await page.evaluate(()=>window.dispatchEvent(new CustomEvent('ea:session-invalidated',{detail:{token:localStorage.getItem('appClientToken')}})));
-  await page.waitForFunction(()=>localStorage.getItem('appClientToken')===null);
+  await page.evaluate(()=>window.dispatchEvent(new CustomEvent('ea:session-invalidated',{detail:{token:btoa('7:client:cookie')}})));
+  await page.waitForFunction(()=>!document.documentElement.hasAttribute('data-ea-ios-standalone-layout'));
   assert.equal(await page.evaluate(attribute=>document.documentElement.hasAttribute(attribute),attribute),false);
   assert.deepEqual(errors,[]);results.push({device,baseline,corrected});console.log('PASS',device.name);await context.close();
 }await writeFile(output+'/results.json',JSON.stringify(results,null,2));}finally{await browser.close();}
