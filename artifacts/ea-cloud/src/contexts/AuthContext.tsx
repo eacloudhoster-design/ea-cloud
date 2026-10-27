@@ -17,6 +17,8 @@ interface AuthContextType {
   login: (user: User, token: string) => void;
   logout: () => Promise<void>;
   isLoading: boolean;
+  sessionError: boolean;
+  retrySession: () => void;
 }
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -27,9 +29,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [, setLocation] = useLocation();
   const queryClient = useQueryClient();
   const generation = useRef(0);
+  const verifying = useRef<number | null>(null);
   const identity = useRef<string | null>(null);
   const verify = useCallback(async () => {
     const current = generation.current;
+    if (verifying.current === current) return;
+    verifying.current = current;
     try {
       const res = await fetch("/api/auth/me", {
         cache: "no-store",
@@ -57,6 +62,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch {
       if (current !== generation.current) return;
       setUnavailable(true); /* Keep verified state during transient outages. */
+    } finally {
+      if (verifying.current === current) verifying.current = null;
     }
   }, [queryClient]);
   useEffect(() => {
@@ -67,12 +74,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     void verify();
     const focus = (event?: Event) => {
       if (
-        event?.type === "pageshow" &&
-        (event as PageTransitionEvent).persisted
-      )
+        (event?.type === "pageshow" &&
+          (event as PageTransitionEvent).persisted) ||
+        event?.type === "message" ||
+        event?.type === "ea:auth-changed"
+      ) {
+        generation.current++;
         setLoading(true);
+      }
       if (!document.hidden) void verify();
     };
+    document.addEventListener("visibilitychange", focus);
     window.addEventListener("focus", focus);
     window.addEventListener("pageshow", focus);
     window.addEventListener("ea:auth-changed", focus);
@@ -85,6 +97,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => {
       clearInterval(timer);
       channel?.close();
+      document.removeEventListener("visibilitychange", focus);
       window.removeEventListener("focus", focus);
       window.removeEventListener("pageshow", focus);
       window.removeEventListener("ea:auth-changed", focus);
@@ -136,22 +149,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
   return (
     <AuthContext.Provider
-      value={{ user, token, login, logout, isLoading: loading }}
+      value={{
+        user,
+        token,
+        login,
+        logout,
+        isLoading: loading,
+        sessionError: unavailable,
+        retrySession: () => void verify(),
+      }}
     >
-      {loading &&
-      unavailable &&
-      /^\/(admin|superadmin)(?:\/|$)/.test(window.location.pathname) ? (
-        <div
-          role="status"
-          className="min-h-screen bg-black text-white flex items-center justify-center"
-        >
-          <button onClick={() => void verify()}>
-            Unable to verify your session. Retry
-          </button>
-        </div>
-      ) : (
-        children
-      )}
+      {children}
     </AuthContext.Provider>
   );
 }
@@ -173,7 +181,10 @@ export function usePortalRedirect() {
         location !== "/superadmin/login"
       )
         setLocation("/superadmin/login", { replace: true });
-    } else if (user.role === "mentor" && location.startsWith("/superadmin"))
+    } else if (
+      ["mentor", "admin"].includes(user.role) &&
+      location.startsWith("/superadmin")
+    )
       setLocation("/admin/dashboard", { replace: true });
     else if (user.role === "superadmin" && location.startsWith("/admin"))
       setLocation("/superadmin/dashboard", { replace: true });

@@ -64,11 +64,11 @@ export function MobileLoginBackdrop() {
   );
 }
 
-export function MobileLoginCloud() {
+export function MobileLoginCloud({ logoSource = cloud }: { logoSource?: string } = {}) {
   return (
     <div className="mentor-mobile-cloud">
       <img
-        src={cloud}
+        src={logoSource}
         alt="EA Cloud"
         width="1688"
         height="932"

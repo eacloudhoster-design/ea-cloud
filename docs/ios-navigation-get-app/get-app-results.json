@@ -1,0 +1,98 @@
+[
+  {
+    "viewport": {
+      "width": 1440,
+      "height": 1000
+    },
+    "fourOriginalFields": true,
+    "originalPayloadAndHandlers": true,
+    "loginModePreserved": true,
+    "successHandoff": true,
+    "transparentCloud": true,
+    "eyesOnOff": true,
+    "circuitAndBackgroundMotion": true,
+    "redTheme": true,
+    "scrolling": true,
+    "reducedMotion": true
+  },
+  {
+    "viewport": {
+      "width": 1920,
+      "height": 1080
+    },
+    "fourOriginalFields": true,
+    "originalPayloadAndHandlers": true,
+    "loginModePreserved": true,
+    "successHandoff": true,
+    "transparentCloud": true,
+    "eyesOnOff": true,
+    "circuitAndBackgroundMotion": true,
+    "redTheme": true,
+    "scrolling": true,
+    "reducedMotion": true
+  },
+  {
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "fourOriginalFields": true,
+    "originalPayloadAndHandlers": true,
+    "loginModePreserved": true,
+    "successHandoff": true,
+    "transparentCloud": true,
+    "eyesOnOff": true,
+    "circuitAndBackgroundMotion": true,
+    "redTheme": true,
+    "scrolling": true,
+    "reducedMotion": true
+  },
+  {
+    "viewport": {
+      "width": 320,
+      "height": 568
+    },
+    "fourOriginalFields": true,
+    "originalPayloadAndHandlers": true,
+    "loginModePreserved": true,
+    "successHandoff": true,
+    "transparentCloud": true,
+    "eyesOnOff": true,
+    "circuitAndBackgroundMotion": true,
+    "redTheme": true,
+    "scrolling": true,
+    "reducedMotion": true
+  },
+  {
+    "viewport": {
+      "width": 412,
+      "height": 915
+    },
+    "fourOriginalFields": true,
+    "originalPayloadAndHandlers": true,
+    "loginModePreserved": true,
+    "successHandoff": true,
+    "transparentCloud": true,
+    "eyesOnOff": true,
+    "circuitAndBackgroundMotion": true,
+    "redTheme": true,
+    "scrolling": true,
+    "reducedMotion": true
+  },
+  {
+    "viewport": {
+      "width": 844,
+      "height": 390
+    },
+    "fourOriginalFields": true,
+    "originalPayloadAndHandlers": true,
+    "loginModePreserved": true,
+    "successHandoff": true,
+    "transparentCloud": true,
+    "eyesOnOff": true,
+    "circuitAndBackgroundMotion": true,
+    "redTheme": true,
+    "scrolling": true,
+    "reducedMotion": true
+  }
+]

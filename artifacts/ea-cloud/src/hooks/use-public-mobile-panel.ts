@@ -6,19 +6,34 @@ const KEY = "eaPublicMobilePanel";
 /** A same-URL history entry lets native Back dismiss a sheet before leaving Home. */
 export function usePublicMobilePanel(enabled: boolean) {
   const [panel, setPanel] = useState<PublicMobilePanel | null>(null);
+  const [settling, setSettling] = useState(false);
+  const closing = useRef(false);
+  const queuedOpen = useRef<PublicMobilePanel | null>(null);
   const owner = useRef(`ea-sheet-${Math.random().toString(36).slice(2)}`);
   const pending = useRef<(() => void) | null>(null);
   const enabledRef = useRef(enabled);
   enabledRef.current = enabled;
   const close = useCallback((after?: () => void) => {
     setPanel(null);
+    queuedOpen.current = null;
+    if (closing.current) {
+      if (after) pending.current = after;
+      return;
+    }
     if (history.state?.[KEY]?.owner === owner.current) {
+      closing.current = true;
+      setSettling(true);
       pending.current = after || null;
       history.back();
     } else after?.();
   }, []);
   const open = useCallback((kind: PublicMobilePanel) => {
     pending.current = null;
+    if (closing.current) {
+      queuedOpen.current = kind;
+      setPanel(kind);
+      return;
+    }
     const marker = { owner: owner.current, kind };
     if (history.state?.[KEY]?.owner === owner.current)
       history.replaceState({ ...history.state, [KEY]: marker }, "");
@@ -27,12 +42,26 @@ export function usePublicMobilePanel(enabled: boolean) {
   }, []);
   useEffect(() => {
     const pop = () => {
-      const marker = history.state?.[KEY];
-      setPanel(
-        enabledRef.current && marker?.owner === owner.current
-          ? marker.kind
-          : null,
-      );
+      setSettling(true);
+      closing.current = false;
+      const queued = queuedOpen.current;
+      queuedOpen.current = null;
+      if (queued && enabledRef.current) {
+        history.pushState(
+          { ...history.state, [KEY]: { owner: owner.current, kind: queued } },
+          "",
+        );
+        setPanel(queued);
+      } else {
+        const marker = history.state?.[KEY];
+        setPanel(
+          enabledRef.current && marker?.owner === owner.current
+            ? marker.kind
+            : null,
+        );
+      }
+      // Keep the header pinned until native scroll restoration has completed.
+      requestAnimationFrame(() => setSettling(false));
       const action = pending.current;
       pending.current = null;
       // Run selected navigation after the sheet's temporary entry is removed.
@@ -49,5 +78,5 @@ export function usePublicMobilePanel(enabled: boolean) {
   useEffect(() => {
     if (!enabled) close();
   }, [enabled, close]);
-  return { panel, open, close };
+  return { panel, settling, open, close };
 }

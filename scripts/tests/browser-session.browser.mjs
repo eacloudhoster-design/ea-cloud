@@ -85,13 +85,13 @@ try {
   );
   await page.reload();
   await page
-    .getByRole("button", { name: "Unable to verify your session. Retry" })
+    .getByRole("button", { name: "Retry", exact: true })
     .waitFor();
   assert.equal(await page.locator("input[type=password]").count(), 0);
   assert((await context.cookies()).some((c) => c.name === "ea_portal_session"));
   await context.unroute("**/api/auth/me");
   await page
-    .getByRole("button", { name: "Unable to verify your session. Retry" })
+    .getByRole("button", { name: "Retry", exact: true })
     .click();
   await page.getByRole("heading", { name: "Dashboard", exact: true }).waitFor();
   await page.screenshot({ path: out + "/portal-desktop.png" });

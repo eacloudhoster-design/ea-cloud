@@ -2,7 +2,7 @@ import { helpLinks } from "@/privacy/legal-links";
 import { useEffect, useRef, useState } from "react";
 import MobilePublicPanel from "./MobilePublicPanel";
 import { usePublicMobilePanel } from "@/hooks/use-public-mobile-panel";
-import { useLocation } from "wouter";
+import { Link, useLocation } from "wouter";
 import { UserRound, Menu, X, ArrowUpRight, ChevronDown } from "lucide-react";
 import { navigationLogo } from "@/lib/branding";
 import {
@@ -60,6 +60,7 @@ export function Navbar() {
     header,
     account ||
       mobilePanel.panel !== null ||
+      mobilePanel.settling ||
       path === "/register" ||
       path === "/admin/login",
     `${path}:${compact}`,
@@ -139,17 +140,30 @@ export function Navbar() {
           Skip to content
         </a>
         <div className="public-nav-shell">
-          <a
+          <Link
             href="/"
             className="public-brand"
-            onClick={(event) => jump(event, "home")}
+            onClick={(event) => {
+              if (
+                compact &&
+                mobilePanel.panel &&
+                event.button === 0 &&
+                !event.metaKey &&
+                !event.ctrlKey &&
+                !event.shiftKey &&
+                !event.altKey
+              ) {
+                event.preventDefault();
+                selectMobile("/", "home");
+              } else jump(event, "home");
+            }}
             aria-label="EA Cloud homepage"
           >
             <img src={navigationLogo} alt="" width="44" height="44" />
-          </a>
+          </Link>
           <nav className="public-nav-links" aria-label="Website navigation">
             {sections.map((item) => (
-              <a
+              <Link
                 key={item.id}
                 href={item.href}
                 onClick={(event) => jump(event, item.id)}
@@ -158,14 +172,14 @@ export function Navbar() {
                 }
               >
                 {item.label}
-              </a>
+              </Link>
             ))}
           </nav>
           <div className="public-nav-actions">
-            <a className="public-get-app" href="/ea-app/">
+            <Link className="public-get-app" href="/get-app">
               Get App
               <ArrowUpRight size={15} />
-            </a>
+            </Link>
             {compact ? (
               <button
                 ref={mobileAccount}
@@ -202,16 +216,16 @@ export function Navbar() {
                   collisionPadding={12}
                 >
                   <DropdownMenuItem asChild>
-                    <a href="/admin/login">
+                    <Link href="/admin/login">
                       Sign In
                       <ArrowUpRight size={15} />
-                    </a>
+                    </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
-                    <a href="/register">
+                    <Link href="/register">
                       Sign Up
                       <ArrowUpRight size={15} />
-                    </a>
+                    </Link>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem
@@ -269,7 +283,8 @@ export function Navbar() {
               aria-controls="public-mobile-nav"
               onClick={() => {
                 setAccount(false);
-                mobilePanel.open("navigation");
+                if (mobilePanel.panel === "navigation") mobilePanel.close();
+                else mobilePanel.open("navigation");
               }}
             >
               {mobilePanel.panel === "navigation" ? (

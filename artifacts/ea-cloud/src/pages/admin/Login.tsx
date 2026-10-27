@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useLayoutEffect } from "react";
 import { Link, useLocation, useSearch } from "wouter";
 import { loginErrorMessage } from "@/lib/login-error";
 import { navigationLogo as logo, authBackground } from "@/lib/branding";
@@ -19,7 +19,7 @@ export default function AdminLogin() {
   const search = useSearch();
   const justApproved = new URLSearchParams(search).get("approved") === "1";
   const { login, user, isLoading: restoringSession } = useAuth();
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!restoringSession && user?.status === "approved")
       setLocation(
         user.role === "superadmin"
@@ -61,15 +61,6 @@ export default function AdminLogin() {
     }
   };
 
-  if (restoringSession || user?.status === "approved")
-    return (
-      <div
-        role="status"
-        className="min-h-screen bg-black text-white flex items-center justify-center"
-      >
-        Verifying session…
-      </div>
-    );
 
   return (
     <div

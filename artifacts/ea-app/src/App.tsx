@@ -85,7 +85,11 @@ function EACloudApp({ onReady, startupComplete }: { onReady: (ready: boolean) =>
   useEffect(() => {
     try { localStorage.removeItem("appClientToken"); } catch {}
     void validateToken("");
-    const restore = () => { if (!document.hidden) void validateToken(""); };
+    const restore = (event: Event) => {
+      // Initial mount already verifies. A BFCache return or cross-tab change must verify afresh.
+      if (event.type === "pageshow" && !(event as PageTransitionEvent).persisted) return;
+      if (!document.hidden) void validateToken("");
+    };
     window.addEventListener("pageshow", restore);
     const channel = typeof BroadcastChannel !== "undefined" ? new BroadcastChannel("ea-cloud-auth") : null;
     if (channel) channel.onmessage = restore;
@@ -261,9 +265,7 @@ function EACloudApp({ onReady, startupComplete }: { onReady: (ready: boolean) =>
   // Auth screens — full screen, no bottom nav
   if (authStage === "access") {
     return (
-      <div className="bg-black" style={{ height: "100dvh", maxWidth: 430, margin: "0 auto" }}>
-        <AccessScreen onAuthenticated={handleAuthenticated} />
-      </div>
+      <AccessScreen onAuthenticated={handleAuthenticated} />
     );
   }
 

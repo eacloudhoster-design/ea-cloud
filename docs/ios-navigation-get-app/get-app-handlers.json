@@ -1,0 +1,9 @@
+{
+  "method": "TypeScript AST printer comparison with whitespace normalized",
+  "unchanged": [
+    "reset",
+    "handleRegister",
+    "handleLogin",
+    "handle"
+  ]
+}

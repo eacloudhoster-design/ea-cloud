@@ -1,3 +1,4 @@
+import MobileNavigationMenu from "./MobileNavigationMenu";
 import { helpLinks } from "@/privacy/legal-links";
 import {
   useCallback,
@@ -27,7 +28,7 @@ export default function MobilePublicPanel({
   onSelect,
 }: Props) {
   const lastKind = useRef<PublicMobilePanel>("account");
-  if (kind) lastKind.current = kind;
+  if (kind === "account") lastKind.current = kind;
   const shown = kind || lastKind.current;
   const [help, setHelp] = useState(false),
     [languages, setLanguages] = useState(false),
@@ -67,61 +68,68 @@ export default function MobilePublicPanel({
       onSelect(href, section);
     };
   return (
-    <Dialog.Root
-      open={kind !== null}
-      onOpenChange={(open) => {
-        if (!open) onDismiss();
-      }}
-    >
-      <Dialog.Portal>
-        <Dialog.Overlay className="public-mobile-backdrop" />
-        <Dialog.Content
-          ref={attach}
-          className="public-mobile-sheet"
-          {...drag}
-          onCloseAutoFocus={(event) => {
-            event.preventDefault();
-            trigger.current?.focus({ preventScroll: true });
-          }}
-        >
-          <div className="public-sheet-top">
-            <button
-              type="button"
-              data-sheet-handle
-              className="public-sheet-handle"
-              aria-label={`Drag down to close ${shown === "account" ? "account panel" : "navigation"}`}
-              onClick={onDismiss}
-              onKeyDown={(event) => {
-                if (event.key === "ArrowDown") {
-                  event.preventDefault();
-                  onDismiss();
-                }
-              }}
-            >
-              <span />
-            </button>
-            <button
-              type="button"
-              className="public-sheet-close"
-              aria-label={`Close ${shown === "account" ? "account panel" : "navigation"}`}
-              onClick={onDismiss}
-            >
-              <X size={19} />
-            </button>
-            <Dialog.Title>
-              {shown === "account"
-                ? "Your EA Cloud account"
-                : "Explore EA Cloud"}
-            </Dialog.Title>
-            <Dialog.Description className="sr-only">
-              {shown === "account"
-                ? "Account access, support and website language."
-                : "Navigate the EA Cloud public website."}{" "}
-              Swipe down, tap outside or use Back to close.
-            </Dialog.Description>
-          </div>
-          <div ref={scroll} className="public-sheet-scroll">
-            {shown === "account" ? (
+    <>
+      <MobileNavigationMenu
+        open={kind === "navigation"}
+        active={active}
+        trigger={trigger}
+        onDismiss={onDismiss}
+        onSelect={onSelect}
+      />
+      <Dialog.Root
+        open={kind === "account"}
+        onOpenChange={(open) => {
+          if (!open) onDismiss();
+        }}
+      >
+        <Dialog.Portal>
+          <Dialog.Overlay className="public-mobile-backdrop" />
+          <Dialog.Content
+            ref={attach}
+            className="public-mobile-sheet"
+            {...drag}
+            onCloseAutoFocus={(event) => {
+              event.preventDefault();
+              trigger.current?.focus({ preventScroll: true });
+            }}
+          >
+            <div className="public-sheet-top">
+              <button
+                type="button"
+                data-sheet-handle
+                className="public-sheet-handle"
+                aria-label={`Drag down to close ${shown === "account" ? "account panel" : "navigation"}`}
+                onClick={onDismiss}
+                onKeyDown={(event) => {
+                  if (event.key === "ArrowDown") {
+                    event.preventDefault();
+                    onDismiss();
+                  }
+                }}
+              >
+                <span />
+              </button>
+              <button
+                type="button"
+                className="public-sheet-close"
+                aria-label={`Close ${shown === "account" ? "account panel" : "navigation"}`}
+                onClick={onDismiss}
+              >
+                <X size={19} />
+              </button>
+              <Dialog.Title>
+                {shown === "account"
+                  ? "Your EA Cloud account"
+                  : "Explore EA Cloud"}
+              </Dialog.Title>
+              <Dialog.Description className="sr-only">
+                {shown === "account"
+                  ? "Account access, support and website language."
+                  : "Navigate the EA Cloud public website."}{" "}
+                Swipe down, tap outside or use Back to close.
+              </Dialog.Description>
+            </div>
+            <div ref={scroll} className="public-sheet-scroll">
               <>
                 <div className="public-sheet-account-links">
                   <a href="/admin/login" onClick={link("/admin/login")}>
@@ -225,42 +233,10 @@ export default function MobilePublicPanel({
                   {announcement}
                 </span>
               </>
-            ) : (
-              <nav
-                id="public-mobile-nav"
-                aria-label="Mobile website navigation"
-                className="public-sheet-navigation"
-              >
-                {[
-                  { label: "Home", href: "/", id: "home" },
-                  { label: "App", href: "/#download", id: "download" },
-                  { label: "Features", href: "/#features", id: "features" },
-                  { label: "FAQ", href: "/#help", id: "help" },
-                  { label: "Support", href: "/#support", id: "support" },
-                ].map((item) => (
-                  <a
-                    key={item.id}
-                    href={item.href}
-                    onClick={link(item.href, item.id)}
-                    aria-current={active === item.id ? "location" : undefined}
-                  >
-                    {item.label}
-                    <ArrowUpRight size={19} />
-                  </a>
-                ))}
-                <a
-                  href="/ea-app/"
-                  onClick={link("/ea-app/")}
-                  className="public-sheet-get-app"
-                >
-                  Get App
-                  <ArrowUpRight size={19} />
-                </a>
-              </nav>
-            )}
-          </div>
-        </Dialog.Content>
-      </Dialog.Portal>
-    </Dialog.Root>
+            </div>
+          </Dialog.Content>
+        </Dialog.Portal>
+      </Dialog.Root>
+    </>
   );
 }
