@@ -212,7 +212,7 @@ export default function InteractiveBotPortrait({
         )
       }
       initial={false}
-      animate={{ height: size, marginBottom: margin }}
+      animate={{ height: hidden && interfaceStyle === "matrix" ? 0 : size, marginBottom: hidden && interfaceStyle === "matrix" ? 0 : margin }}
       transition={{ duration, ease: [0.22, 0.68, 0, 1] }}
     >
       {(!hidden || retain) && (

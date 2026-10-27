@@ -58,7 +58,7 @@ try {
       }
       return r.fulfill({
         json: p.endsWith("/app/me")
-          ? { id: 7, status: "approved", licenseKey: "VALID" }
+          ? { id: 7, token: btoa("7:client:cookie"), status: "approved", licenseKey: "VALID" }
           : p.endsWith("/app/dashboard")
             ? {
                 mentor: {
@@ -262,9 +262,14 @@ try {
       assert.equal(await frame.count(), 0);
       assert.equal(
         (await slot.boundingBox()).height,
-        style === "regular" ? 290 : style === "matrix" ? 260 : 230,
+        style === "regular" ? 290 : style === "matrix" ? 0 : 230,
       );
-      assert.deepEqual(
+      if (style === "matrix") {
+        assert(await page.locator("[data-matrix-branding]").evaluate(el =>
+          el.getBoundingClientRect().top > document.querySelector("[data-matrix-functions]").getBoundingClientRect().bottom),
+        "Hidden Matrix portrait restores branding below controls");
+      } else {
+        assert.deepEqual(
         await page.locator("[data-bot-name=primary]").boundingBox(),
         name,
         "Hiding preserves bot-name geometry",
@@ -274,6 +279,7 @@ try {
         positions,
         "Hiding preserves every sibling's geometry",
       );
+      }
       assert.deepEqual(await nav.boundingBox(), navBox);
       if (device.width === 390)
         await page.screenshot({ path: `${output}/${style}-none.png` });
