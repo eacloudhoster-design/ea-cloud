@@ -74,6 +74,25 @@ try {
       await p.getByRole("button", { name: "LOGIN", exact: true }).isEnabled(),
       "form is available during introduction",
     );
+    assert.equal(
+      await p
+        .getByRole("heading", { name: "EA Cloud Admin Portal", exact: true })
+        .count(),
+      1,
+    );
+    assert.equal(await p.locator(".mentor-mobile-welcome").isVisible(), true);
+    assert.equal(
+      await p
+        .locator(".mentor-mobile-welcome")
+        .evaluate((el) => getComputedStyle(el).textTransform),
+      "uppercase",
+    );
+    assert.equal(
+      await p
+        .getByRole("link", { name: "Close sign in", exact: true })
+        .isVisible(),
+      true,
+    );
     const before = await geometry(p);
     assert.equal(
       await p

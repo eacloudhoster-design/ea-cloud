@@ -663,8 +663,31 @@
 .mentor-mobile-welcome {
   display: none;
 }
+/* Fit desktop welcome copy into the existing gap above the form. */
+@media (min-width: 761px) {
+  .mentor-login-form-content h1 {
+    margin-bottom: 10px;
+  }
+  .mentor-mobile-welcome {
+    display: block;
+    margin: 0 0 15px;
+    color: #999;
+    font-size: 11px;
+    line-height: 17px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+}
+@media (min-width: 761px) and (max-width: 899px) {
+  .mentor-mobile-welcome {
+    margin-bottom: 5px;
+  }
+}
 @media (max-width: 760px),
   (max-width: 960px) and (max-height: 500px) and (hover: none) and (pointer: coarse) {
+  .mentor-login-close {
+    display: none;
+  }
   .mentor-login-page {
     display: flex;
     flex-direction: column;

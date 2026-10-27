@@ -114,6 +114,13 @@ try {
     await cloud.locator("img").evaluate((el) => el.decode());
     assert.equal(await cloud.locator("img").getAttribute("src"), logoSource);
     assert.equal(await p.locator(".mentor-register-logo").isVisible(), false);
+    assert.equal(
+      await p
+        .getByRole("button", { name: "Close registration", exact: true })
+        .count(),
+      0,
+    );
+    assert.equal(await p.locator(".mentor-register-close").boundingBox(), null);
     assert.equal(await p.locator("form input").count(), 6);
     const cb = await cloud.boundingBox(),
       panel = await p.locator(".mentor-register-panel").boundingBox(),

@@ -91,7 +91,7 @@ export default function AdminLogin() {
       <main className="mentor-login-main">
         <div className="mentor-login-form-content">
           <h1>
-            <span className="mentor-desktop-title">Sign in to EA Cloud</span>
+            <span className="mentor-desktop-title">EA Cloud Admin Portal</span>
             <span className="mentor-mobile-title">EA Cloud Admin Portal</span>
           </h1>
           <p className="mentor-mobile-welcome">

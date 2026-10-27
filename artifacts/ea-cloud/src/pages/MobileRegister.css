@@ -47,6 +47,7 @@
     animation: none;
   }
   .mentor-register-page .mentor-register-topbar {
+    display: none;
     position: absolute;
     top: 12px;
     right: 12px;
