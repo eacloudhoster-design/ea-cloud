@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useLayoutEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { Link, useLocation } from "wouter";
 import { useClientAuth, appFetch, type AppClient } from "@/contexts/ClientAuthContext";
@@ -15,12 +15,12 @@ export default function AppLogin() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  if (restoringSession) return <div role="status" className="min-h-screen bg-black text-white flex items-center justify-center">Verifying session…</div>;
-  if (client) {
+  useLayoutEffect(() => {
+    if (restoringSession || !client) return;
     if (client.status === "pending") setLocation("/app/pending", {replace:true});
     else if (client.status === "approved" && !client.licenseKey) setLocation("/app/activate", {replace:true});
     else if (client.status === "approved" && client.licenseKey) setLocation("/app/dashboard", {replace:true});
-  }
+  }, [restoringSession, client, setLocation]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();

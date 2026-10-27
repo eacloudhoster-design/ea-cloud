@@ -24,6 +24,8 @@ interface ClientAuthContextType {
   client: AppClient | null;
   token: string | null;
   loading: boolean;
+  sessionError: boolean;
+  retrySession: () => void;
   login: (token: string, client: AppClient) => void;
   logout: () => void;
   updateClient: (c: AppClient) => void;
@@ -55,25 +57,30 @@ export function ClientAuthProvider({ children }: { children: ReactNode }) {
   const [client, setClient] = useState<AppClient | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const [returnVerification, setReturnVerification] = useState(false);
   const [unavailable, setUnavailable] = useState(false);
   const generation = useRef(0);
+  const retry = useRef<() => void>(() => {});
   const [, setLocation] = useLocation();
 
   useEffect(() => {
     let alive = true;
+    let verifying: number | null = null;
     try {
       localStorage.removeItem(APP_TOKEN_KEY);
     } catch {}
     const check = async (event?: Event) => {
       if (
-        event?.type === "pageshow" &&
-        (event as PageTransitionEvent).persisted
+        (event?.type === "pageshow" &&
+          (event as PageTransitionEvent).persisted) ||
+        event?.type === "message" ||
+        event?.type === "ea:auth-changed"
       ) {
+        generation.current++;
         setLoading(true);
-        setReturnVerification(true);
       }
       const current = generation.current;
+      if (verifying === current) return;
+      verifying = current;
       try {
         const c = await appFetch("/app/me");
         if (alive && current === generation.current) {
@@ -94,9 +101,16 @@ export function ClientAuthProvider({ children }: { children: ReactNode }) {
           setUnavailable(false);
         } else if (alive && current === generation.current)
           setUnavailable(true);
+      } finally {
+        if (verifying === current) verifying = null;
       }
     };
+    retry.current = () => void check();
     void check();
+    const visible = () => {
+      if (!document.hidden) void check();
+    };
+    document.addEventListener("visibilitychange", visible);
     window.addEventListener("focus", check);
     window.addEventListener("pageshow", check);
     window.addEventListener("ea:auth-changed", check);
@@ -110,6 +124,7 @@ export function ClientAuthProvider({ children }: { children: ReactNode }) {
       alive = false;
       clearInterval(timer);
       channel?.close();
+      document.removeEventListener("visibilitychange", visible);
       window.removeEventListener("focus", check);
       window.removeEventListener("pageshow", check);
       window.removeEventListener("ea:auth-changed", check);
@@ -119,6 +134,7 @@ export function ClientAuthProvider({ children }: { children: ReactNode }) {
   const login = (t: string, c: AppClient) => {
     generation.current++;
     setLoading(false);
+    setUnavailable(false);
 
     setToken(t);
     setClient(c);
@@ -150,26 +166,18 @@ export function ClientAuthProvider({ children }: { children: ReactNode }) {
 
   return (
     <ClientAuthContext.Provider
-      value={{ client, token, loading, login, logout, updateClient }}
+      value={{
+        client,
+        token,
+        loading,
+        login,
+        logout,
+        updateClient,
+        sessionError: unavailable,
+        retrySession: () => retry.current(),
+      }}
     >
-      {loading &&
-      (unavailable || returnVerification) &&
-      /^\/app(?:\/|$)/.test(window.location.pathname) ? (
-        <div
-          role="status"
-          className="min-h-screen bg-black text-white flex items-center justify-center"
-        >
-          <button
-            onClick={() => window.dispatchEvent(new Event("ea:auth-changed"))}
-          >
-            {unavailable
-              ? "Unable to verify your session. Retry"
-              : "Verifying session…"}
-          </button>
-        </div>
-      ) : (
-        children
-      )}
+      {children}
     </ClientAuthContext.Provider>
   );
 }

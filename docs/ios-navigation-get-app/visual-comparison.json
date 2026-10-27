@@ -1,0 +1,44 @@
+[
+  {
+    "screenshot": "5222-1440-_.png",
+    "region": "header only",
+    "unchangedGeometry": true,
+    "differentPixels": 0,
+    "maxChannelDifference": 0
+  },
+  {
+    "screenshot": "5222-1440-_admin_login.png",
+    "region": "viewport",
+    "unchangedGeometry": true,
+    "differentPixels": 0,
+    "maxChannelDifference": 0
+  },
+  {
+    "screenshot": "5222-1440-_register.png",
+    "region": "viewport",
+    "unchangedGeometry": true,
+    "differentPixels": 0,
+    "maxChannelDifference": 0
+  },
+  {
+    "screenshot": "5222-390-_.png",
+    "region": "header only",
+    "unchangedGeometry": true,
+    "differentPixels": 0,
+    "maxChannelDifference": 0
+  },
+  {
+    "screenshot": "5222-390-_admin_login.png",
+    "region": "viewport",
+    "unchangedGeometry": true,
+    "differentPixels": 0,
+    "maxChannelDifference": 0
+  },
+  {
+    "screenshot": "5222-390-_register.png",
+    "region": "viewport",
+    "unchangedGeometry": true,
+    "differentPixels": 0,
+    "maxChannelDifference": 0
+  }
+]

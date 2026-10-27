@@ -1,0 +1,38 @@
+[
+  {
+    "publicFormsAvailableBeforeVerification": true,
+    "publicFailuresReportedWithoutBlocking": true,
+    "inFlightChecksCoalesced": true,
+    "clientRoutingPreservesDocument": true
+  },
+  {
+    "scenario": "guest",
+    "protectedContentBlockedUntilAuthorized": true
+  },
+  {
+    "scenario": "pending",
+    "protectedContentBlockedUntilAuthorized": true
+  },
+  {
+    "scenario": "wrong-role",
+    "protectedContentBlockedUntilAuthorized": true
+  },
+  {
+    "lateAnonymousRestoreCannotOverwriteNewLogin": true
+  },
+  {
+    "protectedClientFailureHasRetry": true,
+    "clientUnauthorizedDenied": true
+  },
+  {
+    "existingSessionReused": true,
+    "backForward": true,
+    "noVerificationOnRouteChanges": true,
+    "bfcacheRevalidatesBeforePrivateContent": true,
+    "expiredSessionRedirect": true
+  },
+  {
+    "explicitLogout": true,
+    "protectedBackDenied": true
+  }
+]

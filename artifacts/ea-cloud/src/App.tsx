@@ -1,7 +1,10 @@
+import PortalLoading from "./components/PortalLoading";
+import SessionNotices from "./components/SessionNotices";
+import "./components/NavigationTransitions.css";
 import { PrivacyProvider } from "./privacy/PrivacyProvider";
 import Legal from "./pages/Legal";
 import ClientStartup from "./components/ClientStartup";
-import { Switch, Route } from "wouter";
+import { Switch, Route, useLocation } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { AuthProvider } from "./contexts/AuthContext";
 import { ClientAuthProvider } from "./contexts/ClientAuthContext";
@@ -13,6 +16,7 @@ import { AdminSidebar } from "./components/layout/AdminSidebar";
 import { SuperAdminSidebar } from "./components/layout/SuperAdminSidebar";
 import Landing from "./pages/Landing";
 import Register from "./pages/Register";
+import GetApp from "./pages/GetApp";
 import AdminLogin from "./pages/admin/Login";
 import AdminDashboard from "./pages/admin/Dashboard";
 import SetupMethod from "./pages/admin/SetupMethod";
@@ -47,9 +51,9 @@ const queryClient = new QueryClient({
 function AdminLayout({ children }: { children: React.ReactNode }) {
   const { token, user, isLoading } = useAuth();
   usePortalRedirect();
-  const { data: profile } = useGetProfile({ query: { queryKey: getGetProfileQueryKey(), enabled: !!token } });
+  const { data: profile } = useGetProfile({ query: { queryKey: getGetProfileQueryKey(), enabled: !!token && !isLoading && !!user && ["approved", "active"].includes(user.status) && ["mentor", "admin"].includes(user.role) } });
   const bgImage = profile?.backgroundImageUrl;
-  if(isLoading || !user || !["approved","active"].includes(user.status) || !["mentor","admin"].includes(user.role)) return <div role="status" className="min-h-screen bg-black text-white flex items-center justify-center">Verifying session…</div>;
+  if(isLoading || !user || !["approved","active"].includes(user.status) || !["mentor","admin"].includes(user.role)) return <PortalLoading/>;
   return (
     <div
       className="min-h-screen text-white relative"
@@ -70,7 +74,7 @@ function AdminLayout({ children }: { children: React.ReactNode }) {
 function SuperAdminLayout({ children }: { children: React.ReactNode }) {
   const {user,isLoading} = useAuth();
   usePortalRedirect();
-  if(isLoading || !user || !["approved","active"].includes(user.status) || user.role !== "superadmin") return <div role="status" className="min-h-screen bg-black text-white flex items-center justify-center">Verifying session…</div>;
+  if(isLoading || !user || !["approved","active"].includes(user.status) || user.role !== "superadmin") return <PortalLoading/>;
   return (
     <div className="min-h-screen text-white" style={{ background: "#08080f" }}>
       <SuperAdminSidebar />
@@ -89,14 +93,21 @@ function PublicLayout({ children }: { children: React.ReactNode }) {
   );
 }
 
+function RouteContent({children}:{children:React.ReactNode}) {
+  const [path]=useLocation();
+  return <div key={path} className="ea-route-content">{children}</div>;
+}
+
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <ClientAuthProvider>
           <PrivacyProvider>
+          <SessionNotices />
           <ClientStartup>
           <div className="dark">
+            <RouteContent>
             <Switch>
               {/* ── Client App Portal ── */}
               <Route path="/app" component={AppLogin} />
@@ -160,6 +171,7 @@ function App() {
               {/* ── Public Pages ── */}
               <Route path="/legal/:page">{params => <PublicLayout><Legal page={params.page}/></PublicLayout>}</Route>
               <Route path="/legal"><PublicLayout><Legal/></PublicLayout></Route>
+              <Route path="/get-app" component={GetApp} />
               <Route path="/register">
                 <Register />
               </Route>
@@ -169,6 +181,7 @@ function App() {
 
               <Route component={NotFound} />
             </Switch>
+            </RouteContent>
           </div>
           </ClientStartup>
           </PrivacyProvider>

@@ -1,4 +1,5 @@
 import "../styles/PublicTypography.css";
+import { Link } from "wouter";
 import { useEffect, useRef } from "react";
 import {
   ArrowUpRight,
@@ -162,14 +163,14 @@ export default function Landing() {
             </p>
           </div>
           <div className="public-cta-row hero-enter">
-            <a href="/ea-app/" className="public-cta public-cta-primary">
+            <Link href="/get-app" className="public-cta public-cta-primary">
               Get App
               <ArrowUpRight size={18} />
-            </a>
-            <a href="/register" className="public-cta public-cta-secondary">
+            </Link>
+            <Link href="/register" className="public-cta public-cta-secondary">
               Become a Mentor
               <ArrowUpRight size={17} />
-            </a>
+            </Link>
           </div>
         </div>
         <div className="hero-baseline">
@@ -249,7 +250,7 @@ export default function Landing() {
               <p>{feature.desc}</p>
             </article>
           ))}
-          <a
+          <Link
             href="/register"
             data-reveal
             className="public-feature-card feature-mentor"
@@ -264,7 +265,7 @@ export default function Landing() {
               Explore mentor registration
               <MoveUpRight size={22} />
             </span>
-          </a>
+          </Link>
         </div>
       </section>
       <section
@@ -308,14 +309,14 @@ export default function Landing() {
           experience starts here.
         </h2>
         <div className="public-cta-row">
-          <a href="/ea-app/" className="public-cta public-cta-primary">
+          <Link href="/get-app" className="public-cta public-cta-primary">
             Get App
             <ArrowUpRight size={18} />
-          </a>
-          <a href="/register" className="public-cta public-cta-secondary">
+          </Link>
+          <Link href="/register" className="public-cta public-cta-secondary">
             Become a Mentor
             <ArrowUpRight size={17} />
-          </a>
+          </Link>
         </div>
       </section>
       <section

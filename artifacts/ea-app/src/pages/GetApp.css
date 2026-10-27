@@ -1,0 +1,212 @@
+.get-app-page {
+  position: relative;
+  isolation: isolate;
+  min-height: 100svh;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: max(28px, env(safe-area-inset-top))
+    max(12px, env(safe-area-inset-right)) max(24px, env(safe-area-inset-bottom))
+    max(12px, env(safe-area-inset-left));
+  color: #fff;
+  background-color: #050505;
+  background-size: cover;
+  background-position: center;
+}
+.get-app-page .mentor-mobile-backdrop {
+  display: block;
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background-image: inherit;
+  background-size: cover;
+  background-position: center;
+  pointer-events: none;
+}
+.get-app-page .mentor-mobile-backdrop::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(#0004, #0006);
+}
+.get-app-page .mentor-mobile-neon {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+.get-app-brand {
+  position: relative;
+  z-index: 2;
+  margin-bottom: -30px;
+  pointer-events: none;
+}
+.get-app-page .mentor-mobile-cloud {
+  display: block;
+  position: relative;
+  width: min(68vw, 260px);
+  aspect-ratio: 1688/932;
+  line-height: 0;
+  background: none;
+  border: 0;
+}
+.get-app-page .mentor-login-mobile-logo {
+  display: block;
+  width: 100%;
+  height: auto;
+  object-fit: contain;
+  filter: drop-shadow(0 0 16px #e31e2438);
+}
+.get-app-page .mentor-mobile-cloud-effects {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+.get-app-page .mentor-mobile-eye-dim {
+  opacity: 0.98;
+}
+.get-app-page .mentor-mobile-eye {
+  opacity: 0.08;
+  animation: mentor-mobile-eye-power 3.6s ease-in-out infinite;
+}
+.get-app-page .mentor-mobile-circuit {
+  fill: none;
+  stroke: #ff6171;
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 7 93;
+  stroke-dashoffset: 100;
+  opacity: 0;
+  animation: mentor-mobile-circuit-flow 4.8s linear var(--circuit-delay)
+    infinite;
+}
+.get-app-page .mentor-mobile-circuit-halo {
+  stroke: #ff1538;
+  stroke-width: 12;
+  filter: url(#mentor-mobile-circuit-glow);
+}
+.get-app-panel {
+  position: relative;
+  z-index: 1;
+  flex: 0 0 auto;
+  width: min(100%, 460px);
+  padding: 66px 24px 26px;
+  border: 1px solid #67252c;
+  border-radius: 17px;
+  background: #050505f2;
+  box-shadow:
+    0 12px 50px #0008,
+    0 0 32px #e31e2417;
+}
+.get-app-panel header {
+  text-align: center;
+  margin-bottom: 25px;
+}
+.get-app-panel h1 {
+  margin: 0;
+  color: #fff;
+  font-size: clamp(24px, 5.7vw, 30px);
+  font-weight: 650;
+  letter-spacing: -0.025em;
+  line-height: 1.25;
+}
+.get-app-panel header p {
+  margin: 10px 0 0;
+  color: #999;
+  font-size: 12px;
+  line-height: 1.7;
+}
+.get-app-fields {
+  display: grid;
+  gap: 21px;
+}
+.get-app-field label {
+  display: block;
+  color: #bcbcbc;
+  font-size: 13px;
+  margin-bottom: 9px;
+}
+.get-app-field input {
+  box-sizing: border-box;
+  display: block;
+  width: 100%;
+  min-width: 0;
+  height: 52px;
+  padding: 12px 15px;
+  border: 1px solid #353535;
+  border-radius: 8px;
+  background: #101010;
+  color: #fff;
+  font-size: 16px;
+  outline: none;
+}
+.get-app-field input::placeholder {
+  color: #707070;
+}
+.get-app-field input:focus-visible {
+  border-color: #ee3840;
+  box-shadow: 0 0 0 3px #e31e2426;
+}
+.get-app-submit {
+  width: 100%;
+  height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 5px;
+  border: 1px solid #ff5960;
+  border-radius: 9px;
+  background: linear-gradient(110deg, #d10c1d, #f22a38);
+  color: #fff;
+  font-size: 15px;
+  font-weight: 650;
+  box-shadow: 0 4px 24px #e31e242b;
+  cursor: pointer;
+  transition: box-shadow 180ms;
+}
+.get-app-submit:hover {
+  box-shadow: 0 4px 32px #e31e2459;
+}
+.get-app-submit:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+.get-app-switch {
+  display: block;
+  margin: 22px auto 0;
+  border: 0;
+  background: transparent;
+  color: #ff545d;
+  font-size: 12px;
+  line-height: 1.7;
+  cursor: pointer;
+}
+.get-app-switch:focus-visible,
+.get-app-submit:focus-visible {
+  outline: 2px solid #ff6871;
+  outline-offset: 4px;
+}
+.get-app-error {
+  color: #ff6a75;
+  font-size: 13px;
+  line-height: 1.5;
+}
+@media (prefers-reduced-motion: reduce) {
+  .get-app-page *,
+  .get-app-page *::before {
+    animation: none !important;
+    transition: none !important;
+  }
+  .get-app-page .mentor-mobile-eye {
+    opacity: 0.7;
+  }
+  .get-app-page .mentor-mobile-circuit {
+    opacity: 0;
+  }
+}
