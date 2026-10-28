@@ -1,3 +1,4 @@
+import RobotControlPanel from "@/components/RobotControlPanel";
 import LumoLayout from "@/components/LumoLayout";
 import { confirmSymbolSave } from "@/lib/symbol-save";
 import ModeImage from "@/components/ModeImage";
@@ -10,7 +11,7 @@ import { Bell, Trash2, DollarSign, Play, Pause, X, TrendingUp, Settings2, Check,
 import { useState, useEffect, useLayoutEffect, useRef } from "react";
 import { useApp } from "@/context/AppContext";
 import { useTradeExecutions, type TradeExecution } from "@/hooks/use-trade-executions";
-import { eaLogo } from "@/lib/branding";
+import { eaLogo, robotBg } from "@/lib/branding";
 
 /* Custom chip icon — no inner square */
 function ChipIcon({ size = 24, color = "currentColor", style }: { size?: number; color?: string; style?: React.CSSProperties }) {
@@ -314,78 +315,10 @@ function RegularLayout({ portraitEnabled, shapeStyle, accentColor, botRunning, s
         <span className="font-semibold text-sm" style={{ color: accentColor }}>EA Cloud</span>
       </div>
 
-      {/* Three circle buttons — wider spread */}
-      <div className="z-10 w-full px-2">
-        <ThreeButtons
-          accentColor={accentColor}
-          botRunning={botRunning}
-          setBotRunning={setBotRunning}
-          setShowRemoveConfirm={setShowRemoveConfirm}
-          setShowQuotes={setShowQuotes}
-          wideSpread
-        />
-      </div>
-    </div>
-  );
-}
-
-/* ══════════════════════════════════════════════════════════════════ */
-/* Shared: Three circle buttons (REMOVE · START/STOP · SYMBOLS)     */
-/* wideSpread — pushes buttons to screen edges (Regular layout)     */
-/* ══════════════════════════════════════════════════════════════════ */
-function ThreeButtons({
-  accentColor, botRunning, setBotRunning, setShowRemoveConfirm, setShowQuotes,
-  wideSpread = false,
-}: any) {
-  const sideSize  = 54;
-  const centreSize = 64;
-  const gap = wideSpread ? "justify-between px-6" : "justify-center gap-10";
-
-  return (
-    <div className={`flex items-end w-full ${gap}`}>
-      {/* REMOVE / DELETE */}
-      <div className="flex flex-col items-center gap-2">
-        <button
-          onClick={() => setShowRemoveConfirm(true)}
-          className="rounded-full flex items-center justify-center active:scale-95 transition-transform"
-          style={{ width: sideSize, height: sideSize, border: `1.5px solid ${accentColor}`, background: "transparent" }}
-        >
-          <X size={20} style={{ color: accentColor }} />
-        </button>
-        <span className="text-[11px] font-bold tracking-wider" style={{ color: accentColor }}>REMOVE</span>
-      </div>
-
-      {/* START / STOP */}
-      <div className="flex flex-col items-center gap-2">
-        <button
-          onClick={() => setBotRunning(!botRunning)}
-          className="rounded-full flex items-center justify-center active:scale-95 transition-transform"
-          style={{
-            width: centreSize, height: centreSize,
-            border: `2px solid ${accentColor}`,
-            background: "transparent",
-            boxShadow: `0 0 22px ${accentColor}55`,
-          }}
-        >
-          {botRunning
-            ? <div className="w-5 h-5 rounded-sm" style={{ background: accentColor }} />
-            : <Play size={24} style={{ color: accentColor, marginLeft: 3 }} />}
-        </button>
-        <span className="text-[11px] font-bold tracking-wider" style={{ color: accentColor }}>
-          {botRunning ? "STOP" : "START"}
-        </span>
-      </div>
-
-      {/* SYMBOLS */}
-      <div className="flex flex-col items-center gap-2">
-        <button
-          onClick={() => setShowQuotes(true)}
-          className="rounded-full flex items-center justify-center active:scale-95 transition-transform"
-          style={{ width: sideSize, height: sideSize, border: `1.5px solid ${accentColor}`, background: "transparent" }}
-        >
-          <BarChart2 size={20} style={{ color: accentColor }} />
-        </button>
-        <span className="text-[11px] font-bold tracking-wider" style={{ color: accentColor }}>SYMBOLS</span>
+      {/* Keep the original control slot; only its visual surface is replaced. */}
+      <div className="z-10 w-full px-2 flex items-center justify-center" style={{ height: 88.5 }}>
+        <RobotControlPanel image={bgImageUrl || robotBg} accentColor={accentColor} botRunning={botRunning}
+          onToggle={() => setBotRunning(!botRunning)} onOpenQuotes={() => setShowQuotes(true)} onRemove={() => setShowRemoveConfirm(true)} />
       </div>
     </div>
   );
@@ -473,23 +406,9 @@ function MatrixLayout({ portraitEnabled, shapeStyle, accentColor, botRunning, se
         {[...Array(5)].map((_, i) => <div key={i} className="w-1 h-1 rounded-full bg-white" />)}
       </div>
 
-      <div data-matrix-functions className="relative mx-4 w-[calc(100%-32px)] max-w-[340px] flex items-center justify-between px-6" style={{ height: 84, borderRadius: 9999, background: "rgba(6,6,20,0.75)", border: `1px solid ${theme}44`, backdropFilter: "blur(16px)" }}>
-        <button onClick={() => setShowQuotes(true)} className="flex flex-col items-center gap-1 active:scale-95 transition-transform" style={{ minWidth: 56 }}>
-          <TrendingUp size={22} className="text-white/65" />
-          <span className="text-[10px] tracking-widest font-bold text-white/55">QUOTES</span>
-        </button>
-        <button
-          onClick={() => setBotRunning(!botRunning)}
-          className="absolute left-1/2 -translate-x-1/2 active:scale-95 transition-transform flex flex-col items-center justify-center gap-1"
-          style={{ width: 68, height: 68, borderRadius: 18, background: botRunning ? `radial-gradient(circle at 40% 35%, ${theme}ee 0%, color-mix(in srgb, ${theme} 65%, black) 100%)` : "radial-gradient(circle at 40% 35%, #1a1a3a 0%, #0a0a1e 100%)", border: `2px solid ${botRunning ? theme : theme + "44"}`, boxShadow: botRunning ? `0 0 22px ${theme}88, 0 6px 24px rgba(0,0,0,0.7)` : `0 0 10px ${theme}22, 0 6px 24px rgba(0,0,0,0.6)` }}
-        >
-          {botRunning ? <div className="rounded-sm bg-white" style={{ width: 20, height: 20 }} /> : <Play size={22} className="text-white ml-0.5" />}
-          <span className="text-[9px] font-black tracking-widest text-white/90">{botRunning ? "STOP" : "START"}</span>
-        </button>
-        <button onClick={() => setShowRemoveConfirm(true)} className="flex flex-col items-center gap-1 active:scale-95 transition-transform" style={{ minWidth: 56 }}>
-          <Trash2 size={22} className="text-white/65" />
-          <span className="text-[10px] tracking-widest font-bold text-white/55">REMOVE</span>
-        </button>
+      <div data-matrix-functions className="relative mx-4 w-[calc(100%-32px)] max-w-[340px] flex items-center justify-center" style={{ height: 84, flexShrink: 0 }}>
+        <RobotControlPanel image={bgImageUrl || robotBg} accentColor={accentColor} botRunning={botRunning}
+          onToggle={() => setBotRunning(!botRunning)} onOpenQuotes={() => setShowQuotes(true)} onRemove={() => setShowRemoveConfirm(true)} />
       </div>
 
       <div data-matrix-branding className="mt-5 px-5 py-2.5 rounded-full" style={{ background: "rgba(0,0,0,0.45)", border: "1px solid rgba(255,255,255,0.12)", backdropFilter: "blur(8px)" }}>

@@ -2,14 +2,11 @@ import { useState, type CSSProperties } from "react";
 import {
   ArrowUpRight,
   Menu,
-  Play,
-  Square,
-  Trash2,
-  TrendingUp,
 } from "lucide-react";
 import { useApp } from "@/context/AppContext";
 import { modeNames } from "@/lib/assistant-text";
 import { robotBg } from "@/lib/branding";
+import RobotControlPanel from "./RobotControlPanel";
 import ModeImage from "./ModeImage";
 import BotName from "./BotName";
 import "./LumoLayout.css";
@@ -85,52 +82,8 @@ export default function LumoLayout({
         </BotName>
       </div>
 
-      <div className="lumo-controls" role="group" aria-label="Robot controls">
-        <ModeImage
-          src={image}
-          alt=""
-          aria-hidden="true"
-          className="lumo-control-reflection"
-          draggable={false}
-        />
-        <button
-          type="button"
-          className="lumo-action"
-          onClick={onOpenQuotes}
-          aria-label="Quotes"
-        >
-          <span className="lumo-action-icon">
-            <TrendingUp aria-hidden="true" />
-          </span>
-          <span>Quotes</span>
-        </button>
-        <button
-          type="button"
-          className="lumo-action lumo-toggle"
-          onClick={() => setBotRunning(!botRunning)}
-          aria-label={botRunning ? "Stop" : "Start"}
-        >
-          <span className="lumo-action-icon">
-            {botRunning ? (
-              <Square aria-hidden="true" fill="currentColor" />
-            ) : (
-              <Play aria-hidden="true" fill="currentColor" />
-            )}
-          </span>
-          <span>{botRunning ? "Stop" : "Start"}</span>
-        </button>
-        <button
-          type="button"
-          className="lumo-action"
-          onClick={onRemove}
-          aria-label="Remove"
-        >
-          <span className="lumo-action-icon">
-            <Trash2 aria-hidden="true" />
-          </span>
-          <span>Remove</span>
-        </button>
-      </div>
+      <RobotControlPanel image={image} accentColor={accentColor} botRunning={botRunning}
+        onToggle={() => setBotRunning(!botRunning)} onOpenQuotes={onOpenQuotes} onRemove={onRemove} />
 
       <div className="lumo-powered">
         <span>Powered by </span>

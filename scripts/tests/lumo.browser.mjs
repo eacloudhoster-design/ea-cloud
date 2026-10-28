@@ -80,7 +80,7 @@ try {
         }
         json = { copyingEnabled: running };
       } else if (u.pathname.endsWith("/app/me"))
-        json = { id: 7, status: "approved", licenseKey: "FIXTURE" };
+        json = { id: 7, token: btoa("7:client:cookie"), status: "approved", licenseKey: "FIXTURE" };
       else if (u.pathname.endsWith("/app/dashboard"))
         json = {
           mentor: {
