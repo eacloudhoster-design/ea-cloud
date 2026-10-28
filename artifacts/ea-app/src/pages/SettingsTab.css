@@ -64,3 +64,14 @@
   .ea-settings .ea-settings-card, .ea-settings .ea-settings-icon, .ea-settings .ea-settings-chevron,
   .ea-settings .ea-settings-expansion { transition: none; }
 }
+
+/* Standalone background only: foreground remains in the unchanged safe-area
+   content box. The artwork uses the same full-screen cover crop as Home. */
+.ea-settings[data-fullscreen-background="true"] { background: transparent; }
+.ea-settings-fullscreen-background { position: absolute; inset: 0; overflow: hidden; isolation: isolate; opacity: 0; transition: opacity 240ms ease; background: #050508; }
+.ea-settings-fullscreen-background[data-active="true"] { opacity: 1; }
+.ea-settings-fullscreen-background > img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center; }
+.ea-settings-background-tint { position: absolute; inset: 0; background: radial-gradient(ellipse at 100% 0%, color-mix(in srgb, var(--settings-accent) 24%, transparent), transparent 44%), linear-gradient(155deg, #181a24bd, #090a10d9 36%, #050508e0); }
+@media (prefers-reduced-motion: reduce) {
+  .ea-settings-fullscreen-background { transition: none; }
+}

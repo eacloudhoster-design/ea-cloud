@@ -1,3 +1,4 @@
+import { createPortal } from "react-dom";
 import {assistantEvent} from "@/lib/assistant-events";
 import { X, Camera, ImagePlus, Settings2, Globe2, History, ScanLine, ArrowUpRight, RotateCcw, ShieldCheck, LoaderCircle, Trash2 } from "lucide-react";
 import { useState, useEffect, useRef, useCallback, type CSSProperties, type ChangeEvent } from "react";
@@ -13,7 +14,7 @@ import { prepareChart, ScannerRequestError, scannerErrorTitle, scannerRequest, s
 import { directionalLabel } from "@/lib/scanner-report-view";
 import "./ChartScannerModal.css";
 
-interface ChartScannerModalProps { onClose: () => void; onNavigate: (tab: Tab) => void }
+interface ChartScannerModalProps { backgroundHost?: HTMLElement | null; onClose: () => void; onNavigate: (tab: Tab) => void }
 type Phase = "idle" | "preparing" | "chart" | "fundamental";
 const formatDate = (date: string) => new Date(date).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" });
 
@@ -21,7 +22,7 @@ function ScannerOrb() {
   return <div className="scanner-orb"><div className="scanner-orbit scanner-orbit-one" /><div className="scanner-orbit scanner-orbit-two" /><ScannerMentorMark className="scanner-orb-avatar" /></div>;
 }
 
-export default function ChartScannerModal({ onClose, onNavigate }: ChartScannerModalProps) {
+export default function ChartScannerModal({ onClose, onNavigate, backgroundHost }: ChartScannerModalProps) {
   const { bgImageUrl, eaName, clientToken, accentColor } = useApp();
   const [strategy, setStrategy] = useState<Strategy>("SMC");
   const [file, setFile] = useState<File | null>(null);
@@ -109,7 +110,7 @@ export default function ChartScannerModal({ onClose, onNavigate }: ChartScannerM
   const chart = result?.kind === "chart" ? result.report as ChartReport : null;
   const fundamental = result?.kind === "fundamental" ? result.report as FundamentalReport : null;
 
-  return <div ref={modal} className="scanner-screen" style={{ "--scanner-accent": accentColor } as CSSProperties} role="dialog" aria-modal="true" aria-labelledby="scanner-title" onKeyDown={event => {
+  return <div ref={modal} className="scanner-screen" data-fullscreen-background={!!backgroundHost} style={{ "--scanner-accent": accentColor } as CSSProperties} role="dialog" aria-modal="true" aria-labelledby="scanner-title" onKeyDown={event => {
     if (event.key === "Escape") { event.preventDefault(); if (busy) cancel(); else onClose(); }
     if (event.key === "Tab") {
       const items = Array.from(event.currentTarget.querySelectorAll<HTMLElement>('button:not(:disabled),input:not(:disabled):not([type="file"]),select:not(:disabled),summary,a[href]')).filter(el => el.getClientRects().length);
@@ -119,8 +120,13 @@ export default function ChartScannerModal({ onClose, onNavigate }: ChartScannerM
     }
   }}>
     <div className="scanner-main" inert={settingsOpen}>
-    {bgImageUrl && <img className="scanner-background" src={bgImageUrl} alt="" />}
-    <div className="scanner-shade" />
+    {backgroundHost ? createPortal(<div className="scanner-fullscreen-background" style={{ "--scanner-accent": accentColor } as CSSProperties}>
+      {bgImageUrl && <img className="scanner-background" src={bgImageUrl} alt="" />}
+      <div className="scanner-shade" />
+    </div>, backgroundHost) : <>
+      {bgImageUrl && <img className="scanner-background" src={bgImageUrl} alt="" />}
+      <div className="scanner-shade" />
+    </>}
     <header className="scanner-header">
       <button className="scanner-icon-button" type="button" aria-label="Close scanner" onClick={onClose}><X size={23} /></button>
       <ScannerMentorMark className="scanner-header-avatar" />
