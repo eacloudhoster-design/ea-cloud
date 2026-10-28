@@ -1,4 +1,6 @@
 # Revalidate installation metadata; fingerprinted JS/CSS keep their normal cache policy.
+/build-info.json
+  Cache-Control: no-store
 /ea-app/
   Cache-Control: no-cache
 /ea-app/index.html

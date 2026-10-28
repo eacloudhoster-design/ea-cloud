@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { useApp, InterfaceStyle, ShapeStyle } from "@/context/AppContext";
 import { eaLogo } from "@/lib/branding";
+import ClientSizingDiagnostics from "@/components/ClientSizingDiagnostics";
 
 interface SettingsTabProps {
   onOpenChartScanner?: () => void;
@@ -61,8 +62,8 @@ export default function SettingsTab({ onOpenChartScanner }: SettingsTabProps) {
     >
       {/* Header */}
       <div className="flex items-center justify-between px-5 pt-14 pb-4">
-        <h1 className="font-black text-2xl tracking-widest uppercase" style={{ color: accentColor }}>
-          Settings
+        <h1 aria-label="Settings" className="font-black text-2xl tracking-widest uppercase" style={{ color: accentColor }}>
+          <ClientSizingDiagnostics />
         </h1>
         <button
           aria-label="Enable or repair push notifications"
