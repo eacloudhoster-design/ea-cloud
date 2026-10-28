@@ -242,7 +242,9 @@ function EACloudApp({ onReady, startupComplete }: { onReady: (ready: boolean) =>
   };
 
   const backgroundSrc = bgImageUrl || robotBg;
-  usePwaBackground(backgroundSrc, authStage === "app" && brandingReady && showBg);
+  // The standalone canvas sits outside the splash's stacking context. Keep it
+  // black until the existing handoff finishes, then use the decoded app artwork.
+  usePwaBackground(backgroundSrc, startupComplete && authStage === "app" && brandingReady && showBg);
   useIosStandaloneLayout(authStage === "app" && brandingReady);
 
   const initializing = authStage === "loading" || (authStage === "app" && !loadError && (!brandingReady || visualModes.loading));

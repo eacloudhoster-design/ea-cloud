@@ -1,6 +1,8 @@
 .ea-startup-home { opacity: 0; }
 .ea-startup-home[data-visible="true"] {
-  opacity: 1; transition: opacity var(--ea-crossfade-duration) cubic-bezier(.4, 0, .2, 1);
+  /* One fade over an opaque destination. Fading both layers exposes the black
+     canvas between them (at halfway, only 25% of the app reaches the screen). */
+  opacity: 1;
 }
 .ea-startup {
   position: fixed; inset: 0; z-index: 10000; overflow: hidden;

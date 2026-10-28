@@ -34,7 +34,7 @@ async function check(scenario) {
         if (scenario === 'slow-auth') await new Promise(resolve => setTimeout(resolve, 11000));
         if (scenario === 'mid-entrance-ready') await new Promise(resolve => setTimeout(resolve, 1200));
         if (scenario === 'auth-error') return r.fulfill({ status: 503, json: {} });
-        return r.fulfill({ json: { id: 1, status: 'approved', licenseKey: 'licensed' } });
+        return r.fulfill({ json: { id: 1, token: btoa('1:client:cookie'), status: 'approved', licenseKey: 'licensed' } });
       }
       if (path === '/api/app/dashboard') return r.fulfill({ json: { mentor: { robotName: 'Startup Test Mentor' }, eas: [] } });
       if (path === '/api/app/ea-mode-images') return r.fulfill({ json: { eas: [] } });
@@ -157,11 +157,11 @@ async function check(scenario) {
     const fades = (await page.evaluate(() => window.startupFades)).filter(f => f.splash > .01 && f.splash < .99);
     assert(fades.length >= 2, 'both layers must overlap on multiple rendered frames');
     for (const fade of fades) {
-      assert(fade.home > 0 && fade.home < 1);
-      assert(Math.abs(fade.splash + fade.home - 1) < .05); assert.equal(fade.duration, '0.3s');
+      assert.equal(fade.home, 1, 'destination stays opaque beneath the fading splash');
+      assert.equal(fade.duration, '0s');
       assert.equal(fade.edge, 0);
     }
-    assert(fades[0].splash > fades.at(-1).splash && fades[0].home < fades.at(-1).home);
+    assert(fades[0].splash > fades.at(-1).splash);
     const phases = await page.evaluate(() => window.startupPhases);
     const elapsed = phases.find(p => p.phase === 'done').time - phases.find(p => p.phase === 'true:entrance').time;
     assert(elapsed >= 4600);
@@ -177,7 +177,7 @@ async function check(scenario) {
         await page.getByRole('button', { name, exact: true }).click();
         assert.equal(await page.locator('.ea-startup').count(), 0);
       }
-      assert.equal(await page.evaluate(() => localStorage.getItem('appClientToken')), 'startup-test');
+      assert.equal(await page.evaluate(() => localStorage.getItem('appClientToken')), null, 'legacy token is cleared by existing cookie authentication');
     }
     if (scenario === 'portal-dashboard') await page.getByText('Startup Test Mentor', { exact: true }).first().waitFor();
     if (scenario === 'portal') await page.getByRole('button', { name: 'SIGN IN', exact: true }).waitFor();
