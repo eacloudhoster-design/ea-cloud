@@ -1,5 +1,6 @@
 import {toggleWebPush,prepareWebPush} from "@/lib/web-push-client";
-import {useEffect} from "react";
+import {useEffect, useId, type CSSProperties} from "react";
+import "./SettingsTab.css";
 import EaModeCards from "@/components/EaModeCards";
 import { backgroundAnimations } from "@/lib/home-preferences";
 import {botFonts,botFontStyle,type BotFont} from "@/lib/font-preference";
@@ -7,7 +8,7 @@ import "../assets/bot-fonts/fonts.css";
 import { useState } from "react";
 import {
   LayoutGrid, Circle, PlusCircle, Type, Pencil, LineChart, BarChart2,
-  ChevronDown, ChevronUp, ChevronRight, BellOff, Check
+  ChevronDown, ChevronRight, BellOff, Check, Shield, LogOut
 } from "lucide-react";
 import { useApp, InterfaceStyle, ShapeStyle } from "@/context/AppContext";
 import { eaLogo } from "@/lib/branding";
@@ -57,26 +58,26 @@ export default function SettingsTab({ onOpenChartScanner }: SettingsTabProps) {
 
   return (
     <div
-      className="h-full flex flex-col overflow-hidden"
-      style={{ background: "#080808", paddingBottom: "var(--ea-nav-clearance, 90px)" }}
+      className="ea-settings h-full flex flex-col overflow-hidden"
+      style={{ "--settings-accent": accentColor, paddingBottom: "var(--ea-nav-clearance, 90px)" } as CSSProperties}
     >
       {/* Header */}
-      <div className="flex items-center justify-between px-5 pt-14 pb-4">
-        <h1 aria-label="Settings" className="font-black text-2xl tracking-widest uppercase" style={{ color: accentColor }}>
+      <div className="ea-settings-header flex items-center justify-between px-5 pt-14 pb-4">
+        <h1 aria-label="Settings" className="ea-settings-title font-black text-2xl tracking-widest uppercase">
           <ClientSizingDiagnostics />
         </h1>
         <button
           aria-label="Enable or repair push notifications"
           onClick={()=>{if(clientToken)void toggleWebPush(clientToken);}}
-          className="w-10 h-10 rounded-full flex items-center justify-center"
+          className="ea-settings-notifications w-10 h-10 rounded-full flex items-center justify-center"
           style={{ background: `${accentColor}33`, border: `1px solid ${accentColor}77` }}
         >
           <BellOff size={18} style={{ color: accentColor }} />
         </button>
       </div>
 
-      <div className="flex-1 overflow-y-auto px-4 space-y-3 pb-4">
-        <p className="text-xs text-white/60">Announcements use an AI-generated voice.</p>
+      <div className="ea-settings-scroll flex-1 overflow-y-auto px-4 space-y-3 pb-4">
+        <p className="ea-settings-note text-xs text-white/60">Announcements use an AI-generated voice.</p>
 
         {/* Select Main Interface */}
         <AccordionItem
@@ -181,16 +182,10 @@ export default function SettingsTab({ onOpenChartScanner }: SettingsTabProps) {
         {/* Chart Scanner */}
         <button
           onClick={onOpenChartScanner}
-          className="w-full flex items-center gap-3 px-4 active:scale-[0.98] transition-transform"
-          style={{
-            border: `1px solid ${accentColor}88`,
-            borderRadius: 9999,
-            background: "rgba(0,0,0,0.6)",
-            height: 52,
-          }}
+          className="ea-settings-card ea-settings-action"
         >
-          <LineChart size={18} className="text-white/80 flex-shrink-0" />
-          <span className="flex-1 text-left text-white font-semibold text-sm">Chart Scanner</span>
+          <span className="ea-settings-icon"><LineChart size={20} /></span>
+          <span className="ea-settings-label">Chart Scanner</span>
           <ChevronRight size={18} className="text-white/50" />
         </button>
 
@@ -214,14 +209,13 @@ export default function SettingsTab({ onOpenChartScanner }: SettingsTabProps) {
 
         {/* Live Chart */}
         <button
-          className="w-full h-[52px] rounded-full flex items-center justify-center gap-2 font-semibold active:scale-[0.98] transition-transform"
-          style={{ border: `1.5px solid ${accentColor}`, background: `${accentColor}22`, color: accentColor }}
+          className="ea-settings-card ea-settings-action"
         >
-          <LineChart size={18} />
-          Live Chart
+          <span className="ea-settings-icon"><LineChart size={20} /></span>
+          <span className="ea-settings-label">Live Chart</span>
         </button>
-        <a href="/admin/login" className="block px-4 py-3 text-sm text-white/70">Admin Portal</a>
-        <button type="button" onClick={() => void signOut?.()} className="w-full px-4 py-3 text-left text-sm text-red-400">Sign Out</button>
+        <a href="/admin/login" className="ea-settings-card ea-settings-action"><span className="ea-settings-icon"><Shield size={20} /></span><span className="ea-settings-label">Admin Portal</span><ChevronRight size={18} /></a>
+        <button type="button" onClick={() => void signOut?.()} className="ea-settings-card ea-settings-action ea-settings-signout"><span className="ea-settings-icon"><LogOut size={20} /></span><span className="ea-settings-label">Sign Out</span></button>
       </div>
 
       {/* Floating bot avatar */}
@@ -247,27 +241,28 @@ interface AccordionItemProps {
   accentColor: string;
 }
 
-function AccordionItem({ icon, label, isOpen, onToggle, children, accentColor }: AccordionItemProps) {
+function AccordionItem({ icon, label, isOpen, onToggle, children }: AccordionItemProps) {
+  const contentId = useId();
+  const [retained, setRetained] = useState(isOpen);
+  useEffect(() => {
+    if (isOpen) { setRetained(true); return; }
+    const timer = window.setTimeout(() => setRetained(false), 240);
+    return () => window.clearTimeout(timer);
+  }, [isOpen]);
   return (
-    <div>
-      <button
-        onClick={onToggle}
-        className="w-full flex items-center gap-3 px-4 active:scale-[0.98] transition-transform"
-        style={{
-          border: `1px solid ${isOpen ? accentColor : accentColor + "88"}`,
-          borderRadius: 9999,
-          background: isOpen ? `${accentColor}11` : "rgba(0,0,0,0.6)",
-          height: 52,
-        }}
-      >
-        <span className="flex-shrink-0">{icon}</span>
-        <span className="flex-1 text-left text-white font-semibold text-sm">{label}</span>
-        {isOpen
-          ? <ChevronUp size={18} className="text-white/50 flex-shrink-0" />
-          : <ChevronDown size={18} className="text-white/50 flex-shrink-0" />}
+    <section className="ea-settings-section" data-open={isOpen}>
+      <button type="button" onClick={onToggle} className="ea-settings-card"
+        aria-expanded={isOpen} aria-controls={contentId}>
+        <span className="ea-settings-icon">{icon}</span>
+        <span className="ea-settings-label">{label}</span>
+        <ChevronDown size={18} className="ea-settings-chevron" />
       </button>
-      {isOpen && <div className="px-1">{children}</div>}
-    </div>
+      <div id={contentId} className="ea-settings-expansion" inert={!isOpen} aria-hidden={!isOpen}>
+        <div className="ea-settings-expansion-clip">
+          {(isOpen || retained) && <div className="ea-settings-options">{children}</div>}
+        </div>
+      </div>
+    </section>
   );
 }
 

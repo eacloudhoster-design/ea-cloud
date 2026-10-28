@@ -1,0 +1,66 @@
+.ea-settings {
+  --settings-light: color-mix(in srgb, var(--settings-accent) 24%, transparent);
+  color: #f4f4f8;
+  background: radial-gradient(ellipse at 100% 0%, var(--settings-light), transparent 44%),
+    linear-gradient(155deg, #181a24 0%, #090a10 36%, #050508 100%);
+  isolation: isolate;
+}
+.ea-settings .ea-settings-header { flex-shrink: 0; padding-bottom: 20px; }
+.ea-settings .ea-settings-title { color: #f6f6fa; font-size: 20px; letter-spacing: .06em; }
+.ea-settings .ea-settings-notifications { box-shadow: inset 0 1px 0 #ffffff12, 0 4px 16px #0004; }
+.ea-settings .ea-settings-scroll {
+  min-height: 0;
+  overflow-x: hidden;
+  overscroll-behavior-y: contain;
+  scroll-padding-block: 12px;
+  scrollbar-width: thin;
+  scrollbar-color: #ffffff29 transparent;
+}
+.ea-settings .ea-settings-note { font-size: 11px; line-height: 1.6; margin: 0 4px 20px; color: #999ba9; }
+.ea-settings .ea-settings-card {
+  width: 100%; min-height: 76px; display: flex; align-items: center; gap: 13px;
+  padding: 14px; border-radius: 22px; text-align: left;
+  border: 1px solid #ffffff1f;
+  background: linear-gradient(145deg, #ffffff09, #ffffff00 65%), #0b0c12;
+  color: #ececf3;
+  box-shadow: inset 0 1px 0 #ffffff0c, 0 7px 18px #0003;
+  transition: border-color 200ms ease, background-color 200ms ease, box-shadow 200ms ease;
+  -webkit-tap-highlight-color: transparent;
+}
+.ea-settings .ea-settings-label { flex: 1; min-width: 0; font-size: 14px; font-weight: 700; line-height: 1.4; }
+.ea-settings .ea-settings-icon {
+  display: grid; place-items: center; flex: 0 0 42px; height: 42px; border-radius: 14px;
+  color: var(--settings-accent); border: 1px solid #ffffff20;
+  background: linear-gradient(140deg, #ffffff0c, #ffffff02);
+  box-shadow: inset 0 1px 2px #ffffff0b, 0 3px 8px #0005;
+  transition: background-color 200ms ease, box-shadow 200ms ease;
+}
+.ea-settings .ea-settings-icon svg { color: inherit; }
+.ea-settings .ea-settings-chevron { color: #898b9b; flex-shrink: 0; transition: transform 240ms ease; }
+.ea-settings .ea-settings-section[data-open="true"] > .ea-settings-card {
+  border-color: color-mix(in srgb, var(--settings-accent) 55%, #ffffff20);
+  background-color: color-mix(in srgb, var(--settings-accent) 13%, #0b0c12);
+  box-shadow: inset 0 1px 0 #ffffff16, 0 0 20px var(--settings-light), 0 8px 18px #0004;
+}
+.ea-settings .ea-settings-section[data-open="true"] .ea-settings-chevron { transform: rotate(180deg); color: var(--settings-accent); }
+.ea-settings .ea-settings-section[data-open="true"] > .ea-settings-card .ea-settings-icon {
+  background-color: var(--settings-light); box-shadow: inset 0 1px 0 #ffffff20, 0 0 12px var(--settings-light);
+}
+.ea-settings .ea-settings-expansion { display: grid; grid-template-rows: 0fr; opacity: 0; transition: grid-template-rows 240ms ease, opacity 180ms ease; }
+.ea-settings .ea-settings-section[data-open="true"] > .ea-settings-expansion { grid-template-rows: 1fr; opacity: 1; }
+.ea-settings .ea-settings-expansion-clip { min-height: 0; overflow: hidden; }
+.ea-settings .ea-settings-options { padding: 4px 5px 6px; }
+.ea-settings .ea-settings-options button { max-width: 100%; border-radius: 16px; }
+.ea-settings .ea-settings-options button[aria-pressed="true"] { border-color: var(--settings-accent) !important; }
+.ea-settings .ea-settings-action > svg:last-child { flex-shrink: 0; color: #898b9b; }
+.ea-settings .ea-settings-signout { color: #ff999e; }
+.ea-settings .ea-settings-signout .ea-settings-icon { color: inherit; }
+.ea-settings .ea-settings-card:active { border-color: var(--settings-accent); background-color: var(--settings-light); }
+.ea-settings .ea-settings-card:focus-visible { outline: 2px solid var(--settings-accent); outline-offset: 3px; }
+@media (hover: hover) {
+  .ea-settings .ea-settings-card:hover { border-color: var(--settings-accent); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ea-settings .ea-settings-card, .ea-settings .ea-settings-icon, .ea-settings .ea-settings-chevron,
+  .ea-settings .ea-settings-expansion { transition: none; }
+}
