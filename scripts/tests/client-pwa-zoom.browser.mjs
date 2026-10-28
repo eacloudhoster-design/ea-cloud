@@ -6,10 +6,12 @@ const browser = await chromium.launch({ executablePath: "/usr/bin/chromium", arg
 try {
   for (const device of [
     { name: "iOS PWA", ios: true, installed: true },
+    { name: "wide iOS PWA", ios: true, installed: true, width: 460 },
     { name: "Safari tab", ios: true, installed: false },
     { name: "Android PWA", ios: false, installed: true },
-  ]) {
-    const context = await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true,
+  ].filter(device => !process.env.SIZING_WIDE_ONLY || device.width)) {
+    const deviceWidth = device.width || 390;
+    const context = await browser.newContext({ viewport: { width: deviceWidth, height: 844 }, isMobile: true, hasTouch: true,
       userAgent: device.ios ? "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 Mobile/15E148" : "Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 Chrome/130.0 Mobile Safari/537.36" });
     await context.addInitScript(installed => Object.defineProperty(navigator, "standalone", { value: installed }), device.installed);
     const page = await context.newPage();
@@ -44,7 +46,8 @@ try {
     assert.equal(before.viewport.includes("user-scalable=no"), locked);
     assert(before.font.every(font => font === "16px"));
     assert.equal(before.rootTransform, "none");
-    assert.equal(before.scale, 1);
+    const expectedScale = device.ios && device.installed ? Math.max(1, deviceWidth / 390) : 1;
+    assert(Math.abs(before.scale - expectedScale) < 0.005);
     assert.equal(before.overflow, false);
     if (locked) assert.equal(before.touch, "pan-x pan-y");
     const canceled = await page.evaluate(() => ["gesturestart", "gesturechange", "touchmove", "pointermove"].map(type => {
@@ -54,12 +57,12 @@ try {
     }));
     assert.deepEqual(canceled, [locked, locked, false, false]);
     await page.locator('.get-app-field input[type="email"]').focus();
-    await page.setViewportSize({ width: 390, height: 500 });
+    await page.setViewportSize({ width: deviceWidth, height: 500 });
     const keyboard = await measure();
     assert.deepEqual(keyboard.font, before.font);
     assert.equal(keyboard.rootTransform, "none");
-    assert.equal(keyboard.scale, 1);
-    await page.setViewportSize({ width: 390, height: 844 });
+    assert(Math.abs(keyboard.scale - expectedScale) < 0.005);
+    await page.setViewportSize({ width: deviceWidth, height: 844 });
     await page.getByRole("button", { name: /sign in/i }).last().click();
     assert((await measure()).font.every(font => font === "16px"));
     if (locked) {
@@ -77,8 +80,10 @@ try {
         scale: visualViewport.scale,
         rootTransform: getComputedStyle(document.querySelector(".ea-app-viewport")).transform,
       }));
-      assert.deepEqual(reference, { viewport: 390, portrait: 230, heading: "40px", controlHeight: 58, controlFont: "16px", scale: 1, rootTransform: "none" });
-      console.log("PASS: original S2tone reference geometry after startup: 230px portrait, 40px heading, 58px controls at 390px viewport and scale 1");
+      assert(Math.abs(reference.viewport - 390) <= 1);
+      assert(Math.abs(reference.scale - expectedScale) < 0.005);
+      assert.deepEqual({ ...reference, viewport: 390, scale: 1 }, { viewport: 390, portrait: 230, heading: "40px", controlHeight: 58, controlFont: "16px", scale: 1, rootTransform: "none" });
+      console.log("PASS: S2tone reference geometry after startup: 230px portrait, 40px heading, 58px controls in the 390px design canvas");
       await page.evaluate(() => {
         const key = "ea-cloud:client:7:home-appearance";
         localStorage.setItem(key, JSON.stringify({ ...JSON.parse(localStorage.getItem(key)), interfaceStyle: "matrix" }));
@@ -86,21 +91,60 @@ try {
       await page.reload();
       await page.locator(".ea-startup").waitFor({ state: "detached", timeout: 30000 });
       const portrait = page.locator("[data-portrait-interactive]");
+      const controlBounds = await page.locator("[data-matrix-functions]").boundingBox();
       await portrait.focus();
       await page.keyboard.press("Escape");
       await page.waitForFunction(() => {
         const portrait = document.querySelector("[data-portrait-interactive]");
         const branding = document.querySelector("[data-matrix-branding]");
         const controls = document.querySelector("[data-matrix-functions]");
-        return portrait.getBoundingClientRect().height < 1 && branding.getBoundingClientRect().top > controls.getBoundingClientRect().bottom;
+        return portrait.getAttribute("data-hidden") === "true" && portrait.getBoundingClientRect().height > 259 && branding.getBoundingClientRect().top > controls.getBoundingClientRect().bottom;
       });
+      assert.deepEqual(await page.locator("[data-matrix-functions]").boundingBox(), controlBounds, "Hiding the shape must not move the control panel");
       await portrait.focus();
       await page.keyboard.press("Enter");
       await page.waitForFunction(() => {
         const portrait = document.querySelector("[data-portrait-interactive]");
         return portrait.getBoundingClientRect().height > 259 && document.querySelector("[data-matrix-branding]").getBoundingClientRect().bottom < document.querySelector("[data-matrix-functions]").getBoundingClientRect().top;
       });
-      console.log("PASS: Matrix hides/collapses portrait and moves branding below controls; restoring portrait moves branding above controls");
+      assert.deepEqual(await page.locator("[data-matrix-functions]").boundingBox(), controlBounds, "Restoring the shape must not move the control panel");
+      console.log("PASS: Matrix controls stay fixed; only branding moves below/above controls when hiding/restoring the shape");
+      if (deviceWidth > 390) {
+        const nav = page.locator(".ea-glass-bar");
+        for (const [mode, label] of [["regular", "Regular Interface"], ["matrix", "The Matrix Interface"], ["s2tone", "S2tone_"], ["lumo", "Lumo"]]) {
+          await nav.getByRole("button", { name: "Settings", exact: true }).click();
+          const option = page.getByRole("button", { name: label, exact: false });
+          if (!(await option.isVisible())) await page.getByRole("button", { name: "Select Main Interface", exact: true }).click();
+          await option.click();
+          await nav.getByRole("button", { name: "Home", exact: true }).click();
+          await page.locator(`[data-home-interface="${mode}"]`).waitFor();
+          const width = await page.locator(".ea-app-viewport").evaluate(el => el.getBoundingClientRect().width);
+          assert(Math.abs(width - 390) <= 1, `${mode}: shared reference width`);
+          if (mode === "matrix") {
+            const fraction = await page.locator("[data-matrix-functions]").evaluate(el => el.getBoundingClientRect().width / visualViewport.width);
+            assert(Math.abs(fraction - 340 / 390) < 0.01, "Matrix control panel matches larger reference proportions");
+          }
+        }
+        console.log("PASS: Regular, Matrix, S2tone and Lumo share reference sizing on a wider iPhone viewport");
+        const trigger = page.locator(".trading-activity-trigger");
+        const dragBefore = await trigger.boundingBox();
+        await page.mouse.move(dragBefore.x + dragBefore.width / 2, dragBefore.y + dragBefore.height / 2);
+        await page.mouse.down();
+        await page.mouse.move(dragBefore.x + dragBefore.width / 2 - 35, dragBefore.y + dragBefore.height / 2 - 35, { steps: 10 });
+        await page.mouse.up();
+        await page.waitForFunction(before => document.querySelector(".trading-activity-trigger").getBoundingClientRect().x < before - 20, dragBefore.x);
+        console.log("PASS: floating control remains draggable in the normalized viewport");
+        await page.evaluate(() => Object.defineProperty(window, "orientation", { value: 90, configurable: true }));
+        await page.setViewportSize({ width: 844, height: deviceWidth });
+        await page.evaluate(() => window.dispatchEvent(new Event("orientationchange")));
+        await page.waitForFunction(() => document.querySelector('meta[name="viewport"]').content.includes("width=device-width"));
+        assert(Math.abs(await page.locator(".ea-app-viewport").evaluate(el => el.getBoundingClientRect().width) - 844) <= 1);
+        await page.evaluate(() => Object.defineProperty(window, "orientation", { value: 0, configurable: true }));
+        await page.setViewportSize({ width: deviceWidth, height: 844 });
+        await page.evaluate(() => window.dispatchEvent(new Event("orientationchange")));
+        await page.waitForFunction(() => Math.abs(document.querySelector(".ea-app-viewport").getBoundingClientRect().width - 390) <= 1);
+        console.log("PASS: rotation keeps landscape fullscreen and restores portrait reference sizing");
+      }
     }
     await context.close();
     console.log(`PASS: ${device.name}: viewport policy, fields, focus/resize, native-gesture guard and uncanceled pointer/touch events`);
