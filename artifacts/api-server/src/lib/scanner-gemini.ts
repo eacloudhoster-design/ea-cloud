@@ -28,7 +28,7 @@ export function parseChartReport(text: string): ChartReport {
   try { return buildDirectionalReport(raw); }
   catch (error) { throw new ScannerError("AI returned an invalid directional report. Please retry; no credit was charged.", 502, "AI_INVALID_REPORT", "ai", true, 200, reportValidationDetails("schema", error instanceof ZodError ? error.issues : [], raw)); }
 }
-async function generate(parts: unknown[], grounded: boolean, signal: AbortSignal) {
+export async function generate(parts: unknown[], grounded: boolean, signal: AbortSignal, responseSchema: unknown = scannerChartResponseJsonSchema) {
   requireScannerConfiguration();
   const key = process.env.GEMINI_API_KEY!.trim();
   const { model } = resolveScannerModel();
@@ -38,7 +38,7 @@ async function generate(parts: unknown[], grounded: boolean, signal: AbortSignal
       method: "POST", headers: { "Content-Type": "application/json", "x-goog-api-key": key },
       signal: AbortSignal.any([signal, AbortSignal.timeout(55_000)]),
       body: JSON.stringify({ contents: [{ role: "user", parts }],
-        generationConfig: { temperature: 0.2, maxOutputTokens: 5000, ...(grounded ? {} : { responseMimeType: "application/json", responseJsonSchema: scannerChartResponseJsonSchema }) },
+        generationConfig: { temperature: 0.2, maxOutputTokens: 5000, ...(grounded ? {} : { responseMimeType: "application/json", responseJsonSchema: responseSchema }) },
         ...(grounded ? { tools: [{ google_search: {} }] } : {}),
       }),
     });

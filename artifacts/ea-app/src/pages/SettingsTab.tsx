@@ -17,6 +17,7 @@ import ClientSizingDiagnostics from "@/components/ClientSizingDiagnostics";
 
 interface SettingsTabProps {
   backgroundHost?: HTMLElement | null;
+  onOpenLiveShot?: () => void;
   onOpenChartScanner?: () => void;
 }
 
@@ -51,7 +52,7 @@ const SHAPE_ICONS: Record<ShapeStyle, React.ReactNode> = {
   neural: <div className="w-8 h-8 rounded-xl border-2 border-current" />,
 };
 
-export default function SettingsTab({ onOpenChartScanner, backgroundHost }: SettingsTabProps) {
+export default function SettingsTab({ onOpenChartScanner, onOpenLiveShot, backgroundHost }: SettingsTabProps) {
   const { bgImageUrl, showBg, signOut, clientToken, backgroundAnimation, setBackgroundAnimation, accentColor, setAccentColor, interfaceStyle, setInterfaceStyle, shapeStyle, setShapeStyle, activeTab, botFont="Inter", setBotFont } = useApp();
   useEffect(()=>{if(clientToken)void prepareWebPush()?.catch(()=>{});},[clientToken]);
   const [open, setOpen] = useState<OpenSection>(null);
@@ -215,12 +216,12 @@ export default function SettingsTab({ onOpenChartScanner, backgroundHost }: Sett
           </div>
         </AccordionItem>
 
-        {/* Live Chart */}
-        <button
+        {/* Live Shot: existing previously inactive Live Chart entry */}
+        <button onClick={onOpenLiveShot}
           className="ea-settings-card ea-settings-action"
         >
           <span className="ea-settings-icon"><LineChart size={20} /></span>
-          <span className="ea-settings-label">Live Chart</span>
+          <span className="ea-settings-label">Live Shot</span>
         </button>
         <a href="/admin/login" className="ea-settings-card ea-settings-action"><span className="ea-settings-icon"><Shield size={20} /></span><span className="ea-settings-label">Admin Portal</span><ChevronRight size={18} /></a>
         <button type="button" onClick={() => void signOut?.()} className="ea-settings-card ea-settings-action ea-settings-signout"><span className="ea-settings-icon"><LogOut size={20} /></span><span className="ea-settings-label">Sign Out</span></button>

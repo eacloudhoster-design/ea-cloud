@@ -12,11 +12,12 @@ import "@/components/HomeInteractions.css";
 import {useFontPreference} from "@/hooks/use-font-preference";
 import {useShapePreference} from "@/hooks/use-shape-preference";
 import TradingActivityMonitor from "@/components/TradingActivityMonitor";
-import { useState, useEffect, useCallback, useRef } from "react";
+import { lazy, Suspense, useState, useEffect, useCallback, useRef } from "react";
 import { AppContext, AppSettings } from "@/context/AppContext";
 import HomeTab from "@/pages/HomeTab";
 import MetaTraderTab from "@/pages/MetaTraderTab";
 import MetaTraderView from "@/components/MetaTraderView";
+const LiveShot = lazy(() => import("@/pages/LiveShot"));
 import SettingsTab from "@/pages/SettingsTab";
 import BottomNav from "@/components/BottomNav";
 import ChartScannerModal from "@/components/ChartScannerModal";
@@ -77,6 +78,7 @@ function EACloudApp({ onReady, startupComplete }: { onReady: (ready: boolean) =>
     const timer = window.setTimeout(() => setSettingsClosing(false), 300);
     return () => window.clearTimeout(timer);
   }, [settingsClosing]);
+  const [showLiveShot, setShowLiveShot] = useState(false);
   const [showChartScanner, setShowChartScanner] = useState(false);
   const { botRunning, botStatusConfirmed, setBotRunning: persistBotRunning } = useBotStatus(clientToken, authStage === "app");
   const { interfaceStyle, setInterfaceStyle, showBg, setShowBg, backgroundAnimation, setBackgroundAnimation, accentColor, setAccentColor } = useHomePreferences(clientToken);
@@ -327,7 +329,7 @@ function EACloudApp({ onReady, startupComplete }: { onReady: (ready: boolean) =>
 
         <div ref={setPageBackgroundHost} className="ea-page-background-host absolute inset-0 pointer-events-none" style={{ zIndex: 0 }} aria-hidden="true" />
 
-        <div className="ea-app-content relative overflow-clip" data-fullscreen-scanner={!!fullscreenBackgroundHost && showChartScanner}>
+        <div className="ea-app-content relative overflow-clip" inert={showLiveShot} aria-hidden={showLiveShot || undefined} data-fullscreen-scanner={!!fullscreenBackgroundHost && showChartScanner}>
         <BackgroundAnimation effect={backgroundAnimation} color={accentColor} active={activeTab === "home"} />
 
         <div data-home-screen className="ea-nav-screen absolute inset-0 z-[2]" style={{ opacity: activeTab === "home" ? 1 : 0 }} inert={activeTab !== "home" || settingsClosing}>
@@ -353,7 +355,7 @@ function EACloudApp({ onReady, startupComplete }: { onReady: (ready: boolean) =>
           inert={activeTab !== "settings"}
           style={{ width: "88%", opacity: activeTab === "settings" ? 1 : 0, pointerEvents: activeTab === "settings" ? "auto" : "none" }}
         >
-          <SettingsTab backgroundHost={fullscreenBackgroundHost} onOpenChartScanner={() => setShowChartScanner(true)} />
+          <SettingsTab onOpenLiveShot={() => setShowLiveShot(true)} backgroundHost={fullscreenBackgroundHost} onOpenChartScanner={() => setShowChartScanner(true)} />
         </div>
 
         <TradingActivityMonitor />
@@ -364,8 +366,9 @@ function EACloudApp({ onReady, startupComplete }: { onReady: (ready: boolean) =>
           </div>
         )}
         </div>
+        {showLiveShot && <Suspense fallback={<div className="absolute inset-0 z-[100] bg-black text-white p-6" role="status"><button onClick={() => setShowLiveShot(false)}>Back</button><p>Loading Live Shot…</p></div>}><LiveShot onClose={() => setShowLiveShot(false)} /></Suspense>}
         {/* The dock must not inherit the content size-container/overflow bounds. */}
-        {!showChartScanner && <BottomNav activeTab={activeTab} onTabChange={navigate} backgroundImage={showBg ? backgroundSrc : undefined} />}
+        {!showChartScanner && !showLiveShot && <BottomNav activeTab={activeTab} onTabChange={navigate} backgroundImage={showBg ? backgroundSrc : undefined} />}
       </div>
     </AppContext.Provider>
   );

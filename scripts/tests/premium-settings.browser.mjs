@@ -40,7 +40,7 @@ for(const width of [390,360,1280]) {
  await nav.getByRole('button',{name:'Settings',exact:true}).click();
  const settings=page.locator('.ea-settings');
  await page.waitForTimeout(300);
- for(const name of ['Select Main Interface','Select Shape','Select Colour','Select Font','EA Manipulation','Chart Scanner','Back Animation','Live Chart','Admin Portal','Sign Out'])
+ for(const name of ['Select Main Interface','Select Shape','Select Colour','Select Font','EA Manipulation','Chart Scanner','Back Animation','Live Shot','Admin Portal','Sign Out'])
    assert.equal(await settings.getByRole(name==='Admin Portal'?'link':'button',{name,exact:true}).count(),1);
  await page.screenshot({path:`${output}/${width}-collapsed.png`});
  const open=async name=>{await settings.getByRole('button',{name,exact:true}).click(); await page.waitForTimeout(260);};
@@ -68,7 +68,8 @@ for(const width of [390,360,1280]) {
  }
  await settings.getByRole('button',{name:'None',exact:true}).click();
  await open('Back Animation');
- await settings.getByRole('button',{name:'Live Chart',exact:true}).click();
+ await settings.getByRole('button',{name:'Live Shot',exact:true}).click();
+ await page.getByRole('button',{name:'Back from Live Shot',exact:true}).click();
  assert.equal(await settings.getByRole('link',{name:'Admin Portal'}).getAttribute('href'),'/admin/login');
  // Existing push/sign-out handlers are deliberately not invoked against services.
  assert.equal(await settings.getByRole('button',{name:'Enable or repair push notifications'}).count(),1);
