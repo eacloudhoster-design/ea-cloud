@@ -6,6 +6,7 @@ import { db, appAccessTable, scannerReportsTable, scannerEntitlementsTable } fro
 import { fundamentalRequestSchema, strategySchema } from "../../../../lib/api-zod/src/scanner";
 import { analyseChart, analyseFundamentals, ScannerError, scannerConfiguration, requireScannerConfiguration } from "../lib/scanner-gemini";
 
+import liveShotRouter from "./live-shot";
 import scannerTradingRouter from "./scanner-trading";
 import { scannerLevelDiagnostic, scannerFailureDiagnostic } from "../lib/scanner-diagnostics";
 import { completeScannerReport } from "../lib/scanner-completion";
@@ -60,6 +61,7 @@ function requestSignal(res: Response) {
   res.on("close", close);
   return { signal: controller.signal, dispose: () => res.off("close", close) };
 }
+router.use("/app/scanner/live-shot", liveShotRouter);
 router.get("/app/scanner/status", (_req, res) => res.json({ ...scannerConfiguration(), executionAvailable: false }));
 router.get("/app/scanner/history", async (req: ClientRequest, res) => {
   const page = Number(req.query.page ?? 1);

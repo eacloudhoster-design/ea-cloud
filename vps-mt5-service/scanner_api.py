@@ -1,5 +1,6 @@
 """Isolated scanner read-only quotes/broker checks. Never calls order_send."""
 import hmac
+from contextlib import contextmanager
 import os
 from fastapi import Header, HTTPException
 from pydantic import BaseModel, Field
@@ -25,7 +26,20 @@ class ScannerActivityRequest(BaseModel):
     server: str
     symbols: list[str] = Field(default_factory=list, max_length=20)
 
+class ScannerCandlesRequest(ScannerQuoteRequest):
+    timeframe: Literal['M1', 'M5', 'M15', 'M30', 'H1', 'H4', 'D1']
+
 def register_scanner_routes(app, mt5, lock, filling_modes=None):
+    @contextmanager
+    def market_read_slot():
+        # Live analysis must not build a terminal-lock queue ahead of execution.
+        if not lock.acquire(blocking=False):
+            raise HTTPException(503, 'MT5 terminal is busy; retry market data later')
+        try:
+            yield
+        finally:
+            lock.release()
+
     def authenticate(token):
         expected = os.environ.get('SCANNER_MT5_VPS_TOKEN', '')
         if len(expected) < 32:
@@ -33,13 +47,13 @@ def register_scanner_routes(app, mt5, lock, filling_modes=None):
         if not token or not hmac.compare_digest(token, expected):
             raise HTTPException(401, 'Unauthorized scanner bridge')
 
-    def connect(payload):
+    def connect(payload, select_symbol=True):
         if not mt5.initialize() or not mt5.login(login=payload.login, password=payload.password, server=payload.server):
             raise HTTPException(503, 'MT5 authentication unavailable')
         account = mt5.account_info()
         if not account or account.login != payload.login or account.server != payload.server:
             raise HTTPException(503, 'MT5 account identity mismatch')
-        if not mt5.symbol_select(payload.symbol, True):
+        if select_symbol and not mt5.symbol_select(payload.symbol, True):
             raise HTTPException(422, 'Exact broker symbol unavailable')
         return account
 
@@ -75,6 +89,41 @@ def register_scanner_routes(app, mt5, lock, filling_modes=None):
                 return dict(connected=bool(terminal.connected),tradeAllowed=bool(terminal.trade_allowed and account.trade_allowed and account.trade_expert),
                     account=dict(balance=account.balance,equity=account.equity,profit=account.profit,currency=account.currency),
                     symbols=[dict(symbol=s,available=mt5.symbol_info(s) is not None) for s in payload.symbols if 0<len(s)<=40])
+            finally:
+                mt5.shutdown()
+
+    @app.post('/scanner/symbols')
+    def symbols(payload: ScannerActivityRequest, x_scanner_token: str = Header(default='')):
+        authenticate(x_scanner_token)
+        with market_read_slot():
+            try:
+                if not mt5.initialize() or not mt5.login(login=payload.login, password=payload.password, server=payload.server):
+                    raise HTTPException(503, 'MT5 authentication unavailable')
+                account = mt5.account_info()
+                if not account or account.login != payload.login or account.server != payload.server:
+                    raise HTTPException(503, 'MT5 account identity mismatch')
+                available = mt5.symbols_get()
+                if available is None:
+                    raise HTTPException(503, 'Broker symbols unavailable')
+                return dict(symbols=sorted(set(s.name for s in available if 0 < len(s.name) <= 40))[:5000])
+            finally:
+                mt5.shutdown()
+
+    @app.post('/scanner/candles')
+    def candles(payload: ScannerCandlesRequest, x_scanner_token: str = Header(default='')):
+        authenticate(x_scanner_token)
+        with market_read_slot():
+            try:
+                connect(payload, select_symbol=False)
+                rates = mt5.copy_rates_from_pos(payload.symbol, getattr(mt5, 'TIMEFRAME_' + payload.timeframe), 0, 400)
+                tick, info, terminal = mt5.symbol_info_tick(payload.symbol), mt5.symbol_info(payload.symbol), mt5.terminal_info()
+                if rates is None or len(rates) < 30 or not tick or not info or not terminal:
+                    raise HTTPException(503, 'Broker candle history unavailable')
+                import time
+                return dict(symbol=payload.symbol, timeframe=payload.timeframe,
+                    candles=[dict(time=int(r['time']), open=float(r['open']), high=float(r['high']), low=float(r['low']), close=float(r['close'])) for r in rates],
+                    lastPrice=float(tick.bid), tickTime=int(tick.time_msc), observedAt=int(time.time()*1000),
+                    digits=int(info.digits), connected=bool(terminal.connected), marketStatus='unknown')
             finally:
                 mt5.shutdown()
 
