@@ -2,6 +2,7 @@ import { createPortal } from "react-dom";
 import {toggleWebPush,prepareWebPush} from "@/lib/web-push-client";
 import {useEffect, useId, type CSSProperties} from "react";
 import "./SettingsTab.css";
+import ControlPanelChoices from "@/components/ControlPanelChoices";
 import EaModeCards from "@/components/EaModeCards";
 import { backgroundAnimations } from "@/lib/home-preferences";
 import {botFonts,botFontStyle,type BotFont} from "@/lib/font-preference";
@@ -21,7 +22,7 @@ interface SettingsTabProps {
   onOpenChartScanner?: () => void;
 }
 
-type OpenSection = "interface" | "shape" | "colour" | "font" | "manipulation" | "animation" | null;
+type OpenSection = "control-panel" | "interface" | "shape" | "colour" | "font" | "manipulation" | "animation" | null;
 
 const INTERFACE_OPTIONS: { id: InterfaceStyle; label: string; desc: string }[] = [
   { id: "regular", label: "Regular Interface", desc: "Default 2-column layout" },
@@ -122,6 +123,11 @@ export default function SettingsTab({ onOpenChartScanner, onOpenLiveShot, backgr
               );
             })}
           </div>
+        </AccordionItem>
+
+        <AccordionItem icon={<LayoutGrid size={18} className="text-white/80" />} label="Control Panel"
+          isOpen={open === "control-panel"} onToggle={() => toggle("control-panel")} accentColor={accentColor}>
+          <ControlPanelChoices />
         </AccordionItem>
 
         {/* Select Shape */}

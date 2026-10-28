@@ -1,0 +1,103 @@
+.ea-panel-choices {
+  display: grid;
+  gap: 10px;
+  padding-top: 8px;
+}
+.ea-panel-choice {
+  display: grid;
+  justify-items: center;
+  gap: 9px;
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #ffffff24;
+  border-radius: 18px;
+  background: #09070be0;
+  color: #fff;
+  font-size: 13px;
+}
+.ea-panel-choice[aria-pressed="true"] {
+  border-color: var(--settings-accent);
+  background: color-mix(in srgb, var(--settings-accent) 12%, #09070b);
+}
+.ea-panel-choice:focus-visible {
+  outline: 2px solid var(--settings-accent);
+  outline-offset: 2px;
+}
+.ea-panel-preview {
+  width: min(100%, 240px);
+  height: 80px;
+  border: 1px solid color-mix(in srgb, var(--settings-accent) 52%, transparent);
+  border-radius: 999px;
+  background: linear-gradient(125deg, #242024dc, #0b070be8);
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: center;
+  padding: 8px;
+}
+.ea-panel-preview > span {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+}
+.ea-panel-preview i {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border: 1px solid #fff2;
+  border-radius: 50%;
+  background: #ffffff10;
+  color: var(--settings-accent);
+}
+.ea-panel-preview svg {
+  width: 15px;
+  height: 15px;
+}
+.ea-panel-preview small {
+  font-size: 7px;
+  letter-spacing: 0.08em;
+}
+.ea-panel-preview .ea-preview-toggle i {
+  width: 38px;
+  height: 38px;
+  border: 2px solid var(--settings-accent);
+  background: #09070b;
+}
+.ea-panel-preview[data-preview="regular"] {
+  background: #100917;
+}
+.ea-panel-preview[data-preview="regular"] i {
+  border: 0;
+  background: none;
+  color: #aaa5ad;
+}
+.ea-panel-preview[data-preview="regular"] .ea-preview-toggle {
+  border-radius: 12px;
+  padding: 5px;
+  width: 46px;
+  height: 50px;
+  color: #fff;
+  border: 2px solid var(--settings-accent);
+  background: color-mix(in srgb, var(--settings-accent) 75%, #190711);
+}
+.ea-panel-preview[data-preview="regular"] .ea-preview-toggle i {
+  width: 24px;
+  height: 24px;
+  color: #fff;
+}
+.ea-panel-preview[data-preview="matrix"] {
+  background: none;
+  border-color: transparent;
+  color: var(--settings-accent);
+}
+.ea-panel-preview[data-preview="matrix"] i {
+  border: 1px solid var(--settings-accent);
+  background: none;
+  width: 34px;
+  height: 34px;
+}
+.ea-panel-preview[data-preview="matrix"] .ea-preview-toggle i {
+  width: 42px;
+  height: 42px;
+}

@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import {
   defaultHomePreferences,
+  isControlPanelStyle,
+  type ControlPanelStyle,
   isAccentColor,
   isBackgroundAnimation,
   type BackgroundAnimation,
@@ -54,6 +56,9 @@ export function useHomePreferences(token: string | null) {
     state.key === key ? state.preferences : defaultHomePreferences;
   return {
     ...preferences,
+    setControlPanel: (value: ControlPanelStyle) => {
+      if (isControlPanelStyle(value)) update({ controlPanel: value });
+    },
     setAccentColor: (value: string) => {
       if (isAccentColor(value)) update({ accentColor: value });
     },

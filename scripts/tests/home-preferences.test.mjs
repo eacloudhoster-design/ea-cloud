@@ -10,6 +10,7 @@ const bundle = await build({
 });
 const {
   adjacentInterface,
+  adjacentControlPanel,
   horizontalSwipe,
   readHomePreferences,
   saveHomePreferences,
@@ -61,6 +62,7 @@ test("interface and background preferences survive storage, default safely and s
   assert.equal(homePreferenceKey("invalid"), null);
   assert.equal(homePreferenceKey(btoa("7:superadmin:session")), null);
   assert.deepEqual(readHomePreferences(storage, key), {
+    controlPanel: "default",
     interfaceStyle: "matrix",
     showBg: true,
     backgroundAnimation: "none",
@@ -77,6 +79,7 @@ test("interface and background preferences survive storage, default safely and s
       ]) {
         assert.equal(
           saveHomePreferences(storage, key, {
+            controlPanel: "default",
             interfaceStyle,
             showBg,
             backgroundAnimation,
@@ -85,6 +88,7 @@ test("interface and background preferences survive storage, default safely and s
           true,
         );
         assert.deepEqual(readHomePreferences(storage, key), {
+          controlPanel: "default",
           interfaceStyle,
           showBg,
           backgroundAnimation,
@@ -92,6 +96,7 @@ test("interface and background preferences survive storage, default safely and s
         });
       }
   assert.deepEqual(readHomePreferences(storage, other), {
+    controlPanel: "default",
     interfaceStyle: "matrix",
     showBg: true,
     backgroundAnimation: "none",
@@ -99,6 +104,7 @@ test("interface and background preferences survive storage, default safely and s
   });
   data.set(key, "broken JSON");
   assert.deepEqual(readHomePreferences(storage, key), {
+    controlPanel: "default",
     interfaceStyle: "matrix",
     showBg: true,
     backgroundAnimation: "none",
@@ -106,6 +112,7 @@ test("interface and background preferences survive storage, default safely and s
   });
   data.set(key, JSON.stringify({ interfaceStyle: "bogus", showBg: "false" }));
   assert.deepEqual(readHomePreferences(storage, key), {
+    controlPanel: "default",
     interfaceStyle: "matrix",
     showBg: true,
     backgroundAnimation: "none",
@@ -127,6 +134,7 @@ test("interface and background preferences survive storage, default safely and s
     },
   };
   assert.deepEqual(readHomePreferences(blocked, key), {
+    controlPanel: "default",
     interfaceStyle: "matrix",
     showBg: true,
     backgroundAnimation: "none",
@@ -151,6 +159,7 @@ test("legacy home settings retain their values and default to no extra animation
       }),
   };
   assert.deepEqual(readHomePreferences(storage, "client"), {
+    controlPanel: "default",
     interfaceStyle: "s2tone",
     showBg: false,
     backgroundAnimation: "none",
@@ -191,6 +200,7 @@ test("theme colours persist in existing appearance settings without resetting ot
     "#06b6d4",
   ]) {
     const value = {
+      controlPanel: "default",
       interfaceStyle: "matrix",
       showBg: false,
       backgroundAnimation: "particles",
@@ -216,6 +226,7 @@ test("theme colours persist in existing appearance settings without resetting ot
       }),
     );
     assert.deepEqual(readHomePreferences(storage, key), {
+      controlPanel: "default",
       interfaceStyle: "regular",
       showBg: false,
       backgroundAnimation: "glow",
@@ -223,6 +234,7 @@ test("theme colours persist in existing appearance settings without resetting ot
     });
     assert.equal(
       saveHomePreferences(storage, key, {
+        controlPanel: "default",
         interfaceStyle: "matrix",
         showBg: true,
         backgroundAnimation: "none",
@@ -241,6 +253,7 @@ test("Lumo uses existing account-scoped persistence without changing legacy defa
     };
   const key = homePreferenceKey(btoa("7:client:fixture"));
   const value = {
+    controlPanel: "default",
     interfaceStyle: "lumo",
     accentColor: "#a855f7",
     showBg: true,
@@ -252,5 +265,48 @@ test("Lumo uses existing account-scoped persistence without changing legacy defa
     readHomePreferences(storage, homePreferenceKey(btoa("8:client:fixture")))
       .interfaceStyle,
     "matrix",
+  );
+});
+
+test("control panels default safely, persist per account, preserve other preferences and cycle both directions", () => {
+  const key = homePreferenceKey(btoa("7:client:session"));
+  const data = new Map();
+  const storage = {
+    getItem: (k) => data.get(k) ?? null,
+    setItem: (k, v) => data.set(k, v),
+  };
+  const original = {
+    interfaceStyle: "lumo",
+    accentColor: "#3b82f6",
+    showBg: false,
+    backgroundAnimation: "glow",
+  };
+  data.set(key, JSON.stringify(original));
+  assert.equal(readHomePreferences(storage, key).controlPanel, "default");
+  for (const [panel, next, previous] of [
+    ["default", "regular", "matrix"],
+    ["regular", "matrix", "default"],
+    ["matrix", "default", "regular"],
+  ]) {
+    assert.equal(adjacentControlPanel(panel, "next"), next);
+    assert.equal(adjacentControlPanel(panel, "previous"), previous);
+    assert.equal(
+      saveHomePreferences(storage, key, { ...original, controlPanel: panel }),
+      true,
+    );
+    assert.deepEqual(readHomePreferences(storage, key), {
+      ...original,
+      controlPanel: panel,
+    });
+  }
+  data.set(key, JSON.stringify({ ...original, controlPanel: "bogus" }));
+  assert.deepEqual(readHomePreferences(storage, key), {
+    ...original,
+    controlPanel: "default",
+  });
+  assert.equal(
+    readHomePreferences(storage, homePreferenceKey(btoa("8:client:session")))
+      .controlPanel,
+    "default",
   );
 });
