@@ -24,16 +24,16 @@ actual device model, layout viewport, browser scale or deployed commit.
 ## Independent rendering comparison
 
 The October 26 app was checked out in an isolated temporary worktree and built
-using the unchanged dependency lockfile/dependencies. Current code was built
-separately. Both were served locally with identical isolated API fixtures,
+using the unchanged dependency lockfile/dependencies. The proposed candidate (main a5ca450 with PR #102's viewport normalization removed) was built
+separately. This was NOT unmodified production main at 460px. Both were served locally with identical isolated API fixtures,
 installed-iPhone user-agent/standalone emulation, preferences and viewport sizes.
 No test contacted the production API or database.
 
-`scripts/tests/client-sizing-history.browser.mjs` compares rendered home and dock
+`scripts/tests/client-sizing-history.browser.mjs` compares candidate versus historical rendered home and dock
 button widths, heights and font sizes, plus Matrix panel width, across Regular,
-Matrix, S2tone and Lumo. Both versions match exactly at 390px and 460px widths.
+Matrix, S2tone and Lumo. The historical build and that candidate match exactly at 390px and 460px widths; this does not prove production-main viewport parity.
 
-| Layout viewport | October 26 panel | Current panel | Fraction of viewport |
+| Layout viewport | October 26 panel | Candidate panel | Fraction of viewport |
 | --- | --- | --- | --- |
 | 390px | 340px | 340px | 87.18% |
 | 460px | 340px | 340px | 73.91% |
