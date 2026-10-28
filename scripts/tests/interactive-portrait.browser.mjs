@@ -262,7 +262,7 @@ try {
       assert.equal(await frame.count(), 0);
       assert.equal(
         (await slot.boundingBox()).height,
-        style === "regular" ? 290 : style === "matrix" ? 0 : 230,
+        style === "regular" ? 290 : style === "matrix" ? 260 : 230,
       );
       if (style === "matrix") {
         assert(await page.locator("[data-matrix-branding]").evaluate(el =>

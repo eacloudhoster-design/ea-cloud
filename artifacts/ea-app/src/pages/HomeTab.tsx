@@ -417,7 +417,7 @@ function MatrixLayout({ portraitEnabled, shapeStyle, accentColor, botRunning, se
     return () => { observer.disconnect();layout.removeEventListener("ea:portrait-layout",positionBranding); branding.style.removeProperty("transform"); };
   }, [brandingBelowName]);
   return (
-    <div ref={layoutRef} className="matrix-portrait-layout relative z-10 flex flex-col items-center" style={{ minHeight: shapeStyle === "none" ? 0 : "calc(var(--ea-content-height, 100dvh) - 88px)", paddingBottom: 16 }}>
+    <div ref={layoutRef} className="matrix-portrait-layout relative z-10 flex flex-col items-center" style={{ minHeight: "calc(var(--ea-content-height, 100dvh) - 88px)", paddingBottom: 16 }}>
       <div className="w-full flex items-center justify-between px-4 pt-3 pb-4">
         <button className="w-9 h-9 rounded-full flex items-center justify-center active:scale-95 transition-transform" style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.12)" }}>
           <Menu size={16} className="text-white/60" />
