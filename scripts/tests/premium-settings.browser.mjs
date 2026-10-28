@@ -40,7 +40,7 @@ for(const width of [390,360,1280]) {
  await nav.getByRole('button',{name:'Settings',exact:true}).click();
  const settings=page.locator('.ea-settings');
  await page.waitForTimeout(300);
- for(const name of ['Select Main Interface','Select Shape','Select Colour','Select Font','EA Manipulation','Chart Scanner','Back Animation','Live Shot','Admin Portal','Sign Out'])
+ for(const name of ['Select Main Interface','Control Panel','Select Shape','Select Colour','Select Font','EA Manipulation','Chart Scanner','Back Animation','Live Shot','Admin Portal','Sign Out'])
    assert.equal(await settings.getByRole(name==='Admin Portal'?'link':'button',{name,exact:true}).count(),1);
  await page.screenshot({path:`${output}/${width}-collapsed.png`});
  const open=async name=>{await settings.getByRole('button',{name,exact:true}).click(); await page.waitForTimeout(260);};

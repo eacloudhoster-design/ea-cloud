@@ -22,13 +22,23 @@ export const isBackgroundAnimation = (
 export const isAccentColor = (value: unknown): value is string =>
   typeof value === "string" && /^#[0-9a-f]{6}$/i.test(value);
 
+export const controlPanelOrder = ["default", "regular", "matrix"] as const;
+export type ControlPanelStyle = (typeof controlPanelOrder)[number];
+export const isControlPanelStyle = (value: unknown): value is ControlPanelStyle =>
+  controlPanelOrder.includes(value as ControlPanelStyle);
+export function adjacentControlPanel(current: ControlPanelStyle, direction: "next" | "previous"): ControlPanelStyle {
+  return controlPanelOrder[(controlPanelOrder.indexOf(current) + (direction === "next" ? 1 : -1) + 3) % 3];
+}
+
 export type HomePreferences = {
+  controlPanel: ControlPanelStyle;
   accentColor: string;
   backgroundAnimation: BackgroundAnimation;
   interfaceStyle: InterfaceStyle;
   showBg: boolean;
 };
 export const defaultHomePreferences: HomePreferences = {
+  controlPanel: "default",
   interfaceStyle: "matrix",
   accentColor: "#ef4444",
   showBg: true,
@@ -57,6 +67,7 @@ export function readHomePreferences(
     try {
       const value = JSON.parse(storage.getItem(key) || "null");
       return {
+        controlPanel: isControlPanelStyle(value?.controlPanel) ? value.controlPanel : "default",
         accentColor: isAccentColor(value?.accentColor)
           ? value.accentColor
           : "#ef4444",
@@ -83,6 +94,7 @@ export function saveHomePreferences(
   if (
     !key ||
     !isInterfaceStyle(value.interfaceStyle) ||
+    !isControlPanelStyle(value.controlPanel) ||
     !isAccentColor(value.accentColor) ||
     typeof value.showBg !== "boolean" ||
     !isBackgroundAnimation(value.backgroundAnimation)

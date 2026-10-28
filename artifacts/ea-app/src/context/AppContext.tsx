@@ -1,5 +1,5 @@
 import type { VisualModes } from "@/hooks/use-visual-modes";
-import type { BackgroundAnimation } from "@/lib/home-preferences";
+import type { BackgroundAnimation, ControlPanelStyle } from "@/lib/home-preferences";
 import type {BotFont} from "@/lib/font-preference";
 import { createContext, useContext } from "react";
 
@@ -14,6 +14,8 @@ export interface AppSettings {
   botRunning: boolean;
   botStatusConfirmed: boolean;
   setBotRunning: (v: boolean) => void;
+  controlPanel: ControlPanelStyle;
+  setControlPanel: (value: ControlPanelStyle) => void;
   interfaceStyle: InterfaceStyle;
   setInterfaceStyle: (v: InterfaceStyle) => void;
   accentColor: string;
@@ -41,6 +43,8 @@ export const AppContext = createContext<AppSettings>({
   botRunning: true,
   botStatusConfirmed: false,
   setBotRunning: () => {},
+  controlPanel: "default",
+  setControlPanel: () => {},
   interfaceStyle: "matrix",
   setInterfaceStyle: () => {},
   accentColor: "#ef4444",
