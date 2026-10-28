@@ -25,16 +25,9 @@ export function installIosStandaloneZoomGuard() {
     }
     active = true;
     root.setAttribute(attribute, "");
-    // The approved portrait reference uses a 390 CSS-pixel design canvas.
-    // Wider layout viewports otherwise make every fixed-size control smaller
-    // relative to the screen. Normalize the shared viewport, not each design.
-    // width * visual scale stays stable after normalization and on keyboard open.
-    const angle = (window as Window & { orientation?: number }).orientation ?? screen.orientation?.angle ?? 0;
-    const iphonePortrait = /iPhone/i.test(navigator.userAgent) && Math.abs(angle % 180) === 0;
-    const surfaceWidth = (visualViewport?.width || innerWidth) * (visualViewport?.scale || 1);
-    const scale = iphonePortrait && surfaceWidth > 390 ? Number((surfaceWidth / 390).toFixed(5)) : 1;
-    const width = scale > 1 ? "390" : "device-width";
-    const content = `width=${width}, initial-scale=${scale}, minimum-scale=${scale}, maximum-scale=${scale}, user-scalable=no, viewport-fit=cover`;
+    // Keep the device-width layout. No fixed design width or inferred scale:
+    // screenshots alone cannot establish the installed device's viewport.
+    const content = "width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover";
     if (viewport?.getAttribute("content") !== content) viewport?.setAttribute("content", content);
   };
   const preventPageGesture = (event: Event) => {
