@@ -3,7 +3,7 @@ import {useVoiceAnnouncements} from "@/hooks/use-voice-announcements";
 import ModeImage from "@/components/ModeImage";
 import { useVisualModes } from "@/hooks/use-visual-modes";
 import { usePwaBackground } from "@/hooks/use-pwa-background";
-import { useIosStandaloneLayout } from "@/hooks/use-ios-standalone-layout";
+import { isIosStandaloneLayout, useIosStandaloneLayout } from "@/hooks/use-ios-standalone-layout";
 import { useIosStandaloneZoom } from "@/hooks/use-ios-standalone-zoom";
 import { useBotStatus } from "@/hooks/use-bot-status";
 import BackgroundAnimation from "@/components/BackgroundAnimation";
@@ -48,6 +48,13 @@ function EACloudApp({ onReady, startupComplete }: { onReady: (ready: boolean) =>
   const [clientStatus, setClientStatus] = useState<"pending" | "rejected" | "approved">("pending");
 
   const [activeTab, setActiveTab] = useState<Tab>("home");
+  const [pageBackgroundHost, setPageBackgroundHost] = useState<HTMLDivElement | null>(null);
+  const fullscreenBackgroundHost = isIosStandaloneLayout({
+    userAgent: navigator.userAgent, platform: navigator.platform,
+    maxTouchPoints: navigator.maxTouchPoints,
+    standalone: (navigator as Navigator & { standalone?: boolean }).standalone === true,
+    displayStandalone: window.matchMedia("(display-mode: standalone)").matches,
+  }) ? pageBackgroundHost : null;
   const [mt5BackgroundHost, setMt5BackgroundHost] = useState<HTMLDivElement | null>(null);
   const [mt5Present, setMt5Present] = useState(false);
   useEffect(() => {
@@ -318,7 +325,9 @@ function EACloudApp({ onReady, startupComplete }: { onReady: (ready: boolean) =>
           data-active={activeTab === "metatrader"}
           hidden={activeTab !== "metatrader" && !mt5Present} aria-hidden="true" />
 
-        <div className="ea-app-content relative overflow-clip">
+        <div ref={setPageBackgroundHost} className="ea-page-background-host absolute inset-0 pointer-events-none" style={{ zIndex: 0 }} aria-hidden="true" />
+
+        <div className="ea-app-content relative overflow-clip" data-fullscreen-scanner={!!fullscreenBackgroundHost && showChartScanner}>
         <BackgroundAnimation effect={backgroundAnimation} color={accentColor} active={activeTab === "home"} />
 
         <div data-home-screen className="ea-nav-screen absolute inset-0 z-[2]" style={{ opacity: activeTab === "home" ? 1 : 0 }} inert={activeTab !== "home" || settingsClosing}>
@@ -344,14 +353,14 @@ function EACloudApp({ onReady, startupComplete }: { onReady: (ready: boolean) =>
           inert={activeTab !== "settings"}
           style={{ width: "88%", opacity: activeTab === "settings" ? 1 : 0, pointerEvents: activeTab === "settings" ? "auto" : "none" }}
         >
-          <SettingsTab onOpenChartScanner={() => setShowChartScanner(true)} />
+          <SettingsTab backgroundHost={fullscreenBackgroundHost} onOpenChartScanner={() => setShowChartScanner(true)} />
         </div>
 
         <TradingActivityMonitor />
 
         {showChartScanner && (
-          <div className="absolute inset-0 z-50">
-            <ChartScannerModal onClose={() => setShowChartScanner(false)} onNavigate={tab => { navigate(tab); setShowChartScanner(false); }} />
+          <div className="absolute inset-0 z-50" data-scanner-layer>
+            <ChartScannerModal backgroundHost={fullscreenBackgroundHost} onClose={() => setShowChartScanner(false)} onNavigate={tab => { navigate(tab); setShowChartScanner(false); }} />
           </div>
         )}
         </div>

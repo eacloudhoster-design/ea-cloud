@@ -1,3 +1,4 @@
+import { createPortal } from "react-dom";
 import {toggleWebPush,prepareWebPush} from "@/lib/web-push-client";
 import {useEffect, useId, type CSSProperties} from "react";
 import "./SettingsTab.css";
@@ -15,6 +16,7 @@ import { eaLogo } from "@/lib/branding";
 import ClientSizingDiagnostics from "@/components/ClientSizingDiagnostics";
 
 interface SettingsTabProps {
+  backgroundHost?: HTMLElement | null;
   onOpenChartScanner?: () => void;
 }
 
@@ -49,15 +51,21 @@ const SHAPE_ICONS: Record<ShapeStyle, React.ReactNode> = {
   neural: <div className="w-8 h-8 rounded-xl border-2 border-current" />,
 };
 
-export default function SettingsTab({ onOpenChartScanner }: SettingsTabProps) {
-  const { signOut, clientToken, backgroundAnimation, setBackgroundAnimation, accentColor, setAccentColor, interfaceStyle, setInterfaceStyle, shapeStyle, setShapeStyle, activeTab, botFont="Inter", setBotFont } = useApp();
+export default function SettingsTab({ onOpenChartScanner, backgroundHost }: SettingsTabProps) {
+  const { bgImageUrl, showBg, signOut, clientToken, backgroundAnimation, setBackgroundAnimation, accentColor, setAccentColor, interfaceStyle, setInterfaceStyle, shapeStyle, setShapeStyle, activeTab, botFont="Inter", setBotFont } = useApp();
   useEffect(()=>{if(clientToken)void prepareWebPush()?.catch(()=>{});},[clientToken]);
   const [open, setOpen] = useState<OpenSection>(null);
 
   const toggle = (section: OpenSection) => setOpen(prev => prev === section ? null : section);
 
   return (
+    <>
+    {backgroundHost && createPortal(<div className="ea-settings-fullscreen-background" data-active={activeTab === "settings"} style={{ "--settings-accent": accentColor } as CSSProperties}>
+      {showBg && bgImageUrl && <img src={bgImageUrl} alt="" />}
+      <div className="ea-settings-background-tint" />
+    </div>, backgroundHost)}
     <div
+      data-fullscreen-background={!!backgroundHost}
       className="ea-settings h-full flex flex-col overflow-hidden"
       style={{ "--settings-accent": accentColor, paddingBottom: "var(--ea-nav-clearance, 90px)" } as CSSProperties}
     >
@@ -229,6 +237,7 @@ export default function SettingsTab({ onOpenChartScanner }: SettingsTabProps) {
         </div>
       </div>
     </div>
+    </>
   );
 }
 

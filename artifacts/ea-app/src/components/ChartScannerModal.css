@@ -1,5 +1,10 @@
 .scanner-screen { position:absolute; inset:0; isolation:isolate; display:flex; flex-direction:column; overflow:hidden; background:color-mix(in srgb, var(--scanner-accent), black 94.9%); color:#f9f7f7; --scanner-accent:#ef4444; font-family:Inter,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; }
 .scanner-background { position:absolute; inset:0; z-index:-3; width:100%; height:100%; object-fit:cover; object-position:center; opacity:.58; }
+/* The fullscreen image is below content. Hide covered screens while retaining
+   their state, so they cannot show through the scanner's transparent surface. */
+.ea-app-content[data-fullscreen-scanner="true"] > :not([data-scanner-layer]) { visibility: hidden; }
+.scanner-screen[data-fullscreen-background="true"] { background: transparent; }
+.scanner-fullscreen-background { position:absolute; inset:0; isolation:isolate; overflow:hidden; background:color-mix(in srgb, var(--scanner-accent), black 94.9%); }
 .scanner-shade { position:absolute; inset:0; z-index:-2; background:linear-gradient(180deg,color-mix(in srgb, color-mix(in srgb, var(--scanner-accent), black 76.47%) 45.88%, transparent),color-mix(in srgb, color-mix(in srgb, var(--scanner-accent), black 96.86%) 52.94%, transparent) 40%,color-mix(in srgb, color-mix(in srgb, var(--scanner-accent), black 92.16%) 78.82%, transparent)),radial-gradient(ellipse at 50% 16%,color-mix(in srgb, color-mix(in srgb, var(--scanner-accent), black 13.73%) 18.82%, transparent),transparent 65%); }
 .scanner-screen button,.scanner-screen input,.scanner-screen select,.scanner-screen summary { -webkit-tap-highlight-color:transparent; }
 .scanner-screen button { cursor:pointer; transition:background .2s,transform .2s,border-color .2s; }
