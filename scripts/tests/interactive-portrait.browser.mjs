@@ -196,13 +196,16 @@ try {
         "mentor default for unsaved interface",
       );
       const geometry = () =>
-        page.locator("[data-home-swipe-surface]").evaluate((el) =>
+        page.locator("[data-home-swipe-surface]").evaluate((el, style) =>
           [
             ...el.querySelectorAll(
               "[data-bot-name], button, [data-matrix-branding], [data-matrix-functions], p",
             ),
           ]
-            .filter((node) => !node.closest("[data-portrait-interactive]"))
+            .filter((node) =>
+              !node.closest("[data-portrait-interactive]") &&
+              !(style === "matrix" && node.matches("[data-bot-name=primary], [data-matrix-branding]")),
+            )
             .map((node) => {
               const r = node.getBoundingClientRect();
               return {
@@ -213,6 +216,7 @@ try {
                 height: r.height,
               };
             }),
+          style,
         );
       const positions = await geometry();
       const before = await frame.boundingBox(),
@@ -289,20 +293,13 @@ try {
           .evaluate((el) => getComputedStyle(el).opacity),
         "1",
       );
-      const quotes = page
+      await page
         .locator("[data-home-interface]")
-        .getByText(
-          style === "matrix"
-            ? "QUOTES"
-            : style === "s2tone"
-              ? "Symbols"
-              : "SYMBOLS",
-          { exact: true },
-        )
-        .locator("..");
-      if (await quotes.locator("button").count())
-        await quotes.locator("button").click();
-      else await quotes.click();
+        .getByRole("button", {
+          name: style === "s2tone" ? "Symbols" : "Quotes",
+          exact: true,
+        })
+        .click();
       await page
         .getByRole("button", { name: "SELECTED SYMBOLS", exact: true })
         .waitFor();

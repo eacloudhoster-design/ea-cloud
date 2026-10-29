@@ -330,16 +330,22 @@ function RegularLayout({ portraitEnabled, shapeStyle, accentColor, botRunning, s
 function MatrixLayout({ portraitEnabled, shapeStyle, accentColor, botRunning, setBotRunning, eaName, eaTagline, bgImageUrl, setShowQuotes, setShowRemoveConfirm, onOpenTrades, tradeCount = 0 }: any) {
   const theme = accentColor;
   const layoutRef = useRef<HTMLDivElement>(null);
-  const brandingBelowName = shapeStyle === "orbit" || shapeStyle === "neural";
+  const brandingBelowName = shapeStyle !== "none";
   useLayoutEffect(() => {
-    if (!brandingBelowName) return;
     const layout = layoutRef.current;
     const name = layout?.querySelector<HTMLElement>('[data-bot-name="primary"]');
     const branding = layout?.querySelector<HTMLElement>('[data-matrix-branding]');
-    if (!layout || !name || !branding) return;
+    const controls = layout?.querySelector<HTMLElement>('[data-matrix-functions]');
+    if (!layout || !name || !branding || !controls) return;
     const positionBranding = () => {
-      // Move only the label visually; its original flow space keeps every other element fixed.
-      branding.style.transform = `translateY(${name.offsetTop + name.offsetHeight + 8 - branding.offsetTop}px)`;
+      // Preserve every flow box so controls, header and background never move.
+      if (brandingBelowName) {
+        name.style.removeProperty("transform");
+        branding.style.transform = `translateY(${name.offsetTop + name.offsetHeight + 8 - branding.offsetTop}px)`;
+      } else {
+        name.style.transform = `translateY(${controls.offsetTop - 32 - name.offsetHeight - name.offsetTop}px)`;
+        branding.style.removeProperty("transform");
+      }
     };
     positionBranding();
     layout.addEventListener("ea:portrait-layout",positionBranding);
@@ -347,7 +353,8 @@ function MatrixLayout({ portraitEnabled, shapeStyle, accentColor, botRunning, se
     observer.observe(layout);
     observer.observe(name);
     observer.observe(branding);
-    return () => { observer.disconnect();layout.removeEventListener("ea:portrait-layout",positionBranding); branding.style.removeProperty("transform"); };
+    observer.observe(controls);
+    return () => { observer.disconnect();layout.removeEventListener("ea:portrait-layout",positionBranding); branding.style.removeProperty("transform"); name.style.removeProperty("transform"); };
   }, [brandingBelowName]);
   return (
     <div ref={layoutRef} className="matrix-portrait-layout relative z-10 flex flex-col items-center" style={{ minHeight: "calc(var(--ea-content-height, 100dvh) - 88px)", paddingBottom: 16 }}>
@@ -356,8 +363,12 @@ function MatrixLayout({ portraitEnabled, shapeStyle, accentColor, botRunning, se
           <Menu size={16} className="text-white/60" />
         </button>
         <div className="flex items-center gap-2 px-4 py-2 rounded-full" style={{ background: "rgba(0,0,0,0.55)", border: `1px solid ${theme}55`, backdropFilter: "blur(10px)" }}>
-          <div className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: `${theme}22`, border: `1.5px solid ${theme}` }}>
-            <span className="text-[11px] font-black" style={{ color: theme }}>P</span>
+          <div className="w-6 h-6 rounded-full overflow-hidden flex items-center justify-center flex-shrink-0" style={{ background: `${theme}22`, border: `1.5px solid ${theme}` }}>
+            <ModeImage key={bgImageUrl || robotBg} data-matrix-status-image src={bgImageUrl || robotBg} alt="" className="w-full h-full object-cover" onError={event => {
+              const image = event.currentTarget;
+              if (image.src !== new URL(robotBg, location.href).href) image.src = robotBg;
+              else image.style.visibility = "hidden";
+            }} />
           </div>
           <div className="text-left">
             <BotName as="p" className="text-white font-black text-[11px] leading-none tracking-widest">{eaName.toUpperCase()}</BotName>
