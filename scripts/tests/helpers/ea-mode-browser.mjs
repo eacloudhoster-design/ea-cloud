@@ -50,8 +50,7 @@ export async function verifyModeBrowser(app,engine){
   const mentor=await browser.newContext({viewport:{width:1100,height:900}});await wire(mentor);
   await mentor.addInitScript(()=>localStorage.setItem('token',btoa('5:mentor:fixture')));
   const portal=await mentor.newPage();await portal.goto(origin+'/admin/profile');
-  await portal.getByRole('button',{name:'Manage four mode images',exact:true}).click();
-  const dialog=portal.getByRole('dialog');await dialog.getByRole('button',{name:'Save artwork',exact:true}).waitFor();
+  const dialog=portal.locator('.mentor-background-editor');await dialog.getByRole('button',{name:'Save artwork',exact:true}).waitFor();
   await portal.waitForFunction(()=>[...document.querySelectorAll('button')].some(b=>b.textContent==='Save artwork'&&!b.disabled));
   for(const [index,name] of ['NORMAL','BEAST','AGGRESSIVE','ULTIMATE'].entries()){
    await dialog.getByLabel(`Upload ${name} image`,{exact:true}).setInputFiles({name:name+'.jpg',mimeType:'image/jpeg',buffer:pictures[index]});
@@ -65,7 +64,7 @@ export async function verifyModeBrowser(app,engine){
   const saved=(await engine.query('SELECT * FROM ea_mode_images WHERE ea_id=11')).rows[0];
   assert.ok(saved.normal&&saved.beast&&saved.aggressive&&saved.ultimate);
   await portal.screenshot({path:output+'/mentor-uploads.png'});
-  await portal.reload();await portal.getByRole('button',{name:'Manage four mode images',exact:true}).click();
+  await portal.reload();
   await portal.waitForFunction(()=>[...document.querySelectorAll('button')].some(b=>b.textContent==='Save artwork'&&!b.disabled));
   assert.equal(await portal.getByAltText('BEAST artwork preview').getAttribute('src'),saved.beast);
   const client=await browser.newContext({viewport:{width:390,height:844},hasTouch:true,isMobile:true});await wire(client);
