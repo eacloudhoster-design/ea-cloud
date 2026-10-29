@@ -5,6 +5,7 @@ import {
   storedBackground,
 } from "../../functions/_lib/background-storage.js";
 const originalFetch = globalThis.fetch;
+const portalCookie = `ea_portal_session=${"a".repeat(64)}`;
 afterEach(() => {
   globalThis.fetch = originalFetch;
 });
@@ -44,7 +45,8 @@ const environment = () => ({
 const signedIn = (user = { id: 7, role: "mentor", status: "approved" }) => {
   globalThis.fetch = async (request, options) => {
     assert.equal(String(request), "https://backend.example/api/auth/me");
-    assert.equal(options.headers.Authorization, "Bearer fixture-token");
+    assert.equal(options.headers.Cookie, portalCookie);
+    assert.equal(options.headers.Authorization, undefined);
     return Response.json(user);
   };
 };
@@ -65,7 +67,7 @@ const ticket = (
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          ...(auth ? { Authorization: "Bearer fixture-token" } : {}),
+          ...(auth ? { Cookie: portalCookie } : {}),
         },
         body: JSON.stringify(metadata),
       },
@@ -76,7 +78,7 @@ const upload = (env, url, body = png, type = "image/png") =>
     env,
     request: new Request(url, {
       method: "PUT",
-      headers: { Authorization: "Bearer fixture-token", "Content-Type": type },
+      headers: { Cookie: portalCookie, "Content-Type": type },
       body,
     }),
   });
@@ -201,3 +203,12 @@ test('bucket exceptions produce safe service errors without provider details', a
 });
 
 test("the streamed upload accepts the requested 10MB boundary",async()=>{signedIn();const env=environment();const bytes=new Uint8Array(10*1024*1024);bytes.set(png);const metadata=await(await ticket(env,{name:"large.png",size:bytes.length,contentType:"image/png"})).json();assert.equal((await upload(env,metadata.uploadURL,bytes)).status,200);});
+
+test("upload authorization forwards only a valid portal cookie and rejects legacy hints, client cookies and cross-site writes",async()=>{
+ signedIn();const env=environment();
+ const call=headers=>requestBackgroundUpload({env,request:new Request("https://site.example/api/storage/uploads/request-url",{method:"POST",headers:{"Content-Type":"application/json",...headers},body:JSON.stringify({name:"image.png",size:png.length,contentType:"image/png"})})});
+ for(const headers of [{Authorization:"Bearer cookie-portal"},{Cookie:`ea_client_session=${"b".repeat(64)}`},{Cookie:"ea_portal_session=invalid"}])assert.equal((await call(headers)).status,401);
+ assert.equal((await call({Cookie:`other=private; ${portalCookie}; ea_client_session=${"b".repeat(64)}`,Origin:"https://site.example"})).status,200);
+ assert.equal((await call({Cookie:portalCookie,Origin:"https://attacker.example"})).status,403);
+ assert.equal((await call({Cookie:portalCookie,"Sec-Fetch-Site":"cross-site"})).status,403);
+});
