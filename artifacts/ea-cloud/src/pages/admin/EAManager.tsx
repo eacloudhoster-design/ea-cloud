@@ -85,13 +85,13 @@ export default function EAManager() {
 
   const handleSubmit = async () => {
     if (!form.name.trim()) { setError("EA name is required"); return; }
-    if (!form.symbol) { setError("Select at least one symbol"); return; }
+    if (editingId !== null && !form.symbol) { setError("Select at least one symbol"); return; }
     setError("");
     try {
       if (editingId !== null) {
         await updateMutation.mutateAsync({ id: editingId, data: { ...form } });
       } else {
-        await createMutation.mutateAsync({ data: { ...form } });
+        await createMutation.mutateAsync({ data: { name: form.name, description: form.description, isActive: form.isActive } });
       }
       invalidate();
       closeForm();
@@ -146,6 +146,9 @@ export default function EAManager() {
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              role="dialog"
+              aria-modal="true"
+              aria-label={editingId !== null ? "Edit EA" : "Create New EA"}
               className="w-full max-w-lg bg-[#0e0e1a] border border-white/10 rounded-2xl p-6 shadow-2xl max-h-[90vh] overflow-y-auto"
             >
               <div className="flex items-center justify-between mb-6">
@@ -158,7 +161,7 @@ export default function EAManager() {
                     <p className="text-xs text-white/40">Expert Advisor configuration</p>
                   </div>
                 </div>
-                <button onClick={closeForm} className="text-white/30 hover:text-white transition-colors">
+                <button aria-label="Close EA form" onClick={closeForm} className="text-white/30 hover:text-white transition-colors">
                   <X className="w-5 h-5" />
                 </button>
               </div>
@@ -184,6 +187,7 @@ export default function EAManager() {
                   />
                 </div>
 
+                {editingId !== null && <>
                 {/* Multi-symbol selector */}
                 <div>
                   <Label className="text-xs text-white/50 uppercase tracking-wider mb-2 block">
@@ -240,12 +244,16 @@ export default function EAManager() {
                   </div>
                 </div>
 
+                </>}
+
                 <div className="flex items-center justify-between py-1">
                   <div>
                     <div className="text-sm text-white font-medium">Active Status</div>
                     <div className="text-xs text-white/40">Enable this EA to run on client accounts</div>
                   </div>
                   <button
+                    aria-label="Active Status"
+                    aria-pressed={form.isActive}
                     onClick={() => setForm(f => ({ ...f, isActive: !f.isActive }))}
                     className={`relative w-11 h-6 rounded-full transition-colors duration-200 ${form.isActive ? "bg-primary" : "bg-white/10"}`}
                   >
