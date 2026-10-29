@@ -1,0 +1,818 @@
+[
+  {
+    "device": {
+      "width": 390,
+      "height": 844,
+      "touch": true
+    },
+    "states": {
+      "neural": {
+        "name": {
+          "x": 0,
+          "y": 379,
+          "w": 390,
+          "h": 34
+        },
+        "branding": {
+          "x": 103.0625,
+          "y": 421,
+          "w": 183.859375,
+          "h": 46
+        },
+        "controls": {
+          "x": 25,
+          "y": 590,
+          "w": 340,
+          "h": 84
+        },
+        "nav": {
+          "x": 0,
+          "y": 784,
+          "w": 390,
+          "h": 60
+        },
+        "header": {
+          "x": 0,
+          "y": 0,
+          "w": 390,
+          "h": 71
+        },
+        "font": "\"EA Bot Inter\", sans-serif",
+        "fontSize": "34px",
+        "bg": {
+          "x": 0,
+          "y": 0,
+          "w": 390,
+          "h": 844
+        }
+      },
+      "none": {
+        "name": {
+          "x": 0,
+          "y": 524,
+          "w": 390,
+          "h": 34
+        },
+        "branding": {
+          "x": 103.0625,
+          "y": 694,
+          "w": 183.859375,
+          "h": 46
+        },
+        "controls": {
+          "x": 25,
+          "y": 590,
+          "w": 340,
+          "h": 84
+        },
+        "nav": {
+          "x": 0,
+          "y": 784,
+          "w": 390,
+          "h": 60
+        },
+        "header": {
+          "x": 0,
+          "y": 0,
+          "w": 390,
+          "h": 71
+        },
+        "font": "\"EA Bot Inter\", sans-serif",
+        "fontSize": "34px",
+        "bg": {
+          "x": 0,
+          "y": 0,
+          "w": 390,
+          "h": 844
+        }
+      },
+      "orbit": {
+        "name": {
+          "x": 0,
+          "y": 379,
+          "w": 390,
+          "h": 34
+        },
+        "branding": {
+          "x": 103.0625,
+          "y": 421,
+          "w": 183.859375,
+          "h": 46
+        },
+        "controls": {
+          "x": 25,
+          "y": 590,
+          "w": 340,
+          "h": 84
+        },
+        "nav": {
+          "x": 0,
+          "y": 784,
+          "w": 390,
+          "h": 60
+        },
+        "header": {
+          "x": 0,
+          "y": 0,
+          "w": 390,
+          "h": 71
+        },
+        "font": "\"EA Bot Inter\", sans-serif",
+        "fontSize": "34px",
+        "bg": {
+          "x": 0,
+          "y": 0,
+          "w": 390,
+          "h": 844
+        }
+      },
+      "regular": {
+        "name": {
+          "x": 28.046875,
+          "y": 374,
+          "w": 333.90625,
+          "h": 54
+        },
+        "branding": null,
+        "controls": null,
+        "nav": {
+          "x": 0,
+          "y": 784,
+          "w": 390,
+          "h": 60
+        },
+        "header": null,
+        "font": "\"EA Bot Inter\", sans-serif",
+        "fontSize": "36px",
+        "bg": {
+          "x": 0,
+          "y": 0,
+          "w": 390,
+          "h": 844
+        }
+      },
+      "s2tone": {
+        "name": {
+          "x": 20,
+          "y": 318,
+          "w": 350,
+          "h": 100
+        },
+        "branding": null,
+        "controls": null,
+        "nav": {
+          "x": 0,
+          "y": 784,
+          "w": 390,
+          "h": 60
+        },
+        "header": null,
+        "font": "\"EA Bot Inter\", sans-serif",
+        "fontSize": "40px",
+        "bg": {
+          "x": 0,
+          "y": 0,
+          "w": 390,
+          "h": 844
+        }
+      },
+      "lumo": {
+        "name": {
+          "x": 19,
+          "y": 458.5625,
+          "w": 352,
+          "h": 36.140625
+        },
+        "branding": null,
+        "controls": null,
+        "nav": {
+          "x": 0,
+          "y": 784,
+          "w": 390,
+          "h": 60
+        },
+        "header": null,
+        "font": "\"EA Bot Inter\", sans-serif",
+        "fontSize": "31.98px",
+        "bg": {
+          "x": 0,
+          "y": 0,
+          "w": 390,
+          "h": 844
+        }
+      }
+    }
+  },
+  {
+    "device": {
+      "width": 320,
+      "height": 568,
+      "touch": true
+    },
+    "states": {
+      "neural": {
+        "name": {
+          "x": 0,
+          "y": 379,
+          "w": 320,
+          "h": 68
+        },
+        "branding": {
+          "x": 68.0625,
+          "y": 455,
+          "w": 183.859375,
+          "h": 46
+        },
+        "controls": {
+          "x": 16,
+          "y": 535,
+          "w": 288,
+          "h": 84
+        },
+        "nav": {
+          "x": 0,
+          "y": 508,
+          "w": 320,
+          "h": 60
+        },
+        "header": {
+          "x": 0,
+          "y": 0,
+          "w": 320,
+          "h": 71
+        },
+        "font": "\"EA Bot Inter\", sans-serif",
+        "fontSize": "34px",
+        "bg": {
+          "x": 0,
+          "y": 0,
+          "w": 320,
+          "h": 568
+        }
+      },
+      "none": {
+        "name": {
+          "x": 0,
+          "y": 435,
+          "w": 320,
+          "h": 68
+        },
+        "branding": {
+          "x": 68.0625,
+          "y": 639,
+          "w": 183.859375,
+          "h": 46
+        },
+        "controls": {
+          "x": 16,
+          "y": 535,
+          "w": 288,
+          "h": 84
+        },
+        "nav": {
+          "x": 0,
+          "y": 508,
+          "w": 320,
+          "h": 60
+        },
+        "header": {
+          "x": 0,
+          "y": 0,
+          "w": 320,
+          "h": 71
+        },
+        "font": "\"EA Bot Inter\", sans-serif",
+        "fontSize": "34px",
+        "bg": {
+          "x": 0,
+          "y": 0,
+          "w": 320,
+          "h": 568
+        }
+      },
+      "orbit": {
+        "name": {
+          "x": 0,
+          "y": 379,
+          "w": 320,
+          "h": 68
+        },
+        "branding": {
+          "x": 68.0625,
+          "y": 455,
+          "w": 183.859375,
+          "h": 46
+        },
+        "controls": {
+          "x": 16,
+          "y": 535,
+          "w": 288,
+          "h": 84
+        },
+        "nav": {
+          "x": 0,
+          "y": 508,
+          "w": 320,
+          "h": 60
+        },
+        "header": {
+          "x": 0,
+          "y": 0,
+          "w": 320,
+          "h": 71
+        },
+        "font": "\"EA Bot Inter\", sans-serif",
+        "fontSize": "34px",
+        "bg": {
+          "x": 0,
+          "y": 0,
+          "w": 320,
+          "h": 568
+        }
+      },
+      "regular": {
+        "name": {
+          "x": 24,
+          "y": 374,
+          "w": 272,
+          "h": 108
+        },
+        "branding": null,
+        "controls": null,
+        "nav": {
+          "x": 0,
+          "y": 508,
+          "w": 320,
+          "h": 60
+        },
+        "header": null,
+        "font": "\"EA Bot Inter\", sans-serif",
+        "fontSize": "36px",
+        "bg": {
+          "x": 0,
+          "y": 0,
+          "w": 320,
+          "h": 568
+        }
+      },
+      "s2tone": {
+        "name": {
+          "x": 20,
+          "y": 318,
+          "w": 280,
+          "h": 100
+        },
+        "branding": null,
+        "controls": null,
+        "nav": {
+          "x": 0,
+          "y": 508,
+          "w": 320,
+          "h": 60
+        },
+        "header": null,
+        "font": "\"EA Bot Inter\", sans-serif",
+        "fontSize": "40px",
+        "bg": {
+          "x": 0,
+          "y": 0,
+          "w": 320,
+          "h": 568
+        }
+      },
+      "lumo": {
+        "name": {
+          "x": 13,
+          "y": 382.203125,
+          "w": 294,
+          "h": 29.640625
+        },
+        "branding": null,
+        "controls": null,
+        "nav": {
+          "x": 0,
+          "y": 508,
+          "w": 320,
+          "h": 60
+        },
+        "header": null,
+        "font": "\"EA Bot Inter\", sans-serif",
+        "fontSize": "26.24px",
+        "bg": {
+          "x": 0,
+          "y": 0,
+          "w": 320,
+          "h": 568
+        }
+      }
+    }
+  },
+  {
+    "device": {
+      "width": 430,
+      "height": 932,
+      "touch": true
+    },
+    "states": {
+      "neural": {
+        "name": {
+          "x": 0,
+          "y": 379,
+          "w": 430,
+          "h": 34
+        },
+        "branding": {
+          "x": 123.0625,
+          "y": 421,
+          "w": 183.859375,
+          "h": 46
+        },
+        "controls": {
+          "x": 45,
+          "y": 678,
+          "w": 340,
+          "h": 84
+        },
+        "nav": {
+          "x": 0,
+          "y": 872,
+          "w": 430,
+          "h": 60
+        },
+        "header": {
+          "x": 0,
+          "y": 0,
+          "w": 430,
+          "h": 71
+        },
+        "font": "\"EA Bot Inter\", sans-serif",
+        "fontSize": "34px",
+        "bg": {
+          "x": 0,
+          "y": 0,
+          "w": 430,
+          "h": 932
+        }
+      },
+      "none": {
+        "name": {
+          "x": 0,
+          "y": 612,
+          "w": 430,
+          "h": 34
+        },
+        "branding": {
+          "x": 123.0625,
+          "y": 782,
+          "w": 183.859375,
+          "h": 46
+        },
+        "controls": {
+          "x": 45,
+          "y": 678,
+          "w": 340,
+          "h": 84
+        },
+        "nav": {
+          "x": 0,
+          "y": 872,
+          "w": 430,
+          "h": 60
+        },
+        "header": {
+          "x": 0,
+          "y": 0,
+          "w": 430,
+          "h": 71
+        },
+        "font": "\"EA Bot Inter\", sans-serif",
+        "fontSize": "34px",
+        "bg": {
+          "x": 0,
+          "y": 0,
+          "w": 430,
+          "h": 932
+        }
+      },
+      "orbit": {
+        "name": {
+          "x": 0,
+          "y": 379,
+          "w": 430,
+          "h": 34
+        },
+        "branding": {
+          "x": 123.0625,
+          "y": 421,
+          "w": 183.859375,
+          "h": 46
+        },
+        "controls": {
+          "x": 45,
+          "y": 678,
+          "w": 340,
+          "h": 84
+        },
+        "nav": {
+          "x": 0,
+          "y": 872,
+          "w": 430,
+          "h": 60
+        },
+        "header": {
+          "x": 0,
+          "y": 0,
+          "w": 430,
+          "h": 71
+        },
+        "font": "\"EA Bot Inter\", sans-serif",
+        "fontSize": "34px",
+        "bg": {
+          "x": 0,
+          "y": 0,
+          "w": 430,
+          "h": 932
+        }
+      },
+      "regular": {
+        "name": {
+          "x": 48.046875,
+          "y": 374,
+          "w": 333.90625,
+          "h": 54
+        },
+        "branding": null,
+        "controls": null,
+        "nav": {
+          "x": 0,
+          "y": 872,
+          "w": 430,
+          "h": 60
+        },
+        "header": null,
+        "font": "\"EA Bot Inter\", sans-serif",
+        "fontSize": "36px",
+        "bg": {
+          "x": 0,
+          "y": 0,
+          "w": 430,
+          "h": 932
+        }
+      },
+      "s2tone": {
+        "name": {
+          "x": 20,
+          "y": 318,
+          "w": 390,
+          "h": 50
+        },
+        "branding": null,
+        "controls": null,
+        "nav": {
+          "x": 0,
+          "y": 872,
+          "w": 430,
+          "h": 60
+        },
+        "header": null,
+        "font": "\"EA Bot Inter\", sans-serif",
+        "fontSize": "40px",
+        "bg": {
+          "x": 0,
+          "y": 0,
+          "w": 430,
+          "h": 932
+        }
+      },
+      "lumo": {
+        "name": {
+          "x": 19,
+          "y": 512,
+          "w": 392,
+          "h": 39.84375
+        },
+        "branding": null,
+        "controls": null,
+        "nav": {
+          "x": 0,
+          "y": 872,
+          "w": 430,
+          "h": 60
+        },
+        "header": null,
+        "font": "\"EA Bot Inter\", sans-serif",
+        "fontSize": "35.26px",
+        "bg": {
+          "x": 0,
+          "y": 0,
+          "w": 430,
+          "h": 932
+        }
+      }
+    }
+  },
+  {
+    "device": {
+      "width": 360,
+      "height": 800,
+      "touch": true
+    },
+    "states": {
+      "neural": {
+        "name": {
+          "x": 0,
+          "y": 379,
+          "w": 360,
+          "h": 34
+        },
+        "branding": {
+          "x": 88.0625,
+          "y": 421,
+          "w": 183.859375,
+          "h": 46
+        },
+        "controls": {
+          "x": 16,
+          "y": 546,
+          "w": 328,
+          "h": 84
+        },
+        "nav": {
+          "x": 0,
+          "y": 740,
+          "w": 360,
+          "h": 60
+        },
+        "header": {
+          "x": 0,
+          "y": 0,
+          "w": 360,
+          "h": 71
+        },
+        "font": "\"EA Bot Inter\", sans-serif",
+        "fontSize": "34px",
+        "bg": {
+          "x": 0,
+          "y": 0,
+          "w": 360,
+          "h": 800
+        }
+      },
+      "none": {
+        "name": {
+          "x": 0,
+          "y": 480,
+          "w": 360,
+          "h": 34
+        },
+        "branding": {
+          "x": 88.0625,
+          "y": 650,
+          "w": 183.859375,
+          "h": 46
+        },
+        "controls": {
+          "x": 16,
+          "y": 546,
+          "w": 328,
+          "h": 84
+        },
+        "nav": {
+          "x": 0,
+          "y": 740,
+          "w": 360,
+          "h": 60
+        },
+        "header": {
+          "x": 0,
+          "y": 0,
+          "w": 360,
+          "h": 71
+        },
+        "font": "\"EA Bot Inter\", sans-serif",
+        "fontSize": "34px",
+        "bg": {
+          "x": 0,
+          "y": 0,
+          "w": 360,
+          "h": 800
+        }
+      },
+      "orbit": {
+        "name": {
+          "x": 0,
+          "y": 379,
+          "w": 360,
+          "h": 34
+        },
+        "branding": {
+          "x": 88.0625,
+          "y": 421,
+          "w": 183.859375,
+          "h": 46
+        },
+        "controls": {
+          "x": 16,
+          "y": 546,
+          "w": 328,
+          "h": 84
+        },
+        "nav": {
+          "x": 0,
+          "y": 740,
+          "w": 360,
+          "h": 60
+        },
+        "header": {
+          "x": 0,
+          "y": 0,
+          "w": 360,
+          "h": 71
+        },
+        "font": "\"EA Bot Inter\", sans-serif",
+        "fontSize": "34px",
+        "bg": {
+          "x": 0,
+          "y": 0,
+          "w": 360,
+          "h": 800
+        }
+      },
+      "regular": {
+        "name": {
+          "x": 24,
+          "y": 374,
+          "w": 312,
+          "h": 108
+        },
+        "branding": null,
+        "controls": null,
+        "nav": {
+          "x": 0,
+          "y": 740,
+          "w": 360,
+          "h": 60
+        },
+        "header": null,
+        "font": "\"EA Bot Inter\", sans-serif",
+        "fontSize": "36px",
+        "bg": {
+          "x": 0,
+          "y": 0,
+          "w": 360,
+          "h": 800
+        }
+      },
+      "s2tone": {
+        "name": {
+          "x": 20,
+          "y": 318,
+          "w": 320,
+          "h": 100
+        },
+        "branding": null,
+        "controls": null,
+        "nav": {
+          "x": 0,
+          "y": 740,
+          "w": 360,
+          "h": 60
+        },
+        "header": null,
+        "font": "\"EA Bot Inter\", sans-serif",
+        "fontSize": "40px",
+        "bg": {
+          "x": 0,
+          "y": 0,
+          "w": 360,
+          "h": 800
+        }
+      },
+      "lumo": {
+        "name": {
+          "x": 19,
+          "y": 418.5,
+          "w": 322,
+          "h": 33.34375
+        },
+        "branding": null,
+        "controls": null,
+        "nav": {
+          "x": 0,
+          "y": 740,
+          "w": 360,
+          "h": 60
+        },
+        "header": null,
+        "font": "\"EA Bot Inter\", sans-serif",
+        "fontSize": "29.52px",
+        "bg": {
+          "x": 0,
+          "y": 0,
+          "w": 360,
+          "h": 800
+        }
+      }
+    }
+  }
+]
