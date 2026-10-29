@@ -1,4 +1,4 @@
-import EaModeImageEditor from "@/components/EaModeImageEditor";
+import { Link } from "wouter";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { usePortalRedirect } from "@/contexts/AuthContext";
@@ -60,7 +60,6 @@ export default function EAManager() {
   const updateMutation = useUpdateEa();
   const deleteMutation = useDeleteEa();
 
-  const [modeEa, setModeEa] = useState<{id:number;name:string}|null>(null);
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [form, setForm] = useState<FormState>(defaultForm);
@@ -120,7 +119,6 @@ export default function EAManager() {
 
   return (
     <div className="p-6 md:p-8">
-      {modeEa && <EaModeImageEditor key={modeEa.id} eaId={modeEa.id} name={modeEa.name} onClose={()=>setModeEa(null)} />}
       <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="flex items-center justify-between mb-8">
         <div>
           <h1 className="text-2xl font-bold text-primary tracking-wide">EA Manager</h1>
@@ -340,7 +338,7 @@ export default function EAManager() {
                   ))}
                 </div>
 
-                <Button size="sm" variant="outline" className="mb-4 border-cyan-500/30 text-cyan-300" onClick={()=>setModeEa({id:ea.id,name:ea.name})}>Mode artwork</Button>
+                <Link href={`/admin/profile?ea=${ea.id}#app-background-images`} className="mb-4 inline-block text-sm text-primary hover:underline">Manage app background images in Profile</Link>
 
                 {/* Stats row */}
                 <div className="flex items-center gap-3 mb-4 text-xs">

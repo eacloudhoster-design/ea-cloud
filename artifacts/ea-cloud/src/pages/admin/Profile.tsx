@@ -1,12 +1,12 @@
 import MentorModeArtwork from "@/components/MentorModeArtwork";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { usePortalRedirect } from "@/contexts/AuthContext";
 import { useGetProfile, useUpdateProfile } from "@workspace/api-client-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader2, Save, Upload, Copy, Check, ImagePlus, X, RefreshCw, ShieldCheck, AlertTriangle } from "lucide-react";
+import { Loader2, Save, Copy, Check, RefreshCw, ShieldCheck, AlertTriangle } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { getGetProfileQueryKey } from "@workspace/api-client-react";
 
@@ -18,12 +18,9 @@ export default function AdminProfile() {
   const queryClient = useQueryClient();
   const { data: profile, isLoading } = useGetProfile();
   const updateMutation = useUpdateProfile();
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const [saved, setSaved] = useState(false);
   const [copiedKey, setCopiedKey] = useState(false);
   const [copiedHook, setCopiedHook] = useState(false);
-  const [uploading, setUploading] = useState(false);
-  const [uploadError, setUploadError] = useState("");
   const [regenLoading, setRegenLoading] = useState(false);
   const [regenError, setRegenError] = useState("");
   const [showRegenConfirm, setShowRegenConfirm] = useState(false);
@@ -31,7 +28,7 @@ export default function AdminProfile() {
   const [copiedNew, setCopiedNew] = useState(false);
   const [form, setForm] = useState({
     firstName: "", lastName: "", email: "", phone: "", mentorName: "",
-    robotName: "", robotTagline: "", webhookUrl: "", backgroundImageUrl: "",
+    robotName: "", robotTagline: "", webhookUrl: "",
   });
   const [apiKey, setApiKey] = useState("");
 
@@ -46,7 +43,6 @@ export default function AdminProfile() {
         robotName: profile.robotName || "",
         robotTagline: profile.robotTagline || "",
         webhookUrl: profile.webhookUrl || "",
-        backgroundImageUrl: profile.backgroundImageUrl || "",
       });
       setApiKey(profile.apiKey || "");
     }
@@ -89,46 +85,6 @@ export default function AdminProfile() {
       setRegenError((err as Error).message || "Failed");
     } finally {
       setRegenLoading(false);
-    }
-  };
-
-  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    if (!["image/jpeg", "image/png", "image/webp", "image/gif"].includes(file.type)) { setUploadError("Please select a JPEG, PNG, WebP or GIF image"); return; }
-    if (file.size > 5 * 1024 * 1024) { setUploadError("Image must be 5MB or smaller"); return; }
-    setUploadError("");
-    setUploading(true);
-    try {
-      const token = "cookie-portal";
-      const metaRes = await fetch("/api/storage/uploads/request-url", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
-        body: JSON.stringify({ name: file.name, size: file.size, contentType: file.type }),
-      });
-      if (!metaRes.ok) {
-        const data = await metaRes.json().catch(() => ({}));
-        throw new Error(data.error || "Failed to get upload URL");
-      }
-      const { uploadURL, objectPath } = await metaRes.json();
-      const uploadRes = await fetch(uploadURL, {
-        method: "PUT",
-        headers: { "Content-Type": file.type, ...(token && new URL(uploadURL, window.location.href).origin === window.location.origin ? { Authorization: `Bearer ${token}` } : {}) },
-        body: file,
-      });
-      if (!uploadRes.ok) {
-        const error = await uploadRes.json().catch(() => ({}));
-        throw new Error(error.error || "Upload to storage failed");
-      }
-      setForm(f => ({ ...f, backgroundImageUrl: `/api/storage${objectPath}` }));
-    } catch (err: unknown) {
-      setUploadError((err as Error).message || "Failed to upload image");
-    } finally {
-      setUploading(false);
-      if (fileInputRef.current) fileInputRef.current.value = "";
     }
   };
 
@@ -178,7 +134,7 @@ export default function AdminProfile() {
         </motion.div>
 
         {/* Branding & Assets */}
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="rounded-xl border border-white/8 bg-white/3 p-6">
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="rounded-xl border border-white/8 bg-white/3 p-6 lg:col-span-2">
           <div className="flex items-center gap-2 mb-5 pb-4 border-b border-white/5">
             <div className="w-1 h-5 bg-blue-400 rounded-full" />
             <h3 className="font-semibold text-white">Branding & Assets</h3>
@@ -187,32 +143,6 @@ export default function AdminProfile() {
             {field("EA Name (Displayed on App)", "robotName", { placeholder: "SMC Blueprint EA" })}
             {field("Main Text (Top of Home Page)", "robotTagline", { placeholder: "@your_handle" })}
 
-            <div>
-              <Label className="text-white/60 text-xs mb-1.5 block uppercase tracking-wider">Background Image</Label>
-              {form.backgroundImageUrl && (
-                <div className="relative mb-2 rounded-lg overflow-hidden h-28 bg-white/5 border border-white/10">
-                  <img src={form.backgroundImageUrl} alt="Background preview" className="w-full h-full object-cover"
-                    onError={() => setForm(f => ({ ...f, backgroundImageUrl: "" }))} />
-                  <button onClick={() => setForm(f => ({ ...f, backgroundImageUrl: "" }))}
-                    className="absolute top-2 right-2 w-6 h-6 rounded-full bg-black/60 flex items-center justify-center text-white/70 hover:text-white hover:bg-black/80 transition-all">
-                    <X className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-              )}
-              <div className="flex gap-2">
-                <Input value={form.backgroundImageUrl} onChange={e => setForm(f => ({ ...f, backgroundImageUrl: e.target.value }))}
-                  placeholder="https://... or upload below"
-                  className="bg-white/4 border-white/10 text-white placeholder:text-white/20 focus:border-primary/50 h-10 text-sm flex-1" />
-                <Button variant="outline" size="sm" disabled={uploading} onClick={() => fileInputRef.current?.click()}
-                  className="h-10 border-white/10 bg-white/5 text-white/60 hover:text-white hover:border-primary/40 flex-shrink-0 gap-1.5">
-                  {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <ImagePlus className="w-4 h-4" />}
-                  {uploading ? "" : "Upload"}
-                </Button>
-              </div>
-              {uploadError && <p className="text-red-400 text-xs mt-1">{uploadError}</p>}
-              <p className="text-white/25 text-xs mt-1">JPG, PNG, WebP up to 10MB</p>
-              <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/webp,image/gif" className="hidden" onChange={handleFileSelect} />
-            </div>
             <MentorModeArtwork />
           </div>
         </motion.div>

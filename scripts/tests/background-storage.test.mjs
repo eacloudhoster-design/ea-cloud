@@ -133,7 +133,7 @@ test("metadata and upload bytes enforce image types and size, including spoofed 
   signedIn();
   const env = environment();
   assert.equal(
-    (await ticket(env, { name: "x", size: 6000000, contentType: "image/png" }))
+    (await ticket(env, { name: "x", size: 10 * 1024 * 1024 + 1, contentType: "image/png" }))
       .status,
     413,
   );
@@ -143,13 +143,14 @@ test("metadata and upload bytes enforce image types and size, including spoofed 
     415,
   );
   assert.equal((await ticket(env, null)).status, 400);
+  assert.equal((await ticket(env, { name: "large.png", size: 10 * 1024 * 1024, contentType: "image/png" })).status, 200);
   const meta = await (await ticket(env)).json();
   assert.equal(
     (await upload(env, meta.uploadURL, "<html>bad</html>")).status,
     415,
   );
   assert.equal(
-    (await upload(env, meta.uploadURL, new Uint8Array(5 * 1024 * 1024 + 1)))
+    (await upload(env, meta.uploadURL, new Uint8Array(10 * 1024 * 1024 + 1)))
       .status,
     413,
   );
@@ -198,3 +199,5 @@ test('bucket exceptions produce safe service errors without provider details', a
     assert.ok(!logs.join(' ').includes('private-storage-detail'));
   } finally { console.error = original; }
 });
+
+test("the streamed upload accepts the requested 10MB boundary",async()=>{signedIn();const env=environment();const bytes=new Uint8Array(10*1024*1024);bytes.set(png);const metadata=await(await ticket(env,{name:"large.png",size:bytes.length,contentType:"image/png"})).json();assert.equal((await upload(env,metadata.uploadURL,bytes)).status,200);});

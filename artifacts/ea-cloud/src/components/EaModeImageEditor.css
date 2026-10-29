@@ -1,0 +1,153 @@
+.mentor-background-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+}
+.mentor-background-card {
+  min-width: 0;
+  border: 1px solid #ffffff18;
+  border-radius: 18px;
+  padding: 12px;
+  background: linear-gradient(140deg, #ffffff08, #14040780);
+  backdrop-filter: blur(10px);
+  transition:
+    border-color 220ms ease,
+    box-shadow 220ms ease;
+}
+.mentor-background-card:hover,
+.mentor-background-card:focus-within {
+  border-color: #e31e2460;
+  box-shadow: 0 0 22px #e31e2415;
+}
+.mentor-background-card h5 {
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 12px;
+}
+.mentor-background-preview {
+  aspect-ratio: 9/16;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid #e31e2430;
+  background: #080809;
+}
+.mentor-background-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.mentor-background-empty {
+  display: flex;
+  height: 100%;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 12px;
+  padding: 8px;
+  color: #ffffff70;
+  text-align: center;
+  font-size: 12px;
+}
+.mentor-background-empty svg {
+  width: 30px;
+  height: 30px;
+  color: #e31e24;
+}
+.mentor-background-upload {
+  position: relative;
+  display: block;
+  margin-top: 12px;
+  border: 1px solid #e31e2450;
+  border-radius: 9px;
+  background: #e31e2418;
+  color: #fff;
+  cursor: pointer;
+}
+.mentor-background-upload span {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 44px;
+  padding: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  text-align: center;
+}
+.mentor-background-upload input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+}
+.mentor-background-upload:focus-within {
+  outline: 2px solid #ef4444;
+  outline-offset: 3px;
+}
+.mentor-background-upload[aria-disabled="true"] {
+  opacity: 0.5;
+  cursor: wait;
+}
+.mentor-background-upload svg,
+.mentor-background-remove svg {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+}
+.mentor-background-remove {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  min-height: 44px;
+  font-size: 12px;
+  color: #fca5a5;
+  border-radius: 8px;
+}
+.mentor-background-remove:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+.mentor-background-remove:focus-visible {
+  outline: 2px solid #ef4444;
+}
+.mentor-background-inherited {
+  font-size: 11px;
+  line-height: 1.5;
+  color: #ffffff70;
+}
+@media (max-width: 1050px) {
+  .mentor-background-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 420px) {
+  .mentor-background-grid {
+    gap: 8px;
+  }
+  .mentor-background-card {
+    padding: 8px;
+  }
+  .mentor-background-card h5 {
+    font-size: 10px;
+    letter-spacing: 0.03em;
+  }
+  .mentor-background-upload span {
+    font-size: 11px;
+    padding: 6px;
+    flex-wrap: wrap;
+  }
+  .mentor-background-remove {
+    font-size: 11px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .mentor-background-card {
+    transition: none;
+  }
+}

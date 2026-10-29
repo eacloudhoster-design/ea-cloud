@@ -1,4 +1,4 @@
-const MAX_BYTES = 5 * 1024 * 1024;
+const MAX_BYTES = 10 * 1024 * 1024;
 const TYPES = new Set(["image/jpeg", "image/png", "image/webp", "image/gif"]);
 const PREFIX = "/api/storage/r2/";
 const json = (error, status) =>
@@ -84,7 +84,7 @@ export async function requestBackgroundUpload({ request, env }) {
     return json("Invalid upload metadata.", 400);
   if (!TYPES.has(data.contentType))
     return json("Choose a JPEG, PNG, WebP or GIF image.", 415);
-  if (data.size > MAX_BYTES) return json("Image must be 5MB or smaller.", 413);
+  if (data.size > MAX_BYTES) return json("Image must be 10MB or smaller.", 413);
   const path = `${user.id}/${crypto.randomUUID()}`;
   return Response.json(
     {
@@ -147,7 +147,7 @@ export async function storedBackground({ request, env }) {
     if (!TYPES.has(type))
       return json("Choose a JPEG, PNG, WebP or GIF image.", 415);
     if (Number(request.headers.get("content-length")) > MAX_BYTES)
-      return json("Image must be 5MB or smaller.", 413);
+      return json("Image must be 10MB or smaller.", 413);
     const reader = request.body?.getReader();
     if (!reader) return json("An image is required.", 400);
     try {
@@ -159,7 +159,7 @@ export async function storedBackground({ request, env }) {
         size += value.byteLength;
         if (size > MAX_BYTES) {
           await reader.cancel();
-          return json("Image must be 5MB or smaller.", 413);
+          return json("Image must be 10MB or smaller.", 413);
         }
         chunks.push(value);
       }
