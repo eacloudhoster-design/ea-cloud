@@ -1,3 +1,4 @@
+import eaBuilderRouter from "./ea-builder";
 import privacyRouter from "./privacy";
 import webPushRouter from "./web-push";
 import { requireAppSession } from "../middlewares/app-session";
@@ -62,6 +63,7 @@ router.use(brokerServersRouter);
 router.use(clientSettingsRouter);
 router.use(tradeSignalsRouter);
 router.use(copierRouter);
+router.use(eaBuilderRouter);
 router.use(mt5ValidationRouter);
 router.use(mt5ConnectRouter);
 router.use(clientMt5Router);
