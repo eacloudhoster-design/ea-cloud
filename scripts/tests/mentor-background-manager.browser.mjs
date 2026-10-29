@@ -191,10 +191,14 @@ try {
       assert(branding.y>=personal.y+personal.height,'mobile retains personal then branding order');
       assert(Math.abs(personal.x-branding.x)<1);
     }
-    assert(credentials.y>=Math.max(personal.y+personal.height,branding.y+branding.height),'credentials stay below both sections');
+    const artwork = await page.locator('[data-profile-artwork-row]').boundingBox();
+    assert(artwork.y>=Math.max(personal.y+personal.height,branding.y+branding.height),'artwork sits below both top sections');
+    assert(Math.abs(artwork.x-personal.x)<1,'artwork extends into the left column');
+    assert(Math.abs(artwork.width-credentials.width)<1,'artwork spans the full profile width');
+    assert(credentials.y>=artwork.y+artwork.height,'credentials stay below artwork');
     assert(Math.abs(credentials.x-personal.x)<1);
     assert(credentials.width>=branding.width,'credentials retain full-row width');
-    await page.screenshot({path:`work/mentor-backgrounds/${width}-profile-columns.png`,fullPage:true});
+    await page.screenshot({path:`work/mentor-backgrounds/${width}-profile-full-width.png`,fullPage:true});
 
     assert(
       await page.evaluate(

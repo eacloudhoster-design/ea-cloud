@@ -142,9 +142,12 @@ export default function AdminProfile() {
           <div className="space-y-4">
             {field("EA Name (Displayed on App)", "robotName", { placeholder: "SMC Blueprint EA" })}
             {field("Main Text (Top of Home Page)", "robotTagline", { placeholder: "@your_handle" })}
-
-            <MentorModeArtwork />
           </div>
+        </motion.div>
+
+        {/* Shared artwork row fills the space beneath both profile columns. */}
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="min-w-0 rounded-xl border border-white/8 bg-white/3 p-6 lg:col-span-2" data-profile-artwork-row>
+          <MentorModeArtwork />
         </motion.div>
 
         {/* API Credentials */}
