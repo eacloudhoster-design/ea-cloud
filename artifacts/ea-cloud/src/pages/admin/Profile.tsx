@@ -115,7 +115,7 @@ export default function AdminProfile() {
         <p className="text-white/40 text-sm mt-1">Manage your mentor profile and EA configuration</p>
       </motion.div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 items-start gap-6">
         {/* Personal Info */}
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="rounded-xl border border-white/8 bg-white/3 p-6">
           <div className="flex items-center gap-2 mb-5 pb-4 border-b border-white/5">
@@ -134,7 +134,7 @@ export default function AdminProfile() {
         </motion.div>
 
         {/* Branding & Assets */}
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="rounded-xl border border-white/8 bg-white/3 p-6 lg:col-span-2">
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="min-w-0 rounded-xl border border-white/8 bg-white/3 p-6">
           <div className="flex items-center gap-2 mb-5 pb-4 border-b border-white/5">
             <div className="w-1 h-5 bg-blue-400 rounded-full" />
             <h3 className="font-semibold text-white">Branding & Assets</h3>
