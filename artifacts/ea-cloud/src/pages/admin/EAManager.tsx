@@ -348,17 +348,6 @@ export default function EAManager() {
 
                 <Link href={`/admin/profile?ea=${ea.id}#app-background-images`} className="mb-4 inline-block text-sm text-primary hover:underline">Manage app background images in Profile</Link>
 
-                {/* Stats row */}
-                <div className="flex items-center gap-3 mb-4 text-xs">
-                  <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white/4 border border-white/6">
-                    <span className="text-white/40">Lot</span>
-                    <span className="text-white/70 font-mono">{ea.lotSize}</span>
-                  </div>
-                  <div className={`px-2.5 py-1 rounded-lg border text-[10px] font-semibold uppercase tracking-wider ${RISK_COLORS[ea.riskLevel as keyof typeof RISK_COLORS]}`}>
-                    {ea.riskLevel}
-                  </div>
-                </div>
-
                 {/* Actions */}
                 <div className="flex items-center gap-2 pt-3 border-t border-white/5">
                   <button
