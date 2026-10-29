@@ -1,0 +1,20 @@
+{
+  "name": "EA Cloud",
+  "short_name": "EA Cloud",
+  "start_url": "/",
+  "display": "browser",
+  "icons": [
+    {
+      "src": "/ea-cloud-icon-192.png?v=a96d1d637e6d",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/ea-cloud-icon-512.png?v=a96d1d637e6d",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}
