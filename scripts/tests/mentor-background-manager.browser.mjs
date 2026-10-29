@@ -12,7 +12,7 @@ const browser = await chromium.launch({
 });
 await mkdir("work/mentor-backgrounds", { recursive: true });
 try {
-  for (const width of [390, 320, 1440]) {
+  for (const width of [390, 320, 1024, 1440]) {
     const context = await browser.newContext({
       viewport: { width, height: 1000 },
       hasTouch: width < 600,
@@ -144,6 +144,8 @@ try {
           .querySelector(".mentor-background-editor")
           ?.getAttribute("aria-busy") === "false",
     );
+    // Measure settled geometry after the existing staggered entrance animations.
+    await page.waitForTimeout(800);
     assert.equal(await page.locator(".mentor-background-card").count(), 4);
     assert.equal(
       await page.getByText("Background Image", { exact: true }).count(),
@@ -170,12 +172,30 @@ try {
         }),
       );
     for (const b of boxes) assert(Math.abs(b.width / b.height - 9 / 16) < 0.01);
-    if (width < 600) {
+    if ((await editor.boundingBox()).width < 480) {
       assert.equal(boxes[0].y, boxes[1].y);
       assert.equal(boxes[2].y, boxes[3].y);
       assert(boxes[2].y > boxes[0].y);
     } else assert(boxes.every((b) => b.y === boxes[0].y));
     assert(boxes.filter((b) => b.fit).every((b) => b.fit === "cover"));
+    assert(await page.locator(".mentor-background-card").evaluateAll(cards=>cards.every(card=>card.scrollWidth<=card.clientWidth)),"card labels and controls fit within their panel");
+    const section = name => page.getByRole('heading',{name,exact:true}).locator('xpath=ancestor::div[contains(@class, "rounded-xl")][1]');
+    const personal = await section('Personal Information').boundingBox();
+    const branding = await section('Branding & Assets').boundingBox();
+    const credentials = await section('API Credentials').boundingBox();
+    if(width>=1024){
+      assert(Math.abs(personal.y-branding.y)<1,'desktop section tops align');
+      assert(Math.abs(personal.width-branding.width)<1,'desktop sections have equal widths');
+      assert(branding.x>=personal.x+personal.width,'branding is in right column');
+    }else{
+      assert(branding.y>=personal.y+personal.height,'mobile retains personal then branding order');
+      assert(Math.abs(personal.x-branding.x)<1);
+    }
+    assert(credentials.y>=Math.max(personal.y+personal.height,branding.y+branding.height),'credentials stay below both sections');
+    assert(Math.abs(credentials.x-personal.x)<1);
+    assert(credentials.width>=branding.width,'credentials retain full-row width');
+    await page.screenshot({path:`work/mentor-backgrounds/${width}-profile-columns.png`,fullPage:true});
+
     assert(
       await page.evaluate(
         () => document.documentElement.scrollWidth <= innerWidth,
