@@ -1,0 +1,53 @@
+{
+  "cases": [
+    {
+      "case": "ios-reference",
+      "cardHeadingGeometryAndStylesUnchanged": true,
+      "bottomNavigationGeometryUnchanged": true,
+      "nonAndroidSettingsChangedPixels": 0
+    },
+    {
+      "case": "android-matched-insets",
+      "cardHeadingGeometryAndStylesUnchanged": true,
+      "bottomNavigationGeometryUnchanged": true,
+      "nonAndroidSettingsChangedPixels": null
+    },
+    {
+      "case": "android-small",
+      "cardHeadingGeometryAndStylesUnchanged": true,
+      "bottomNavigationGeometryUnchanged": true,
+      "nonAndroidSettingsChangedPixels": null
+    },
+    {
+      "case": "android-chrome",
+      "cardHeadingGeometryAndStylesUnchanged": true,
+      "bottomNavigationGeometryUnchanged": true,
+      "nonAndroidSettingsChangedPixels": null
+    },
+    {
+      "case": "android-large",
+      "cardHeadingGeometryAndStylesUnchanged": true,
+      "bottomNavigationGeometryUnchanged": true,
+      "nonAndroidSettingsChangedPixels": null
+    },
+    {
+      "case": "android-landscape",
+      "cardHeadingGeometryAndStylesUnchanged": true,
+      "bottomNavigationGeometryUnchanged": true,
+      "nonAndroidSettingsChangedPixels": null
+    },
+    {
+      "case": "ios-safari",
+      "cardHeadingGeometryAndStylesUnchanged": true,
+      "bottomNavigationGeometryUnchanged": true,
+      "nonAndroidSettingsChangedPixels": 0
+    },
+    {
+      "case": "desktop",
+      "cardHeadingGeometryAndStylesUnchanged": true,
+      "bottomNavigationGeometryUnchanged": true,
+      "nonAndroidSettingsChangedPixels": 0
+    }
+  ],
+  "androidIosMatchedInsetsIdentical": true
+}
