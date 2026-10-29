@@ -56,6 +56,10 @@ function EACloudApp({ onReady, startupComplete }: { onReady: (ready: boolean) =>
     standalone: (navigator as Navigator & { standalone?: boolean }).standalone === true,
     displayStandalone: window.matchMedia("(display-mode: standalone)").matches,
   }) ? pageBackgroundHost : null;
+  // Android Settings uses the same full-viewport artwork layer as iOS.
+  // Keep scanner and all other screens on their existing platform paths.
+  const settingsBackgroundHost = fullscreenBackgroundHost ??
+    (/Android/i.test(navigator.userAgent) ? pageBackgroundHost : null);
   const [mt5BackgroundHost, setMt5BackgroundHost] = useState<HTMLDivElement | null>(null);
   const [mt5Present, setMt5Present] = useState(false);
   useEffect(() => {
@@ -356,7 +360,7 @@ function EACloudApp({ onReady, startupComplete }: { onReady: (ready: boolean) =>
           inert={activeTab !== "settings"}
           style={{ width: "88%", opacity: activeTab === "settings" ? 1 : 0, pointerEvents: activeTab === "settings" ? "auto" : "none" }}
         >
-          <SettingsTab onOpenLiveShot={() => setShowLiveShot(true)} backgroundHost={fullscreenBackgroundHost} onOpenChartScanner={() => setShowChartScanner(true)} />
+          <SettingsTab onOpenLiveShot={() => setShowLiveShot(true)} backgroundHost={settingsBackgroundHost} onOpenChartScanner={() => setShowChartScanner(true)} />
         </div>
 
         <TradingActivityMonitor />
