@@ -8,9 +8,18 @@ const json = (error, status) =>
   );
 
 async function authorizedUser(request, env) {
-  const authorization = request.headers.get("authorization");
-  if (!authorization?.startsWith("Bearer "))
-    return json("Sign in before uploading an image.", 401);
+  // The API authenticates portal browsers with an HttpOnly cookie. Bearer
+  // identity hints are not credentials and must never authorize an upload.
+  const cookie = (request.headers.get("cookie") || "")
+    .split(";").map(value => value.trim())
+    .find(value => /^ea_portal_session=[a-f0-9]{64}$/.test(value));
+  if (!cookie) return json("Sign in before uploading an image.", 401);
+  // This handler performs writes locally, so enforce its browser origin here
+  // rather than relying on the upstream read-only /auth/me request's checks.
+  const browserOrigin = request.headers.get("origin");
+  if ((browserOrigin && browserOrigin !== new URL(request.url).origin) ||
+      request.headers.get("sec-fetch-site") === "cross-site")
+    return json("Request origin is not allowed.", 403);
   let origin;
   try {
     origin = new URL(env.BACKEND_ORIGIN);
@@ -29,7 +38,7 @@ async function authorizedUser(request, env) {
   }
   try {
     const response = await fetch(new URL("/api/auth/me", origin), {
-      headers: { Authorization: authorization },
+      headers: { Cookie: cookie },
       redirect: "manual",
       signal: AbortSignal.timeout(15000),
     });
