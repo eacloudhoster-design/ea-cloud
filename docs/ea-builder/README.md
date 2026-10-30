@@ -1,6 +1,6 @@
 # Mentor Setup Methods and compiled-EA account observer
 
-This updates draft PR #123. **No deployment, production migration, credential change, or original-strategy change is performed.**
+This continues the foundation introduced by already-merged PR #123. The observer follow-up remains draft pending native verification. **No deployment, production migration, credential change, or original-strategy change is performed.**
 
 ## Two distinct modes
 
@@ -60,7 +60,7 @@ PNG/JPEG/uncompressed BMP input is bounded to 10MiB, 12MP and 8192px dimensions,
 
 ## Manual activation sequence — requires separate approval
 
-1. Review PR123, migration and code. Resolve the previously unverified production database backup/recovery point and exposed-credential incident before any production rollout. Do not print or copy secrets into reports.
+1. Review the observer follow-up PR, migration and code. Resolve the previously unverified production database backup/recovery point and exposed-credential incident before any production rollout. Do not print or copy secrets into reports.
 2. Validate additive `docs/migrations/20261030-robot-builds.sql` against a restored disposable database first. It creates new metadata tables/columns/indexes and adds nullable `trade_signals.observer_event_id`; it does not reset accounts, passwords, trades or the database. Apply only after explicit migration approval; the API startup runner does not apply it automatically.
 3. Prepare a DEMO Windows MT5 execution service with this code, persistent writable journal storage and authenticated TLS termination. Configure a new private `OBSERVER_MT5_VPS_TOKEN` of at least 32 characters in that service. Do not reuse the read-only Chart Scanner token.
 4. After approval, configure API `OBSERVER_MT5_VPS_URL` as that HTTPS origin and `OBSERVER_MT5_VPS_TOKEN` as the matching private service credential. These names are documented requirements; no production variables have been changed here. No new paid service is introduced.
@@ -70,4 +70,4 @@ PNG/JPEG/uncompressed BMP input is bounded to 10MiB, 12MP and 8192px dimensions,
 
 ## Verification limits
 
-Automated tests use disposable PostgreSQL and a simulated broker. MetaEditor, original EX5 network traffic, real broker execution, production data/provider settings and live connectivity are unavailable here. Passing TypeScript/builds or simulated broker tests does not establish end-to-end MT5 readiness. Keep PR123 draft until native compilation and demo acceptance are recorded.
+Automated tests use disposable PostgreSQL and a simulated broker. MetaEditor, original EX5 network traffic, real broker execution, production data/provider settings and live connectivity are unavailable here. Passing TypeScript/builds or simulated broker tests does not establish end-to-end MT5 readiness. Keep the observer follow-up PR draft until native compilation and demo acceptance are recorded.
