@@ -112,3 +112,11 @@ test("build verification rejects a missing or incorrectly based client bundle", 
     rmSync(directory, { recursive: true, force: true });
   }
 });
+
+test('client shell and push worker revalidate without caching authenticated requests',()=>{
+ const headers=readFileSync('artifacts/ea-cloud/public/_headers','utf8');
+ for(const path of ['/ea-app/','/ea-app/index.html','/ea-app/push-sw.js'])assert(headers.includes(path+'\n  Cache-Control: no-cache'));
+ const sw=readFileSync('artifacts/ea-app/public/push-sw.js','utf8');
+ assert(!/addEventListener\s*\(\s*["']fetch/.test(sw));assert(!/caches\.(open|match)/.test(sw));
+ assert(readFileSync('artifacts/ea-app/src/lib/web-push-client.ts','utf8').includes('updateViaCache: "none"'));
+});
