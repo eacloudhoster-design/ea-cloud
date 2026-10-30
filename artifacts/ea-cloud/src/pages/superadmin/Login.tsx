@@ -1,3 +1,4 @@
+import PasswordInput from "@/components/PasswordInput";
 import { useState, useLayoutEffect } from "react";
 import { useLocation } from "wouter";
 import { motion } from "framer-motion";
@@ -64,7 +65,7 @@ export default function SuperAdminLogin() {
               </div>
               <div>
                 <Label className="text-white/60 text-xs mb-2 block uppercase tracking-wider">Password</Label>
-                <Input type="password" value={form.password} onChange={e => setForm(f => ({ ...f, password: e.target.value }))} placeholder="••••••••" required className="bg-purple-950/30 border-purple-500/20 text-white placeholder:text-white/20 focus:border-purple-400/60 h-11" />
+                <PasswordInput autoComplete="current-password" name="password" value={form.password} onChange={e => setForm(f => ({ ...f, password: e.target.value }))} placeholder="••••••••" required className="bg-purple-950/30 border-purple-500/20 text-white placeholder:text-white/20 focus:border-purple-400/60 h-11" />
               </div>
               {error && <p className="text-red-400 text-xs text-center">{error}</p>}
               <Button type="submit" disabled={loginMutation.isPending} className="w-full h-11 bg-gradient-to-r from-purple-600 to-purple-800 hover:from-purple-500 hover:to-purple-700 text-white font-bold tracking-wider shadow-[0_0_25px_rgba(168,85,247,0.35)] transition-all duration-300 mt-1">

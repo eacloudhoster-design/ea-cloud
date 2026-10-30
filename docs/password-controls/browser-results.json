@@ -1,0 +1,57 @@
+[
+  {
+    "viewport": {
+      "width": 1440,
+      "height": 1000
+    },
+    "registrationConfirmation": true,
+    "independentVisibility": true,
+    "missingAndMismatchBlocked": true,
+    "unchangedPayloads": true,
+    "signIns": true,
+    "visibilityReset": true,
+    "noHorizontalOverflow": true
+  },
+  {
+    "viewport": {
+      "width": 390,
+      "height": 844,
+      "touch": true
+    },
+    "registrationConfirmation": true,
+    "independentVisibility": true,
+    "missingAndMismatchBlocked": true,
+    "unchangedPayloads": true,
+    "signIns": true,
+    "visibilityReset": true,
+    "noHorizontalOverflow": true
+  },
+  {
+    "viewport": {
+      "width": 360,
+      "height": 800,
+      "touch": true
+    },
+    "registrationConfirmation": true,
+    "independentVisibility": true,
+    "missingAndMismatchBlocked": true,
+    "unchangedPayloads": true,
+    "signIns": true,
+    "visibilityReset": true,
+    "noHorizontalOverflow": true
+  },
+  {
+    "viewport": {
+      "width": 768,
+      "height": 1024,
+      "touch": true
+    },
+    "registrationConfirmation": true,
+    "independentVisibility": true,
+    "missingAndMismatchBlocked": true,
+    "unchangedPayloads": true,
+    "signIns": true,
+    "visibilityReset": true,
+    "noHorizontalOverflow": true
+  }
+]

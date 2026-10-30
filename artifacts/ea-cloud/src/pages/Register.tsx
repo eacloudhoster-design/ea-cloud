@@ -1,3 +1,4 @@
+import PasswordInput from "@/components/PasswordInput";
 import { useState, useEffect, useRef } from "react";
 import { Link, useLocation } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
@@ -201,6 +202,15 @@ export default function Register() {
     mentorName: "",
     phone: "",
   });
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [confirmationChecked, setConfirmationChecked] = useState(false);
+  const confirmationError = confirmationChecked
+    ? !confirmPassword
+      ? "Please confirm your password."
+      : confirmPassword !== form.password
+        ? "Passwords do not match."
+        : ""
+    : "";
   const [error, setError] = useState("");
   const [registered, setRegistered] = useState(false);
   const [registeredEmail, setRegisteredEmail] = useState("");
@@ -209,6 +219,9 @@ export default function Register() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+    setConfirmationChecked(true);
+    if (!form.password || !confirmPassword || form.password !== confirmPassword)
+      return;
     try {
       await registerMutation.mutateAsync({ data: form });
       setRegisteredName(form.firstName);
@@ -373,7 +386,7 @@ export default function Register() {
               >
                 Password
               </Label>
-              <Input
+              <PasswordInput
                 id="register-password"
                 name="password"
                 autoComplete="new-password"
@@ -386,6 +399,38 @@ export default function Register() {
                 required
                 className="bg-white/5 border-white/10 text-white placeholder:text-white/25 focus:border-primary/50 focus:ring-primary/20"
               />
+            </div>
+            <div>
+              <Label
+                htmlFor="register-confirm-password"
+                className="text-white/70 text-xs mb-1.5 block"
+              >
+                Confirm Password
+              </Label>
+              <PasswordInput
+                id="register-confirm-password"
+                autoComplete="new-password"
+                confirmation
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                onBlur={() => setConfirmationChecked(true)}
+                placeholder="••••••••••"
+                required
+                aria-invalid={!!confirmationError}
+                aria-describedby={
+                  confirmationError ? "register-confirm-error" : undefined
+                }
+                className="bg-white/5 border-white/10 text-white placeholder:text-white/25 focus:border-primary/50 focus:ring-primary/20"
+              />
+              {confirmationError && (
+                <p
+                  id="register-confirm-error"
+                  role="alert"
+                  className="text-red-400 text-xs mt-1.5"
+                >
+                  {confirmationError}
+                </p>
+              )}
             </div>
             {error && (
               <p
