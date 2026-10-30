@@ -103,7 +103,7 @@ try {
         assert.ok(padding <= 32, "no reserved header gap");
       }
       if (route === "register") {
-        assert.equal(await p.locator("form input").count(), 6);
+        assert.equal(await p.locator("form input").count(), 7);
         assert.equal(
           await p.getByRole("button", { name: "Close registration" }).count(),
           1,
@@ -137,7 +137,8 @@ try {
         await p
           .getByPlaceholder("you@example.com")
           .fill("test@example.invalid");
-        await p.locator("input[type=password]").fill("not-a-real-password");
+        await p.getByLabel("Password", { exact: true }).fill("not-a-real-password");
+        await p.getByLabel("Confirm Password", { exact: true }).fill("not-a-real-password");
         await p.locator("form button[type=submit]").click();
         await p
           .getByText("Account Created Successfully", { exact: true })
