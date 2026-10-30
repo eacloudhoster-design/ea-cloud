@@ -92,6 +92,21 @@ export default function EaModeImageEditor({
       urls.current.forEach(URL.revokeObjectURL);
     };
   }, [eaId]);
+  const persistImages = async (values: (string | null)[]) => {
+    const data = await (
+      await api(`/api/eas/${eaId}/mode-images`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ images: values }),
+      })
+    ).json();
+    if (alive.current) {
+      setImages(data.savedImages);
+      setSavedImages(data.savedImages);
+      setFallback(data.normalFallback);
+      setPreview({});
+    }
+  };
   const upload = async (index: number, file: File) => {
     if (pending.current) return;
     if (
@@ -110,6 +125,7 @@ export default function EaModeImageEditor({
     const local = URL.createObjectURL(file);
     urls.current.push(local);
     setPreview((old) => ({ ...old, [index]: local }));
+    let uploaded = false;
     try {
       const data = await (
         await api("/api/storage/uploads/request-url", {
@@ -159,24 +175,34 @@ export default function EaModeImageEditor({
         if (alive.current) setProgress({ index, percent: 0 });
         xhr.send(file);
       });
+      uploaded = true;
+      const updated = images.map((value, i) =>
+        i === index ? `/api/storage${data.objectPath}` : value,
+      );
       if (alive.current) {
-        setImages((old) =>
-          old.map((value, i) =>
-            i === index ? `/api/storage${data.objectPath}` : value,
-          ),
-        );
-        setMessage(
-          `${names[index]} image uploaded. Save artwork to publish it to clients.`,
-        );
+        setImages(updated);
+        setMessage(`Saving ${names[index]} image…`);
       }
+      // Do not report success until the persistent EA association is confirmed.
+      await persistImages(updated);
+      if (alive.current)
+        setMessage(
+          `${names[index]} image saved. Linked clients refresh automatically.`,
+        );
     } catch (err) {
       if (alive.current) {
-        setError((err as Error).message);
-        setPreview((old) => {
-          const copy = { ...old };
-          delete copy[index];
-          return copy;
-        });
+        setMessage("");
+        setError(
+          uploaded
+            ? `Image uploaded but could not be saved: ${(err as Error).message} Select Save artwork to retry before leaving.`
+            : (err as Error).message,
+        );
+        if (!uploaded)
+          setPreview((old) => {
+            const copy = { ...old };
+            delete copy[index];
+            return copy;
+          });
       }
     } finally {
       uploadRequest.current = null;
@@ -194,20 +220,9 @@ export default function EaModeImageEditor({
     setError("");
     setMessage("");
     try {
-      const data = await (
-        await api(`/api/eas/${eaId}/mode-images`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ images }),
-        })
-      ).json();
-      if (alive.current) {
-        setImages(data.savedImages);
-        setSavedImages(data.savedImages);
-        setFallback(data.normalFallback);
-        setPreview({});
+      await persistImages(images);
+      if (alive.current)
         setMessage("Artwork saved. Linked clients refresh automatically.");
-      }
     } catch (err) {
       if (alive.current) setError((err as Error).message);
     } finally {
@@ -222,9 +237,9 @@ export default function EaModeImageEditor({
       aria-busy={busy}
     >
       <p className="text-xs text-white/50 mb-4">
-        JPG, PNG or WebP · Maximum 10MB per image. Uploads and removals are
-        published only when you select Save artwork. Trading settings are
-        unaffected.
+        JPG, PNG or WebP · Maximum 10MB per image. Uploads are saved
+        automatically. Use Save artwork for removals or to retry a failed save.
+        Trading settings are unaffected.
       </p>
       {!loaded && (
         <Button type="button" disabled={busy} onClick={() => void load()}>
@@ -290,6 +305,7 @@ export default function EaModeImageEditor({
                     delete next[index];
                     return next;
                   });
+                  onDirtyChange(true);
                   setMessage("Save artwork to apply this change.");
                 }}
               >
