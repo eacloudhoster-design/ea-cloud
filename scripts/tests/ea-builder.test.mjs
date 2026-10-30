@@ -1,5 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
 import { build } from "../../artifacts/api-server/node_modules/esbuild/lib/main.js";
 import { PNG } from "../../artifacts/api-server/node_modules/pngjs/lib/png.js";
 import jpeg from "../../artifacts/api-server/node_modules/jpeg-js/index.js";
@@ -12,11 +13,12 @@ import { createRequire } from "node:module";
 const bundle = await build({
   stdin: {
     contents:
-      "export * from './artifacts/api-server/src/lib/ea-builder/image';export * from './artifacts/api-server/src/lib/ea-builder/package';export * from './artifacts/api-server/src/lib/ea-builder/contracts';",
+      "export * from './artifacts/api-server/src/lib/ea-builder/trading-package';export * from './artifacts/api-server/src/lib/ea-builder/image';export * from './artifacts/api-server/src/lib/ea-builder/package';export * from './artifacts/api-server/src/lib/ea-builder/contracts';",
     resolveDir: process.cwd(),
   },
   bundle: true,
   platform: "node",
+  loader: { ".mq5": "text" },
   format: "cjs",
   write: false,
 });
@@ -26,8 +28,15 @@ new Function("require", "module", "exports", bundle.outputFiles[0].text)(
   module,
   module.exports,
 );
-const { chartBitmap, toolkitPackage, safeFilename, robotEvent, buildInput } =
-  module.exports;
+const {
+  tradingPackage,
+  intelligenceTemplate,
+  chartBitmap,
+  toolkitPackage,
+  safeFilename,
+  robotEvent,
+  buildInput,
+} = module.exports;
 const image = new PNG({ width: 3, height: 2 });
 for (let i = 0; i < image.data.length; i += 4) {
   image.data[i] = 255;
@@ -205,5 +214,119 @@ test("existing EX5 observer reconciles account history from a separate chart and
       sourceMagic: "9999999999999999999",
     }).success,
     false,
+  );
+});
+
+function functionBody(source, name) {
+  const begin = source.search(
+    new RegExp("(?:void|bool|int|double)\\s+" + name + "\\s*\\("),
+  );
+  assert(begin >= 0, name);
+  const open = source.indexOf("{", begin);
+  let depth = 0;
+  for (let i = open; i < source.length; i++) {
+    if (source[i] === "{") depth++;
+    if (source[i] === "}" && --depth === 0) return source.slice(open, i + 1);
+  }
+  throw Error("Unbalanced function " + name);
+}
+test("complete Intelligence strategy is preserved with local-only integrated broadcasting and exact resources", () => {
+  assert.equal(
+    createHash("sha256")
+      .update(intelligenceTemplate.replace(/\r\n/g, "\n"))
+      .digest("hex"),
+    "3c0ceb54954ae5f243271b14154811d791ad9942269d0e961e3093a851279e61",
+    "complete user-supplied template must remain unchanged",
+  );
+  assert.equal(
+    intelligenceTemplate.replace(/\r\n/g, "\n").split("\n").length,
+    934,
+  );
+  for (const bitmap of [undefined, chartBitmap(png)]) {
+    const archive = tradingPackage({ ...opts, bitmap }),
+      files = unzipSync(archive.bytes),
+      read = (suffix) =>
+        strFromU8(files[Object.keys(files).find((k) => k.endsWith(suffix))]);
+    const main = read("/GOLD_HUNTER_PRO.mq5"),
+      relay = read("_Relay.mq5"),
+      original = intelligenceTemplate.replace(/\r\n/g, "\n");
+    for (const name of [
+      "DetectQuasimodoSignal",
+      "OpenBuy",
+      "OpenSell",
+      "CalculateStops",
+      "ManageTrailingStop",
+      "OnTick",
+      "NormalizeLot",
+      "SpreadOK",
+      "CountOurPositions",
+    ])
+      assert.equal(
+        functionBody(main, name),
+        functionBody(original, name),
+        name + " must be unchanged",
+      );
+    assert.equal(
+      functionBody(main, "EAC_StrategyInit"),
+      functionBody(original, "OnInit"),
+    );
+    assert.equal(
+      functionBody(main, "EAC_StrategyDeinit"),
+      functionBody(original, "OnDeinit"),
+    );
+    assert.deepEqual(
+      main.match(/^input .+$/gm),
+      original.match(/^input .+$/gm),
+    );
+    assert.deepEqual(
+      main.match(/trade\.\w+\(/g),
+      original.match(/trade\.\w+\(/g),
+    );
+    assert(main.includes('g_eaName     = "GOLD HUNTER PRO"'));
+    assert(main.includes("EA Manager: Test Manager"));
+    assert(!/WebRequest\s*\(/.test(main));
+    assert(/WebRequest\s*\(/.test(relay));
+    assert(relay.includes("#property service"));
+    assert(!relay.includes("CTrade"));
+    assert(main.includes("SourceMagic=MagicNumber;"));
+    assert(main.includes("FILE_COMMON"));
+    assert(relay.includes("/api/robots/events"));
+    assert.equal(
+      (read("INSTALLATION_GUIDE.txt").match(/^\d+\./gm) || []).length,
+      10,
+    );
+    assert(!Object.keys(files).some((k) => k.includes("_Observer")));
+    assert.equal(
+      Object.keys(files).some((k) => k.endsWith(".bmp")),
+      !!bitmap,
+    );
+    if (bitmap) {
+      assert(main.includes('#resource "MT5_Background.bmp"'));
+      assert(main.includes('"::MT5_Background.bmp"'));
+      assert(!main.includes("Images\\\\EACloud"));
+    }
+  }
+});
+
+test("branding containing replacement syntax cannot corrupt lifecycle handlers or source literals", () => {
+  const name = '$& int OnInit() "Quoted"',
+    manager = "$` $' Manager";
+  const files = unzipSync(tradingPackage({ ...opts, name, manager }).bytes);
+  const main = strFromU8(
+    files[
+      Object.keys(files).find(
+        (k) => k.endsWith(".mq5") && !k.endsWith("_Relay.mq5"),
+      )
+    ],
+  );
+  assert.equal(
+    functionBody(main, "EAC_StrategyInit"),
+    functionBody(intelligenceTemplate.replace(/\r\n/g, "\n"), "OnInit"),
+  );
+  assert(
+    main.includes("g_comment    = " + module.exports.mqlString(name) + ";"),
+  );
+  assert(
+    main.includes(module.exports.mqlString(name + " | EA Manager: " + manager)),
   );
 });

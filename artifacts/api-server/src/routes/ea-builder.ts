@@ -86,7 +86,7 @@ router.get("/admin/ea-builder/config", requireAuth, approved, (_req, res) => {
     existingObserverAvailable: true,
     observerExecution: "explicit_verified_activation_required",
     blocker:
-      "The complete original SMC Blueprint strategy and dependencies are required. The supplied fragment ends inside CreateLabel(). MetaEditor compilation and broker execution are unverified.",
+      "The complete Intelligence EA V3+ source is available. Source packages require MetaEditor compilation before use.",
   });
 });
 router.post("/admin/ea-builder/package", requireAuth, approved, (req, res) => {
@@ -120,14 +120,6 @@ router.post("/admin/ea-builder/package", requireAuth, approved, (req, res) => {
       });
       return;
     }
-    if (input.data.purpose === "trading") {
-      res.status(409).json({
-        error:
-          "Trading EA generation is blocked: the complete verified original strategy is missing. No trading robot was generated.",
-        code: "ORIGINAL_STRATEGY_REQUIRED",
-      });
-      return;
-    }
     working = true;
     try {
       const user = (req as any).builderMentor;
@@ -142,6 +134,30 @@ router.post("/admin/ea-builder/package", requireAuth, approved, (req, res) => {
         res.status(404).json({ error: "EA not found in your account." });
         return;
       }
+      const trading = input.data.purpose === "trading";
+      const branding = trading
+        ? {
+            name: user.robotName?.trim() || ea.name,
+            manager:
+              user.mentorName?.trim() ||
+              [user.firstName, user.lastName].filter(Boolean).join(" ").trim(),
+          }
+        : { name: input.data.name, manager: input.data.managerName };
+      if (
+        !buildInput.safeParse({
+          ...input.data,
+          name: branding.name,
+          managerName: branding.manager,
+        }).success
+      ) {
+        res
+          .status(400)
+          .json({
+            error:
+              "Add your EA name and manager name in Profile before creating your EA.",
+          });
+        return;
+      }
       const id = randomUUID(),
         token = "eacr_" + randomBytes(32).toString("hex");
       // Build first; invalid images/archives never create a credential or database row.
@@ -150,8 +166,9 @@ router.post("/admin/ea-builder/package", requireAuth, approved, (req, res) => {
           id,
           token,
           origin: ORIGIN,
-          name: input.data.name,
-          manager: input.data.managerName,
+          name: branding.name,
+          manager: branding.manager,
+          trading,
           existingObserver: input.data.purpose === "existing-observer",
           sourceMagic: input.data.sourceMagic,
         },
@@ -161,10 +178,11 @@ router.post("/admin/ea-builder/package", requireAuth, approved, (req, res) => {
         id,
         mentorId: user.id,
         eaId: ea.id,
-        displayName: input.data.name,
-        managerName: input.data.managerName,
-        mode:
-          input.data.purpose === "existing-observer"
+        displayName: branding.name,
+        managerName: branding.manager,
+        mode: trading
+          ? "integrated-ea"
+          : input.data.purpose === "existing-observer"
             ? "existing-observer"
             : "capture",
         sourceMagic: input.data.sourceMagic,
@@ -309,21 +327,17 @@ router.post(
   async (req: AuthRequest, res) => {
     res.setHeader("Cache-Control", "no-store");
     if (req.body?.confirmLegacyBlock !== true) {
-      res
-        .status(400)
-        .json({
-          error: "Explicit legacy-ingestion blocking consent is required.",
-        });
+      res.status(400).json({
+        error: "Explicit legacy-ingestion blocking consent is required.",
+      });
       return;
     }
     try {
       const capabilities = await observerCapabilities();
       if (!capabilities) {
-        res
-          .status(503)
-          .json({
-            error: "Verified observer execution bridge is unavailable.",
-          });
+        res.status(503).json({
+          error: "Verified observer execution bridge is unavailable.",
+        });
         return;
       }
       const outcome = await db.transaction(async (tx) => {
@@ -403,7 +417,10 @@ async function capture(req: any, res: any, event: boolean) {
         return { status: 403, body: { error: "Mentor is not approved." } };
       if (!event) {
         const heartbeat = observerHeartbeat.safeParse(req.body);
-        if (robot.mode === "existing-observer" && !heartbeat.success)
+        if (
+          ["existing-observer", "integrated-ea"].includes(robot.mode) &&
+          !heartbeat.success
+        )
           return {
             status: 400,
             body: {
@@ -412,7 +429,8 @@ async function capture(req: any, res: any, event: boolean) {
           };
         if (
           heartbeat.success &&
-          (heartbeat.data.sourceMagic !== robot.sourceMagic ||
+          ((heartbeat.data.sourceMagic !== robot.sourceMagic &&
+            !(robot.mode === "integrated-ea" && !robot.sourceAccount)) ||
             (robot.sourceAccount &&
               (robot.sourceAccount !== heartbeat.data.sourceAccount ||
                 robot.sourceServer !== heartbeat.data.sourceServer)))
@@ -439,6 +457,7 @@ async function capture(req: any, res: any, event: boolean) {
             ...(heartbeat.success
               ? {
                   lastHeartbeatAt: new Date(),
+                  sourceMagic: heartbeat.data.sourceMagic,
                   sourceAccount: heartbeat.data.sourceAccount,
                   sourceServer: heartbeat.data.sourceServer,
                   inventoryCount: heartbeat.data.inventoryCount,
@@ -470,7 +489,7 @@ async function capture(req: any, res: any, event: boolean) {
         };
       if (
         payload.kind === "SNAPSHOT" &&
-        (robot.mode !== "existing-observer" ||
+        (!["existing-observer", "integrated-ea"].includes(robot.mode) ||
           payload.sourceMagic !== robot.sourceMagic)
       )
         return {

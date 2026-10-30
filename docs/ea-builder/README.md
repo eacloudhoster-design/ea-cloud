@@ -1,12 +1,34 @@
-# Mentor Setup Methods and compiled-EA account observer
+# Mentor Setup Methods and Intelligence EA V3+ generator
 
-This continues the foundation introduced by already-merged PR #123. The observer follow-up remains draft pending native verification. **No deployment, production migration, credential change, or original-strategy change is performed.**
+This redesign builds on merged PRs #123 and #124. **No deployment, production migration, credential change, or original-strategy change is performed.**
 
-## Two distinct modes
+## Setup Methods and the supplied Intelligence strategy
 
-**Connect Existing EA** packages a separate-chart account observer. The original compiled SMC Blueprint V3 EX5 stays unchanged on Chart 1. Chart 2 holds the observer, branding panel and optional embedded BMP. Renaming the observer does not rename the original robot. Source strategy files are not needed to observe an existing EX5.
+The portal is one vertical page: **CREATE YOUR TRADING EA**, then **COPY TRADING**. Saved profile branding is displayed with a link to the existing Profile editor. EA selection, optional MT5-only background preview/removal, generation errors, independent ready/download actions, connection history and existing source verification remain available. There is no competing mode selector or repeated branding form.
 
-**Create Custom EA** remains blocked server-side with `409 ORIGINAL_STRATEGY_REQUIRED`. The supplied fragment ends inside `CreateLabel()` and is not a complete strategy. No strategy reconstruction, fire-on-load trade, replacement entry rule or original EX5 is included. Full original MQ5/includes and MetaEditor verification are needed to enable that mode.
+Create EA now generates the entire user-supplied 934-line **Intelligence EA V3+** template under `lib/ea-builder/templates/intelligence-ea-v3.mq5`. The original source is retained in full with normalized line endings, including original attribution (normalized SHA256 `3c0ceb54954ae5f243271b14154811d791ad9942269d0e961e3093a851279e61`). Generated trading inputs and the bodies of `DetectQuasimodoSignal`, `OpenBuy`, `OpenSell`, `CalculateStops`, `ManageTrailingStop`, `OnTick` and original initialization/deinitialization logic are unchanged. Only display metadata/comments and wrapper lifecycle integration are added. Startup trading/ForceSignal behavior is preserved and may place a strategy trade immediately; no additional trade is created for broadcasting. This is a source package, not a compiled EX5 or a claim of verified broker operation.
+
+Names come from the authenticated mentor's saved profile and selected owned EA; forged request branding cannot override them. The ZIP contains `<EA>/<EA>.mq5`, `<EA>/<EA>_Relay.mq5`, optional `<EA>/MT5_Background.bmp`, and a guide with exactly ten numbered steps. The BMP is embedded from beside the main source before compilation and resized behind the information panels. No client app background is touched.
+
+### Nonblocking network delivery
+
+MQL5 WebRequest is synchronous. It must not run in the strategy's event loop. The generated trading EA itself reconciles and queues confirmed events; a bundled **native MT5 background Service** performs HTTPS using that queue. It is not a second observer/trading EA, DLL or paid service. Compile the relay, copy it into `MQL5/Services` and start it in the same terminal/account. Without the relay, original strategy trading is unchanged but trade sharing remains waiting/disconnected.
+
+The chart EA writes a bounded durable outbox, reconciliation state and heartbeat under MT5 Common/Files; the service reads the outbox, validates actual API acknowledgements and writes a matching receipt. Only then does the chart EA remove the queue head. The service holds a per-robot/account local lock to reject duplicate relay instances and performs timeout/backoff outside the chart event loop. Retain both local state and the existing VPS journal across restarts. The installed package contains a private, revocable robot token, never the unrestricted mentor/admin key.
+
+The actual authenticated endpoints remain `/api/robots/heartbeat` and `/api/robots/events` at `https://eacloudhoster.online`. First heartbeat binds the integrated robot's actual original `MagicNumber`; later account/server/magic changes are rejected. Explicit, verified trade-sharing activation remains required and cannot be bypassed by generation. Start flat: trades opened before activation, including immediate startup trades, are not copied retroactively.
+
+### Standalone copier
+
+`/api/admin/copier/download?format=zip` packages the existing standalone copier and ten-step guide. The default raw MQ5 download is preserved. This is a separate product and does not contain the Intelligence strategy. Its existing credential/verification/trade logic is unchanged; the new ZIP uses the verified production API origin. Its existing partial-close, netting, SL/TP and offline-delivery limitations are documented. Do not enable both routes for the same mentor: the existing observer/integrated activation gate blocks legacy webhook ingestion.
+
+### Verification and rollout
+
+Automated checks compare every original trading input and critical function body, verify original initialization/deinitialization, confirm no additional trade calls, ensure HTTPS appears only in the Service, validate image/resource paths and test real authenticated package generation. MetaEditor is unavailable here, so compilation remains unverified; the mentor will perform native/demo-broker acceptance. Source package readiness does not mean broker verification.
+
+No new database migration is introduced by this redesign. The robot-builds/observer routing migration from PR124 must already be present before using those endpoints. No production SQL, service restart, credential/configuration change, merge or deployment is authorized or performed. Production backup and the earlier exposed-credential incident still require operator attention before rollout. After approval, rebuild/deploy complete API dist and Pages output through existing mechanisms; no VPS execution changes are needed for this PR beyond the previously introduced authenticated bridge. Install/compile the generated main EA and relay as described by its ten-step guide.
+
+The sections below document the reused routing/recovery gates, including compatibility with older separate-chart registrations.
 
 ## Account-wide observation and routing
 
@@ -60,14 +82,14 @@ PNG/JPEG/uncompressed BMP input is bounded to 10MiB, 12MP and 8192px dimensions,
 
 ## Manual activation sequence — requires separate approval
 
-1. Review the observer follow-up PR, migration and code. Resolve the previously unverified production database backup/recovery point and exposed-credential incident before any production rollout. Do not print or copy secrets into reports.
+1. Review the generator redesign and existing migration/code. Resolve the previously unverified production database backup/recovery point and exposed-credential incident before any production rollout. Do not print or copy secrets into reports.
 2. Validate additive `docs/migrations/20261030-robot-builds.sql` against a restored disposable database first. It creates new metadata tables/columns/indexes and adds nullable `trade_signals.observer_event_id`; it does not reset accounts, passwords, trades or the database. Apply only after explicit migration approval; the API startup runner does not apply it automatically.
 3. Prepare a DEMO Windows MT5 execution service with this code, persistent writable journal storage and authenticated TLS termination. Configure a new private `OBSERVER_MT5_VPS_TOKEN` of at least 32 characters in that service. Do not reuse the read-only Chart Scanner token.
 4. After approval, configure API `OBSERVER_MT5_VPS_URL` as that HTTPS origin and `OBSERVER_MT5_VPS_TOKEN` as the matching private service credential. These names are documented requirements; no production variables have been changed here. No new paid service is introduced.
 5. After approval, deploy complete API dist and Pages output using existing build commands. Preserve the browser-session migration startup runner and all existing variables. No observer copying starts merely because code is deployed.
-6. Download observer, compile with MetaEditor, retain original EX5 on Chart 1 and install observer on Chart 2 of DEMO. Verify actual magic, source connection, old external broadcast behavior, healthy flat heartbeat and authorized demo clients; explicitly enable copying only after these pass.
+6. Download and compile the generated trading EA plus its native relay Service, and install on DEMO using the ten-step guide. Previously issued separate-chart registrations remain compatible. Verify actual magic, source connection, old external broadcast behavior, healthy flat heartbeat and authorized demo clients; explicitly enable copying only after these pass.
 7. Validate BUY/SELL, SL/TP, partial/full closes, reversals, partial fills, distinct client sizing/symbols, unrelated manual trades, HTTP duplicates, broker rejections, pause/licence expiry, disconnect/restart and uncertain-outcome recovery. Inspect actual broker tickets plus portal execution records. Live rollout requires separate approval after DEMO evidence.
 
 ## Verification limits
 
-Automated tests use disposable PostgreSQL and a simulated broker. MetaEditor, original EX5 network traffic, real broker execution, production data/provider settings and live connectivity are unavailable here. Passing TypeScript/builds or simulated broker tests does not establish end-to-end MT5 readiness. Keep the observer follow-up PR draft until native compilation and demo acceptance are recorded.
+Automated tests use disposable PostgreSQL and a simulated broker. MetaEditor, original EX5 network traffic, real broker execution, production data/provider settings and live connectivity are unavailable here. Passing TypeScript/builds or simulated broker tests does not establish end-to-end MT5 readiness. Keep this generator redesign PR draft until review; native compilation and demo acceptance remain operator verification steps.

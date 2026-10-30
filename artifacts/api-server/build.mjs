@@ -17,6 +17,7 @@ async function buildAll() {
   await esbuild({
     entryPoints: [path.resolve(artifactDir, "src/index.ts"), path.resolve(artifactDir, "src/check-scanner.ts"), path.resolve(artifactDir, "src/ea-builder-worker.ts")],
     platform: "node",
+    loader:{".mq5":"text"},
     bundle: true,
     format: "esm",
     outdir: distDir,

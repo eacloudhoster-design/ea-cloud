@@ -48,6 +48,7 @@ test(
         entryPoints: ["artifacts/api-server/src/ea-builder-worker.ts"],
         bundle: true,
         platform: "node",
+        loader: { ".mq5": "text" },
         format: "esm",
         outfile: "work/browser-sessions/ea-builder-worker.mjs",
         banner: {
@@ -62,6 +63,7 @@ test(
         },
         bundle: true,
         platform: "node",
+        loader: { ".mq5": "text" },
         format: "esm",
         outfile: "work/browser-sessions/builder-router.mjs",
         banner: {
@@ -211,7 +213,7 @@ test(
       assert.equal(
         (await (await call("/admin/ea-builder/config")).json())
           .strategyAvailable,
-        false,
+        true,
       );
       const multipart = (values, image) => {
         const boundary = "ea-builder-test-boundary";
@@ -243,15 +245,6 @@ test(
         managerName: "Manager Test",
         purpose: "integration-toolkit",
       };
-      assert.equal(
-        (
-          await call(
-            "/admin/ea-builder/package",
-            multipart({ ...fields, purpose: "trading" }),
-          )
-        ).status,
-        409,
-      );
       assert.equal(
         (await engine.query("SELECT count(*) FROM robot_builds")).rows[0].count,
         0,
@@ -582,6 +575,88 @@ test(
       assert.equal(
         (await expired.json()).copyState,
         "source_verification_expired",
+      );
+      const trading = await call(
+        "/admin/ea-builder/package",
+        multipart(
+          {
+            ...fields,
+            purpose: "trading",
+            name: "FORGED NAME",
+            managerName: "FORGED MANAGER",
+          },
+          validImage,
+        ),
+      );
+      assert.equal(trading.status, 200);
+      const tradingFiles = unzipSync(
+        new Uint8Array(await trading.arrayBuffer()),
+      );
+      const mainPath = Object.keys(tradingFiles).find((k) =>
+        k.endsWith("/First_EA.mq5"),
+      );
+      assert(mainPath, "uses saved owned EA name, not request branding");
+      const tradingSource = strFromU8(tradingFiles[mainPath]);
+      assert(tradingSource.includes("EA Manager: Test User"));
+      assert(!tradingSource.includes("FORGED NAME"));
+      assert(tradingSource.includes("DetectQuasimodoSignal"));
+      assert(!/WebRequest\s*\(/.test(tradingSource));
+      const integratedToken = tradingSource.match(/eacr_[a-f0-9]{64}/)[0];
+      assert(!tradingSource.includes(legacyKey));
+      const integratedBeat = (body) =>
+        call("/robots/heartbeat", {
+          method: "POST",
+          session: null,
+          robot: integratedToken,
+          body,
+        });
+      assert.equal(
+        (
+          await integratedBeat({
+            ...heartbeat,
+            sourceAccount: "77777",
+            sourceMagic: "54321",
+          })
+        ).status,
+        200,
+        "bind actual original MagicNumber on first authenticated heartbeat",
+      );
+      assert.equal(
+        (
+          await integratedBeat({
+            ...heartbeat,
+            sourceAccount: "77777",
+            sourceMagic: "99999",
+          })
+        ).status,
+        409,
+        "later magic changes cannot redirect a registered robot",
+      );
+      const copierZip = await call("/admin/copier/download?format=zip");
+      assert.equal(copierZip.status, 200);
+      const copierFiles = unzipSync(
+        new Uint8Array(await copierZip.arrayBuffer()),
+      );
+      const standalone = strFromU8(
+        copierFiles[Object.keys(copierFiles).find((k) => k.endsWith(".mq5"))],
+      );
+      assert.equal(
+        standalone.replaceAll("https://eacloudhoster.online/api", "<API>"),
+        legacySource.replaceAll("https://backend.example/api", "<API>"),
+        "standalone strategy/source must be unchanged except the production origin",
+      );
+      assert(standalone.includes(legacyKey));
+      assert(standalone.includes("https://eacloudhoster.online/api"));
+      assert(!standalone.includes("DetectQuasimodoSignal"));
+      assert.equal(
+        (
+          strFromU8(
+            copierFiles[
+              Object.keys(copierFiles).find((k) => k.endsWith(".txt"))
+            ],
+          ).match(/^\d+\./gm) || []
+        ).length,
+        10,
       );
       // Existing EA deletion must not be blocked by the new metadata foreign keys.
       await engine.exec("DELETE FROM eas WHERE id=11");

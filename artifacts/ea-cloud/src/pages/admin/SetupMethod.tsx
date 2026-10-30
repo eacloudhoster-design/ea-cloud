@@ -1,109 +1,134 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
+import { Link } from "wouter";
 import { useGetProfile, useGetEas } from "@workspace/api-client-react";
 import { usePortalRedirect } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Download,
-  Copy,
-  Loader2,
-  ImagePlus,
-  AlertCircle,
-  X,
-} from "lucide-react";
+import { Download, Copy, Loader2, ImagePlus, X } from "lucide-react";
 import Mt5ConnectInput from "@/components/Mt5ConnectInput";
 import "./SetupMethod.css";
-
-type Capture = {
-  eventId: string;
-  receivedAt: string;
-  copyState?: string;
-  queueStatus?: string | null;
-  queueError?: string | null;
-  signalId?: number | null;
-  payload: {
-    kind: string;
-    entry: string;
-    symbol: string;
-    side: string;
-    volume: number;
-  };
-};
-type Config = {
-  origin: string;
-  legacyIngestion: string;
-  strategyAvailable: boolean;
-  blocker: string;
-};
+type Package = { blob: Blob; name: string };
 type Robot = {
   id: string;
   name: string;
-  mode?: string;
-  copyEnabled?: boolean;
-  sourceMagic?: string;
-  historyHealthy?: boolean;
+  mode: string;
+  copyEnabled: boolean;
   revokedAt: string | null;
   lastSeenAt: string | null;
-  lastEventAt: string | null;
-  sourceAccount: string | null;
-  sourceServer: string | null;
+  historyHealthy: boolean;
 };
-const request = async (path: string, init: RequestInit = {}) => {
+type Receipt = {
+  eventId: string;
+  copyState: string;
+  queueStatus?: string;
+  queueError?: string;
+  receivedAt: string;
+  payload: { kind: string; symbol: string; side: string; volume: number };
+};
+async function request(path: string, init: RequestInit = {}) {
   const response = await fetch(path, {
     ...init,
     cache: "no-store",
-    signal: init.signal ?? AbortSignal.timeout(60000),
+    signal: init.signal || AbortSignal.timeout(60000),
   });
   if (!response.ok) {
     const data = await response.json().catch(() => ({}));
-    throw Error(data.error || `Request failed (HTTP ${response.status})`);
+    throw Error(data.error || `Request failed (HTTP ${response.status}).`);
   }
   return response;
-};
-function download(blob: Blob, name: string) {
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
+}
+async function prepare(path: string, init?: RequestInit): Promise<Package> {
+  const response = await request(path, init);
+  if (!response.headers.get("Content-Type")?.includes("application/zip"))
+    throw Error(
+      "The installation package could not be prepared. Please try again.",
+    );
+  const blob = await response.blob();
+  if (blob.size === 0)
+    throw Error("The installation package is empty. Please try again.");
+  return {
+    blob,
+    name:
+      response.headers
+        .get("Content-Disposition")
+        ?.match(/filename="([^"]+)"/)?.[1] || "EACloud.zip",
+  };
+}
+function download(file: Package) {
+  const url = URL.createObjectURL(file.blob),
+    a = document.createElement("a");
   a.href = url;
-  a.download = name;
+  a.download = file.name;
   document.body.append(a);
   a.click();
   a.remove();
   setTimeout(() => URL.revokeObjectURL(url), 2000);
 }
+const creationSteps = [
+  ["Customise your EA", "Confirm your EA name and EA Manager in your profile."],
+  ["Upload background", "Choose an optional MT5 chart image."],
+  ["Create EA", "Generate your personalised trading robot."],
+  ["Download file", "Save your EA package and installation notes."],
+];
+const copierSteps = [
+  ["Create copier", "Generate your EA Cloud trade copier file."],
+  ["Install on MT5", "Install the copier on your desktop terminal."],
+  ["Configure WebRequest", "Allow the EA Cloud URL shown below."],
+  ["Connect account", "Confirm your source account connection."],
+  ["Start copying", "Share eligible trades with authorised clients."],
+];
+function Steps({ items }: { items: string[][] }) {
+  return (
+    <ol className="ea-setup-steps">
+      {items.map(([title, text], i) => (
+        <li key={title}>
+          <span>{i + 1}</span>
+          <div>
+            <strong>{title}</strong>
+            <p>{text}</p>
+          </div>
+        </li>
+      ))}
+    </ol>
+  );
+}
 export default function SetupMethod() {
   usePortalRedirect();
   const { data: profile } = useGetProfile(),
     { data: eas } = useGetEas();
-  const [config, setConfig] = useState<Config | null>(null),
-    [robots, setRobots] = useState<Robot[]>([]),
-    [error, setError] = useState(""),
-    [listError, setListError] = useState("");
-  const [open, setOpen] = useState(false),
-    [eaId, setEaId] = useState(0),
-    [name, setName] = useState(""),
-    [manager, setManager] = useState(""),
-    [sourceMagic, setSourceMagic] = useState("12345"),
+  const [eaId, setEaId] = useState(0),
     [file, setFile] = useState<File | null>(null),
     [preview, setPreview] = useState(""),
-    [busy, setBusy] = useState(false),
-    [message, setMessage] = useState(""),
-    [copied, setCopied] = useState(false);
-  const [events, setEvents] = useState<Record<string, Capture[] | undefined>>(
-    {},
-  );
-  const seeded = useRef(false),
-    pending = useRef(false);
+    [origin, setOrigin] = useState(""),
+    [error, setError] = useState(""),
+    [busy, setBusy] = useState<"ea" | "copier" | null>(null),
+    [eaPackage, setEaPackage] = useState<Package | null>(null),
+    [copierPackage, setCopierPackage] = useState<Package | null>(null),
+    [copied, setCopied] = useState(false),
+    [robots, setRobots] = useState<Robot[]>([]),
+    [receipts, setReceipts] = useState<Record<string, Receipt[]>>({});
+  const selected = eaId || eas?.[0]?.id || 0,
+    eaName =
+      profile?.robotName?.trim() ||
+      eas?.find((e) => e.id === selected)?.name ||
+      "",
+    manager =
+      profile?.mentorName?.trim() ||
+      [profile?.firstName, profile?.lastName].filter(Boolean).join(" ");
+  const loadRobots = async () => {
+    const data = await (await request("/api/admin/ea-builder/robots")).json();
+    setRobots(data.robots);
+  };
   useEffect(() => {
-    if (profile && !seeded.current) {
-      setName(profile.robotName || "");
-      setManager(
-        profile.mentorName ||
-          [profile.firstName, profile.lastName].filter(Boolean).join(" "),
-      );
-      seeded.current = true;
-    }
-  }, [profile]);
+    const controller = new AbortController();
+    void request("/api/admin/ea-builder/config", { signal: controller.signal })
+      .then((r) => r.json())
+      .then((data) => setOrigin(data.origin))
+      .catch((e) => {
+        if (!controller.signal.aborted) setError(e.message);
+      });
+    void loadRobots().catch((e) => setError(e.message));
+    return () => controller.abort();
+  }, []);
   useEffect(() => {
     if (!file) {
       setPreview("");
@@ -113,302 +138,195 @@ export default function SetupMethod() {
     setPreview(url);
     return () => URL.revokeObjectURL(url);
   }, [file]);
-  const loadRobots = async () => {
-    try {
-      const data = await (await request("/api/admin/ea-builder/robots")).json();
-      setRobots(data.robots);
-      setListError("");
-    } catch (err) {
-      setListError((err as Error).message);
-    }
-  };
-  useEffect(() => {
-    let alive = true;
-    const controller = new AbortController();
-    void request("/api/admin/ea-builder/config", { signal: controller.signal })
-      .then((r) => r.json())
-      .then((data) => {
-        if (alive) setConfig(data);
-      })
-      .catch((err) => {
-        if (alive) setError(err.message);
-      });
-    void loadRobots();
-    const timer = setInterval(() => {
-      if (!document.hidden) void loadRobots();
-    }, 20000);
-    return () => {
-      alive = false;
-      controller.abort();
-      clearInterval(timer);
-    };
-  }, []);
-  const selected = eaId || eas?.[0]?.id || 0;
-  const generate = async (
-    purpose: "trading" | "integration-toolkit" | "existing-observer",
-  ) => {
-    if (pending.current) return;
+  useEffect(() => setEaPackage(null), [selected, eaName, manager, file]);
+  async function generate(kind: "ea" | "copier") {
+    if (busy) return;
     setError("");
-    setMessage("");
-    if (!selected || !name.trim() || !manager.trim()) {
-      setError("Choose an EA and enter an EA name and manager name.");
-      return;
-    }
-    if (file && file.size > 10 * 1024 * 1024) {
-      setError("Background must be 10MB or smaller.");
-      return;
-    }
-    pending.current = true;
-    setBusy(true);
+    setBusy(kind);
+    if (kind === "ea") setEaPackage(null);
+    else setCopierPackage(null);
     try {
+      if (kind === "copier") {
+        setCopierPackage(
+          await prepare("/api/admin/copier/download?format=zip"),
+        );
+        return;
+      }
+      if (!selected || !eaName || !manager)
+        throw Error(
+          "Select your EA and complete its name and manager in Profile.",
+        );
+      if (
+        file &&
+        (file.size > 10 * 1024 * 1024 ||
+          !/^image\/(png|jpeg|bmp|x-ms-bmp|x-bmp)$/.test(file.type))
+      )
+        throw Error("Choose a PNG, JPG, JPEG or BMP image up to 10MB.");
       const data = new FormData();
       data.set("eaId", String(selected));
-      data.set("name", name);
+      data.set("name", eaName);
       data.set("managerName", manager);
-      data.set("purpose", purpose);
-      data.set("sourceMagic", sourceMagic);
+      data.set("purpose", "trading");
       if (file) data.set("background", file);
-      const response = await request("/api/admin/ea-builder/package", {
-        method: "POST",
-        body: data,
-      });
-      if (!response.headers.get("Content-Type")?.includes("application/zip"))
-        throw Error("The API did not return an installation package.");
-      const blob = await response.blob();
-      if (!blob.size) throw Error("The package is empty. Please retry.");
-      download(
-        blob,
-        response.headers
-          .get("Content-Disposition")
-          ?.match(/filename="([^"]+)"/)?.[1] ||
-          "EACloud_Integration_Toolkit.zip",
-      );
-      setMessage(
-        "Observer package downloaded. Keep the original EA unchanged on Chart 1; install the observer on Chart 2. Copying stays disabled until verified and explicitly enabled.",
+      setEaPackage(
+        await prepare("/api/admin/ea-builder/package", {
+          method: "POST",
+          body: data,
+        }),
       );
       await loadRobots();
-    } catch (err) {
-      setError((err as Error).message);
+    } catch (e) {
+      setError((e as Error).message);
     } finally {
-      pending.current = false;
-      setBusy(false);
+      setBusy(null);
     }
-  };
-  const copier = async () => {
-    if (pending.current) return;
-    pending.current = true;
-    setBusy(true);
-    setError("");
-    setMessage("");
-    try {
-      const response = await request("/api/admin/copier/download");
-      download(
-        await response.blob(),
-        response.headers
-          .get("Content-Disposition")
-          ?.match(/filename="([^"]+)"/)?.[1] || "EACloud_Copier.mq5",
-      );
-      setMessage(
-        "Existing trade copier downloaded. Compile and test it on a demo account; download does not prove connection or execution.",
-      );
-    } catch (err) {
-      setError((err as Error).message);
-    } finally {
-      pending.current = false;
-      setBusy(false);
-    }
-  };
-  const guide = () => {
-    if (!config) return;
-    download(
-      new Blob(
-        [
-          `EA CLOUD — EXISTING TRADE COPIER INSTALLATION\n\n1. MT5 File → Open Data Folder. Place the downloaded MQ5 in MQL5/Experts.\n2. Open MetaEditor (F4), then compile the source with F7. Compilation is unverified here.\n3. Tools → Options → Expert Advisors → Allow WebRequest for listed URL: add ${config.origin}.\n4. Attach one copier to a demo account/chart. Enable its permissions as needed.\n5. The copier uses /api/signals/challenge, /register-account and /heartbeat. Ingestion is ${config.legacyIngestion}. Check Experts/Journal and verified accounts below. A configured URL is not proof of connectivity.\n6. Confirm actual trade and client execution acknowledgements before considering live use. The existing copier does not fully cover partial closes, netting reversals or SL/TP changes and lacks source-event deduplication. Never run multiple broadcasters for a source account.\n7. The legacy file contains your existing mentor API credential: keep it private. This download does not rotate/change that credential.\n8. If registration fails, check the exact broker/server whitelist and account approval; do not bypass verification. Offline events may be lost by this legacy copier.\n9. Do not attach the legacy copier alongside the new capture observer on the same account without a deliberate demo test plan.\n`,
-        ],
-        { type: "text/plain" },
-      ),
-      "EACloud_Copier_INSTALLATION_GUIDE.txt",
-    );
-  };
+  }
   return (
-    <div className="ea-setup p-6 md:p-8">
-      <h1 className="text-2xl font-bold text-primary">Setup Methods</h1>
-      <p className="text-sm text-white/50 mt-2 mb-6">
-        Customise MT5 branding and manage your trade-broadcasting tools.
-      </p>
+    <div className="ea-setup">
+      <header className="ea-setup-header">
+        <p>YOUR STRATEGY. YOUR BRAND.</p>
+        <h1>Setup Methods</h1>
+        <p>Create your trading EA or set up your standalone trade copier.</p>
+      </header>
       {error && (
-        <p role="alert" className="ea-setup-alert">
-          <AlertCircle aria-hidden="true" />
+        <p className="ea-setup-alert" role="alert">
           {error}
         </p>
       )}
-      {message && (
-        <p role="status" className="ea-setup-status">
-          {message}
+      <section className="ea-setup-card" aria-labelledby="create-ea-heading">
+        <h2 id="create-ea-heading">CREATE YOUR TRADING EA</h2>
+        <p>
+          Create your personalised MetaTrader 5 trading robot with your own EA
+          name, manager branding, custom chart background and integrated EA
+          Cloud trade broadcasting.
         </p>
-      )}
-      <div className="ea-setup-options">
-        <section className="ea-setup-card">
-          <h2>CONNECT EXISTING EA / CREATE CUSTOM EA</h2>
+        <h3>HOW IT WORKS</h3>
+        <Steps items={creationSteps} />
+        <div className="ea-setup-branding">
+          <div>
+            <small>EA NAME</small>
+            <strong>{eaName || "Add your EA name in Profile"}</strong>
+          </div>
+          <div>
+            <small>EA MANAGER</small>
+            <strong>{manager || "Add your manager name in Profile"}</strong>
+          </div>
+          <Link href="/admin/profile" className="ea-setup-edit">
+            Edit in Profile
+          </Link>
+        </div>
+        {(eas?.length || 0) > 1 && (
+          <div className="ea-setup-form">
+            <label htmlFor="setup-ea">EA registration</label>
+            <select
+              id="setup-ea"
+              value={selected}
+              disabled={!!busy}
+              onChange={(e) => setEaId(Number(e.target.value))}
+            >
+              {eas?.map((e) => (
+                <option key={e.id} value={e.id}>
+                  {e.name}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
+        {!eas?.length && (
           <p>
-            Create your personalised MetaTrader 5 trading robot with custom
-            branding and integrated EA Cloud trade broadcasting.
+            <Link href="/admin/ea-manager">
+              Create an EA in EA Manager first.
+            </Link>
           </p>
-          <Button onClick={() => setOpen((v) => !v)}>
-            {open ? "Close customisation" : "Create EA"}
-          </Button>
-          {open && (
-            <div className="ea-setup-form">
-              <div className="ea-setup-alert" role="note">
-                {config?.blocker || "Loading verified template availability…"}{" "}
-                Connect Existing EA observes your compiled EX5 from a separate
-                chart. Create Custom EA requires complete source; it remains
-                blocked. The observer never places source-account orders.
-              </div>
-              <label htmlFor="setup-ea">Existing EA</label>
-              <select
-                id="setup-ea"
-                value={selected}
-                onChange={(e) => setEaId(Number(e.target.value))}
-                disabled={busy}
-              >
-                {!eas?.length && (
-                  <option value={0}>Create an EA in EA Manager first</option>
-                )}
-                {eas?.map((e) => (
-                  <option key={e.id} value={e.id}>
-                    {e.name}
-                  </option>
-                ))}
-              </select>
-              <Label htmlFor="setup-name">EA Name</Label>
-              <Input
-                id="setup-name"
-                placeholder="Enter your robot name"
-                maxLength={80}
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                disabled={busy}
+        )}
+        <h3>MT5 CHART BACKGROUND</h3>
+        <p>
+          Upload an image to personalise the background of your MetaTrader 5
+          desktop trading chart.
+        </p>
+        <div className="ea-setup-upload">
+          <ImagePlus />
+          <label htmlFor="setup-background">
+            {file ? "Replace background" : "Upload MT5 Chart Background"}
+          </label>
+          <input
+            id="setup-background"
+            type="file"
+            accept=".png,.jpg,.jpeg,.bmp,image/png,image/jpeg,image/bmp"
+            disabled={!!busy}
+            onChange={(e) => {
+              setFile(e.target.files?.[0] || null);
+              e.target.value = "";
+            }}
+          />
+          <p>
+            PNG, JPG, JPEG or BMP · up to 10MB. Your client app background stays
+            unchanged.
+          </p>
+          {preview && (
+            <>
+              <img
+                className="ea-setup-preview"
+                src={preview}
+                alt="MT5 chart background preview"
               />
-              <Label htmlFor="setup-manager">EA Manager</Label>
-              <Input
-                id="setup-manager"
-                placeholder="Enter manager name"
-                maxLength={80}
-                value={manager}
-                onChange={(e) => setManager(e.target.value)}
-                disabled={busy}
-              />
-              <Label htmlFor="setup-image">Upload MT5 Chart Background</Label>
-              <p>
-                Upload a background image for your MetaTrader 5 desktop trading
-                chart.
-              </p>
-              <p className="text-red-200">
-                This background is for MetaTrader 5 desktop only. It does not
-                change your EA Cloud mobile app background.
-              </p>
-              <div className="ea-setup-preview">
-                {preview ? (
-                  <img src={preview} alt="MT5 chart background preview" />
-                ) : (
-                  <ImagePlus aria-label="No MT5 background selected" />
-                )}
-              </div>
-              <input
-                id="setup-image"
-                type="file"
-                accept=".png,.jpg,.jpeg,.bmp,image/png,image/jpeg,image/bmp"
-                disabled={busy}
-                onChange={(e) => {
-                  setFile(e.target.files?.[0] || null);
-                  e.target.value = "";
-                }}
-              />
-              {file && (
-                <Button
-                  variant="outline"
-                  disabled={busy}
-                  onClick={() => setFile(null)}
-                >
-                  <X size={16} />
-                  Remove background
-                </Button>
-              )}
-              <p>
-                PNG, JPG or uncompressed 24/32-bit BMP · up to 10MB/12
-                megapixels. Server converts to a bounded 24-bit BMP.
-              </p>
-              <Label htmlFor="observer-magic">
-                Verified source magic number
-              </Label>
-              <Input
-                id="observer-magic"
-                value={sourceMagic}
-                onChange={(e) => setSourceMagic(e.target.value)}
-                inputMode="numeric"
-                disabled={busy}
-              />
-              <p>
-                12345 is a reference only. Verify the nonzero magic on actual
-                MT5 opening deals. Comments alone do not identify the strategy.
-              </p>
-              <Button
-                disabled={busy || !config || !config.strategyAvailable}
-                onClick={() => void generate("trading")}
-              >
-                Create Custom EA
-              </Button>
-              <p>
-                Blocked until complete, verified strategy source is available.
-              </p>
               <Button
                 variant="outline"
-                disabled={busy || !config}
-                onClick={() => void generate("existing-observer")}
+                disabled={!!busy}
+                onClick={() => setFile(null)}
               >
-                {busy ? (
-                  <>
-                    <Loader2 className="animate-spin" />
-                    Preparing package…
-                  </>
-                ) : (
-                  "Connect Existing EA — download observer"
-                )}
+                <X size={16} />
+                Remove background
               </Button>
-              <p>
-                Includes custom observer branding, optional BMP and installation
-                guide. Your original EX5 is not included, renamed or modified.
-                MetaEditor compilation remains unverified. Start flat on a demo
-                account, verify its connection, then explicitly enable copying
-                below.
-              </p>
-            </div>
+            </>
           )}
-        </section>
-        <section className="ea-setup-card">
-          <h2>COPY TRADE</h2>
-          <p>
-            Download the EA Cloud trade copier to broadcast trades from your
-            existing MetaTrader 5 account to connected clients.
-          </p>
-          <Button disabled={busy} onClick={() => void copier()}>
-            <Download size={16} />
-            Download Trade Copier
-          </Button>
-          <Button variant="outline" disabled={!config} onClick={guide}>
-            Download copier guide
-          </Button>
-          <h3>MT5 WebRequest URL</h3>
-          <code>
-            {config?.origin || "Loading verified route configuration…"}
-          </code>
+        </div>
+        <Button
+          className="ea-setup-primary"
+          disabled={!!busy || !origin || !selected || !eaName || !manager}
+          onClick={() => void generate("ea")}
+        >
+          {busy === "ea" ? (
+            <>
+              <Loader2 className="animate-spin" />
+              Creating your personalised EA...
+            </>
+          ) : (
+            "CREATE EA"
+          )}
+        </Button>
+        {eaPackage && (
+          <div className="ea-setup-ready" role="status">
+            <strong>YOUR EA IS READY</strong>
+            <p>
+              Your source package is ready. Compile it in MetaEditor and test it
+              on DEMO before live use.
+            </p>
+            <Button onClick={() => download(eaPackage)}>
+              <Download size={16} />
+              DOWNLOAD FILE
+            </Button>
+          </div>
+        )}
+      </section>
+      <div className="ea-setup-divider" aria-hidden="true" />
+      <section className="ea-setup-card" aria-labelledby="copy-heading">
+        <h2 id="copy-heading">COPY TRADING</h2>
+        <p>
+          Connect your MetaTrader 5 account to EA Cloud and automatically share
+          your trades with your connected clients.
+        </p>
+        <h3>HOW COPY TRADING WORKS</h3>
+        <Steps items={copierSteps} />
+        <div className="ea-setup-url">
+          <h3>EA CLOUD WEBREQUEST URL</h3>
+          <code>{origin || "Loading connection details…"}</code>
           <Button
             variant="outline"
-            disabled={!config}
+            disabled={!origin}
             onClick={() => {
               void navigator.clipboard
-                .writeText(config!.origin)
+                .writeText(origin)
                 .then(() => {
                   setCopied(true);
                   setTimeout(() => setCopied(false), 2000);
@@ -421,117 +339,75 @@ export default function SetupMethod() {
             }}
           >
             <Copy size={16} />
-            {copied ? "Copied" : "Copy URL"}
+            COPY URL
           </Button>
+          {copied && <p role="status">URL copied successfully.</p>}
           <p>
-            Ingestion route:{" "}
-            <code>{config?.legacyIngestion || "Loading…"}</code>. This path
-            exists in the backend; production reachability has not been tested
-            here.
+            Open MetaTrader 5 → Tools → Options → Expert Advisors → Allow
+            WebRequest for listed URL, then add the URL shown above.
           </p>
-          <ol>
-            <li>Download the existing copier and guide.</li>
-            <li>Install in MQL5/Experts and compile with F7 in MetaEditor.</li>
-            <li>
-              Add the WebRequest origin and attach only one copier per source
-              account.
-            </li>
-            <li>
-              Verify registration and demo execution using actual
-              acknowledgements.
-            </li>
-          </ol>
-          <p>
-            The legacy copier is preserved. Partial-close/reversal
-            reconciliation, SL/TP coverage and source-event deduplication are
-            not complete. A download or a configured URL does not mean
-            Connected.
-          </p>
-        </section>
-      </div>
-      <section className="ea-setup-card mt-6">
-        <h2>Observer connections</h2>
+        </div>
+        <Button
+          className="ea-setup-primary"
+          disabled={!!busy || !origin}
+          onClick={() => void generate("copier")}
+        >
+          {busy === "copier" ? (
+            <>
+              <Loader2 className="animate-spin" />
+              Preparing your copy trading file...
+            </>
+          ) : (
+            "CREATE COPY TRADING FILE"
+          )}
+        </Button>
+        {copierPackage && (
+          <div className="ea-setup-ready" role="status">
+            <strong>YOUR COPY TRADING FILE IS READY</strong>
+            <Button onClick={() => download(copierPackage)}>
+              <Download size={16} />
+              DOWNLOAD COPY TRADING FILE
+            </Button>
+          </div>
+        )}
+        <Mt5ConnectInput />
+      </section>
+      <section className="ea-setup-card ea-setup-connections">
+        <h2>CONNECTIONS &amp; DELIVERY</h2>
         <p>
-          Heartbeat acknowledgement alone is not source-account verification or
-          client execution. Copying requires a verified MT5 source and an
-          explicitly enabled observer. Enqueued events show queue acceptance,
-          not broker success.
+          Check your source connection and trade delivery here. A connection
+          acknowledgement is not a confirmed client trade.
         </p>
-        {listError && <p role="alert">{listError}</p>}
-        <Button variant="outline" onClick={() => void loadRobots()}>
+        <Button
+          variant="outline"
+          onClick={() => void loadRobots().catch((e) => setError(e.message))}
+        >
           Refresh status
         </Button>
-        {!robots.length && <p>No integration robots loaded.</p>}
+        {!robots.length && <p>No EA packages created yet.</p>}
         {robots.map((robot) => (
           <div key={robot.id} className="ea-setup-robot">
             <strong>{robot.name}</strong>
             <span>
               {robot.revokedAt
                 ? "Revoked"
-                : robot.lastSeenAt &&
-                    Date.now() - Date.parse(robot.lastSeenAt) < 60000
-                  ? robot.historyHealthy
-                    ? robot.copyEnabled
-                      ? "Connected · copying enabled"
-                      : "Connected · waiting for enablement"
-                    : "Connected · reconciliation not healthy"
-                  : "Disconnected / waiting for heartbeat"}
+                : !robot.lastSeenAt ||
+                    Date.now() - Date.parse(robot.lastSeenAt) > 60000
+                  ? "Disconnected / waiting for connection"
+                  : !robot.historyHealthy
+                    ? "Connected · checking history"
+                    : robot.copyEnabled
+                      ? "Connected · trade sharing enabled"
+                      : "Connected · waiting for trade sharing"}
             </span>
-            <small>
-              Last event:{" "}
-              {robot.lastEventAt
-                ? new Date(robot.lastEventAt).toLocaleString()
-                : "None"}
-            </small>
-            <Button
-              variant="outline"
-              onClick={() => {
-                if (events[robot.id])
-                  setEvents((old) => ({ ...old, [robot.id]: undefined }));
-                else
-                  void request(
-                    `/api/admin/ea-builder/robots/${robot.id}/events`,
-                  )
-                    .then((r) => r.json())
-                    .then((data) =>
-                      setEvents((old) => ({ ...old, [robot.id]: data.events })),
-                    )
-                    .catch((err) => setError(err.message));
-              }}
-            >
-              {events[robot.id]
-                ? "Hide captured events"
-                : "Recent captured events"}
-            </Button>
-            {events[robot.id] && (
-              <ul className="ea-setup-events">
-                {events[robot.id]!.length ? (
-                  events[robot.id]!.map((event) => (
-                    <li key={event.eventId}>
-                      {event.payload.kind} {event.payload.entry} ·{" "}
-                      {event.payload.symbol} {event.payload.side} ·{" "}
-                      {event.payload.volume} lots · received{" "}
-                      {new Date(event.receivedAt).toLocaleString()} ·{" "}
-                      {event.copyState || "capture_only"}
-                      {event.signalId
-                        ? ` · signal #${event.signalId} · ${event.queueStatus || "pending"}`
-                        : ""}
-                      {event.queueError ? ` · ${event.queueError}` : ""}
-                    </li>
-                  ))
-                ) : (
-                  <li>No captured events returned.</li>
-                )}
-              </ul>
-            )}
-            {robot.mode === "existing-observer" &&
-              !robot.copyEnabled &&
-              !robot.revokedAt && (
+            {!robot.copyEnabled &&
+              !robot.revokedAt &&
+              ["integrated-ea", "existing-observer"].includes(robot.mode) && (
                 <Button
                   onClick={() => {
                     if (
                       !confirm(
-                        "Enable observer copying? EA Cloud will block ALL legacy webhook ingestion for this mentor to prevent duplicate copying. Verify the original EX5's external destination independently. Start flat on DEMO and verify its actual source magic first.",
+                        "Enable trade sharing? Start flat with no queued events and verify your exact MT5 source account first. This blocks ALL legacy copier ingestion for your mentor account to prevent duplicate copying. Confirm any external copier is stopped independently.",
                       )
                     )
                       return;
@@ -544,34 +420,62 @@ export default function SetupMethod() {
                       },
                     )
                       .then(loadRobots)
-                      .catch((err) => setError(err.message));
+                      .catch((e) => setError(e.message));
                   }}
                 >
-                  Enable verified observer copying
+                  Enable trade sharing
                 </Button>
               )}
             <Button
-              disabled={!!robot.revokedAt || busy}
               variant="outline"
+              onClick={() =>
+                void request(`/api/admin/ea-builder/robots/${robot.id}/events`)
+                  .then((r) => r.json())
+                  .then((data) =>
+                    setReceipts((old) => ({ ...old, [robot.id]: data.events })),
+                  )
+                  .catch((e) => setError(e.message))
+              }
+            >
+              Recent trade delivery
+            </Button>
+            {receipts[robot.id] && (
+              <ul>
+                {receipts[robot.id].length ? (
+                  receipts[robot.id].map((e) => (
+                    <li key={e.eventId}>
+                      {e.payload.kind} · {e.payload.symbol} {e.payload.side} ·{" "}
+                      {e.copyState} {e.queueStatus ? `· ${e.queueStatus}` : ""}
+                      {e.queueError ? ` · ${e.queueError}` : ""}
+                    </li>
+                  ))
+                ) : (
+                  <li>No events received yet.</li>
+                )}
+              </ul>
+            )}
+            <Button
+              variant="outline"
+              disabled={!!robot.revokedAt}
               onClick={() => {
                 if (
-                  confirm(
-                    "Revoke this observer? Future updates stop; existing client positions require manual management. Legacy ingestion remains blocked if copying was enabled, to prevent duplicate execution.",
+                  !confirm(
+                    "Revoke this connection? Future updates stop; existing client positions require manual management. Legacy ingestion stays blocked if trade sharing was enabled.",
                   )
                 )
-                  void request(`/api/admin/ea-builder/robots/${robot.id}`, {
-                    method: "DELETE",
-                  })
-                    .then(loadRobots)
-                    .catch((err) => setError(err.message));
+                  return;
+                void request(`/api/admin/ea-builder/robots/${robot.id}`, {
+                  method: "DELETE",
+                })
+                  .then(loadRobots)
+                  .catch((e) => setError(e.message));
               }}
             >
-              Revoke robot
+              Revoke connection
             </Button>
           </div>
         ))}
       </section>
-      <Mt5ConnectInput />
     </div>
   );
 }
