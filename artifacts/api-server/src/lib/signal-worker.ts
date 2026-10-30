@@ -100,13 +100,14 @@ async function processSignal(signal: TradeSignal, log: Logger): Promise<void> {
       return;
     }
 
+    const observerFailed=!!signal.observerEventId&&(tally.failedTerminal>0||tally.succeeded===0);
     await db.update(tradeSignalsTable).set({
-      status: needsRetry ? "failed" : "success",
+      status: needsRetry||observerFailed ? "failed" : "success",
       attempts,
       processedAt: new Date(),
-      lastError: needsRetry ? `Exhausted retries; ${tally.failedRetryable} client(s) still failing on VPS` : null,
+      lastError: needsRetry ? `Exhausted retries; ${tally.failedRetryable} client(s) still failing on VPS` : observerFailed ? "Observer execution failed or no authorized connected clients executed; inspect client execution records" : null,
     }).where(eq(tradeSignalsTable.id, signal.id));
-    log.info({ signalId: signal.id, attempts, status: needsRetry ? "failed" : "success" }, "[SignalWorker] signal finalised");
+    log.info({ signalId: signal.id, attempts, status: needsRetry||observerFailed ? "failed" : "success" }, "[SignalWorker] signal finalised");
   } catch (err) {
     // Fatal processing error (e.g. could not even load clients). Retry or fail.
     const msg = err instanceof Error ? err.message : String(err);
@@ -160,7 +161,7 @@ async function tick(log: Logger): Promise<void> {
 export async function reconcileOnStartup(log: Logger): Promise<void> {
   const orphanExec = await db.update(tradeExecutionsTable).set({
     status: "failed",
-    retryable: 0,
+    retryable: sql`CASE WHEN ${tradeExecutionsTable.signalKind}='SYNC' THEN 1 ELSE 0 END`,
     errorMessage: "Interrupted by server restart (outcome unknown)",
   }).where(eq(tradeExecutionsTable.status, "pending")).returning({ id: tradeExecutionsTable.id });
 

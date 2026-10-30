@@ -111,11 +111,27 @@ try {
       "Existing Manager",
     );
     await page.getByLabel("EA Name", { exact: true }).fill("");
-    await page.getByRole('button',{name:'Download integration toolkit (not a trading EA)',exact:true}).click();
-    await page.getByRole('alert').filter({hasText:'Choose an EA'}).waitFor();
+    await page
+      .getByRole("button", {
+        name: "Connect Existing EA — download observer",
+        exact: true,
+      })
+      .click();
+    await page.getByRole("alert").filter({ hasText: "Choose an EA" }).waitFor();
     await page.getByLabel("EA Name", { exact: true }).fill("GOLD HUNTER PRO");
-    assert(await page.getByRole('button',{name:'CREATE MY EA',exact:true}).isDisabled());
-    assert(await page.getByText('Blocked until complete, verified strategy source is available.',{exact:true}).isVisible());
+    assert(
+      await page
+        .getByRole("button", { name: "Create Custom EA", exact: true })
+        .isDisabled(),
+    );
+    assert(
+      await page
+        .getByText(
+          "Blocked until complete, verified strategy source is available.",
+          { exact: true },
+        )
+        .isVisible(),
+    );
     assert.equal(packages, 0);
     await page
       .getByLabel("Upload MT5 Chart Background", { exact: true })
@@ -134,7 +150,7 @@ try {
     const event = page.waitForEvent("download");
     await page
       .getByRole("button", {
-        name: "Download integration toolkit (not a trading EA)",
+        name: "Connect Existing EA — download observer",
         exact: true,
       })
       .click();
@@ -144,7 +160,7 @@ try {
     );
     await page
       .getByRole("status")
-      .filter({ hasText: "capture-only observer" })
+      .filter({ hasText: "Observer package downloaded" })
       .waitFor();
     assert.equal(packages, 1);
     const copierDownload = page.waitForEvent("download");
@@ -166,7 +182,7 @@ try {
     );
     assert(
       await page
-        .getByText("No recent acknowledgement", { exact: true })
+        .getByText("Disconnected / waiting for heartbeat", { exact: true })
         .isVisible(),
     );
     assert(

@@ -59,11 +59,11 @@ void EAC_Init() {
  if(f!=INVALID_HANDLE){while(!FileIsEnding(f)&&ArraySize(EAC_queue)<256){string line=FileReadString(f);if(StringFind(line,"{\"eventId\":")==0){int n=ArraySize(EAC_queue);ArrayResize(EAC_queue,n+1);EAC_queue[n]=line;}}FileClose(f);}
  EAC_Panel();
 }
-void EAC_Enqueue(string value) {
+bool EAC_Enqueue(string value) {
  int n=ArraySize(EAC_queue);
- if(n>=256){EAC_status="OUTBOX FULL - EVENT NOT CAPTURED";Print("EA Cloud: outbox full; event not queued. Reconcile history before restarting.");EAC_Panel();return;}
+ if(n>=256){EAC_status="OUTBOX FULL - EVENT NOT CAPTURED";Print("EA Cloud: outbox full; event not queued. Reconcile history before restarting.");EAC_Panel();return false;}
  ArrayResize(EAC_queue,n+1);EAC_queue[n]=value;
- EAC_Persist();EAC_Panel();
+ if(!EAC_Persist()){ArrayResize(EAC_queue,n);EAC_Panel();return false;}EAC_Panel();return true;
 }
 bool EAC_SelectPosition(ulong identifier) {
  for(int i=0;i<PositionsTotal();i++)if(PositionGetTicket(i)>0&&(ulong)PositionGetInteger(POSITION_IDENTIFIER)==identifier)return true;

@@ -1,3 +1,4 @@
+import {executeObserver} from "./observer-execution";
 import { recordExecutionActivity } from "./trading-activity";
 import {
   db,
@@ -144,7 +145,7 @@ async function recordSkip(
 //   pending                        -> in-flight elsewhere -> do not touch
 //   no row                         -> first attempt
 // Returns "already_done" when the client should be skipped this pass.
-async function priorOutcome(signalId: number, clientId: number): Promise<ClientOutcome | null> {
+async function priorOutcome(signalId: number, clientId: number, idempotent=false): Promise<ClientOutcome | null> {
   const [prev] = await db.select({ status: tradeExecutionsTable.status, retryable: tradeExecutionsTable.retryable })
     .from(tradeExecutionsTable)
     .where(and(eq(tradeExecutionsTable.signalId, signalId), eq(tradeExecutionsTable.clientId, clientId)))
@@ -153,7 +154,7 @@ async function priorOutcome(signalId: number, clientId: number): Promise<ClientO
   if (!prev) return null;
   if (prev.status === "success") return "success";
   if (prev.status === "skipped") return "skipped";
-  if (prev.status === "pending") return "already_done";
+  if (prev.status === "pending") return idempotent?null:"already_done";
   if (prev.status === "failed") return prev.retryable === 1 ? null : "failed_terminal";
   return null;
 }
@@ -205,9 +206,10 @@ async function settleExecution(
 
 async function executeForClient(signal: TradeSignal, client: AppAccess, eaName: string, canonicalPair: string | null, log: Logger): Promise<ClientOutcome> {
   // Idempotency: never repeat finished work or risk a duplicate fill on retry.
-  const prior = await priorOutcome(signal.id, client.id);
+  const prior = await priorOutcome(signal.id, client.id,!!signal.observerEventId);
   if (prior !== null) {
     log.info({ signalId: signal.id, clientId: client.id, prior }, "[CopyEngine] client already settled — skipping");
+    if(signal.observerEventId&&prior==="failed_terminal")return prior;
     return prior === "skipped" || prior === "success" ? prior : "already_done";
   }
 
@@ -247,6 +249,16 @@ async function executeForClient(signal: TradeSignal, client: AppAccess, eaName: 
     clientMt5Server: settings.mt5Server,
     signalId: signal.id,
   };
+
+  if(signal.signal==="SYNC") {
+    if(!signal.observerEventId)return recordSkip(signal,client,"Unregistered observer signal",log);
+    let symbol=signal.symbol,customLot:number|null=null;
+    if(canonicalPair){const [cfg]=await db.select().from(clientSymbolConfigsTable).where(and(eq(clientSymbolConfigsTable.clientId,client.id),eq(clientSymbolConfigsTable.pairName,canonicalPair))).limit(1);if(cfg?.selectedSymbol)symbol=cfg.selectedSymbol;customLot=num(cfg?.customLotSize);}
+    const [pending]=await db.insert(tradeExecutionsTable).values({signalId:signal.id,mentorId:signal.mentorId,clientId:client.id,signalKind:"SYNC",symbol,action:"SYNC",status:"pending",mentorTicket:signal.ticket}).returning();
+    pushUpdate(client.id,pending);
+    const result=await executeObserver(signal,client,settings,password,symbol,source=>resolveVolume(source,settings,customLot));
+    return settleExecution(pending.id,client.id,result,log);
+  }
 
   // ── OPEN ────────────────────────────────────────────────────────────────
   if (signal.signal === "OPEN") {

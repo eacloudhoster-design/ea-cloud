@@ -1,3 +1,4 @@
+import {lockMentor,legacyBlocked} from "../lib/ea-builder/routing";
 import { Router } from "express";
 import { db, tradeSignalsTable, tradeExecutionsTable, appAccessTable } from "@workspace/db";
 import { eq, desc } from "drizzle-orm";
@@ -30,7 +31,10 @@ router.post("/signals/webhook", webhookLimiter, async (req, res) => {
       res.status(400).json({ error: "signal, symbol, and orderType are required" }); return;
     }
 
-    const [saved] = await db.insert(tradeSignalsTable).values({
+    const saved = await db.transaction(async tx=>{
+      await lockMentor(tx,mentor.id);
+      if(await legacyBlocked(tx,mentor.id))return null;
+      const [row]=await tx.insert(tradeSignalsTable).values({
       mentorId: mentor.id,
       eaId: eaId ? Number(eaId) : null,
       signal: String(signal),
@@ -43,7 +47,9 @@ router.post("/signals/webhook", webhookLimiter, async (req, res) => {
       ticket: ticket !== undefined ? String(ticket) : null,
       comment: comment !== undefined ? String(comment) : null,
       rawPayload: JSON.stringify(req.body),
-    }).returning();
+    }).returning();return row;
+    });
+    if(!saved){res.status(409).json({error:"Observer copying is active for this mentor. Legacy ingestion is blocked to prevent duplicate execution.",code:"OBSERVER_ROUTE_ACTIVE"});return;}
 
     // Broadcast to all WS clients subscribed to this mentor
     broadcastToMentorClients(mentor.id, {

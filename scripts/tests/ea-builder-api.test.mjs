@@ -25,6 +25,20 @@ test(
         "docs/migrations/20261030-robot-builds.sql",
         "utf8",
       );
+      const { getTableConfig } =
+        await import("../../lib/db/node_modules/drizzle-orm/pg-core/index.js");
+      for (const table of [
+        globalThis.__sessionSchema.tradeSignalsTable,
+        globalThis.__sessionSchema.mt5ConnectionsTable,
+      ]) {
+        const c = getTableConfig(table);
+        await engine.exec(
+          `CREATE TABLE IF NOT EXISTS "${c.name}" (${c.columns.map((x) => `"${x.name}" ${x.getSQLType()}${x.primary ? " PRIMARY KEY" : ""}`).join(",")})`,
+        );
+      }
+      await engine.exec(
+        "ALTER TABLE trade_signals ALTER COLUMN status SET DEFAULT 'pending'; ALTER TABLE trade_signals ALTER COLUMN created_at SET DEFAULT now(); ALTER TABLE trade_signals ALTER COLUMN updated_at SET DEFAULT now()",
+      );
       await engine.exec(migration);
       await engine.exec(migration);
       await engine.exec(
@@ -43,7 +57,7 @@ test(
       await build({
         stdin: {
           contents:
-            "export {default as builderRouter} from './artifacts/api-server/src/routes/ea-builder';export {default as legacyCopier} from './artifacts/api-server/src/routes/copier';export {encryptApiKey,hashApiKey,getMentorByApiKey} from './artifacts/api-server/src/lib/api-key';",
+            "export {default as builderRouter} from './artifacts/api-server/src/routes/ea-builder';export {default as legacySignals} from './artifacts/api-server/src/routes/trade-signals';export {default as legacyCopier} from './artifacts/api-server/src/routes/copier';export {encryptApiKey,hashApiKey,getMentorByApiKey} from './artifacts/api-server/src/lib/api-key';",
           resolveDir: process.cwd(),
         },
         bundle: true,
@@ -57,6 +71,40 @@ test(
           {
             name: "builder-db",
             setup(b) {
+              b.onResolve({ filter: /\/logger$/ }, () => ({
+                path: "logger",
+                namespace: "logger-stub",
+              }));
+              b.onLoad({ filter: /.*/, namespace: "logger-stub" }, () => ({
+                contents:
+                  "export const logger={info(){},error(){},warn(){},debug(){},child(){return this}};",
+                loader: "js",
+              }));
+              b.onResolve({ filter: /\/ws$/ }, () => ({
+                path: "ws",
+                namespace: "ws-stub",
+              }));
+              b.onLoad({ filter: /.*/, namespace: "ws-stub" }, () => ({
+                contents: "export const broadcastToMentorClients=()=>{};",
+                loader: "js",
+              }));
+              b.onResolve({ filter: /observer-vps$/ }, () => ({
+                path: "bridge",
+                namespace: "bridge-stub",
+              }));
+              b.onLoad({ filter: /.*/, namespace: "bridge-stub" }, () => ({
+                contents:
+                  'export const observerCapabilities=async()=>true;export const syncObserverPosition=async()=>{throw Error("Execution must be stubbed")};',
+                loader: "js",
+              }));
+              b.onResolve({ filter: /signal-worker$/ }, () => ({
+                path: "worker",
+                namespace: "worker-stub",
+              }));
+              b.onLoad({ filter: /.*/, namespace: "worker-stub" }, () => ({
+                contents: "export const wakeWorker=()=>{};",
+                loader: "js",
+              }));
               b.onResolve({ filter: /^@workspace\/db$/ }, () => ({
                 path: "db",
                 namespace: "fixture",
@@ -79,6 +127,7 @@ test(
       const {
         builderRouter: router,
         legacyCopier,
+        legacySignals,
         encryptApiKey,
         hashApiKey,
         getMentorByApiKey,
@@ -92,7 +141,13 @@ test(
         req.log = { error() {} };
         next();
       });
-      server.use("/api", api.browserSessionMiddleware, router, legacyCopier);
+      server.use(
+        "/api",
+        api.browserSessionMiddleware,
+        router,
+        legacyCopier,
+        legacySignals,
+      );
       const login = async (email) => {
         const r = await appRequest(
           app,
@@ -120,6 +175,7 @@ test(
           body,
           session = cookie,
           robot,
+          apiKey,
           contentType = "application/json",
         } = {},
       ) =>
@@ -128,6 +184,7 @@ test(
           headers: {
             ...(session ? { Cookie: session } : {}),
             ...(robot ? { "X-EA-Robot-Token": robot } : {}),
+            ...(apiKey ? { "X-API-Key": apiKey } : {}),
             "Content-Type": contentType,
             Origin: "https://backend.example",
             "X-Forwarded-Proto": "https",
@@ -352,7 +409,7 @@ test(
         await call("/admin/ea-builder/robots/" + id + "/events")
       ).json();
       assert.equal(history.events.length, 5);
-      assert.equal(history.execution, false);
+      assert.equal(history.execution, "see_per_event_queue_status");
       assert.equal(
         (
           await (
@@ -389,6 +446,143 @@ test(
         ).status,
         401,
       );
+      // Exercise opt-in observer routing with actual cookie/credential middleware.
+      assert.equal(
+        Number(
+          (await engine.query("SELECT count(*) FROM trade_signals")).rows[0]
+            .count,
+        ),
+        0,
+      );
+      const observerZip = await call(
+        "/admin/ea-builder/package",
+        multipart({
+          ...fields,
+          purpose: "existing-observer",
+          sourceMagic: "12345",
+        }),
+      );
+      assert.equal(observerZip.status, 200);
+      const of = unzipSync(new Uint8Array(await observerZip.arrayBuffer()));
+      const observerToken = strFromU8(
+        of[Object.keys(of).find((k) => k.endsWith("EACloudBroadcast.mqh"))],
+      ).match(/eacr_[a-f0-9]{64}/)[0];
+      const [observer] = (
+        await (await call("/admin/ea-builder/robots")).json()
+      ).robots.filter((r) => r.mode === "existing-observer");
+      const heartbeat = {
+        sourceAccount: "12345",
+        sourceServer: "Demo",
+        sourceMagic: "12345",
+        inventoryCount: 0,
+        queueDepth: 0,
+        lastSequence: 1,
+        historyHealthy: true,
+      };
+      const beat = (body) =>
+        call("/robots/heartbeat", {
+          method: "POST",
+          session: null,
+          robot: observerToken,
+          body,
+        });
+      assert.equal(
+        (await beat({ ...heartbeat, sourceMagic: "999" })).status,
+        409,
+      );
+      assert.equal((await beat(heartbeat)).status, 200);
+      const enable = () =>
+        call(`/admin/ea-builder/robots/${observer.id}/enable-copy`, {
+          method: "POST",
+          body: { confirmLegacyBlock: true },
+        });
+      assert.equal(
+        (await enable()).status,
+        409,
+        "heartbeat is not source ownership proof",
+      );
+      await engine.exec(
+        "INSERT INTO mt5_connections(mentor_id,mt5_login,mt5_server,status,connected_at) VALUES(1,12345,'Demo','connected',now())",
+      );
+      assert.equal((await enable()).status, 200);
+      const blockedLegacy = await call("/signals/webhook", {
+        method: "POST",
+        apiKey: legacyKey,
+        body: {
+          signal: "OPEN",
+          symbol: "XAUUSD",
+          orderType: "BUY",
+          lots: 0.01,
+        },
+      });
+      assert.equal(blockedLegacy.status, 409);
+      assert.equal((await blockedLegacy.json()).code, "OBSERVER_ROUTE_ACTIVE");
+      const snapshot = {
+        ...payload,
+        kind: "SNAPSHOT",
+        entry: "SNAPSHOT",
+        dealId: "0",
+        orderId: "0",
+        sourceMagic: "12345",
+        sequence: 2,
+        eventId: "12345:S:50:2",
+        mixed: false,
+      };
+      const snap = (body) =>
+        call("/robots/events", {
+          method: "POST",
+          session: null,
+          robot: observerToken,
+          body,
+        });
+      const routed = await snap(snapshot);
+      assert.equal(routed.status, 201);
+      assert.equal((await routed.json()).execution, true);
+      assert.equal((await snap(snapshot)).status, 200);
+      assert.equal(
+        Number(
+          (await engine.query("SELECT count(*) FROM trade_signals")).rows[0]
+            .count,
+        ),
+        1,
+        "retry never enqueues twice",
+      );
+      assert.equal(
+        (await snap({ ...snapshot, eventId: "old-sequence", sequence: 1 }))
+          .status,
+        201,
+      );
+      assert.equal(
+        (
+          await snap({
+            ...snapshot,
+            eventId: "mixed",
+            sequence: 3,
+            mixed: true,
+          })
+        ).status,
+        201,
+      );
+      assert.equal(
+        Number(
+          (await engine.query("SELECT count(*) FROM trade_signals")).rows[0]
+            .count,
+        ),
+        1,
+        "stale/mixed snapshots never execute",
+      );
+      await engine.exec(
+        "UPDATE mt5_connections SET connected_at=now()-interval '2 days'",
+      );
+      const expired = await snap({
+        ...snapshot,
+        eventId: "expired",
+        sequence: 4,
+      });
+      assert.equal(
+        (await expired.json()).copyState,
+        "source_verification_expired",
+      );
       // Existing EA deletion must not be blocked by the new metadata foreign keys.
       await engine.exec("DELETE FROM eas WHERE id=11");
       assert.equal(
@@ -405,14 +599,14 @@ test(
         ),
         0,
       );
-      // Capture-only feature never provisions or touches the execution queue tables.
+      // Capture-only packages still never enqueue execution, even though the
+      // observer migration now adds an opt-in link to the existing queue.
       assert.equal(
-        (
-          await engine.query(
-            "SELECT count(*) FROM information_schema.tables WHERE table_name='trade_signals'",
-          )
-        ).rows[0].count,
-        0,
+        Number(
+          (await engine.query("SELECT count(*) FROM trade_signals")).rows[0]
+            .count,
+        ),
+        1,
       );
     } finally {
       await engine.close();

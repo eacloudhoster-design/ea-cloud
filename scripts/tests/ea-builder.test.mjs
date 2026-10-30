@@ -167,3 +167,43 @@ test("confirmed-event contract rejects forged mentor/execution flags, invalid nu
   ])
     assert(!robotEvent.safeParse({ ...event, ...patch }).success);
 });
+test("existing EX5 observer reconciles account history from a separate chart and preserves original strategy", () => {
+  const archive = toolkitPackage({
+    ...opts,
+    existingObserver: true,
+    sourceMagic: "12345",
+  });
+  const files = unzipSync(archive.bytes),
+    read = (suffix) =>
+      strFromU8(files[Object.keys(files).find((p) => p.endsWith(suffix))]);
+  const mq = read("_Observer.mq5"),
+    reconcile = read("EACloudReconcile.mqh"),
+    broadcast = read("EACloudBroadcast.mqh");
+  assert(mq.includes("EAC_Reconcile();EAC_Timer();"));
+  assert(!mq.includes("EAC_Transaction(trans);"));
+  assert(reconcile.includes("HistorySelectByPosition"));
+  assert(reconcile.includes("HistorySelect("));
+  assert(reconcile.includes("PositionsTotal()"));
+  assert(reconcile.includes("GlobalVariablesFlush()"));
+  assert(reconcile.includes("EAC_SaveState()"));
+  assert(broadcast.includes("EAC_Heartbeat()"));
+  assert(
+    !broadcast.includes('&&StringFind(answer,"\\\"execution\\\":false")>=0'),
+  );
+  assert(!/OrderSend|CTrade|PositionClose/.test(mq + reconcile + broadcast));
+  assert(
+    read("INSTALLATION_GUIDE.txt").includes(
+      "Chart 1: retain the original compiled EX5",
+    ),
+  );
+  assert.equal(
+    buildInput.safeParse({
+      eaId: 1,
+      name: "EA",
+      managerName: "Mentor",
+      purpose: "existing-observer",
+      sourceMagic: "9999999999999999999",
+    }).success,
+    false,
+  );
+});
