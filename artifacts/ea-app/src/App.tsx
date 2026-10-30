@@ -26,6 +26,7 @@ import PendingScreen from "@/pages/PendingScreen";
 import ActivateScreen from "@/pages/ActivateScreen";
 import type { Tab } from "@/context/AppContext";
 import { requestJson } from "@/lib/request";
+import {requestStartupJson,recoverableStartupFailure,startupFailureMessage} from "@/lib/startup-request";
 import StartupSplash from "@/components/StartupSplash";
 import { eaLogo, robotBg } from "@/lib/branding";
 
@@ -45,6 +46,8 @@ function EACloudApp({ onReady, startupComplete }: { onReady: (ready: boolean) =>
   const [brandingReady, setBrandingReady] = useState(false);
   const [brandingAttempt, setBrandingAttempt] = useState(0);
   const authAttempt = useRef(0);
+  const authController=useRef<AbortController|null>(null);
+  const [recoverableError,setRecoverableError]=useState(false);
   const [clientToken, setClientToken] = useState<string | null>(null);
   const [clientStatus, setClientStatus] = useState<"pending" | "rejected" | "approved">("pending");
 
@@ -108,16 +111,18 @@ function EACloudApp({ onReady, startupComplete }: { onReady: (ready: boolean) =>
     window.addEventListener("pageshow", restore);
     const channel = typeof BroadcastChannel !== "undefined" ? new BroadcastChannel("ea-cloud-auth") : null;
     if (channel) channel.onmessage = restore;
-    return () => { channel?.close(); window.removeEventListener("pageshow", restore); };
+    return () => { authController.current?.abort();channel?.close(); window.removeEventListener("pageshow", restore); };
   }, []);
 
   // Once the user is on the dashboard with a token, fetch mentor-specific config
   useEffect(() => {
     if (authStage !== "app" || !clientToken) return;
     let cancelled = false;
+    const controller=new AbortController();
+    setRecoverableError(false);
     setBrandingReady(false);
     setLoadError("");
-    requestJson("/api/app/dashboard", { headers: { Authorization: `Bearer ${clientToken}` } })
+    requestStartupJson("/api/app/dashboard", { headers: { Authorization: `Bearer ${clientToken}` },signal:controller.signal })
       .then(data => {
         if (cancelled) return;
         if (!data.mentor) throw new Error("Your mentor is not linked. Please contact support.");
@@ -142,26 +147,41 @@ function EACloudApp({ onReady, startupComplete }: { onReady: (ready: boolean) =>
         }
         setBrandingReady(true);
       })
-      .catch((err) => { if (!cancelled) setLoadError(err.message || "Unable to load your mentor. Please retry."); });
-    return () => { cancelled = true; };
+      .catch((err) => { if (!cancelled) {
+        if(err.status===401){clearAuth();return;}
+        setRecoverableError(recoverableStartupFailure(err));setLoadError(startupFailureMessage(err,"Unable to load your mentor. Please retry."));
+      } });
+    return () => { cancelled = true;controller.abort(); };
   }, [authStage, clientToken, brandingAttempt]);
 
   const validateToken = async (token: string) => {
     const current = ++authAttempt.current;
+    authController.current?.abort();const controller=new AbortController();authController.current=controller;
     try {
       setAuthStage("loading");
+      setRecoverableError(false);
       setLoadError("");
-      const client = await requestJson("/api/app/me", { headers: { Authorization: `Bearer ${token}` } });
+      const client = await requestStartupJson("/api/app/me", { headers: { Authorization: `Bearer ${token}` },signal:controller.signal });
       if(current !== authAttempt.current) return;
       setClientToken(client.token || token);
       routeByStatus(client.status, client.licenseKey ?? null);
     } catch (err) {
       if(current !== authAttempt.current) return;
       if ((err as { status?: number }).status === 401) { clearAuth(); return; }
-      setLoadError((err as Error).message || "Unable to connect. Please retry.");
+      if(controller.signal.aborted)return;
+      setRecoverableError(recoverableStartupFailure(err));
+      setLoadError(startupFailureMessage(err,"Unable to connect. Please retry."));
       setAuthStage("error");
     }
   };
+
+  // Resume failed startup reads on network return / iOS PWA foreground, never grant offline access.
+  useEffect(()=>{
+    if(!loadError||!recoverableError)return;
+    const reconnect=()=>{if(document.hidden)return;if(authStage==='app')setBrandingAttempt(v=>v+1);else if(authStage==='error')void validateToken('');};
+    window.addEventListener('online',reconnect);document.addEventListener('visibilitychange',reconnect);
+    return()=>{window.removeEventListener('online',reconnect);document.removeEventListener('visibilitychange',reconnect);};
+  },[loadError,recoverableError,authStage]);
 
   const routeByStatus = (status: string, licenseKey: string | null) => {
     if (status === "pending") { setAuthStage("pending"); setClientStatus("pending"); }
@@ -180,6 +200,8 @@ function EACloudApp({ onReady, startupComplete }: { onReady: (ready: boolean) =>
     } catch { window.alert("Unable to sign out securely. Please retry."); }
   };
   const clearAuth = () => {
+    authController.current?.abort();
+    setRecoverableError(false);
     authAttempt.current++;
     try { localStorage.removeItem("appClientToken"); } catch {}
     setClientToken(null);
