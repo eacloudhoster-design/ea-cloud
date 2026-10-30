@@ -8,6 +8,8 @@ export function buildToolkit(
     origin: string;
     name: string;
     manager: string;
+    existingObserver?: boolean;
+    sourceMagic?: string;
   },
   image?: Buffer,
 ): Promise<{ filename: string; bytes: Buffer }> {

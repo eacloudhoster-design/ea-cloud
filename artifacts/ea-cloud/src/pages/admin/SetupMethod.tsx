@@ -18,6 +18,10 @@ import "./SetupMethod.css";
 type Capture = {
   eventId: string;
   receivedAt: string;
+  copyState?: string;
+  queueStatus?: string | null;
+  queueError?: string | null;
+  signalId?: number | null;
   payload: {
     kind: string;
     entry: string;
@@ -35,6 +39,10 @@ type Config = {
 type Robot = {
   id: string;
   name: string;
+  mode?: string;
+  copyEnabled?: boolean;
+  sourceMagic?: string;
+  historyHealthy?: boolean;
   revokedAt: string | null;
   lastSeenAt: string | null;
   lastEventAt: string | null;
@@ -75,6 +83,7 @@ export default function SetupMethod() {
     [eaId, setEaId] = useState(0),
     [name, setName] = useState(""),
     [manager, setManager] = useState(""),
+    [sourceMagic, setSourceMagic] = useState("12345"),
     [file, setFile] = useState<File | null>(null),
     [preview, setPreview] = useState(""),
     [busy, setBusy] = useState(false),
@@ -135,7 +144,9 @@ export default function SetupMethod() {
     };
   }, []);
   const selected = eaId || eas?.[0]?.id || 0;
-  const generate = async (purpose: "trading" | "integration-toolkit") => {
+  const generate = async (
+    purpose: "trading" | "integration-toolkit" | "existing-observer",
+  ) => {
     if (pending.current) return;
     setError("");
     setMessage("");
@@ -155,6 +166,7 @@ export default function SetupMethod() {
       data.set("name", name);
       data.set("managerName", manager);
       data.set("purpose", purpose);
+      data.set("sourceMagic", sourceMagic);
       if (file) data.set("background", file);
       const response = await request("/api/admin/ea-builder/package", {
         method: "POST",
@@ -172,7 +184,7 @@ export default function SetupMethod() {
           "EACloud_Integration_Toolkit.zip",
       );
       setMessage(
-        "Integration toolkit downloaded. This is a capture-only observer, not a trading EA. Read the installation guide before compiling.",
+        "Observer package downloaded. Keep the original EA unchanged on Chart 1; install the observer on Chart 2. Copying stays disabled until verified and explicitly enabled.",
       );
       await loadRobots();
     } catch (err) {
@@ -237,7 +249,7 @@ export default function SetupMethod() {
       )}
       <div className="ea-setup-options">
         <section className="ea-setup-card">
-          <h2>CREATE EA</h2>
+          <h2>CONNECT EXISTING EA / CREATE CUSTOM EA</h2>
           <p>
             Create your personalised MetaTrader 5 trading robot with custom
             branding and integrated EA Cloud trade broadcasting.
@@ -249,8 +261,9 @@ export default function SetupMethod() {
             <div className="ea-setup-form">
               <div className="ea-setup-alert" role="note">
                 {config?.blocker || "Loading verified template availability…"}{" "}
-                No trading EA is currently generated. The optional toolkit only
-                captures events; it never executes client trades.
+                Connect Existing EA observes your compiled EX5 from a separate
+                chart. Create Custom EA requires complete source; it remains
+                blocked. The observer never places source-account orders.
               </div>
               <label htmlFor="setup-ea">Existing EA</label>
               <select
@@ -326,11 +339,25 @@ export default function SetupMethod() {
                 PNG, JPG or uncompressed 24/32-bit BMP · up to 10MB/12
                 megapixels. Server converts to a bounded 24-bit BMP.
               </p>
+              <Label htmlFor="observer-magic">
+                Verified source magic number
+              </Label>
+              <Input
+                id="observer-magic"
+                value={sourceMagic}
+                onChange={(e) => setSourceMagic(e.target.value)}
+                inputMode="numeric"
+                disabled={busy}
+              />
+              <p>
+                12345 is a reference only. Verify the nonzero magic on actual
+                MT5 opening deals. Comments alone do not identify the strategy.
+              </p>
               <Button
                 disabled={busy || !config || !config.strategyAvailable}
                 onClick={() => void generate("trading")}
               >
-                CREATE MY EA
+                Create Custom EA
               </Button>
               <p>
                 Blocked until complete, verified strategy source is available.
@@ -338,7 +365,7 @@ export default function SetupMethod() {
               <Button
                 variant="outline"
                 disabled={busy || !config}
-                onClick={() => void generate("integration-toolkit")}
+                onClick={() => void generate("existing-observer")}
               >
                 {busy ? (
                   <>
@@ -346,14 +373,15 @@ export default function SetupMethod() {
                     Preparing package…
                   </>
                 ) : (
-                  "Download integration toolkit (not a trading EA)"
+                  "Connect Existing EA — download observer"
                 )}
               </Button>
               <p>
-                Includes custom branding, optional BMP, capture-only
-                observer/include and exact installation guide. MetaEditor
-                compilation remains unverified. The new robot credential is
-                restricted to event capture and can be revoked below.
+                Includes custom observer branding, optional BMP and installation
+                guide. Your original EX5 is not included, renamed or modified.
+                MetaEditor compilation remains unverified. Start flat on a demo
+                account, verify its connection, then explicitly enable copying
+                below.
               </p>
             </div>
           )}
@@ -422,11 +450,12 @@ export default function SetupMethod() {
         </section>
       </div>
       <section className="ea-setup-card mt-6">
-        <h2>Integration robots · capture only</h2>
+        <h2>Observer connections</h2>
         <p>
-          Source account IDs are self-reported and bound on first event, not
-          proof of account ownership. Captured events never enter the live copy
-          worker.
+          Heartbeat acknowledgement alone is not source-account verification or
+          client execution. Copying requires a verified MT5 source and an
+          explicitly enabled observer. Enqueued events show queue acceptance,
+          not broker success.
         </p>
         {listError && <p role="alert">{listError}</p>}
         <Button variant="outline" onClick={() => void loadRobots()}>
@@ -441,8 +470,12 @@ export default function SetupMethod() {
                 ? "Revoked"
                 : robot.lastSeenAt &&
                     Date.now() - Date.parse(robot.lastSeenAt) < 60000
-                  ? "Recently acknowledged · capture only"
-                  : "No recent acknowledgement"}
+                  ? robot.historyHealthy
+                    ? robot.copyEnabled
+                      ? "Connected · copying enabled"
+                      : "Connected · waiting for enablement"
+                    : "Connected · reconciliation not healthy"
+                  : "Disconnected / waiting for heartbeat"}
             </span>
             <small>
               Last event:{" "}
@@ -478,8 +511,12 @@ export default function SetupMethod() {
                       {event.payload.kind} {event.payload.entry} ·{" "}
                       {event.payload.symbol} {event.payload.side} ·{" "}
                       {event.payload.volume} lots · received{" "}
-                      {new Date(event.receivedAt).toLocaleString()} · capture
-                      only
+                      {new Date(event.receivedAt).toLocaleString()} ·{" "}
+                      {event.copyState || "capture_only"}
+                      {event.signalId
+                        ? ` · signal #${event.signalId} · ${event.queueStatus || "pending"}`
+                        : ""}
+                      {event.queueError ? ` · ${event.queueError}` : ""}
                     </li>
                   ))
                 ) : (
@@ -487,13 +524,39 @@ export default function SetupMethod() {
                 )}
               </ul>
             )}
+            {robot.mode === "existing-observer" &&
+              !robot.copyEnabled &&
+              !robot.revokedAt && (
+                <Button
+                  onClick={() => {
+                    if (
+                      !confirm(
+                        "Enable observer copying? EA Cloud will block ALL legacy webhook ingestion for this mentor to prevent duplicate copying. Verify the original EX5's external destination independently. Start flat on DEMO and verify its actual source magic first.",
+                      )
+                    )
+                      return;
+                    void request(
+                      `/api/admin/ea-builder/robots/${robot.id}/enable-copy`,
+                      {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ confirmLegacyBlock: true }),
+                      },
+                    )
+                      .then(loadRobots)
+                      .catch((err) => setError(err.message));
+                  }}
+                >
+                  Enable verified observer copying
+                </Button>
+              )}
             <Button
               disabled={!!robot.revokedAt || busy}
               variant="outline"
               onClick={() => {
                 if (
                   confirm(
-                    "Revoke this robot's capture credential? Existing copier and trading accounts are unchanged.",
+                    "Revoke this observer? Future updates stop; existing client positions require manual management. Legacy ingestion remains blocked if copying was enabled, to prevent duplicate execution.",
                   )
                 )
                   void request(`/api/admin/ea-builder/robots/${robot.id}`, {

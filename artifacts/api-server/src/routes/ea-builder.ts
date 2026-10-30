@@ -7,6 +7,7 @@ import {
   easTable,
   robotBuildsTable,
   robotEventsTable,
+  tradeSignalsTable,
 } from "@workspace/db";
 import { and, eq, desc } from "drizzle-orm";
 import { requireAuth, type AuthRequest } from "../middlewares/auth";
@@ -14,10 +15,18 @@ import { webhookLimiter } from "../lib/rate-limit";
 import {
   buildInput,
   robotEvent,
+  observerHeartbeat,
   STRATEGY_AVAILABLE,
   TEMPLATE_VERSION,
 } from "../lib/ea-builder/contracts";
 import { buildToolkit, ImageInputError } from "../lib/ea-builder/worker";
+import {
+  lockMentor,
+  enableObserver,
+  routeSnapshot,
+} from "../lib/ea-builder/routing";
+import { observerCapabilities } from "../lib/observer-vps";
+import { wakeWorker } from "../lib/signal-worker";
 const router = Router();
 let building = false;
 const ORIGIN = "https://eacloudhoster.online";
@@ -27,9 +36,9 @@ const upload = multer({
   limits: {
     fileSize: 10 * 1024 * 1024,
     files: 1,
-    fields: 5,
+    fields: 6,
     fieldSize: 512,
-    parts: 7,
+    parts: 8,
   },
 }).single("background");
 const failure = (req: any, res: any, error: unknown) => {
@@ -74,6 +83,8 @@ router.get("/admin/ea-builder/config", requireAuth, approved, (_req, res) => {
     origin: ORIGIN,
     legacyIngestion: ORIGIN + "/api/signals/webhook",
     toolkitExecution: false,
+    existingObserverAvailable: true,
+    observerExecution: "explicit_verified_activation_required",
     blocker:
       "The complete original SMC Blueprint strategy and dependencies are required. The supplied fragment ends inside CreateLabel(). MetaEditor compilation and broker execution are unverified.",
   });
@@ -141,6 +152,8 @@ router.post("/admin/ea-builder/package", requireAuth, approved, (req, res) => {
           origin: ORIGIN,
           name: input.data.name,
           manager: input.data.managerName,
+          existingObserver: input.data.purpose === "existing-observer",
+          sourceMagic: input.data.sourceMagic,
         },
         req.file?.buffer,
       );
@@ -150,6 +163,11 @@ router.post("/admin/ea-builder/package", requireAuth, approved, (req, res) => {
         eaId: ea.id,
         displayName: input.data.name,
         managerName: input.data.managerName,
+        mode:
+          input.data.purpose === "existing-observer"
+            ? "existing-observer"
+            : "capture",
+        sourceMagic: input.data.sourceMagic,
         templateVersion: TEMPLATE_VERSION,
         tokenHash: hash(token),
       });
@@ -185,6 +203,12 @@ router.get(
           revokedAt: robotBuildsTable.revokedAt,
           lastSeenAt: robotBuildsTable.lastSeenAt,
           lastEventAt: robotBuildsTable.lastEventAt,
+          mode: robotBuildsTable.mode,
+          sourceMagic: robotBuildsTable.sourceMagic,
+          copyEnabled: robotBuildsTable.copyEnabled,
+          inventoryCount: robotBuildsTable.inventoryCount,
+          queueDepth: robotBuildsTable.queueDepth,
+          historyHealthy: robotBuildsTable.historyHealthy,
           sourceAccount: robotBuildsTable.sourceAccount,
           sourceServer: robotBuildsTable.sourceServer,
         })
@@ -237,6 +261,8 @@ router.get(
           eventId: robotEventsTable.eventId,
           payload: robotEventsTable.payload,
           receivedAt: robotEventsTable.receivedAt,
+          signalId: robotEventsTable.signalId,
+          copyState: robotEventsTable.copyState,
         })
         .from(robotEventsTable)
         .where(
@@ -247,9 +273,82 @@ router.get(
         )
         .orderBy(desc(robotEventsTable.receivedAt))
         .limit(20);
-      res.json({ events, execution: false });
+      const enriched = await Promise.all(
+        events.map(async (event) => {
+          if (!event.signalId) return { ...event, queueStatus: null };
+          const [signal] = await db
+            .select({
+              status: tradeSignalsTable.status,
+              error: tradeSignalsTable.lastError,
+            })
+            .from(tradeSignalsTable)
+            .where(
+              and(
+                eq(tradeSignalsTable.id, event.signalId),
+                eq(tradeSignalsTable.mentorId, req.userId!),
+              ),
+            )
+            .limit(1);
+          return {
+            ...event,
+            queueStatus: signal?.status || "unknown",
+            queueError: signal?.error || null,
+          };
+        }),
+      );
+      res.json({ events: enriched, execution: "see_per_event_queue_status" });
     } catch (err) {
       failure(req, res, err);
+    }
+  },
+);
+router.post(
+  "/admin/ea-builder/robots/:id/enable-copy",
+  requireAuth,
+  approved,
+  async (req: AuthRequest, res) => {
+    res.setHeader("Cache-Control", "no-store");
+    if (req.body?.confirmLegacyBlock !== true) {
+      res
+        .status(400)
+        .json({
+          error: "Explicit legacy-ingestion blocking consent is required.",
+        });
+      return;
+    }
+    try {
+      const capabilities = await observerCapabilities();
+      if (!capabilities) {
+        res
+          .status(503)
+          .json({
+            error: "Verified observer execution bridge is unavailable.",
+          });
+        return;
+      }
+      const outcome = await db.transaction(async (tx) => {
+        await lockMentor(tx, req.userId!);
+        const [robot] = await tx
+          .select()
+          .from(robotBuildsTable)
+          .where(
+            and(
+              eq(robotBuildsTable.id, String(req.params.id)),
+              eq(robotBuildsTable.mentorId, req.userId!),
+            ),
+          )
+          .for("update")
+          .limit(1);
+        if (!robot) return "Robot not found.";
+        return enableObserver(tx, robot, true);
+      });
+      if (outcome) {
+        res.status(409).json({ error: outcome });
+        return;
+      }
+      res.json({ enabled: true, legacyIngestionBlocked: true });
+    } catch (error) {
+      failure(req, res, error);
     }
   },
 );
@@ -269,6 +368,17 @@ async function capture(req: any, res: any, event: boolean) {
   }
   try {
     const result = await db.transaction(async (tx) => {
+      const [identity] = await tx
+        .select({ mentorId: robotBuildsTable.mentorId })
+        .from(robotBuildsTable)
+        .where(eq(robotBuildsTable.tokenHash, hash(token)))
+        .limit(1);
+      if (!identity)
+        return {
+          status: 401,
+          body: { error: "Robot credential is invalid or revoked." },
+        };
+      await lockMentor(tx, identity.mentorId);
       const [robot] = await tx
         .select()
         .from(robotBuildsTable)
@@ -292,9 +402,52 @@ async function capture(req: any, res: any, event: boolean) {
       )
         return { status: 403, body: { error: "Mentor is not approved." } };
       if (!event) {
+        const heartbeat = observerHeartbeat.safeParse(req.body);
+        if (robot.mode === "existing-observer" && !heartbeat.success)
+          return {
+            status: 400,
+            body: {
+              error: "Authenticated observer reconciliation metadata required.",
+            },
+          };
+        if (
+          heartbeat.success &&
+          (heartbeat.data.sourceMagic !== robot.sourceMagic ||
+            (robot.sourceAccount &&
+              (robot.sourceAccount !== heartbeat.data.sourceAccount ||
+                robot.sourceServer !== heartbeat.data.sourceServer)))
+        )
+          return {
+            status: 409,
+            body: { error: "Observer source binding or magic mismatch." },
+          };
+        if (
+          heartbeat.success &&
+          Number(robot.lastSequence || 0) > heartbeat.data.lastSequence
+        )
+          return {
+            status: 409,
+            body: {
+              error:
+                "Observer sequence moved backwards; retain recovery state.",
+            },
+          };
         await tx
           .update(robotBuildsTable)
-          .set({ lastSeenAt: new Date() })
+          .set({
+            lastSeenAt: new Date(),
+            ...(heartbeat.success
+              ? {
+                  lastHeartbeatAt: new Date(),
+                  sourceAccount: heartbeat.data.sourceAccount,
+                  sourceServer: heartbeat.data.sourceServer,
+                  inventoryCount: heartbeat.data.inventoryCount,
+                  queueDepth: heartbeat.data.queueDepth,
+                  lastSequence: String(heartbeat.data.lastSequence),
+                  historyHealthy: heartbeat.data.historyHealthy,
+                }
+              : {}),
+          })
           .where(eq(robotBuildsTable.id, robot.id));
         return {
           status: 200,
@@ -314,6 +467,15 @@ async function capture(req: any, res: any, event: boolean) {
             error:
               "This robot is bound to a different source account. Generate a separate toolkit.",
           },
+        };
+      if (
+        payload.kind === "SNAPSHOT" &&
+        (robot.mode !== "existing-observer" ||
+          payload.sourceMagic !== robot.sourceMagic)
+      )
+        return {
+          status: 409,
+          body: { error: "Observer source magic mismatch." },
         };
       const inserted = await tx
         .insert(robotEventsTable)
@@ -364,19 +526,28 @@ async function capture(req: any, res: any, event: boolean) {
           sourceServer: payload.sourceServer,
         })
         .where(eq(robotBuildsTable.id, robot.id));
-      // Capture-only until original strategy/lifecycle reconciliation is verified.
-      // Deliberately never insert into trade_signals or wake the execution worker.
+      let routing = { state: "capture_only", signalId: null as number | null };
+      if (inserted.length) {
+        routing = await routeSnapshot(tx, robot, payload, inserted[0].id);
+        await tx
+          .update(robotEventsTable)
+          .set({ copyState: routing.state, signalId: routing.signalId })
+          .where(eq(robotEventsTable.id, inserted[0].id));
+      }
       return {
         status: inserted.length ? 201 : 200,
         body: {
           received: true,
-          execution: false,
+          execution: !!routing.signalId,
           eventId: payload.eventId,
           duplicate: !inserted.length,
+          copyState: routing.state,
         },
+        wake: !!routing.signalId,
       };
     });
     res.status(result.status).json(result.body);
+    if ("wake" in result && result.wake) wakeWorker(req.log);
   } catch (err) {
     failure(req, res, err);
   }

@@ -627,3 +627,7 @@ def account_info(
 # Scanner operations are read-only and have separate service-token authentication.
 from scanner_api import register_scanner_routes
 register_scanner_routes(app, mt5, MT5_LOCK, _filling_modes)
+
+# Observer execution is separately authenticated; Scanner remains read-only.
+from observer_sync import register_observer_routes
+register_observer_routes(app, mt5, MT5_LOCK, _connect, _send_with_filling)

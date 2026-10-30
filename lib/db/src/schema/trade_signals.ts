@@ -5,6 +5,7 @@ import { z } from "zod/v4";
 export const tradeSignalsTable = pgTable("trade_signals", {
   id: serial("id").primaryKey(),
   mentorId: integer("mentor_id").notNull(),
+  observerEventId: text("observer_event_id").unique(),
   eaId: integer("ea_id"),
   signal: text("signal").notNull(),          // OPEN | CLOSE | MODIFY
   symbol: text("symbol").notNull(),
