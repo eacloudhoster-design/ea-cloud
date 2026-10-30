@@ -1,3 +1,5 @@
+import {zipSync,strToU8} from "fflate";
+import {safeFilename} from "../lib/ea-builder/contracts";
 import { Router } from "express";
 import { db, usersTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
@@ -297,7 +299,7 @@ router.get("/admin/copier/download", async (req: any, res) => {
 
     const host     = req.headers["x-forwarded-host"] || req.headers.host || "localhost";
     const protocol = "https";
-    const baseUrl  = `${protocol}://${host}/api`;
+    const baseUrl  = req.query.format==="zip"?"https://eacloudhoster.online/api":`${protocol}://${host}/api`;
 
     const eaName      = mentor.robotName || mentor.mentorName || "EA Cloud Copier";
     const displayName = mentor.mentorName || mentor.firstName?.trim() || "Mentor";
@@ -312,6 +314,13 @@ router.get("/admin/copier/download", async (req: any, res) => {
     });
 
     const filename = `EACloud_Copier_${eaName.replace(/[^a-zA-Z0-9]/g, "_")}.mq5`;
+    res.setHeader("Cache-Control","no-store");
+    if(req.query.format==="zip"){
+      const folder=safeFilename(eaName)+"_Copier";
+      const guide=`HOW TO INSTALL ${eaName} COPY TRADING\n\n1. Open desktop MT5 → File → Open Data Folder.\n2. Copy ${filename} into MQL5/Experts.\n3. Open MetaEditor and compile with F7; compilation remains unverified here.\n4. Add https://eacloudhoster.online under Tools → Options → Expert Advisors → Allow WebRequest.\n5. Attach the copier to ONE chart on your DEMO source account.\n6. Confirm the existing server whitelist/account verification requirements in EA Cloud.\n7. Enable the required permissions and inspect Experts/Journal plus actual client execution history.\n8. Never run this legacy copier alongside enabled integrated trade sharing for the same mentor. The backend blocks this legacy webhook while that route is enabled.\n9. Keep this source private: it contains the existing mentor copier credential.\n10. Test your DEMO account before live use. This preserves the existing copier; its partial-close, reversal, SL/TP and offline-recovery limitations remain.\n\nAuthenticated ingestion: https://eacloudhoster.online/api/signals/webhook. Configuration and receipt alone do not prove a broker fill.\n`;
+      res.setHeader("Content-Type","application/zip");res.setHeader("Content-Disposition",`attachment; filename="${folder}.zip"`);
+      res.send(Buffer.from(zipSync({[folder+"/"+filename]:strToU8(mq5Content),[folder+"/INSTALLATION_GUIDE.txt"]:strToU8(guide)})));return;
+    }
     res.setHeader("Content-Type", "text/plain; charset=utf-8");
     res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
     res.send(mq5Content);

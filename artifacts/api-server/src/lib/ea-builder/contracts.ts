@@ -1,6 +1,6 @@
 import { z } from "zod";
-export const TEMPLATE_VERSION = "account-observer-2";
-export const STRATEGY_AVAILABLE = false;
+export const TEMPLATE_VERSION = "intelligence-v3-integrated-1";
+export const STRATEGY_AVAILABLE = true;
 const name = z
   .string()
   .trim()

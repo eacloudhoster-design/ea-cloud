@@ -8,6 +8,7 @@ export function buildToolkit(
     origin: string;
     name: string;
     manager: string;
+    trading?: boolean;
     existingObserver?: boolean;
     sourceMagic?: string;
   },

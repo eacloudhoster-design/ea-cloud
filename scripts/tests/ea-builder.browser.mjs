@@ -16,130 +16,122 @@ const browser = await chromium.launch({
 const picture = await readFile("artifacts/ea-cloud/public/default-robot.jpg");
 await mkdir("work/ea-builder-ui", { recursive: true });
 try {
-  for (const width of [390, 360, 1280]) {
+  for (const width of [360, 390, 1280]) {
     const context = await browser.newContext({
       viewport: { width, height: 900 },
       isMobile: width < 600,
       hasTouch: width < 600,
+      permissions: ["clipboard-write", "clipboard-read"],
     });
-    let legacy = 0,
-      packages = 0;
+    let packages = 0,
+      copiers = 0,
+      failPackage = true;
     const robots = [];
     await context.route("https://fonts.**", (r) => r.abort());
     await context.route("**/api/**", async (r) => {
       const req = r.request(),
-        p = new URL(req.url()).pathname;
+        path = new URL(req.url()).pathname;
       let json = [];
-      if (p === "/api/auth/me" || p === "/api/profile")
+      if (path === "/api/auth/me" || path === "/api/profile")
         json = {
           id: 5,
           role: "mentor",
           status: "approved",
           email: "mentor@example.invalid",
-          robotName: "Existing Robot",
+          robotName: "GOLD HUNTER PRO",
           mentorName: "Existing Manager",
         };
-      if (p === "/api/eas") json = [{ id: 11, name: "EA One" }];
-      if (p === "/api/admin/ea-builder/config")
+      if (path === "/api/eas")
+        json = [
+          { id: 11, name: "EA One" },
+          { id: 12, name: "EA Two" },
+        ];
+      if (path === "/api/admin/ea-builder/config")
         json = {
           origin: "https://eacloudhoster.online",
-          legacyIngestion: "https://eacloudhoster.online/api/signals/webhook",
-          strategyAvailable: false,
-          blocker:
-            "Complete verified original strategy source is required. Compilation unverified.",
+          strategyAvailable: true,
         };
-      if (p === "/api/admin/ea-builder/robots")
-        json = { robots, execution: false };
-      if (p === "/api/admin/ea-builder/package") {
-        if (/name="purpose"\r\n\r\ntrading/.test(req.postData()))
-          return r.fulfill({
-            status: 409,
-            json: {
-              error:
-                "Trading EA generation is blocked: complete original strategy missing.",
-            },
-          });
+      if (path === "/api/admin/ea-builder/robots") json = { robots };
+      if (path === "/api/admin/ea-builder/package") {
         packages++;
+        assert(req.postData()?.includes("trading"));
+        if (failPackage) {
+          failPackage = false;
+          return r.fulfill({
+            status: 503,
+            json: { error: "Package temporarily unavailable. Please retry." },
+          });
+        }
         robots.push({
           id: "fixture",
           name: "GOLD HUNTER PRO",
-          revokedAt: null,
+          mode: "integrated-ea",
+          copyEnabled: false,
           lastSeenAt: null,
-          lastEventAt: null,
+          revokedAt: null,
         });
         return r.fulfill({
           body: Buffer.from(
             zipSync({
-              "INSTALLATION_GUIDE.txt": strToU8("Capture only fixture"),
+              "GOLD_HUNTER_PRO/GOLD_HUNTER_PRO.mq5": strToU8(
+                "// Browser fixture; source verified in package tests",
+              ),
+            }),
+          ),
+          contentType: "application/zip",
+          headers: {
+            "Content-Disposition": 'attachment; filename="GOLD_HUNTER_PRO.zip"',
+          },
+        });
+      }
+      if (path === "/api/admin/copier/download") {
+        assert.equal(new URL(req.url()).searchParams.get("format"), "zip");
+        copiers++;
+        return r.fulfill({
+          body: Buffer.from(
+            zipSync({
+              "Copier/Existing_Copier.mq5": strToU8(
+                "// Original standalone copier fixture",
+              ),
             }),
           ),
           contentType: "application/zip",
           headers: {
             "Content-Disposition":
-              'attachment; filename="GOLD_HUNTER_PRO_Integration_Toolkit.zip"',
-          },
-        });
-      }
-      if (p === "/api/admin/copier/download") {
-        legacy++;
-        return r.fulfill({
-          body: "// Existing copier fixture",
-          contentType: "text/plain",
-          headers: {
-            "Content-Disposition": 'attachment; filename="Existing_Copier.mq5"',
+              'attachment; filename="GOLD_HUNTER_PRO_Copier.zip"',
           },
         });
       }
       return r.fulfill({ json });
     });
-    const page = await context.newPage();
-    page.setDefaultTimeout(10000);
-    const errors = [];
+    const page = await context.newPage(),
+      errors = [];
+    page.setDefaultTimeout(12000);
     page.on("pageerror", (e) => errors.push(e.message));
     await page.goto(origin + "/admin/setup");
-    // Router may use the existing /setup-method spelling; assert a page, never SPA fallthrough.
     await page
-      .getByRole("heading", { name: "Setup Methods", exact: true })
+      .getByRole("heading", { name: "CREATE YOUR TRADING EA", exact: true })
       .waitFor();
-    await page.getByRole("button", { name: "Create EA", exact: true }).click();
-    await page.getByLabel("EA Name", { exact: true }).waitFor();
-    await page.waitForFunction(
-      () => document.querySelector("#setup-name")?.value === "Existing Robot",
+    await page.getByText("Existing Manager", { exact: true }).waitFor();
+    assert.equal(
+      await page.getByText("Connect Existing EA", { exact: true }).count(),
+      0,
     );
     assert.equal(
-      await page.getByLabel("EA Manager", { exact: true }).inputValue(),
-      "Existing Manager",
-    );
-    await page.getByLabel("EA Name", { exact: true }).fill("");
-    await page
-      .getByRole("button", {
-        name: "Connect Existing EA — download observer",
-        exact: true,
-      })
-      .click();
-    await page.getByRole("alert").filter({ hasText: "Choose an EA" }).waitFor();
-    await page.getByLabel("EA Name", { exact: true }).fill("GOLD HUNTER PRO");
-    assert(
       await page
-        .getByRole("button", { name: "Create Custom EA", exact: true })
-        .isDisabled(),
+        .getByRole("link", { name: "Edit in Profile", exact: true })
+        .getAttribute("href"),
+      "/admin/profile",
     );
-    assert(
-      await page
-        .getByText(
-          "Blocked until complete, verified strategy source is available.",
-          { exact: true },
-        )
-        .isVisible(),
-    );
-    assert.equal(packages, 0);
     await page
-      .getByLabel("Upload MT5 Chart Background", { exact: true })
-      .setInputFiles({
-        name: "image.png",
-        mimeType: "image/png",
-        buffer: picture,
-      });
+      .getByLabel("EA registration", { exact: true })
+      .selectOption("12");
+    const input = page.locator("#setup-background");
+    await input.setInputFiles({
+      name: "background.jpg",
+      mimeType: "image/jpeg",
+      buffer: picture,
+    });
     await page.getByAltText("MT5 chart background preview").waitFor();
     await page
       .getByRole("button", { name: "Remove background", exact: true })
@@ -147,57 +139,71 @@ try {
     await page
       .getByAltText("MT5 chart background preview")
       .waitFor({ state: "detached" });
-    const event = page.waitForEvent("download");
+    await page.getByRole("button", { name: "CREATE EA", exact: true }).click();
     await page
-      .getByRole("button", {
-        name: "Connect Existing EA — download observer",
-        exact: true,
-      })
+      .getByRole("alert")
+      .filter({ hasText: "temporarily unavailable" })
+      .waitFor();
+    assert.equal(
+      await page
+        .getByRole("button", { name: "DOWNLOAD FILE", exact: true })
+        .count(),
+      0,
+      "failed generation cannot show success",
+    );
+    await page.getByRole("button", { name: "CREATE EA", exact: true }).click();
+    await page.getByText("YOUR EA IS READY", { exact: true }).waitFor();
+    let event = page.waitForEvent("download");
+    await page
+      .getByRole("button", { name: "DOWNLOAD FILE", exact: true })
+      .click();
+    assert.equal((await event).suggestedFilename(), "GOLD_HUNTER_PRO.zip");
+    assert.equal(packages, 2);
+    await page
+      .getByRole("button", { name: "CREATE COPY TRADING FILE", exact: true })
+      .click();
+    await page
+      .getByText("YOUR COPY TRADING FILE IS READY", { exact: true })
+      .waitFor();
+    event = page.waitForEvent("download");
+    await page
+      .getByRole("button", { name: "DOWNLOAD COPY TRADING FILE", exact: true })
       .click();
     assert.equal(
       (await event).suggestedFilename(),
-      "GOLD_HUNTER_PRO_Integration_Toolkit.zip",
+      "GOLD_HUNTER_PRO_Copier.zip",
     );
-    await page
-      .getByRole("status")
-      .filter({ hasText: "Observer package downloaded" })
-      .waitFor();
-    assert.equal(packages, 1);
-    const copierDownload = page.waitForEvent("download");
-    await page
-      .getByRole("button", { name: "Download Trade Copier", exact: true })
-      .click();
-    assert.equal(
-      (await copierDownload).suggestedFilename(),
-      "Existing_Copier.mq5",
-    );
-    assert.equal(legacy, 1);
-    const guideDownload = page.waitForEvent("download");
-    await page
-      .getByRole("button", { name: "Download copier guide", exact: true })
-      .click();
-    assert.equal(
-      (await guideDownload).suggestedFilename(),
-      "EACloud_Copier_INSTALLATION_GUIDE.txt",
-    );
+    assert.equal(copiers, 1);
+    await page.getByRole("button", { name: "COPY URL", exact: true }).click();
+    await page.getByText("URL copied successfully.", { exact: true }).waitFor();
+    const layout = await page.evaluate(() => {
+      const a = document
+          .querySelector("#create-ea-heading")
+          .closest("section")
+          .getBoundingClientRect(),
+        b = document
+          .querySelector("#copy-heading")
+          .closest("section")
+          .getBoundingClientRect();
+      return {
+        below: b.top >= a.bottom,
+        sameWidth: Math.abs(a.width - b.width) < 1,
+        overflow: document.documentElement.scrollWidth > innerWidth + 1,
+      };
+    });
     assert(
-      await page
-        .getByText("Disconnected / waiting for heartbeat", { exact: true })
-        .isVisible(),
+      layout.below && layout.sameWidth,
+      "sections must be stacked on desktop and mobile",
     );
-    assert(
-      await page.evaluate(
-        () => document.documentElement.scrollWidth <= innerWidth,
-      ),
-    );
+    assert(!layout.overflow, "no horizontal overflow");
+    assert.deepEqual(errors, []);
     await page.screenshot({
-      path: `work/ea-builder-ui/${width}.png`,
+      path: `work/ea-builder-ui/setup-final-${width}.png`,
       fullPage: true,
     });
-    assert.deepEqual(errors, []);
     await context.close();
     console.log(
-      `PASS ${width}px: ownership selection, profile prefill, strategy blocker, background preview/remove, toolkit/legacy/guide downloads, truthful status, overflow`,
+      `PASS ${width}px: vertical layout, saved branding, EA selection, image preview/remove, truthful failure/retry, separate package downloads, clipboard and overflow`,
     );
   }
 } finally {

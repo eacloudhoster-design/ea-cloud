@@ -70,8 +70,11 @@ export async function enableObserver(
   robot: any,
   legacyConsent: boolean,
 ) {
-  if (robot.mode !== "existing-observer" || robot.revokedAt)
-    return "Download a Connect Existing EA observer first.";
+  if (
+    !["existing-observer", "integrated-ea"].includes(robot.mode) ||
+    robot.revokedAt
+  )
+    return "Create an EA package before enabling trade sharing.";
   const [ea] = await tx
     .select()
     .from(easTable)

@@ -1,5 +1,6 @@
 import { parentPort, workerData } from "node:worker_threads";
 import { chartBitmap } from "./lib/ea-builder/image";
+import {tradingPackage} from "./lib/ea-builder/trading-package";
 import { toolkitPackage } from "./lib/ea-builder/package";
 if (!parentPort) throw Error("Package worker requires a parent.");
 try {
@@ -16,7 +17,7 @@ try {
       process.exit(0);
     }
   }
-  const archive = toolkitPackage({ ...workerData.options, bitmap });
+  const archive = (workerData.options.trading?tradingPackage:toolkitPackage)({ ...workerData.options, bitmap });
   parentPort.postMessage({
     ok: true,
     filename: archive.filename,
