@@ -1,3 +1,4 @@
+import { reportSessionFailure } from "../lib/session-diagnostics";
 import { db, appAccessTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
 import { resolveAppSessionAccess } from "../lib/app-session-access";
@@ -22,8 +23,8 @@ export async function requireAppSession(req: any, res: any, next: any) {
     req.appClient = client;
     req.appSession = { clientId: client.id, mentorId: access.mentorId };
     next();
-  } catch {
+  } catch (error) {
     // A database/network failure does not constitute revocation or destroy a session.
-    res.status(503).json({ error: "Your session could not be checked. Please retry.", code: "SESSION_CHECK_UNAVAILABLE" });
+    reportSessionFailure(req,res,error,"licence");
   }
 }

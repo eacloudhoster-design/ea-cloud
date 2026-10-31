@@ -1,3 +1,4 @@
+import { reportSessionFailure } from "../lib/session-diagnostics";
 import { issueBrowserSession, revokeBrowserSessions, identityHint } from "../lib/browser-session";
 import {issuePushSession} from "../lib/push-session";
 import { requireAppSession } from "../middlewares/app-session";
@@ -29,7 +30,7 @@ export const requireClientAuth = async (req: any, res: any, next: any) => {
     if (!client) { res.status(401).json({ error: "Unauthorized" }); return; }
     req.clientId = id;
     next();
-  } catch { res.status(503).json({ error: "Unable to verify your session. Please retry." }); }
+  } catch (error) { reportSessionFailure(req,res,error,"identity"); }
 };
 
 const toClientDto = (c: typeof appAccessTable.$inferSelect) => ({
@@ -155,8 +156,7 @@ router.get("/app/me", requireClientAuth, async (req: any, res) => {
     }
     res.json({ ...toClientDto(verified), token: identityHint(client.id, "client") });
   } catch (err) {
-    req.log.error({ err }, "AppGetMe error");
-    res.status(500).json({ error: "Internal server error" });
+    reportSessionFailure(req,res,err,"identity");
   }
 });
 
@@ -216,8 +216,7 @@ router.get("/app/dashboard", requireAppSession, async (req: any, res) => {
 
     res.json({ client: toClientDto(client), mentor: mentor ?? null, eas });
   } catch (err) {
-    req.log.error({ err }, "AppDashboard error");
-    res.status(500).json({ error: "Internal server error" });
+    reportSessionFailure(req,res,err,"branding");
   }
 });
 

@@ -1,3 +1,4 @@
+import { reportSessionFailure } from "./session-diagnostics";
 import { EventEmitter } from "node:events";
 import { createHash, randomBytes } from "node:crypto";
 import { pool } from "@workspace/db";
@@ -204,10 +205,8 @@ export async function browserSessionMiddleware(
       }
     }
     next();
-  } catch {
-    // Do not erase valid cookies during database/network outages.
-    res
-      .status(503)
-      .json({ error: "Session verification is unavailable. Please retry." });
+  } catch (error) {
+    // Unavailable verification never invalidates a persistent browser cookie.
+    reportSessionFailure(req,res,error,"session");
   }
 }

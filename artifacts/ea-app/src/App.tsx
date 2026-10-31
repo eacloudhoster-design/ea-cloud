@@ -25,7 +25,8 @@ import AccessScreen from "@/pages/AccessScreen";
 import PendingScreen from "@/pages/PendingScreen";
 import ActivateScreen from "@/pages/ActivateScreen";
 import type { Tab } from "@/context/AppContext";
-import { requestJson } from "@/lib/request";
+import { requestJson, ApiRequestError, protocolError } from "@/lib/request";
+import { useStartupRequest } from "@/hooks/use-startup-request";
 import StartupSplash from "@/components/StartupSplash";
 import { eaLogo, robotBg } from "@/lib/branding";
 
@@ -43,8 +44,8 @@ function EACloudApp({ onReady, startupComplete }: { onReady: (ready: boolean) =>
   const [authStage, setAuthStage] = useState<AuthStage>("loading");
   const [loadError, setLoadError] = useState("");
   const [brandingReady, setBrandingReady] = useState(false);
-  const [brandingAttempt, setBrandingAttempt] = useState(0);
-  const authAttempt = useRef(0);
+
+
   const [clientToken, setClientToken] = useState<string | null>(null);
   const [clientStatus, setClientStatus] = useState<"pending" | "rejected" | "approved">("pending");
 
@@ -96,72 +97,62 @@ function EACloudApp({ onReady, startupComplete }: { onReady: (ready: boolean) =>
   const [mentorId, setMentorId] = useState<number|null>(null);
   const [mentorImageUrl, setBgImageUrl] = useState<string | null>(null);
 
-  // Always ask the server: the persistent HttpOnly cookie is the credential.
+  const refreshBrandingAfterSession = useRef(false);
+  // A cookie is still the only credential. Recovery never restores legacy bearer login.
+  const session = useStartupRequest("session", "session", async signal => {
+    const client = await requestJson("/api/app/me", {signal}, 30000);
+    if (!client || !["pending","rejected","approved"].includes(client.status) || typeof client.token !== "string" || !client.token)
+      throw protocolError("The API session response does not match this app. Please check the frontend and API deployments.");
+    return client;
+  }, client => {
+    if (clientToken && clientToken !== client.token) {
+      branding.cancel();
+      setBrandingReady(false);
+      setBgImageUrl(null);
+      setMentorId(null);
+    }
+    if (refreshBrandingAfterSession.current && authStage === "app" && brandingReady && clientToken === client.token) branding.recheck();
+    refreshBrandingAfterSession.current = false;
+    setClientToken(client.token);
+    if (authStage !== "app" || brandingReady) setLoadError("");
+    routeByStatus(client.status, client.licenseKey ?? null);
+  }, error => {
+    if (error.status === 401) { clearAuth(); return; }
+    // A recheck must not unmount a previously verified app during an outage.
+    if (authStage !== "app") { setLoadError(error.message); setAuthStage("error"); }
+  });
+
+  const branding = useStartupRequest(authStage === "app" && clientToken ? clientToken : null,
+    "branding", async signal => {
+      const data = await requestJson("/api/app/dashboard", {signal}, 30000);
+      if (data?.client?.id !== undefined && String(data.client.id) !== atob(clientToken!).split(":")[0]) throw protocolError("The account changed during startup. Retrying securely.");
+      if (!data || !data.mentor) throw new ApiRequestError("Your mentor is not linked. Please contact support.","MENTOR_NOT_LINKED","authorization",false);
+      if (typeof data.mentor !== "object" || (data.eas !== undefined && !Array.isArray(data.eas))) throw protocolError("The mentor configuration response is invalid. Please retry.");
+      return data;
+    }, data => {
+      const mentor = data.mentor;
+      setMentorId(Number.isSafeInteger(mentor.id) ? mentor.id : null);
+      setMentorShape(["orbit","neural","none"].includes(mentor.shapeStyle) ? mentor.shapeStyle : undefined);
+      setBgImageUrl(typeof mentor.backgroundImageUrl === "string" ? mentor.backgroundImageUrl : null);
+      const eas = data.eas ?? [];
+      const primaryName = typeof mentor.robotName === "string" ? mentor.robotName.trim() : eas[0]?.name;
+      if (primaryName) setEaName(primaryName);
+      if (typeof mentor.robotTagline === "string") setEaTagline(mentor.robotTagline);
+      const allSymbols = [...new Set<string>(eas.flatMap((ea: {symbol?: unknown}) => typeof ea.symbol === "string" ? ea.symbol.split(",").map((value: string) => value.trim()).filter(Boolean) : []))];
+      if (allSymbols.length) setEaSymbols(allSymbols);
+      setBrandingReady(true);
+      setLoadError("");
+    }, error => {
+      if (error.status === 401) { clearAuth(); return; }
+      if (!brandingReady) setLoadError(error.message);
+    });
+
   useEffect(() => {
     try { localStorage.removeItem("appClientToken"); } catch {}
-    void validateToken("");
-    const restore = (event: Event) => {
-      // Initial mount already verifies. A BFCache return or cross-tab change must verify afresh.
-      if (event.type === "pageshow" && !(event as PageTransitionEvent).persisted) return;
-      if (!document.hidden) void validateToken("");
-    };
-    window.addEventListener("pageshow", restore);
     const channel = typeof BroadcastChannel !== "undefined" ? new BroadcastChannel("ea-cloud-auth") : null;
-    if (channel) channel.onmessage = restore;
-    return () => { channel?.close(); window.removeEventListener("pageshow", restore); };
-  }, []);
-
-  // Once the user is on the dashboard with a token, fetch mentor-specific config
-  useEffect(() => {
-    if (authStage !== "app" || !clientToken) return;
-    let cancelled = false;
-    setBrandingReady(false);
-    setLoadError("");
-    requestJson("/api/app/dashboard", { headers: { Authorization: `Bearer ${clientToken}` } })
-      .then(data => {
-        if (cancelled) return;
-        if (!data.mentor) throw new Error("Your mentor is not linked. Please contact support.");
-        const mentor = data.mentor;
-        setMentorId(Number.isSafeInteger(mentor.id) ? mentor.id : null);
-        setMentorShape(["orbit","neural","none"].includes(mentor.shapeStyle) ? mentor.shapeStyle : undefined);
-        const eas: { name: string; symbol: string }[] = data.eas ?? [];
-        // Background image from mentor profile
-        setBgImageUrl(mentor?.backgroundImageUrl || null);
-        // The mentor profile is the source of truth for client branding.
-        const primaryName = mentor?.robotName?.trim() || eas[0]?.name;
-        if (primaryName) setEaName(primaryName);
-        if (mentor?.robotTagline) setEaTagline(mentor.robotTagline);
-        // Symbols: all unique symbols across active EAs
-        if (eas.length > 0) {
-          const allSymbols = [...new Set(
-            eas.flatMap((ea) =>
-              ea.symbol.split(",").map((s: string) => s.trim()).filter(Boolean)
-            )
-          )];
-          if (allSymbols.length > 0) setEaSymbols(allSymbols);
-        }
-        setBrandingReady(true);
-      })
-      .catch((err) => { if (!cancelled) setLoadError(err.message || "Unable to load your mentor. Please retry."); });
-    return () => { cancelled = true; };
-  }, [authStage, clientToken, brandingAttempt]);
-
-  const validateToken = async (token: string) => {
-    const current = ++authAttempt.current;
-    try {
-      setAuthStage("loading");
-      setLoadError("");
-      const client = await requestJson("/api/app/me", { headers: { Authorization: `Bearer ${token}` } });
-      if(current !== authAttempt.current) return;
-      setClientToken(client.token || token);
-      routeByStatus(client.status, client.licenseKey ?? null);
-    } catch (err) {
-      if(current !== authAttempt.current) return;
-      if ((err as { status?: number }).status === 401) { clearAuth(); return; }
-      setLoadError((err as Error).message || "Unable to connect. Please retry.");
-      setAuthStage("error");
-    }
-  };
+    if (channel) channel.onmessage = () => session.retry();
+    return () => channel?.close();
+  }, [session.retry]);
 
   const routeByStatus = (status: string, licenseKey: string | null) => {
     if (status === "pending") { setAuthStage("pending"); setClientStatus("pending"); }
@@ -180,7 +171,8 @@ function EACloudApp({ onReady, startupComplete }: { onReady: (ready: boolean) =>
     } catch { window.alert("Unable to sign out securely. Please retry."); }
   };
   const clearAuth = () => {
-    authAttempt.current++;
+    session.cancel();
+    branding.cancel();
     try { localStorage.removeItem("appClientToken"); } catch {}
     setClientToken(null);
     setBrandingReady(false);
@@ -191,27 +183,36 @@ function EACloudApp({ onReady, startupComplete }: { onReady: (ready: boolean) =>
   };
 
   useEffect(() => {
-    if (authStage !== "app" || !clientToken) return;
-    let alive = true, busy = false;
-    const invalid = (event: Event) => {
-      if ((event as CustomEvent).detail?.token === clientToken && alive) clearAuth();
+    const restore = (event?: Event) => {
+      if (document.hidden) { session.cancel(); branding.cancel(); return; }
+      if (event?.type === "pageshow" && !(event as PageTransitionEvent).persisted) return;
+      if (["app","loading","error"].includes(authStage)) {
+        if (event && authStage === "app" && brandingReady) refreshBrandingAfterSession.current = true;
+        if (event?.type === "pageshow") session.retry(); else session.recheck();
+        if (authStage === "app" && !brandingReady) branding.recheck();
+      }
     };
-    const check = async () => {
-      if (!alive || busy || document.hidden) return;
-      busy = true;
-      try { const client = await requestJson("/api/app/me", { headers: { Authorization: `Bearer ${clientToken}` } }); if (alive && (client.status !== "approved" || !client.licenseKey)) clearAuth(); }
-      catch (error) { if (alive && (error as {status?: number}).status === 401) clearAuth(); }
-      finally { busy = false; }
+    const invalid = (event: Event) => { if ((event as CustomEvent).detail?.token === clientToken) clearAuth(); };
+    const leave = () => { session.cancel(); branding.cancel(); };
+    window.addEventListener("pagehide",leave);
+    window.addEventListener("ea:session-invalidated",invalid);
+    for (const name of ["online","focus","pageshow"]) window.addEventListener(name,restore);
+    document.addEventListener("visibilitychange",restore);
+    const timer = window.setInterval(() => { if (authStage === "app") restore(); },20000);
+    return () => {
+      window.removeEventListener("pagehide",leave);
+      window.removeEventListener("ea:session-invalidated",invalid);
+      for (const name of ["online","focus","pageshow"]) window.removeEventListener(name,restore);
+      document.removeEventListener("visibilitychange",restore);
+      window.clearInterval(timer);
     };
-    window.addEventListener("ea:session-invalidated", invalid);
-    window.addEventListener("focus", check);
-    document.addEventListener("visibilitychange", check);
-    const timer = window.setInterval(check, 20000);
-    return () => { alive = false; clearInterval(timer); window.removeEventListener("ea:session-invalidated", invalid); window.removeEventListener("focus", check); document.removeEventListener("visibilitychange", check); };
-  }, [authStage, clientToken]);
+  },[authStage,clientToken,brandingReady,session.recheck,session.retry,session.cancel,branding.recheck,branding.cancel]);
 
   const handleAuthenticated = (token: string, status: string, licenseKey: string | null) => {
-    authAttempt.current++;
+    session.cancel();
+    branding.cancel();
+    setLoadError("");
+    setBrandingReady(false);
     setClientToken(token);
     routeByStatus(status, licenseKey);
   };
@@ -272,8 +273,8 @@ function EACloudApp({ onReady, startupComplete }: { onReady: (ready: boolean) =>
         {loadError ? <div className="text-white text-center p-6" role="alert">
           <p>{loadError}</p>
           <button className="mt-4 rounded-xl bg-red-500 px-5 py-3" onClick={() => {
-            if (authStage === "app") setBrandingAttempt(v => v + 1);
-            else void validateToken("");
+            if (authStage === "app") { setLoadError(""); branding.retry(); }
+            else { setLoadError(""); setAuthStage("loading"); session.retry(); }
           }}>Retry</button>
         </div> : <img src={eaLogo} alt="Preparing EA Cloud" style={{ width: "min(39.375vw, 157.5px)", height: "auto" }} />}
       </div>
