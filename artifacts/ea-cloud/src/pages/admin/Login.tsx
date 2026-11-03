@@ -5,7 +5,7 @@ import { navigationLogo as logo, authBackground } from "@/lib/branding";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useLogin } from "@workspace/api-client-react";
+import { usePortalLogin } from "@/hooks/use-portal-login";
 import { useAuth } from "@/contexts/AuthContext";
 import { Loader2, Clock, CheckCircle2, X, Eye, EyeOff } from "lucide-react";
 
@@ -28,7 +28,7 @@ export default function AdminLogin() {
         { replace: true },
       );
   }, [user, restoringSession, setLocation]);
-  const loginMutation = useLogin();
+  const loginMutation = usePortalLogin();
   const [form, setForm] = useState({ email: "", password: "" });
   const [error, setError] = useState("");
   const [isPending, setIsPending] = useState(false);

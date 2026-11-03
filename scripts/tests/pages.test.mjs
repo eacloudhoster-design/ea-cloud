@@ -123,3 +123,18 @@ test('Render-style HTML 503 remains a backend outage, distinct from a successful
  const failure=await onRequest(context());assert.equal(failure.status,502);
  assert.deepEqual(await failure.json(),{error:'The API backend returned a webpage instead of an API response.',code:'API_UPSTREAM_UNAVAILABLE',upstreamStatus:503});
 });
+
+test('optional VPS origin token replaces spoofed caller header without appearing in the response', async () => {
+ const c=context('/api/auth/me',{headers:{'x-ea-cloud-origin-token':'caller-spoof'}});
+ globalThis.fetch=async request=>{assert.equal(request.headers.get('x-ea-cloud-origin-token'),null);return Response.json({ok:true});};
+ await onRequest(c);
+ c.env.BACKEND_PROXY_TOKEN='a'.repeat(43);
+ globalThis.fetch=async request=>{assert.equal(request.headers.get('x-ea-cloud-origin-token'),c.env.BACKEND_PROXY_TOKEN);return Response.json({ok:true});};
+ const response=await onRequest(c);assert.ok(!(await response.text()).includes(c.env.BACKEND_PROXY_TOKEN));assert.equal(response.headers.get('x-ea-cloud-origin-token'),null);
+});
+
+test('malformed optional origin token fails closed without fetching or exposing it', async () => {
+ const c=context();c.env.BACKEND_PROXY_TOKEN='PRIVATE\nBAD';
+ globalThis.fetch=async()=>assert.fail('must not forward malformed gateway configuration');
+ const response=await onRequest(c);assert.equal(response.status,503);assert.ok(!(await response.text()).includes('PRIVATE'));
+});
