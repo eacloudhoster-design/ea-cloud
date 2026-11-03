@@ -5,6 +5,7 @@ export type FailureCategory =
   | "authorization"
   | "configuration"
   | "backend"
+  | "database"
   | "protocol"
   | "rate_limit"
   | "frontend";
@@ -18,6 +19,8 @@ export type StartupDiagnostic = {
   attempt?: number;
   delayMs?: number;
   requestId?: string;
+  elapsedMs?: number;
+  windowMs?: number;
 };
 const recent: StartupDiagnostic[] = [];
 /** Fixed metadata only: never error messages, credentials, response bodies or query strings. */

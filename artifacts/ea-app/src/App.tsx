@@ -28,6 +28,8 @@ import type { Tab } from "@/context/AppContext";
 import { requestJson, ApiRequestError, protocolError } from "@/lib/request";
 import { useStartupRequest } from "@/hooks/use-startup-request";
 import StartupSplash from "@/components/StartupSplash";
+import StartupConnectionStatus from "@/components/StartupConnectionStatus";
+import type { RecoveryProgress } from "@/lib/connection-recovery";
 import { eaLogo, robotBg } from "@/lib/branding";
 
 type AuthStage = "loading" | "error" | "access" | "pending" | "rejected" | "activate" | "app";
@@ -36,11 +38,12 @@ export default function App() {
   useIosStandaloneZoom();
   const [ready, setReady] = useState(false);
   const [startupComplete, setStartupComplete] = useState(false);
+  const [connectionProgress, setConnectionProgress] = useState<RecoveryProgress | null>(null);
   const finishStartup = useCallback(() => setStartupComplete(true), []);
-  return <StartupSplash ready={ready} onComplete={finishStartup}><EACloudApp onReady={setReady} startupComplete={startupComplete} /></StartupSplash>;
+  return <StartupSplash ready={ready} onComplete={finishStartup} connectionStatus={connectionProgress && <StartupConnectionStatus progress={connectionProgress}/>}><EACloudApp onReady={setReady} onConnectionProgress={setConnectionProgress} startupComplete={startupComplete} /></StartupSplash>;
 }
 
-function EACloudApp({ onReady, startupComplete }: { onReady: (ready: boolean) => void; startupComplete: boolean }) {
+function EACloudApp({ onReady, onConnectionProgress, startupComplete }: { onReady: (ready: boolean) => void; onConnectionProgress: (progress: RecoveryProgress | null) => void; startupComplete: boolean }) {
   const [authStage, setAuthStage] = useState<AuthStage>("loading");
   const [loadError, setLoadError] = useState("");
   const [brandingReady, setBrandingReady] = useState(false);
@@ -111,7 +114,7 @@ function EACloudApp({ onReady, startupComplete }: { onReady: (ready: boolean) =>
       setBgImageUrl(null);
       setMentorId(null);
     }
-    if (refreshBrandingAfterSession.current && authStage === "app" && brandingReady && clientToken === client.token) branding.recheck();
+    if (refreshBrandingAfterSession.current && authStage === "app" && brandingReady && clientToken === client.token) { branding.resume(); branding.recheck(); }
     refreshBrandingAfterSession.current = false;
     setClientToken(client.token);
     if (authStage !== "app" || brandingReady) setLoadError("");
@@ -150,7 +153,7 @@ function EACloudApp({ onReady, startupComplete }: { onReady: (ready: boolean) =>
   useEffect(() => {
     try { localStorage.removeItem("appClientToken"); } catch {}
     const channel = typeof BroadcastChannel !== "undefined" ? new BroadcastChannel("ea-cloud-auth") : null;
-    if (channel) channel.onmessage = () => session.retry();
+    if (channel) channel.onmessage = () => { setLoadError(""); setAuthStage(current => current === "error" ? "loading" : current); session.retry(); };
     return () => channel?.close();
   }, [session.retry]);
 
@@ -184,29 +187,35 @@ function EACloudApp({ onReady, startupComplete }: { onReady: (ready: boolean) =>
 
   useEffect(() => {
     const restore = (event?: Event) => {
-      if (document.hidden) { session.cancel(); branding.cancel(); return; }
+      if (document.hidden || navigator.onLine === false) { session.pause(); branding.pause(); return; }
       if (event?.type === "pageshow" && !(event as PageTransitionEvent).persisted) return;
       if (["app","loading","error"].includes(authStage)) {
+        if (authStage === "app" && !brandingReady) { if (branding.progress.state === "paused") setLoadError(""); branding.resume(); branding.recheck(); return; }
+        if (authStage === "error" && session.progress.state === "paused") { setLoadError(""); setAuthStage("loading"); }
         if (event && authStage === "app" && brandingReady) refreshBrandingAfterSession.current = true;
-        if (event?.type === "pageshow") session.retry(); else session.recheck();
-        if (authStage === "app" && !brandingReady) branding.recheck();
+        // Preserve the existing security revalidation cadence for an already
+        // verified Home. Cold/error screens never restart a cycle on this poll.
+        if (!event && authStage === "app" && brandingReady && session.progress.state === "exhausted") session.retry();
+        else { session.resume(); session.recheck(); }
       }
     };
     const invalid = (event: Event) => { if ((event as CustomEvent).detail?.token === clientToken) clearAuth(); };
-    const leave = () => { session.cancel(); branding.cancel(); };
+    const leave = () => { session.pause(); branding.pause(); };
     window.addEventListener("pagehide",leave);
+    window.addEventListener("offline",leave);
     window.addEventListener("ea:session-invalidated",invalid);
     for (const name of ["online","focus","pageshow"]) window.addEventListener(name,restore);
     document.addEventListener("visibilitychange",restore);
     const timer = window.setInterval(() => { if (authStage === "app") restore(); },20000);
     return () => {
       window.removeEventListener("pagehide",leave);
+      window.removeEventListener("offline",leave);
       window.removeEventListener("ea:session-invalidated",invalid);
       for (const name of ["online","focus","pageshow"]) window.removeEventListener(name,restore);
       document.removeEventListener("visibilitychange",restore);
       window.clearInterval(timer);
     };
-  },[authStage,clientToken,brandingReady,session.recheck,session.retry,session.cancel,branding.recheck,branding.cancel]);
+  },[authStage,clientToken,brandingReady,session.progress.state,branding.progress.state,session.recheck,session.retry,session.cancel,branding.recheck,branding.cancel]);
 
   const handleAuthenticated = (token: string, status: string, licenseKey: string | null) => {
     session.cancel();
@@ -264,6 +273,10 @@ function EACloudApp({ onReady, startupComplete }: { onReady: (ready: boolean) =>
 
   const initializing = authStage === "loading" || (authStage === "app" && !loadError && (!brandingReady || visualModes.loading));
   useEffect(() => { onReady(!initializing); }, [initializing, onReady]);
+  const connectionProgress = authStage === "app" ? branding.progress : session.progress;
+  useEffect(() => {
+    onConnectionProgress(initializing && !loadError ? connectionProgress : null);
+  }, [initializing, loadError, connectionProgress, onConnectionProgress]);
 
   // Keep the existing retry flow; slow initialization holds the logo without replay.
   // Loading splash
@@ -276,7 +289,7 @@ function EACloudApp({ onReady, startupComplete }: { onReady: (ready: boolean) =>
             if (authStage === "app") { setLoadError(""); branding.retry(); }
             else { setLoadError(""); setAuthStage("loading"); session.retry(); }
           }}>Retry</button>
-        </div> : <img src={eaLogo} alt="Preparing EA Cloud" style={{ width: "min(39.375vw, 157.5px)", height: "auto" }} />}
+        </div> : <><img src={eaLogo} alt="Preparing EA Cloud" style={{ width: "min(39.375vw, 157.5px)", height: "auto" }} /><div style={{position:"absolute", left:0, right:0, bottom:"max(32px, env(safe-area-inset-bottom))", maxWidth:430, margin:"0 auto"}}><StartupConnectionStatus progress={connectionProgress}/></div></>}
       </div>
     );
   }

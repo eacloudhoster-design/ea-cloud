@@ -35,6 +35,10 @@ export class ApiRequestError extends Error {
   }
 }
 const known: Record<string, [FailureCategory, string]> = {
+  DATABASE_NOT_READY: [
+    "database",
+    "The service is temporarily unavailable. EA Cloud will retry automatically.",
+  ],
   API_BACKEND_NOT_CONFIGURED: [
     "configuration",
     "The API backend is not configured correctly. Please contact support.",
@@ -56,11 +60,11 @@ const known: Record<string, [FailureCategory, string]> = {
     "The session database schema is unavailable. Please contact support; your login has not been erased.",
   ],
   SESSION_STORAGE_UNAVAILABLE: [
-    "backend",
+    "database",
     "Session verification is temporarily unavailable. EA Cloud will retry automatically.",
   ],
   SESSION_CHECK_UNAVAILABLE: [
-    "backend",
+    "database",
     "Session verification is temporarily unavailable. EA Cloud will retry automatically.",
   ],
   SESSION_BACKEND_FAILURE: [
@@ -163,7 +167,9 @@ export async function requestJson(
               : forbidden
                 ? "authorization"
                 : definition?.[0] || (state === 429 ? "rate_limit" : "backend"),
-            [408, 425, 429, 500, 502, 503, 504].includes(state),
+            definition?.[0] !== "configuration" &&
+              ([408, 425, 429].includes(state) ||
+                (state >= 500 && state <= 599)),
             state,
             Math.max(
               retryAfterMs,

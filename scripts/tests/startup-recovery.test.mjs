@@ -50,7 +50,7 @@ test("temporary startup failures automatically recover, then stop polling", asyn
   t.mock.timers.tick(2400);
   await flush();
   assert.deepEqual(saved, ["verified"]);
-  assert.equal(failed.length, 2);
+  assert.equal(failed.length, 0, "transient failures do not open the terminal error screen");
   t.mock.timers.tick(60000);
   await flush();
   assert.equal(calls, 3);
