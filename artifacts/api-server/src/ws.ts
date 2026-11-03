@@ -23,6 +23,14 @@ export function createWsServer(server: import("http").Server) {
   const wss = new WebSocketServer({ server, path: "/api/ws" });
 
   wss.on("connection", async (ws: WebSocket, req: IncomingMessage) => {
+    // Attach cleanup before any asynchronous authentication. A phone can
+    // disconnect while PostgreSQL is waking; otherwise its close event is
+    // missed and the closed socket/cookie can remain in the map indefinitely.
+    ws.on("close", () => { connections.delete(ws); });
+    ws.on("error", () => {
+      connections.delete(ws);
+      logger.warn({ event: "websocket_transport_failed" }, "WebSocket transport failed");
+    });
     const principal = await verifyBrowserSession(req, "client").catch(
       () => null,
     );
@@ -67,6 +75,7 @@ export function createWsServer(server: import("http").Server) {
       return;
     }
 
+    if (ws.readyState !== WebSocket.OPEN) return;
     if (clientId !== null) {
       connections.set(ws, {
         ws,
@@ -93,11 +102,6 @@ export function createWsServer(server: import("http").Server) {
       if (clientId !== null) {
         logger.info({ clientId }, "WS client disconnected");
       }
-      connections.delete(ws);
-    });
-
-    ws.on("error", (err) => {
-      logger.warn({ err }, "WS error");
       connections.delete(ws);
     });
 

@@ -472,3 +472,8 @@ export function startPushWorker(log: any, health: () => boolean = () => false) {
   timer.unref();
   void deliverPushEvents(log);
 }
+
+export function stopPushWorker() {
+  if (timer) clearInterval(timer);
+  timer = null;
+}

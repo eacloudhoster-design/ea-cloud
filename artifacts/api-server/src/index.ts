@@ -1,12 +1,14 @@
-import {startPushWorker} from "./lib/web-push";
+import {startPushWorker, stopPushWorker} from "./lib/web-push";
 import http from "http";
 import app from "./app";
 import { createWsServer } from "./ws";
 import { logger } from "./lib/logger";
-import { db, brokerServersTable } from "@workspace/db";
+import { db, pool, brokerServersTable } from "@workspace/db";
+import { startBackendDiagnostics } from "./lib/backend-lifecycle";
+import { createShutdown } from "./lib/shutdown";
 import { backfillApiKeys, backfillEncryptedKeys } from "./lib/api-key";
 import { expireStaleAccounts } from "./routes/mt5-validation";
-import { reconcileOnStartup, startWorker, signalWorkerHealthy } from "./lib/signal-worker";
+import { reconcileOnStartup, startWorker, stopWorker, signalWorkerHealthy } from "./lib/signal-worker";
 
 async function seedBrokerServers() {
   try {
@@ -62,13 +64,26 @@ if (Number.isNaN(port) || port <= 0) {
 }
 
 const server = http.createServer(app);
-createWsServer(server);
+const sockets = createWsServer(server);
+const stopDiagnostics = startBackendDiagnostics(pool, logger, signalWorkerHealthy);
+let shuttingDown = false;
+const shutdown = createShutdown({ server, sockets, pool, log: logger,
+  stop: () => { shuttingDown = true; stopWorker(); stopPushWorker(); stopDiagnostics(); },
+  exit: () => process.exit(0),
+});
+process.once("SIGTERM", () => shutdown("SIGTERM"));
+process.once("SIGINT", () => shutdown("SIGINT"));
+// Observe fatal failures without swallowing Node's normal fatal termination.
+process.on("uncaughtExceptionMonitor", (_error, origin) => {
+  logger.fatal({ event: "backend_fatal_exception", origin }, "Backend terminating after uncaught exception");
+});
 
 // Open the port FIRST so the deployment health check passes and the container
 // becomes ready. Startup/maintenance tasks must never gate `listen()` — if one
 // of them rejects, the server still serves traffic instead of the port never
 // opening and the deploy failing its readiness probe.
 server.listen(port, () => {
+  if (shuttingDown) return;
   logger.info({ port }, "Server listening");
   startPushWorker(logger,signalWorkerHealthy);
   void runStartupTasks();
@@ -102,7 +117,7 @@ async function runStartupTasks() {
     // risk double- or missed-processing of in-flight signals.
     try {
       await reconcileOnStartup(logger);
-      startWorker(logger);
+      if (!shuttingDown) startWorker(logger);
     } catch (err) {
       logger.error({ err }, "Startup reconciliation failed; signal worker NOT started");
     }

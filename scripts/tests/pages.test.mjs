@@ -112,3 +112,14 @@ test("build verification rejects a missing or incorrectly based client bundle", 
     rmSync(directory, { recursive: true, force: true });
   }
 });
+test('startup proxy errors expose distinct safe codes and never replay mutations',async()=>{
+ const config=await onRequest({...context(),env:{}});assert.equal((await config.json()).code,'API_BACKEND_NOT_CONFIGURED');
+ let calls=0;globalThis.fetch=async()=>{calls++;throw Error('PRIVATE upstream credential');};
+ const response=await onRequest(context('/api/app/trading-controls',{method:'PATCH',body:'{}'}));
+ assert.equal(calls,1);assert.equal((await response.json()).code,'API_UPSTREAM_UNREACHABLE');
+});
+test('Render-style HTML 503 remains a backend outage, distinct from a successful SPA fallback',async()=>{
+ globalThis.fetch=async()=>new Response('<html>Unavailable</html>',{status:503,headers:{'content-type':'text/html'}});
+ const failure=await onRequest(context());assert.equal(failure.status,502);
+ assert.deepEqual(await failure.json(),{error:'The API backend returned a webpage instead of an API response.',code:'API_UPSTREAM_UNAVAILABLE',upstreamStatus:503});
+});
