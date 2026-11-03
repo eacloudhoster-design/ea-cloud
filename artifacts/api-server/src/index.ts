@@ -82,7 +82,7 @@ process.on("uncaughtExceptionMonitor", (_error, origin) => {
 // becomes ready. Startup/maintenance tasks must never gate `listen()` — if one
 // of them rejects, the server still serves traffic instead of the port never
 // opening and the deploy failing its readiness probe.
-server.listen(port, () => {
+server.listen({port, ...(process.env.API_LISTEN_HOST ? {host:process.env.API_LISTEN_HOST} : {})}, () => {
   if (shuttingDown) return;
   logger.info({ port }, "Server listening");
   startPushWorker(logger,signalWorkerHealthy);

@@ -1,0 +1,53 @@
+# DRAFT: install/start only after explicit capacity, quota and cutover approval.
+[Unit]
+Description=EA Cloud API (single instance, approved cutover only)
+After=network-online.target
+Wants=network-online.target
+ConditionPathExists=/etc/ea-cloud/CUTOVER-APPROVED
+StartLimitIntervalSec=300
+StartLimitBurst=3
+
+[Service]
+Type=simple
+User=ea-cloud
+Group=ea-cloud
+WorkingDirectory=/var/lib/ea-cloud
+EnvironmentFile=/etc/ea-cloud/api.env
+Environment=NODE_ENV=production
+Environment=PORT=18080
+Environment=API_LISTEN_HOST=127.0.0.1
+Environment=NODE_OPTIONS=--max-old-space-size=256
+Environment=VOICE_AUDIO_CACHE_DIR=/var/lib/ea-cloud/voice-cache
+Environment=VOICE_ASSETS_DIR=/srv/ea-cloud/current/artifacts/ea-app/public/natural-voice
+# Checks existing schema only; deliberately does NOT run pnpm start (DDL).
+ExecStartPre=/usr/bin/node /srv/ea-cloud/current/scripts/check-api-host.mjs --database
+ExecStart=/usr/bin/node --enable-source-maps /srv/ea-cloud/current/artifacts/api-server/dist/index.mjs
+# Bounded crash recovery with journal evidence. Repeated failure leaves unit failed.
+Restart=on-failure
+RestartSec=10s
+TimeoutStopSec=30s
+KillSignal=SIGTERM
+UMask=0077
+StateDirectory=ea-cloud
+StateDirectoryMode=0700
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+NoNewPrivileges=true
+RestrictSUIDSGID=true
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+ReadWritePaths=/var/lib/ea-cloud
+MemoryAccounting=true
+MemoryHigh=384M
+MemoryMax=512M
+CPUAccounting=true
+# 50% of ONE core: leaves most of the 2-vCPU host for Wine/MT5 and the OS.
+CPUQuota=50%
+CPUWeight=20
+TasksMax=128
+LimitNOFILE=4096
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

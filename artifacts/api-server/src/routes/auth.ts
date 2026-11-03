@@ -1,4 +1,5 @@
 import { issueBrowserSession, revokeBrowserSessions } from "../lib/browser-session";
+import { reportPortalAuthFailure } from "../lib/portal-auth-diagnostics";
 import { Router } from "express";
 import { db, usersTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
@@ -61,8 +62,7 @@ router.post("/auth/login", authLimiter, async (req, res) => {
       token,
     });
   } catch (err) {
-    req.log.error({ err }, "Login error");
-    res.status(500).json({ error: "Internal server error" });
+    reportPortalAuthFailure(req, res, err, "login");
   }
 });
 
@@ -145,8 +145,7 @@ router.get("/auth/me", requireAuth, async (req: AuthRequest, res) => {
       createdAt: user.createdAt,
     });
   } catch (err) {
-    req.log.error({ err }, "GetMe error");
-    res.status(500).json({ error: "Internal server error" });
+    reportPortalAuthFailure(req, res, err, "restore");
   }
 });
 

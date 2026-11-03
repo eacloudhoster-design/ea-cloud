@@ -15,7 +15,15 @@ export async function onRequest({ request, env }) {
   }
   const incoming = new URL(request.url);
   const target = new URL(incoming.pathname + incoming.search, backend);
+  if (env.BACKEND_PROXY_TOKEN && (typeof env.BACKEND_PROXY_TOKEN !== "string" || !/^[A-Za-z0-9_-]{43,128}$/.test(env.BACKEND_PROXY_TOKEN))) {
+    console.warn({event:"api_proxy_failed",code:"API_BACKEND_NOT_CONFIGURED",status:503});
+    return unavailable("The API gateway is not configured correctly.",503,"API_BACKEND_NOT_CONFIGURED");
+  }
   const headers = new Headers(request.headers);
+  // Optional private-origin authentication for an approved VPS cutover. Never
+  // trust a caller-supplied token; existing hosts need no new configuration.
+  headers.delete("x-ea-cloud-origin-token");
+  if (env.BACKEND_PROXY_TOKEN) headers.set("x-ea-cloud-origin-token", env.BACKEND_PROXY_TOKEN);
   headers.delete("host");
   // Do not trust a caller-supplied forwarding chain at the API's trust boundary.
   headers.delete("forwarded");

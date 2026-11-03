@@ -6,7 +6,7 @@ import { logo } from "@/lib/branding";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useLogin } from "@workspace/api-client-react";
+import { usePortalLogin } from "@/hooks/use-portal-login";
 import { useAuth } from "@/contexts/AuthContext";
 import { Loader2, ShieldCheck } from "lucide-react";
 
@@ -14,7 +14,7 @@ export default function SuperAdminLogin() {
   const [, setLocation] = useLocation();
   const { login, user, isLoading: restoringSession } = useAuth();
   useLayoutEffect(() => { if(!restoringSession && user?.status === "approved") setLocation(user.role === "superadmin" ? "/superadmin/dashboard" : "/admin/dashboard", {replace:true}); },[user,restoringSession,setLocation]);
-  const loginMutation = useLogin();
+  const loginMutation = usePortalLogin();
   const [form, setForm] = useState({ email: "", password: "" });
   const [error, setError] = useState("");
 

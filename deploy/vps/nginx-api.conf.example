@@ -1,0 +1,54 @@
+# DRAFT http{} include. Replace hostname, certificate paths and private token
+# OFFLINE after approval. Save the rendered file root-owned 0600. Never commit it.
+map $http_upgrade $ea_cloud_upgrade {
+    default upgrade;
+    '' close;
+}
+map $http_x_ea_cloud_origin_token $ea_cloud_trusted_origin {
+    default 0;
+    # Must match the future Pages BACKEND_PROXY_TOKEN (>=32 random bytes).
+    # Add one quoted private token entry here after approval, for example:
+    # "REPLACE_WITH_PRIVATE_TOKEN_AFTER_APPROVAL" 1;
+}
+server {
+    listen 443 ssl;
+    server_name REPLACE_WITH_APPROVED_API_HOSTNAME;
+    ssl_certificate /etc/ea-cloud/tls/fullchain.pem;
+    ssl_certificate_key /etc/ea-cloud/tls/privkey.pem;
+    ssl_protocols TLSv1.2 TLSv1.3;
+    client_max_body_size 12m;
+    # Disable access logs. Keep error logs private: Nginx can include request
+    # URIs in errors, so never share raw logs or use secrets in URL parameters.
+    access_log off;
+    error_log /var/log/nginx/ea-cloud-error.log warn;
+    location = /api/healthz {
+        proxy_pass http://127.0.0.1:18080;
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-For $remote_addr;
+        proxy_set_header X-Forwarded-Proto https;
+    }
+    location /api/ {
+        default_type application/json;
+        if ($ea_cloud_trusted_origin = 0) {
+            return 503 '{"error":"API gateway configuration unavailable","code":"API_BACKEND_NOT_CONFIGURED"}';
+        }
+        proxy_pass http://127.0.0.1:18080;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        # Only the authenticated Pages proxy may supply this chain. That proxy
+        # replaces spoofed forwarding headers using Cloudflare's actual client IP.
+        proxy_set_header X-Forwarded-For $http_x_forwarded_for;
+        proxy_set_header X-Forwarded-Host $http_x_forwarded_host;
+        proxy_set_header X-Forwarded-Proto https;
+        proxy_set_header X-Ea-Cloud-Origin-Token "";
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection $ea_cloud_upgrade;
+        proxy_connect_timeout 5s;
+        proxy_read_timeout 3600s;
+        proxy_send_timeout 120s;
+        proxy_buffering off;
+        proxy_cache off;
+        proxy_next_upstream off;
+    }
+    location / { return 404; }
+}
