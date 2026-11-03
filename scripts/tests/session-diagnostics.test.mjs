@@ -45,3 +45,15 @@ test("session diagnostics distinguish missing schema from connection/credential 
   assert.equal(records[0].event, "app_startup_backend_failed");
   assert.ok(!JSON.stringify(records).includes("PRIVATE"));
 });
+
+test("pool checkout/query deadlines remain recoverable database errors", () => {
+  for (const message of [
+    "timeout exceeded when trying to connect",
+    "Connection terminated due to connection timeout",
+    "Query read timeout",
+  ]) {
+    const result = sessionFailureInfo({ cause: { message } });
+    assert.equal(result.code, "SESSION_STORAGE_UNAVAILABLE");
+    assert.equal(result.category, "database_timeout");
+  }
+});

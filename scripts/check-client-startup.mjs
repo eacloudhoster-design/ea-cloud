@@ -4,6 +4,8 @@ const pages = "https://ea-cloud-website.pages.dev",
 for (const [name, url] of [
   ["pages_health", pages + "/api/healthz"],
   ["render_health", api + "/api/healthz"],
+  ["pages_readiness", pages + "/api/readyz"],
+  ["render_readiness", api + "/api/readyz"],
   ["anonymous_session", pages + "/api/app/me"],
   ["pages_build", pages + "/build-info.json"],
 ]) {
@@ -27,6 +29,7 @@ for (const [name, url] of [
       "SESSION_STORAGE_SCHEMA_UNAVAILABLE",
       "SESSION_STORAGE_UNAVAILABLE",
       "SESSION_BACKEND_FAILURE",
+      "DATABASE_NOT_READY",
     ].includes(data?.code)
       ? data.code
       : undefined;

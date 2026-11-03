@@ -18,6 +18,8 @@ export function sessionFailureInfo(error: unknown) {
     "ETIMEDOUT",
     "ENOTFOUND",
     "EAI_AGAIN",
+    "EPIPE",
+    "57014",
   ]);
   for (let i = 0; queue.length && i < 16; i++) {
     const item = queue.shift();
@@ -35,6 +37,9 @@ export function sessionFailureInfo(error: unknown) {
         category: "database_connection",
         driverCode: item.code,
       };
+    // These exact messages come from pg/pg-pool and carry no SQL/user data.
+    if (["timeout exceeded when trying to connect", "Connection terminated due to connection timeout", "Query read timeout"].includes(item.message))
+      return { code: "SESSION_STORAGE_UNAVAILABLE", category: "database_timeout", driverCode: "DB_TIMEOUT" };
     if (["28P01", "28000"].includes(item.code))
       return {
         code: "SESSION_STORAGE_UNAVAILABLE",

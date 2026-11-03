@@ -1,8 +1,6 @@
 import { drizzle } from "drizzle-orm/node-postgres";
-import pg from "pg";
+import { createDatabasePool, withPoolClient } from "./pool";
 import * as schema from "./schema";
-
-const { Pool } = pg;
 
 if (!process.env.DATABASE_URL) {
   throw new Error(
@@ -10,7 +8,13 @@ if (!process.env.DATABASE_URL) {
   );
 }
 
-export const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+export const pool = createDatabasePool(process.env.DATABASE_URL);
 export const db = drizzle(pool, { schema });
+// Use the single-client adapter inside an outer release guarantee. Its nested
+// transactions still use Drizzle savepoints, with exactly one pool checkout.
+db.transaction = (transaction, config) =>
+  withPoolClient(pool, (client) =>
+    drizzle(client, { schema }).transaction(transaction, config),
+  );
 
 export * from "./schema";
