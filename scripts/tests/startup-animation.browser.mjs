@@ -33,7 +33,9 @@ async function check(scenario) {
       if (path === '/api/app/me') {
         if (scenario === 'slow-auth') await new Promise(resolve => setTimeout(resolve, 11000));
         if (scenario === 'mid-entrance-ready') await new Promise(resolve => setTimeout(resolve, 1200));
-        if (scenario === 'auth-error') return r.fulfill({ status: 503, json: {} });
+        // Transient 503 recovery is covered by the cold-start suite. This
+        // animation scenario needs a genuinely terminal authorization failure.
+        if (scenario === 'auth-error') return r.fulfill({ status: 403, json: {} });
         return r.fulfill({ json: { id: 1, token: btoa('1:client:cookie'), status: 'approved', licenseKey: 'licensed' } });
       }
       if (path === '/api/app/dashboard') return r.fulfill({ json: { mentor: { robotName: 'Startup Test Mentor' }, eas: [] } });

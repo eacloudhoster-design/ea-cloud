@@ -26,6 +26,7 @@ const context = await browser.newContext({
     "Mozilla/5.0 (iPhone; CPU iPhone OS 26_0 like Mac OS X) AppleWebKit/605.1.15 Mobile/15E148",
 });
 let meFailures = 0,
+  coldDelay = 0,
   brandingFailures = 0,
   alwaysUnavailable = false,
   holdFirst = false,
@@ -37,6 +38,7 @@ await context.addInitScript(() => {
   Object.defineProperty(window, "AudioContext", { value: undefined });
   Object.defineProperty(window, "webkitAudioContext", { value: undefined });
   localStorage.removeItem("appClientToken");
+  window.__coldStartAt = undefined;
 });
 await context.routeWebSocket("**/api/ws?*", () => {});
 await context.route("**/*", async (route) => {
@@ -50,6 +52,10 @@ await context.route("**/*", async (route) => {
   }
   if (u.pathname === "/api/app/me") {
     counts.me++;
+    if (coldDelay) {
+      const elapsed = await request.frame().evaluate(() => { window.__coldStartAt ??= Date.now(); return Date.now() - window.__coldStartAt; });
+      if (elapsed < coldDelay) return route.fulfill({status:522, body:"<html>Temporary upstream outage</html>", contentType:"text/html"});
+    }
     if (holdFirst) {
       holdFirst = false;
       await new Promise((r) => (releaseHold = r));
@@ -137,6 +143,59 @@ try {
   );
   await page.close();
   const originalCookie = await login();
+  for (const seconds of [30,60,90,120]) {
+    coldDelay = seconds * 1000;
+    const before = counts.me;
+    page = await context.newPage();
+    const start = new Date("2026-11-03T00:00:00Z");
+    await page.clock.install({time:start});
+    await page.goto(origin + "/ea-app/");
+    // CSS artwork/outline runs unchanged while the backend is unavailable.
+    await pause(5000);
+    assert.equal(await page.getByRole("button",{name:"Retry",exact:true}).count(),0);
+    await page.locator(".ea-startup").getByText("Connecting to EA Cloud",{exact:true}).waitFor({state:"visible"});
+    await page.clock.pauseAt(new Date(await page.evaluate(()=>Date.now())+100));
+    for (let elapsed=0;elapsed<(seconds+12)*1000;elapsed+=1000) {
+      await page.clock.runFor(1000);
+      await pause(30);
+      if (elapsed===20000 && seconds>=60) {
+        await page.locator(".ea-startup").getByText("Still connecting",{exact:true}).waitFor({state:"visible"});
+        assert.equal(await page.getByRole("button",{name:"Retry",exact:true}).count(),0);
+        if(seconds===90)await page.screenshot({path:"work/startup-recovery/still-connecting.png"});
+      }
+      if (await page.locator("[data-home-screen]").count()) break;
+    }
+    await page.clock.resume();
+    try { await home(page); } catch (error) {
+      console.error("cold-start fixture diagnostics", {seconds, counts, diagnostics:await diagnostics(page), text:await page.locator("body").innerText(), clock:await page.evaluate(()=>({now:Date.now(),start:window.__coldStartAt,hidden:document.hidden}))});
+      throw error;
+    }
+    assert.ok(counts.me-before<=12,"cold-start attempts respect backoff rather than foreground polling");
+    assert.equal((await context.cookies()).find(c=>c.name==="ea_client_session").value,originalCookie.value);
+    assert.equal(await page.locator("input[type=email]").count(),0);
+    if(seconds===90)await page.screenshot({path:"work/startup-recovery/cold-start-recovered.png"});
+    cases.push(`${seconds}-second HTTP 522 cold start: connection status, automatic Home recovery and same cookie`);
+    await page.close();
+  }
+  coldDelay = 0;
+  alwaysUnavailable = true;
+  page = await context.newPage();
+  const neverStart = new Date("2026-11-03T00:00:00Z");
+  await page.clock.install({time:neverStart});
+  await page.clock.pauseAt(new Date(neverStart.getTime()+1000));
+  await page.goto(origin + "/ea-app/");
+  for(let i=0;i<132;i++){await page.clock.runFor(1000);await pause(20);}
+  await page.clock.resume();
+  await page.getByRole("button",{name:"Retry",exact:true}).waitFor({state:"visible",timeout:15000});
+  assert.equal(await page.locator("[data-home-screen]").count(),0);
+  const exhausted = counts.me;
+  await page.evaluate(()=>{window.dispatchEvent(new Event("focus"));window.dispatchEvent(new Event("online"));});
+  await pause(400); assert.equal(counts.me,exhausted,"exhausted retries do not restart on focus spam");
+  alwaysUnavailable=false;
+  await page.getByRole("button",{name:"Retry",exact:true}).click();await home(page);
+  assert.equal((await context.cookies()).find(c=>c.name==="ea_client_session").value,originalCookie.value);
+  cases.push("backend never recovers: bounded Retry, no focus loop, fresh Retry preserves cookie and reaches Home");
+  await page.close();
   meFailures = 2;
   brandingFailures = 1;
   page = await context.newPage();
@@ -170,6 +229,7 @@ try {
   );
   const bounds = await page.locator(".ea-glass-navigation").boundingBox();
   // Reopen while unavailable: keep the already verified interface, never replay the splash.
+  const brandingBeforeReopen = counts.branding;
   alwaysUnavailable = true;
   await page.evaluate(() => {
     window.dispatchEvent(
@@ -203,6 +263,8 @@ try {
   for (let i = 0; i < 60 && counts.me === beforeRecovery; i++) await pause(100);
   assert.ok(counts.me > beforeRecovery);
   await home(page);
+  for (let i = 0; i < 60 && counts.branding === brandingBeforeReopen; i++) await pause(100);
+  assert.ok(counts.branding > brandingBeforeReopen, "mentor configuration resumes only after authoritative session recovery");
   cases.push(
     "PWA pagehide/pageshow during backend outage retains the same verified Home and geometry",
   );
@@ -210,7 +272,7 @@ try {
   await context.setOffline(true);
   await page.evaluate(() => window.dispatchEvent(new Event("focus")));
   await page.waitForFunction(() =>
-    window.__eaStartupDiagnostics?.some((e) => e.category === "network"),
+    window.__eaStartupDiagnostics?.some((e) => e.event === "startup_recovery_paused"),
   );
   assert.equal(
     await page.evaluate(
@@ -295,6 +357,7 @@ try {
   await page.clock.fastForward(31000);
   assert.ok((await diagnostics(page)).some((e) => e.code === "API_TIMEOUT"));
   releaseHold();
+  await page.clock.resume();
   await page.evaluate(() => window.dispatchEvent(new Event("online")));
   await home(page);
   cases.push(
@@ -335,6 +398,9 @@ try {
       2,
     ),
   );
+} catch (error) {
+  if (page && !page.isClosed()) console.error("startup fixture failed", {cases, counts, diagnostics:await diagnostics(page), text:await page.locator("body").innerText()});
+  throw error;
 } finally {
   if (tableRenamed)
     await engine.exec(

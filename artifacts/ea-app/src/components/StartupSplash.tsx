@@ -16,7 +16,7 @@ const CLOUD_OUTLINE = "M626 180 C711 180 787 230 819 308 C873 308 919 346 934 39
 type Phase = "entrance" | "tracing" | "glowing" | "fading" | "done";
 
 /** A presentation layer: initialization and the existing app stay mounted below. */
-export default function StartupSplash({ ready, children, onComplete }: { ready: boolean; children: ReactNode; onComplete?: () => void }) {
+export default function StartupSplash({ ready, children, onComplete, connectionStatus }: { ready: boolean; children: ReactNode; onComplete?: () => void; connectionStatus?: ReactNode }) {
   const filterId = useId().replace(/:/g, "");
   const outlineHalo = `${filterId}-outline-halo`;
   const eyeHalo = `${filterId}-eye-halo`;
@@ -28,13 +28,23 @@ export default function StartupSplash({ ready, children, onComplete }: { ready: 
 
   useEffect(() => {
     let cancelled = false;
+    const fallback = window.setTimeout(() => { if (!cancelled) setStarted(true); }, 5000);
     // A cold image must not consume the entrance. A failed image must not trap
     // a usable app; still retain the readiness gate and presentation timeline.
     imageRef.current!.decode().catch(() => {}).then(() => {
+      window.clearTimeout(fallback);
       if (!cancelled) setStarted(true);
     });
-    return () => { cancelled = true; };
+    return () => { cancelled = true; window.clearTimeout(fallback); };
   }, []);
+
+  // A dropped WebKit animationend (for example during backgrounding) must not
+  // hold a recovered app forever. Normal animation events still own the timing.
+  useEffect(() => {
+    if (!started || phase !== "tracing" || traceComplete) return;
+    const timer = window.setTimeout(() => setTraceComplete(true), TRACE_MS + 250);
+    return () => window.clearTimeout(timer);
+  }, [started, phase, traceComplete]);
 
   useEffect(() => {
     if (traceComplete && ready && phase === "tracing") setPhase("glowing");
@@ -121,6 +131,7 @@ export default function StartupSplash({ ready, children, onComplete }: { ready: 
           </g>
         </svg>
       </div>
+      {traceComplete && !ready && connectionStatus && <div style={{position:"absolute", left:0, right:0, bottom:"max(32px, env(safe-area-inset-bottom))", margin:"0 auto", maxWidth:430}}>{connectionStatus}</div>}
     </div>}
   </>;
 }

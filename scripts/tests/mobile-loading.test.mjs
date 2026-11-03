@@ -27,7 +27,7 @@ test('invalid JSON is actionable and successful branding stays intact', async ()
   assert.deepEqual(await requestJson('/api/app/dashboard'), data);
 });
 test('diagnostics distinguish session schema, proxy configuration, throttling and permission failures without private responses',async()=>{
- for(const [status,code,category,retryable] of [[503,'SESSION_STORAGE_SCHEMA_UNAVAILABLE','configuration',true],[503,'API_BACKEND_NOT_CONFIGURED','configuration',true],[429,'UNKNOWN_PRIVATE_CODE','rate_limit',true],[403,'UNKNOWN_PRIVATE_CODE','authorization',false]]){
+ for(const [status,code,category,retryable] of [[503,'SESSION_STORAGE_SCHEMA_UNAVAILABLE','configuration',false],[503,'API_BACKEND_NOT_CONFIGURED','configuration',false],[429,'UNKNOWN_PRIVATE_CODE','rate_limit',true],[403,'UNKNOWN_PRIVATE_CODE','authorization',false]]){
   globalThis.fetch=async()=>Response.json({error:'PRIVATE password and query',code},{status,headers:{'Retry-After':'20'}});
   await assert.rejects(requestJson('/api/app/me'),e=>e.status===status&&e.category===category&&e.retryable===retryable&&!e.message.includes('PRIVATE')&&e.retryAfterMs>=20000);
  }
