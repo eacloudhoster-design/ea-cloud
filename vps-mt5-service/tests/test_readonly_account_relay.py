@@ -9,6 +9,13 @@ class RelayTests(unittest.TestCase):
   self.snapshot=dict(success=True,read_only=True,initialized=True,identity_verified=True,portable_paths_verified=True,connected=True,positions_read_verified=True,orders_read_verified=True,automated_trading_enabled=False,execution_enabled=False,financial_trades=0,open_positions=0,pending_orders=0,account=dict(login=1,server='FixtureDemo',mode='demo',currency='ZAR',balance=1000,equity=1000),password='must-not-escape')
   def forward(binding):self.calls.append(binding.login);return self.snapshot
   self.client=TestClient(create_app([self.b],'b'*64,forward))
+ def test_multiple_brokers_have_distinct_bound_status_routes(self):
+  bindings=[Binding(broker,10+i,'Fixture'+str(i),'client','http://127.0.0.1:'+str(8300+i),'private'+str(i),str(i)*64) for i,broker in enumerate(['deriv','exness','xm','rcg'],1)]
+  def forward(binding):return {**self.snapshot,'account':{**self.snapshot['account'],'login':binding.login,'server':binding.server}}
+  client=TestClient(create_app(bindings,'z'*64,forward))
+  for b in bindings:
+   response=client.post('/observer/account-status',headers={'Authorization':'Bearer '+'z'*64},json=dict(login=b.login,server=b.server,password=b.password))
+   self.assertEqual(response.status_code,200);self.assertEqual(response.json()['broker'],b.broker);self.assertFalse(response.json()['execution_enabled'])
  def query(self,password='fixture-private'):return self.client.post('/observer/account-status',headers=self.headers,json=dict(login=1,server='FixtureDemo',password=password))
  def test_real_proof_shape_requires_credentials_and_does_not_invent_journal_or_stop(self):
   self.assertEqual(self.query('wrong').status_code,403);self.assertEqual(self.calls,[])

@@ -19,7 +19,7 @@ class Binding:
  api_token:str=field(repr=False)
 
 def create_app(bindings,token,forward=None):
- if len(token)<32 or not 1<=len(bindings)<=2:raise ValueError('Bound service credentials and capacity required')
+ if len(token)<32 or not 1<=len(bindings)<=8:raise ValueError('Bound service credentials and capacity required')
  routes={};urls=set();tokens=set()
  for b in bindings:
   if b.broker not in ('justmarkets','exness','xm','rcg','deriv') or b.role not in ('mentor','client') or type(b.login) is not int or b.login<=0 or not isinstance(b.server,str) or not b.server or b.server.strip()!=b.server or not b.password or len(b.api_token)<32:raise ValueError('Invalid bound demo identity')

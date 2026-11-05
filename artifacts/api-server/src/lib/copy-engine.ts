@@ -1,3 +1,4 @@
+import {effectiveCopySettings,policyVolume} from "./copy-policy";
 import {executeObserver} from "./observer-execution";
 import {syncObserverPosition} from "./observer-vps";
 import { recordExecutionActivity } from "./trading-activity";
@@ -5,6 +6,7 @@ import {
   db,
   appAccessTable,
   clientSettingsTable,
+  mentorCopyPoliciesTable,
   symbolPairsTable,
   clientSymbolConfigsTable,
   tradeExecutionsTable,
@@ -221,8 +223,12 @@ async function executeForClient(signal: TradeSignal, client: AppAccess, eaName: 
     return prior === "skipped" || prior === "success" ? prior : "already_done";
   }
 
-  const [settings] = await db.select().from(clientSettingsTable)
+  const [storedSettings] = await db.select().from(clientSettingsTable)
     .where(eq(clientSettingsTable.clientId, client.id)).limit(1);
+
+  const [policy]=await db.select().from(mentorCopyPoliciesTable).where(and(eq(mentorCopyPoliciesTable.clientId,client.id),eq(mentorCopyPoliciesTable.mentorId,signal.mentorId))).limit(1);
+  const settings=storedSettings?effectiveCopySettings(storedSettings,policy):null;
+  if(!settings)return recordSkip(signal,client,"Explicit mentor allocation policy and valid client limits required",log);
 
   // 1. Bot must be enabled.
   if (!settings || settings.copyingEnabled !== true) {
@@ -264,63 +270,12 @@ async function executeForClient(signal: TradeSignal, client: AppAccess, eaName: 
     if(canonicalPair){const [cfg]=await db.select().from(clientSymbolConfigsTable).where(and(eq(clientSymbolConfigsTable.clientId,client.id),eq(clientSymbolConfigsTable.pairName,canonicalPair))).limit(1);if(cfg?.selectedSymbol)symbol=cfg.selectedSymbol;customLot=num(cfg?.customLotSize);}
     const [pending]=await db.insert(tradeExecutionsTable).values({signalId:signal.id,mentorId:signal.mentorId,clientId:client.id,signalKind:"SYNC",symbol,action:"SYNC",status:"pending",mentorTicket:signal.ticket}).returning();
     pushUpdate(client.id,pending);
-    const result=await executeObserver(signal,client,settings,password,symbol,source=>resolveVolume(source,settings,customLot,true),observerDispatch);
+    const result=await executeObserver(signal,client,settings,password,symbol,source=>policyVolume(resolveVolume(source,settings,customLot,true),source,policy),observerDispatch);
     return settleExecution(pending.id,client.id,result,log);
   }
 
   // ── OPEN ────────────────────────────────────────────────────────────────
-  if (signal.signal === "OPEN") {
-    const action = resolveAction(signal.orderType);
-
-    // Apply the client's broker-symbol selection + per-pair custom lot, if the
-    // mentor configured this pair and the client has a saved config for it.
-    let execSymbol = signal.symbol;
-    let customLot: number | null = null;
-    if (canonicalPair) {
-      const [cfg] = await db.select().from(clientSymbolConfigsTable)
-        .where(and(
-          eq(clientSymbolConfigsTable.clientId, client.id),
-          eq(clientSymbolConfigsTable.pairName, canonicalPair),
-        )).limit(1);
-      if (cfg?.selectedSymbol) execSymbol = cfg.selectedSymbol;
-      const lot = num(cfg?.customLotSize);
-      if (lot !== null && lot > 0) customLot = lot;
-    }
-
-    const volume = resolveVolume(num(signal.lots), settings, customLot);
-    if (volume <= 0) {
-      return recordSkip(signal, client, "Resolved lot size is zero", log);
-    }
-
-    // Pre-dispatch trace: exactly what mapping is being applied for THIS client
-    // before the order is sent to the VPS. Confirms the remap + custom lot.
-    log.info(
-      {
-        client: client.id,
-        pair: canonicalPair ?? signal.symbol,
-        signalSymbol: signal.symbol,
-        selectedSymbol: execSymbol,
-        lotSize: volume,
-      },
-      "[CopyEngine] dispatching trade to VPS",
-    );
-
-    const [pending] = await db.insert(tradeExecutionsTable).values({
-      signalId: signal.id, mentorId: signal.mentorId, clientId: client.id,
-      signalKind: "OPEN", symbol: execSymbol, action, volume: String(volume),
-      status: "pending", mentorTicket: signal.ticket ?? null,
-    }).returning();
-    pushUpdate(client.id, pending);
-
-    const result = await executeTradeOnVps({
-      login: settings.mt5Login, password, server: settings.mt5Server,
-      symbol: execSymbol, action, volume,
-      sl: num(signal.stopLoss), tp: num(signal.takeProfit),
-      comment: buildTradeComment(eaName, signal.id),
-    }, log);
-    finalize(result, log, { ...baseCtx, action, volume, signalSymbol: signal.symbol, execSymbol, canonicalPair });
-    return settleExecution(pending.id, client.id, result, log);
-  }
+  if (signal.signal === "OPEN")return recordSkip(signal,client,"Legacy opening disabled; authenticated observer lifecycle required",log);
 
   // ── CLOSE / MODIFY ──────────────────────────────────────────────────────
   const clientTicket = await findClientTicket(client.id, signal.ticket ?? null);

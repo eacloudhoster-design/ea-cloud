@@ -3,7 +3,7 @@ import { createPortal } from "react-dom";
 import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { ArrowRight, ChevronRight, Eye, EyeOff, Fingerprint, LockKeyhole, RotateCcw, Server, X } from "lucide-react";
 import { useApp } from "@/context/AppContext";
-import { detectBroker, validateMt5Preview } from "@/lib/brokers";
+import { brokers, detectBroker, validateMt5Preview } from "@/lib/brokers";
 import { connectMt5Account,readEngineStatus } from "@/lib/mt5-engine";
 import { requestJson } from "@/lib/request";
 import BrokerLogo from "@/components/mt5/BrokerLogo";
@@ -19,6 +19,7 @@ export default function MetaTraderTab({ backgroundHost, backgroundImage }: { bac
   const [login, setLogin] = useState("");
   const [password, setPassword] = useState("");
   const [server, setServer] = useState("");
+  const [selectedBroker,setSelectedBroker]=useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [state, setState] = useState<ConnectionState>("idle");
   const [error, setError] = useState("");
@@ -31,7 +32,7 @@ export default function MetaTraderTab({ backgroundHost, backgroundImage }: { bac
   const connectButton = useRef<HTMLButtonElement>(null);
   const closeButton = useRef<HTMLButtonElement>(null);
   const restoreFocus = useRef(false);
-  const broker = detectBroker(server);
+  const broker = brokers.find(b=>b.id===selectedBroker) ?? detectBroker(server);
   const modalOpen = state !== "idle";
 
   useEffect(() => { setBackgroundFailed(false); }, [backgroundImage]);
@@ -41,13 +42,8 @@ export default function MetaTraderTab({ backgroundHost, backgroundImage }: { bac
     setSaved(null);
     setEngine(null);
     setSavedError(false);
-    if (clientToken) requestJson("/api/app/trading-controls", { headers: { Authorization: `Bearer ${clientToken}` } })
-      .then(data => {
-        if (!cancelled && data.mt5Login && data.mt5Server) setSaved({ login: String(data.mt5Login), server: data.mt5Server });
-      })
-      .catch(() => { if (!cancelled) setSavedError(true); });
     const statusController=new AbortController();
-    if(clientToken && activeTab==="metatrader") void readEngineStatus(clientToken,statusController.signal).then(data=>{if(!cancelled)setEngine(data);}).catch(()=>{});
+    if(clientToken && activeTab==="metatrader") void readEngineStatus(clientToken,statusController.signal).then(data=>{if(!cancelled){setEngine(data);if(data.account?.login&&data.account?.server)setSaved({login:String(data.account.login),server:data.account.server});}}).catch(()=>{if(!cancelled)setSavedError(true);});
     return () => { cancelled = true;statusController.abort(); };
   }, [clientToken, restoreAttempt,activeTab]);
 
@@ -87,7 +83,7 @@ export default function MetaTraderTab({ backgroundHost, backgroundImage }: { bac
     setState("connecting");
     assistantEvent({type:"mt5-start",broker:broker?.name || "your broker",server:server.trim()});
     try {
-      const data=await connectMt5Account({login:login.trim(),server:server.trim(),password:secret},clientToken,attempt.signal);
+      const data=await connectMt5Account({login:login.trim(),server:server.trim(),password:secret,broker:selectedBroker},clientToken,attempt.signal);
       if(!attempt.signal.aborted){setSaved({login:String(data.login),server:data.server});setState("verified");setRestoreAttempt(v=>v+1);}
     } catch {
       if (!attempt.signal.aborted) { setState("unverified"); assistantEvent({type:"mt5-unverified"}); }
@@ -120,6 +116,11 @@ export default function MetaTraderTab({ backgroundHost, backgroundImage }: { bac
         </div>
 
         <form className="mt5-form" onSubmit={connect}>
+          <label className="mt5-broker-select-label">Broker
+            <select aria-label="Broker" value={selectedBroker} onChange={e=>setSelectedBroker(e.target.value)} required className="mt5-broker-select">
+              <option value="">Select broker</option>{[["justmarkets","JustMarkets"],["exness","Exness"],["deriv","Deriv"],["xm","XM Global"],["rcg","RCG Markets"]].map(([id,name])=><option key={id} value={id}>{name}</option>)}
+            </select>
+          </label>
           <FloatingField id="mt5-login" label="MT5 Account Number" icon={Fingerprint}>
             <input id="mt5-login" inputMode="numeric" type="text" autoComplete="off" maxLength={32}
               value={login} onChange={e => setLogin(e.target.value)} placeholder="Enter account number" required />
@@ -133,7 +134,7 @@ export default function MetaTraderTab({ backgroundHost, backgroundImage }: { bac
           </FloatingField>
           <FloatingField id="mt5-server" label="Server" icon={Server}>
             <input id="mt5-server" type="text" autoCapitalize="none" autoCorrect="off" spellCheck={false} autoComplete="off" maxLength={128}
-              value={server} onChange={e => setServer(e.target.value)} placeholder="e.g. Exness-MT5Real1" required list="mt5-broker-hints" />
+              value={server} onChange={e => setServer(e.target.value)} placeholder="Exact server shown by your broker" required list="mt5-broker-hints" />
           </FloatingField>
           <datalist id="mt5-broker-hints">
             {["Exness-MT5Real1", "Deriv-Demo", "ICMarketsSC-MT5", "Pepperstone-MT5-Live01", "XMGlobal-MT5", "HFMarketsSV-Live", "FBS-Real", "Tickmill-Live", "ForexTimeFXTM-Live"].map(value => <option key={value} value={value} />)}
@@ -142,8 +143,8 @@ export default function MetaTraderTab({ backgroundHost, backgroundImage }: { bac
           <button ref={connectButton} type="submit" className="mt5-connect-button"><span>Connect MT5</span><ArrowRight size={18} /></button>
         </form>
         <p className="mt5-availability-note">Only provisioned demo accounts can be verified.<br />Verification does not enable order execution.</p>
-        {(saved || savedError) && <aside className="mt5-saved-account">
-          {saved ? <><span>{engine?.connection?.verified ? "Demo connection verified" : "Saved account · status unverified"}</span><p>#{saved.login} <ChevronRight size={12} /> {saved.server}</p><small>Copier: {engine?.copier?.state || "unverified"}. {engine?.copier?.emergencyStopActive === true ? "Emergency stop active." : ""}</small><button type="button" onClick={()=>setRestoreAttempt(v=>v+1)}>Refresh status</button></> : <><p>Saved account details are unavailable.</p><button type="button" onClick={() => setRestoreAttempt(v => v + 1)}>Retry loading details</button></>}
+        {(saved || savedError) && <aside className={`mt5-saved-account ${engine?.connection?.verified?"mt5-status-connected":"mt5-status-disconnected"}`}>
+          {saved ? <><span>{engine?.connection?.verified ? "Demo connection verified" : "Saved account · status unverified"}</span><p>#{saved.login} <ChevronRight size={12} /> {saved.server}</p><small>Copier: {engine?.copier?.state || "unverified"}. Checked: {engine?.observedAt?new Date(engine.observedAt).toLocaleTimeString():"unverified"}. {engine?.copier?.emergencyStopActive === true ? "Emergency stop active." : ""}</small><button type="button" onClick={()=>setRestoreAttempt(v=>v+1)}>Refresh status</button><button type="button" onClick={()=>{setLogin(saved.login);setServer(saved.server);setSelectedBroker(engine?.account?.broker||"");setState("idle");}}>Reconnect</button><button type="button" onClick={async()=>{try{await requestJson("/api/app/mt5-disconnect",{method:"POST",headers:{Authorization:`Bearer ${clientToken}`}});setSaved(null);setEngine(null);setRestoreAttempt(v=>v+1);}catch{setError("Disconnect could not be confirmed.");}}}>Disconnect</button></> : <><p>Saved account details are unavailable.</p><button type="button" onClick={() => setRestoreAttempt(v => v + 1)}>Retry loading details</button></>}
         </aside>}
       </div>
 
@@ -163,9 +164,10 @@ export default function MetaTraderTab({ backgroundHost, backgroundImage }: { bac
             <div className="mt5-broker-float"><div className="mt5-broker-reveal"><BrokerLogo key={broker?.id ?? "unknown"} broker={broker} /></div></div>
           </div>
           {state === "connecting" && <div className="mt5-small-spinner" role="status" aria-label="Connecting" />}
+          {state!=="connecting"&&<span className={`mt5-live-indicator ${state==="verified"?"is-connected":"is-disconnected"}`}>{state==="verified"?"Verified demo connection":"Connection not verified"}</span>}
           <div aria-live="polite" aria-atomic="true">
-            <h3 id="mt5-dialog-title">{state === "connecting" ? `Connecting to ${broker?.name ?? "broker"}...` : state === "verified" ? "Demo account verified" : "Account verification unavailable"}</h3>
-            {state === "verified" && <p id="mt5-dialog-description">The bound demo terminal confirmed your identity. Copying permissions and emergency stops are unchanged.</p>}
+            <h3 id="mt5-dialog-title">{state === "connecting" ? "Connecting to MT5..." : state === "verified" ? "Connected Successfully" : "Account verification unavailable"}</h3>
+            {state === "verified" && <p id="mt5-dialog-description">MT5 Account Connected. The bound demo terminal confirmed your identity. Copying permissions and emergency stops are unchanged.</p>}
             {state === "unverified" && <>
               <p id="mt5-dialog-description">Your account could not be verified. Confirm that this demo account has been provisioned for EA Cloud. Order execution remains unchanged.</p>
               <div className="mt5-result-actions">

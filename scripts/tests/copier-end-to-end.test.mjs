@@ -50,6 +50,7 @@ test('mentor database routing to five isolated HTTP workers: mapping, replay, di
   for(let i=1;i<=5;i++){
    await db.insert(s.appAccessTable).values({id:i,firstName:'Synthetic',lastName:'Client',email:`client${i}@example.invalid`,mentorId:1,status:'approved',licenseKey:'FIXTURE-'+i});
    await db.insert(s.licensesTable).values({key:'FIXTURE-'+i,mentorId:1,clientName:'Synthetic',clientEmail:`client${i}@example.invalid`,duration:'1month'});
+   await db.insert(s.mentorCopyPoliciesTable).values({clientId:i,mentorId:1,enabled:true,lotMode:'fixed',fixedLotSize:'1',allocationPercent:'100',maxLotSize:'1',maxExposureLots:'5',maxOpenTrades:10,maxDailyDrawdown:'5'});
    await db.insert(s.clientSettingsTable).values({clientId:i,mt5Login:String(i),mt5Server:'SimulationOnly',mt5Broker:brokers[i-1],encryptedMt5Password:api.encryptMT5Password('synthetic-password'),mt5Connected:true,copyingEnabled:true,lotMode:i===2?'multiplier':'fixed',fixedLotSize:'0.10',lotMultiplier:'2',maxLotSize:i===4?'0.08':'1'});
    await db.insert(s.clientSymbolConfigsTable).values({clientId:i,pairName:'EURUSD',selectedSymbol:'EURUSD.'+brokers[i-1],customLotSize:i===3?'0.06':null});
   }
@@ -74,7 +75,7 @@ test('mentor database routing to five isolated HTTP workers: mapping, replay, di
   assert.equal((await enqueue(2,.12,'BUY','100',{symbol:'OTHER'})).routed.state,'blocked_position_identity_change');
   // Restart the complete HTTP/process gateway, then replay the identical target.
   await f.restart();const key=api.sourceKey(1,'700','SyntheticMentor','100');
-  const replay=await transport({login:'1',password:'synthetic-password',server:'SimulationOnly',sourceKey:key,revision:signal.id,symbol:'EURUSD.deriv',target:.1,sl:0,tp:0,maxVolume:1,maxOpenTrades:10,maxDailyDrawdown:5});
+  const replay=await transport({login:'1',password:'synthetic-password',server:'SimulationOnly',sourceKey:key,revision:signal.id,symbol:'EURUSD.deriv',target:.1,sl:0,tp:0,maxVolume:1,maxOpenTrades:10,maxDailyDrawdown:5,maxExposureLots:5});
   assert.equal(replay.ok,true);assert.equal(await count(),beforeDuplicate);
   // Lost acknowledgement: backend retry must read the worker's journal.
   ({signal}=await enqueue(2,.12));lostAck=true;tally=await execute(signal);assert.equal(tally.failedRetryable,1);

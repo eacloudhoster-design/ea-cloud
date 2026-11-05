@@ -9,6 +9,7 @@ export const mt5ConnectionsTable = pgTable("mt5_connections", {
   balance: text("balance"),
   status: text("status").notNull().default("connected"), // "connected" | "failed"
   rawResponse: text("raw_response"),
+  encryptedMt5Password:text("encrypted_mt5_password"),
   connectedAt: timestamp("connected_at", { withTimezone: true }).notNull().defaultNow(),
 });
 

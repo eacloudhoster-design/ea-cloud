@@ -8,7 +8,7 @@ import { previewMt5Connection } from '../../artifacts/ea-app/src/lib/mt5-preview
 
 test('broker detection recognises common MT5 server names and regional/legacy aliases', () => {
   const cases = {
-    'OANDA-Live': 'OANDA', 'AvaTrade-Demo': 'AvaTrade', 'Exness-MT5Real12': 'Exness', ' exness demo ': 'Exness', 'Deriv-Demo': 'Deriv',
+    'JustMarkets-Demo3':'JustMarkets','RCGMarkets-Demo':'RCG Markets','OANDA-Live': 'OANDA', 'AvaTrade-Demo': 'AvaTrade', 'Exness-MT5Real12': 'Exness', ' exness demo ': 'Exness', 'Deriv-Demo': 'Deriv',
     'ICMarketsSC-MT5-2': 'IC Markets', 'Pepperstone-MT5-Live01': 'Pepperstone',
     'XMGlobal-MT5 2': 'XM', 'XMTrading-Real': 'XM', 'TradingPoint-Real': 'XM',
     'HFMarketsSV-LiveServer3': 'HFM', 'HotForex-Live': 'HFM', 'HFM-Demo': 'HFM',
@@ -23,11 +23,12 @@ test('unknown, ambiguous or spoofed server strings use the neutral fallback', ()
   }
 });
 
-test('all supported brokers have authentic pinned local assets with no external dependencies', () => {
+test('branded brokers retain pinned local assets; new profiles use explicit text fallbacks', () => {
   const manifest = JSON.parse(readFileSync(new URL('../../artifacts/ea-app/src/assets/brokers/manifest.json', import.meta.url), 'utf8'));
   assert.equal(new Set(brokers.map(b => b.id)).size, brokers.length);
-  assert.equal(Object.keys(manifest.assets).length, brokers.length);
-  for (const broker of brokers) {
+  assert.equal(Object.keys(manifest.assets).length, brokers.filter(b=>b.logo).length);
+  assert.deepEqual(brokers.filter(b=>!b.logo).map(b=>b.id).sort(),["justmarkets","rcg"]);
+  for (const broker of brokers.filter(b=>b.logo)) {
     const url = new URL(broker.logo);
     assert.equal(url.protocol, 'file:', broker.name + ' must be bundled locally');
     const bytes = readFileSync(fileURLToPath(url));

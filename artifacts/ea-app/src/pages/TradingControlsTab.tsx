@@ -84,7 +84,7 @@ export default function TradingControlsTab() {
     try {
       const headers = { "Content-Type": "application/json", Authorization: `Bearer ${clientToken}` };
       const responses = await Promise.all([
-        fetch(`${BASE}/app/trading-controls`, { method: "PATCH", headers, body: JSON.stringify(controls) }),
+        fetch(`${BASE}/app/trading-controls`, { method: "PATCH", headers, body: JSON.stringify({...controls,...Object.fromEntries(["fixedLotSize","riskPercent","lotMultiplier","maxDailyDrawdown","maxLotSize","maxOpenTrades"].map(key=>[key,Number((controls as any)[key])]))}) }),
         ...(symbolConfigs.length > 0 ? [
           fetch(`${BASE}/app/symbol-configs`, {
             method: "PATCH", headers: { ...headers, "X-Symbol-Save-Id": saveId },
@@ -199,7 +199,7 @@ export default function TradingControlsTab() {
 
         {/* Risk Limits */}
         <Section label="Risk Limits" accent={accentColor}>
-          <NumberField label="Max Daily Drawdown (%)" value={controls.maxDailyDrawdown} min="0.5" max="100" step="0.5"
+          <NumberField label="Max Daily Drawdown (%)" value={controls.maxDailyDrawdown} min="0.5" max="25" step="0.5"
             onChange={v => setControls(c => ({ ...c, maxDailyDrawdown: v }))} accent={accentColor} suffix="%" />
           <NumberField label="Max Open Trades" value={String(controls.maxOpenTrades)} min="1" max="100" step="1"
             onChange={v => setControls(c => ({ ...c, maxOpenTrades: parseInt(v) || 1 }))} accent={accentColor} />

@@ -49,6 +49,7 @@ export async function syncObserverPosition(input: {
   tp: number;
   maxVolume: number;
   maxOpenTrades: number;
+  maxExposureLots?: number;
   maxDailyDrawdown: number;
 }): Promise<VpsResult> {
   try {
