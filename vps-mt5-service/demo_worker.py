@@ -98,7 +98,10 @@ def create_demo_app(config,mt5,password,token,stop_checker=None):
                 finally:db.close()
                 if a is None or t is None or positions is None or orders is None:raise ValueError('Account snapshot unavailable')
                 if a.login!=config.login or a.server!=config.server or a.trade_mode!=getattr(mt5,'ACCOUNT_TRADE_MODE_DEMO',0):raise ValueError('Account changed')
-                return {'success':True,'connected':True,'simulation':False,'account_mode':'demo','broker':config.broker,'login':config.login,'server':config.server,'role':config.role,'currency':getattr(a,'currency',None),'balance':getattr(a,'balance',None),'equity':getattr(a,'equity',None),'open_positions':len(positions),'pending_orders':len(orders),'execution_enabled':bool(config.enabled and config.execution_approved and config.role=='client' and not stop_checker() and getattr(t,'trade_allowed',False) and getattr(a,'trade_allowed',False) and getattr(a,'trade_expert',False) and not getattr(t,'tradeapi_disabled',True)),'emergency_stop_active':bool(stop_checker()),'journal_bound':True,'journal_holds':holds}
+                expected=ntpath.normcase(ntpath.normpath(ntpath.dirname(config.terminal_path)))
+                if not t.connected or any(ntpath.normcase(ntpath.normpath(getattr(t,k,'')))!=expected for k in ('path','data_path')):raise ValueError('Terminal changed')
+                stopped=bool(stop_checker())
+                return {'success':True,'connected':True,'simulation':False,'account_mode':'demo','broker':config.broker,'login':config.login,'server':config.server,'role':config.role,'currency':getattr(a,'currency',None),'balance':getattr(a,'balance',None),'equity':getattr(a,'equity',None),'open_positions':len(positions),'pending_orders':len(orders),'execution_enabled':bool(config.enabled and config.execution_approved and config.role=='client' and not stopped and holds==0 and getattr(t,'trade_allowed',False) and getattr(a,'trade_allowed',False) and getattr(a,'trade_expert',False) and not getattr(t,'tradeapi_disabled',True)),'emergency_stop_active':stopped,'journal_bound':True,'journal_holds':holds}
             except Exception:
                 return JSONResponse({'success':False,'connected':False,'message':'Account status unavailable; execution unchanged'},status_code=503)
             finally:getattr(mt5,'shutdown',lambda:None)()
@@ -110,8 +113,14 @@ def create_demo_app(config,mt5,password,token,stop_checker=None):
                 if error:return JSONResponse({'success':False,'message':error},status_code=503)
                 try:bound()
                 except ValueError:return JSONResponse({'success':False,'message':'Unverified account journal binding'},status_code=503)
-                db=journal.open();db.close()
-                return {'version':2,'persistentJournal':True,'absoluteTargets':True,'simulation':False,'account_mode':'demo','accountIsolation':'dedicated-prefix','login':config.login,'server':config.server}
+                db=journal.open()
+                try:holds=db.execute("SELECT count(*) FROM allocations WHERE phase IN ('dispatching','reconciled_hold','external_reduction')").fetchone()[0]
+                finally:db.close()
+                a=mt5.account_info();t=mt5.terminal_info()
+                expected=ntpath.normcase(ntpath.normpath(ntpath.dirname(config.terminal_path)))
+                permitted=bool(a and t and a.login==config.login and a.server==config.server and getattr(a,'trade_mode',None)==getattr(mt5,'ACCOUNT_TRADE_MODE_DEMO',0) and t.connected and all(ntpath.normcase(ntpath.normpath(getattr(t,k,'')))==expected for k in ('path','data_path')) and getattr(a,'trade_allowed',False) and getattr(a,'trade_expert',False) and getattr(t,'trade_allowed',False) and not getattr(t,'tradeapi_disabled',True) and holds==0 and not stop_checker())
+                if not permitted:return JSONResponse({'success':False,'message':'Account safety gates or unresolved holds block execution','execution_enabled':False},status_code=503)
+                return {'execution_enabled':True,'emergency_stop_active':False,'journal_holds':0,'version':2,'persistentJournal':True,'absoluteTargets':True,'simulation':False,'account_mode':'demo','accountIsolation':'dedicated-prefix','login':config.login,'server':config.server}
             finally:getattr(mt5,'shutdown',lambda:None)()
     @app.get('/v1/reconciliation/{mapping_id}')
     def reconciliation_preview(mapping_id:int):

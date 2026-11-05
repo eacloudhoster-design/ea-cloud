@@ -21,6 +21,8 @@ export async function readBoundAccount(login: string | number, server: string, p
       typeof data.execution_enabled !== "boolean" || typeof data.emergency_stop_active !== "boolean" || data.journal_bound !== true ||
       !Number.isSafeInteger(data.journal_holds) || data.journal_holds < 0 || !Number.isSafeInteger(data.open_positions) || data.open_positions < 0 || !Number.isSafeInteger(data.pending_orders) || data.pending_orders < 0)
     throw Error("Provisioned demo account verification unavailable");
+  if(data.execution_enabled && (data.emergency_stop_active || data.journal_holds>0 || data.role!=="client"))
+    throw Error("Contradictory account safety snapshot");
   // Explicit projection: never return upstream credentials, names or debug text.
   const cash = (v: unknown) => typeof v === "number" && Number.isFinite(v) ? v : null;
   return { success:true, connected:true, simulation:false, account_mode:"demo",login:data.login,server:data.server,broker:data.broker,role:data.role,

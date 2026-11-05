@@ -12,3 +12,10 @@ class InventoryTests(unittest.TestCase):
  def test_installed_publisher_with_unavailable_metadata_alarms(self):
   r=self.base();r['publisher']={'installed':True,'metadata_fresh':False};self.assertEqual(len(module.assess(r)),1)
   r['publisher']['installed']=False;self.assertEqual(module.assess(r),[])
+ def test_journal_scope_rejects_cross_account_traversal_and_symlinks(self):
+  import tempfile
+  with tempfile.TemporaryDirectory() as folder:
+   base=Path(folder);(base/'one').mkdir();(base/'two').mkdir();journal=base/'one/journal.db';journal.touch();other=base/'two/journal.db';other.touch()
+   self.assertEqual(module.owned_journal(journal,'one',base),journal)
+   self.assertIsNone(module.owned_journal(base/'one/../two/journal.db','one',base))
+   (base/'one/link.db').symlink_to(other);self.assertIsNone(module.owned_journal(base/'one/link.db','one',base))

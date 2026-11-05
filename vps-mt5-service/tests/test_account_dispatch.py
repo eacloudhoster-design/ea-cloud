@@ -8,7 +8,7 @@ class DispatchTests(unittest.TestCase):
   self.calls=[];self.binding={'broker':'deriv','login':1,'server':'DemoFixture','mode':'demo','role':'client','url':'http://127.0.0.1:8201','token':'a'*64}
   def forward(binding,path,payload=None):
    self.calls.append((binding,path,payload))
-   return 200,{'success':True,'simulation':False,'account_mode':'demo','version':2,'persistentJournal':True,'absoluteTargets':True,'login':1,'server':'DemoFixture'}
+   return 200,{'success':True,'simulation':False,'account_mode':'demo','version':2,'persistentJournal':True,'absoluteTargets':True,'execution_enabled':True,'emergency_stop_active':False,'journal_holds':0,'login':1,'server':'DemoFixture'}
   self.forward=forward;self.client=TestClient(create_dispatch_app([self.binding],'b'*64,forward));self.headers={'Authorization':'Bearer '+'b'*64}
   self.payload={'login':1,'server':'DemoFixture','password':'must-stay-out-of-worker-request','sourceKey':'a'*64,'revision':1,'symbol':'EURUSD','target':.1,'sl':0,'tp':0,'maxVolume':1}
  def test_binding_authentication_and_password_is_not_forwarded(self):
@@ -50,7 +50,7 @@ class DispatchTests(unittest.TestCase):
     binding={**self.binding,'broker':broker,'role':role}
     def forward(binding,path,payload=None):
      self.assertEqual(path,'/v1/account-status');self.assertEqual(payload['password'],'fixture-private')
-     return 200,dict(success=True,connected=True,simulation=False,account_mode='demo',broker=broker,role=role,login=1,server='DemoFixture',execution_enabled=False,emergency_stop_active=True,journal_bound=True,password='must-never-escape')
+     return 200,dict(success=True,connected=True,simulation=False,account_mode='demo',broker=broker,role=role,login=1,server='DemoFixture',execution_enabled=False,emergency_stop_active=True,journal_bound=True,journal_holds=0,open_positions=0,pending_orders=0,password='must-never-escape')
     client=TestClient(create_dispatch_app([binding],'b'*64,forward))
     result=client.post('/observer/account-status',headers=self.headers,json={'login':1,'server':'DemoFixture','password':'fixture-private'})
     self.assertEqual(result.status_code,200);self.assertNotIn('must-never-escape',result.text)
@@ -60,3 +60,26 @@ class DispatchTests(unittest.TestCase):
    base=dict(success=True,connected=True,simulation=False,account_mode='demo',login=1,server='DemoFixture',broker='deriv',role='client')
    client=TestClient(create_dispatch_app([self.binding],'b'*64,lambda *a:(200,{**base,**changes})))
    self.assertEqual(client.post('/connect-mt5',headers=self.headers,json={'login':1,'server':'DemoFixture','password':'fixture'}).status_code,503)
+ def test_mentor_only_registry_never_advertises_execution_readiness(self):
+  calls=[];client=TestClient(create_dispatch_app([{**self.binding,'role':'mentor'}],'b'*64,lambda *a:calls.append(a)))
+  result=client.get('/observer/capabilities',headers=self.headers)
+  self.assertEqual(result.status_code,503);self.assertFalse(result.json()['success']);self.assertEqual(calls,[])
+ def test_invalid_or_shared_account_credentials_rejected_before_startup(self):
+  for change in [{'login':True},{'login':0},{'server':' DemoFixture'},{'token':'b'*64}]:
+   with self.assertRaises(ValueError):create_dispatch_app([{**self.binding,**change}],'b'*64,self.forward)
+  second={**self.binding,'login':2,'url':'http://127.0.0.1:8202'}
+  with self.assertRaises(ValueError):create_dispatch_app([self.binding,second],'b'*64,self.forward)
+
+ def test_mixed_router_counts_only_ready_receivers(self):
+  mentor={**self.binding,'role':'mentor'};receiver={**self.binding,'login':2,'token':'c'*64,'url':'http://127.0.0.1:8202'};calls=[]
+  def forward(binding,path,payload=None):
+   calls.append(binding['role']);return 200,dict(version=2,persistentJournal=True,absoluteTargets=True,simulation=False,account_mode='demo',execution_enabled=True,emergency_stop_active=False,journal_holds=0,login=2,server='DemoFixture')
+  client=TestClient(create_dispatch_app([mentor,receiver],'b'*64,forward));r=client.get('/observer/capabilities',headers=self.headers)
+  self.assertEqual(r.status_code,200);self.assertEqual(r.json()['accounts'],1);self.assertEqual(r.json()['registeredAccounts'],2);self.assertEqual(calls,['client'])
+ def test_blocked_or_contradictory_worker_never_advertises_ready(self):
+  for flags in [dict(execution_enabled=False),dict(execution_enabled=True,emergency_stop_active=True),dict(execution_enabled=True,emergency_stop_active=False,journal_holds=1)]:
+   ack=dict(success=True,connected=True,simulation=False,account_mode='demo',broker='deriv',role='client',login=1,server='DemoFixture',version=2,persistentJournal=True,absoluteTargets=True,execution_enabled=False,emergency_stop_active=True,journal_bound=True,journal_holds=0,open_positions=0,pending_orders=0);ack.update(flags)
+   client=TestClient(create_dispatch_app([self.binding],'b'*64,lambda *a:(200,ack)))
+   self.assertEqual(client.get('/observer/capabilities',headers=self.headers).status_code,503)
+   if not ack['execution_enabled']:pass
+   else:self.assertEqual(client.post('/observer/account-status',headers=self.headers,json={'login':1,'server':'DemoFixture','password':'fixture'}).status_code,503)

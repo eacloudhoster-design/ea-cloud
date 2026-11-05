@@ -1,5 +1,7 @@
 # MT5 engine read-only release readiness
 
+Post-merge review: PR131_FINAL_DEPLOYMENT_CHECKLIST.md and PR131_HARDENING_VERIFICATION.json supersede this historical release snapshot for the follow-up hardening. PR #131 was merged externally; no deployment is implied.
+
 Continues the existing engine integration. Earlier successful lifecycle/copying/latency simulations are carried forward, not rerun. No broker orders, stop removal, execution activation, merge, production deployment or production secret change occurred.
 
 ## Release scope and pass/fail gates

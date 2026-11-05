@@ -22,13 +22,15 @@ def worker_url(url):
 def create_dispatch_app(bindings,token,forward=None):
     if len(token)<32:raise ValueError('Strong router credential required')
     if len(bindings)>2:raise ValueError('VPS demo capacity limited to two MT5 workers until load acceptance')
-    routes={};urls=set()
+    routes={};urls=set();worker_tokens=set()
     for binding in bindings:
         if binding['mode']!='demo' or binding['role'] not in ('mentor','client') or binding['broker'] not in ('deriv','exness','justmarkets','xm','rcg'):
             raise ValueError('Only bound demo accounts are routable')
-        key=(int(binding['login']),binding['server']);url=worker_url(binding['url'])
-        if key in routes or url in urls or len(binding['token'])<32:raise ValueError('Duplicate account/endpoint or invalid credential')
-        routes[key]={**binding,'url':url};urls.add(url)
+        if type(binding['login']) is not int or binding['login']<=0 or not isinstance(binding['server'],str) or not binding['server'] or binding['server']!=binding['server'].strip():
+            raise ValueError('Exact positive account and server binding required')
+        key=(binding['login'],binding['server']);url=worker_url(binding['url'])
+        if key in routes or url in urls or len(binding['token'])<32 or binding['token']==token or binding['token'] in worker_tokens:raise ValueError('Duplicate account/endpoint/credential or invalid credential')
+        routes[key]={**binding,'url':url};urls.add(url);worker_tokens.add(binding['token'])
     if not routes:raise ValueError('No provisioned account workers')
     if forward is None:
         opener=urllib.request.build_opener(NoRedirect)
@@ -60,12 +62,13 @@ def create_dispatch_app(bindings,token,forward=None):
     def health():return {'status':'ok','service':'isolated-demo-router','accounts':len(routes),'simulation':False,'execution_readiness_claimed':False}
     @app.get('/observer/capabilities')
     def capabilities():
-        for (login,server),binding in routes.items():
-            if binding['role']!='client':continue
+        clients=[(key,binding) for key,binding in routes.items() if binding['role']=='client']
+        if not clients:return JSONResponse({'success':False,'message':'No receiving workers provisioned'},status_code=503)
+        for (login,server),binding in clients:
             status,data=forward(binding,'/observer/capabilities')
-            if status!=200 or not isinstance(data,dict) or data.get('simulation') is not False or data.get('account_mode')!='demo' or data.get('login')!=login or data.get('server')!=server or data.get('version')!=2 or data.get('persistentJournal') is not True or data.get('absoluteTargets') is not True:
+            if status!=200 or not isinstance(data,dict) or data.get('simulation') is not False or data.get('account_mode')!='demo' or data.get('login')!=login or data.get('server')!=server or data.get('version')!=2 or data.get('persistentJournal') is not True or data.get('absoluteTargets') is not True or data.get('execution_enabled') is not True or data.get('emergency_stop_active') is not False or type(data.get('journal_holds')) is not int or data['journal_holds']!=0:
                 return JSONResponse({'success':False,'message':'Account workers not ready'},status_code=503)
-        return {'version':2,'persistentJournal':True,'absoluteTargets':True,'simulation':False,'account_mode':'demo','accountIsolation':'dedicated-prefix','accounts':len(routes)}
+        return {'version':2,'persistentJournal':True,'absoluteTargets':True,'simulation':False,'account_mode':'demo','accountIsolation':'dedicated-prefix','execution_enabled':True,'emergency_stop_active':False,'journal_holds':0,'accounts':len(clients),'registeredAccounts':len(routes)}
     @app.post('/connect-mt5')
     @app.post('/observer/account-status')
     def account_status(payload:AccountCheck):
@@ -74,6 +77,9 @@ def create_dispatch_app(bindings,token,forward=None):
         status,data=forward(binding,'/v1/account-status',{'login':payload.login,'server':payload.server,'password':payload.password.get_secret_value()})
         if status!=200 or not isinstance(data,dict) or data.get('success') is not True or data.get('connected') is not True or data.get('simulation') is not False or data.get('account_mode')!='demo' or data.get('login')!=payload.login or data.get('server')!=payload.server or data.get('broker')!=binding['broker'] or data.get('role')!=binding['role']:
             return JSONResponse({'success':False,'connected':False,'message':'Bound account verification unavailable'},status_code=503)
+        valid_controls=all(type(data.get(k)) is bool for k in ('execution_enabled','emergency_stop_active')) and data.get('journal_bound') is True and all(type(data.get(k)) is int and data[k]>=0 for k in ('journal_holds','open_positions','pending_orders'))
+        if not valid_controls or (data['execution_enabled'] and (data['emergency_stop_active'] or data['journal_holds']>0 or binding['role']!='client')):
+            return JSONResponse({'success':False,'connected':False,'message':'Account safety snapshot is unavailable or contradictory'},status_code=503)
         allowed=('success','connected','simulation','account_mode','broker','login','server','role','currency','balance','equity','open_positions','pending_orders','execution_enabled','emergency_stop_active','journal_bound','journal_holds')
         return {key:data[key] for key in allowed if key in data}
     @app.post('/observer/sync-position')

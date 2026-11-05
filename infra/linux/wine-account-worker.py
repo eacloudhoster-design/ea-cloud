@@ -8,8 +8,12 @@ def main():
         root=Path(os.environ['CREDENTIALS_DIRECTORY']);home=Path(os.environ['HOME'])
         binding=dict(config=json.loads((root/'account.json').read_text()),password=(root/'broker-password').read_text().rstrip('\r\n'),token=(root/'api-token').read_text().strip(),port=int(os.environ['API_PORT']))
         if binding['config'].get('account_mode')!='demo' or not 1024<=binding['port']<=65535:raise ValueError('Invalid demo binding')
+        # Launch the worker from THIS reviewed release, not the mutable primary checkout.
+        entry=Path(__file__).resolve().parents[2]/'vps-mt5-service/demo_worker.py'
+        if not entry.is_file():raise ValueError('Reviewed worker entry unavailable')
+        wine_entry='Z:'+str(entry).replace('/','\\')
         # No credential in argv/environment; suppress arbitrary vendor output.
-        result=subprocess.run(['/opt/wine-stable/bin/wine',str(home/'python/python.exe'),r'Z:\opt\ea-cloud\vps-mt5-service\demo_worker.py'],input=json.dumps(binding),text=True,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
+        result=subprocess.run(['/opt/wine-stable/bin/wine',str(home/'python/python.exe'),wine_entry],input=json.dumps(binding),text=True,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
         print('Account worker exited; status='+str(result.returncode),flush=True)
         return result.returncode
     except Exception:

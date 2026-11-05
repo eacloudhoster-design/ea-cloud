@@ -42,3 +42,29 @@ class DemoGateTests(unittest.TestCase):
   from unittest.mock import patch
   from demo_worker import emergency_stop_active
   with patch('demo_worker.Path.exists',side_effect=PermissionError('fixture')):self.assertTrue(emergency_stop_active())
+
+ def ready_sdk(self):
+  self.info.trade_allowed=True;self.info.trade_expert=True
+  self.mt5.positions_get=lambda:();self.mt5.orders_get=lambda:()
+  self.mt5.terminal_info=lambda:NS(connected=True,path=r'C:\fixture',data_path=r'C:\fixture',trade_allowed=True,tradeapi_disabled=False)
+ def test_status_samples_stop_once_and_never_returns_contradictory_flags(self):
+  self.ready_sdk();samples=[]
+  def stopped():samples.append(True);return len(samples)>1
+  client=TestClient(create_demo_app(self.config,self.mt5,'fixture','a'*64,stop_checker=stopped))
+  r=client.post('/v1/account-status',headers=self.headers,json=dict(login=1,server='DemoFixture',password='fixture'))
+  self.assertEqual(r.status_code,200);self.assertEqual(len(samples),1);self.assertTrue(r.json()['execution_enabled']);self.assertFalse(r.json()['emergency_stop_active']);self.assertEqual(self.calls,[])
+ def test_mid_snapshot_disconnect_and_permission_or_hold_block_capability(self):
+  self.ready_sdk();calls=[];original=self.mt5.terminal_info
+  def terminal():
+   t=original();calls.append(True)
+   if len(calls)>1:t.connected=False
+   return t
+  self.mt5.terminal_info=terminal
+  r=self.client.post('/v1/account-status',headers=self.headers,json=dict(login=1,server='DemoFixture',password='test-only-broker-secret'))
+  self.assertEqual(r.status_code,503);self.assertFalse(r.json()['connected'])
+  self.mt5.terminal_info=original;self.info.trade_expert=False
+  self.assertEqual(self.client.get('/observer/capabilities',headers=self.headers).status_code,503)
+  self.info.trade_expert=True;self.assertEqual(self.client.get('/observer/capabilities',headers=self.headers).status_code,200)
+  import sqlite3
+  with sqlite3.connect(self.config.journal_path) as db:db.execute("INSERT INTO allocations(scope,account,source,magic,symbol,revision,phase) VALUES('fixture','fixture','fixture',1,'FIXTURE',1,'dispatching')")
+  self.assertEqual(self.client.get('/observer/capabilities',headers=self.headers).status_code,503);self.assertEqual(self.calls,[])

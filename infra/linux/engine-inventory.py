@@ -1,7 +1,14 @@
 #!/usr/bin/env python3
 """Root read-only inventory. No SDK, process mutation or credentials in output."""
-import datetime,json,os,sqlite3,subprocess,time,tempfile
+import datetime,json,os,sqlite3,subprocess,time,tempfile,re
 from pathlib import Path
+
+def owned_journal(path,alias,base=Path('/var/lib/ea-cloud/accounts')):
+ if not re.fullmatch(r'[a-zA-Z0-9_-]+',alias):return None
+ try:
+  resolved=Path(path).resolve(strict=True)
+  return resolved if resolved.is_file() and resolved.is_relative_to(base.resolve()/alias) else None
+ except OSError:return None
 
 def assess(report):
  alerts=[unit+': service unavailable' for unit,state in report['services'].items() if state!='active']
@@ -17,8 +24,8 @@ def inventory():
    c=json.loads(file.read_text());alias=file.parent.name
    path=str(c.get('journal_path','')).replace('\\','/')
    if path.lower().startswith('z:'):path=path[2:]
-   journal=Path(path);holds=None
-   if journal.is_absolute() and journal.is_relative_to('/var/lib/ea-cloud/accounts') and journal.is_file():
+   journal=owned_journal(path,alias);holds=None
+   if journal is not None:
     db=sqlite3.connect(journal.as_uri()+'?mode=ro',uri=True,timeout=1)
     try:
      db.execute('PRAGMA query_only=ON');db.execute('PRAGMA busy_timeout=1000')
