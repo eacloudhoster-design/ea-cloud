@@ -1,14 +1,13 @@
+import { MT5_VPS_BASE, mt5Headers } from "./mt5-endpoint";
 import type { Logger } from "pino";
 
 // ─── MT5 VPS trade-execution client ───────────────────────────────────────────
 // Thin wrapper around the FastAPI service running on the Windows VPS
-// (see /vps-mt5-service). Handles structured success detection and transient
-// retry. NEVER log the decrypted password passed in `password`.
+// (see /vps-mt5-service). Handles structured success detection without
+// replaying ambiguous non-idempotent submissions. NEVER log the decrypted password passed in `password`.
 
-const EXTERNAL_MT5_BASE = "http://102.214.9.67:8000";
+const EXTERNAL_MT5_BASE = MT5_VPS_BASE;
 const REQUEST_TIMEOUT_MS = 20_000;
-const MAX_ATTEMPTS = 3;
-const RETRY_BACKOFF_MS = [500, 1500]; // delay before attempts 2 and 3
 
 export interface VpsResult {
   ok: boolean;                 // logical success (terminal executed the request)
@@ -50,23 +49,20 @@ interface ModifyParams {
   tp?: number | null;
 }
 
-function sleep(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
 // Single POST attempt — classifies the outcome but does not retry.
 async function postOnce(path: string, body: Record<string, unknown>): Promise<Omit<VpsResult, "attempts">> {
   let res: Response;
   try {
     res = await fetch(`${EXTERNAL_MT5_BASE}${path}`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      redirect: "error",
+      headers: mt5Headers(),
       body: JSON.stringify(body),
       signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
     });
   } catch {
-    // Network error / timeout — never reached or no response: transient.
-    return { ok: false, httpStatus: 0, ticket: null, retcode: null, message: "VPS unreachable", data: null, retriable: true };
+    // A missing response does not establish whether the broker already filled.
+    return { ok: false, httpStatus: 0, ticket: null, retcode: null, message: "VPS outcome unknown; reconcile account history before retry", data: { uncertain: true }, retriable: false };
   }
 
   let data: any = null;
@@ -76,9 +72,9 @@ async function postOnce(path: string, body: Record<string, unknown>): Promise<Om
     data = null;
   }
 
-  // Transient server-side problems are worth retrying.
+  // HTTP failure alone cannot establish that no broker submission occurred.
   if (res.status >= 500 || res.status === 429) {
-    return { ok: false, httpStatus: res.status, ticket: null, retcode: null, message: `VPS HTTP ${res.status}`, data, retriable: true };
+    return { ok: false, httpStatus: res.status, ticket: null, retcode: null, message: `VPS HTTP ${res.status}; reconcile before retry`, data, retriable: false };
   }
 
   // Logical success requires a positive, structured marker from the VPS — an
@@ -93,24 +89,16 @@ async function postOnce(path: string, body: Record<string, unknown>): Promise<Om
   return { ok, httpStatus: res.status, ticket, retcode, message, data, retriable: false };
 }
 
-async function callWithRetry(path: string, body: Record<string, unknown>, log: Logger): Promise<VpsResult> {
-  let last: Omit<VpsResult, "attempts"> | null = null;
-  for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
-    last = await postOnce(path, body);
-    if (last.ok || !last.retriable) {
-      return { ...last, attempts: attempt };
-    }
-    if (attempt < MAX_ATTEMPTS) {
-      const delay = RETRY_BACKOFF_MS[attempt - 1] ?? 1500;
-      log.warn({ path, attempt, httpStatus: last.httpStatus, message: last.message }, "VPS call transient failure — retrying");
-      await sleep(delay);
-    }
+async function callOnce(path: string, body: Record<string, unknown>, log: Logger): Promise<VpsResult> {
+  const result = await postOnce(path, body);
+  if (!result.ok && result.httpStatus === 0) {
+    log.warn({ path }, "VPS submission outcome unknown; automatic replay blocked");
   }
-  return { ...(last as Omit<VpsResult, "attempts">), attempts: MAX_ATTEMPTS };
+  return { ...result, attempts: 1 };
 }
 
 export function executeTradeOnVps(p: ExecuteParams, log: Logger): Promise<VpsResult> {
-  return callWithRetry("/execute-trade", {
+  return callOnce("/execute-trade", {
     login: Number(p.login),
     password: p.password,
     server: p.server,
@@ -124,7 +112,7 @@ export function executeTradeOnVps(p: ExecuteParams, log: Logger): Promise<VpsRes
 }
 
 export function closeTradeOnVps(p: CloseParams, log: Logger): Promise<VpsResult> {
-  return callWithRetry("/close-trade", {
+  return callOnce("/close-trade", {
     login: Number(p.login),
     password: p.password,
     server: p.server,
@@ -134,7 +122,7 @@ export function closeTradeOnVps(p: CloseParams, log: Logger): Promise<VpsResult>
 }
 
 export function modifyTradeOnVps(p: ModifyParams, log: Logger): Promise<VpsResult> {
-  return callWithRetry("/modify-trade", {
+  return callOnce("/modify-trade", {
     login: Number(p.login),
     password: p.password,
     server: p.server,

@@ -8,10 +8,20 @@ import json
 import math
 import os
 import sqlite3
+import secrets
+import time
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional
+from dataclasses import dataclass
+
+@dataclass(frozen=True)
+class ConnectionFailure:
+    message:str
+    retriable:bool=True
+
 from fastapi import Header, HTTPException
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field, SecretStr
 
 class ObserverSync(BaseModel):
@@ -37,6 +47,17 @@ class SyncJournal:
         db.execute("PRAGMA synchronous=FULL")
         db.execute("CREATE TABLE IF NOT EXISTS allocations(scope TEXT PRIMARY KEY, account TEXT NOT NULL, source TEXT NOT NULL, magic INTEGER NOT NULL, symbol TEXT NOT NULL, revision INTEGER NOT NULL, phase TEXT NOT NULL, response TEXT, UNIQUE(account,magic))")
         db.execute("CREATE TABLE IF NOT EXISTS daily_risk(account TEXT NOT NULL, day TEXT NOT NULL, equity REAL NOT NULL, PRIMARY KEY(account,day))")
+        columns={row[1] for row in db.execute("PRAGMA table_info(allocations)")}
+        if 'confirmed_volume' not in columns:
+            db.execute('ALTER TABLE allocations ADD COLUMN confirmed_volume REAL');db.commit()
+        db.execute("CREATE TABLE IF NOT EXISTS order_mappings(id INTEGER PRIMARY KEY AUTOINCREMENT,scope TEXT NOT NULL,revision INTEGER NOT NULL,phase TEXT NOT NULL,request TEXT NOT NULL,receipt TEXT)");db.commit()
+        mapping_columns={row[1] for row in db.execute('PRAGMA table_info(order_mappings)')}
+        for name,kind in [('operation_id','TEXT'),('created_at','REAL'),('pre_positions','TEXT'),('target','REAL')]:
+            if name not in mapping_columns:db.execute('ALTER TABLE order_mappings ADD COLUMN '+name+' '+kind)
+        db.execute('CREATE UNIQUE INDEX IF NOT EXISTS order_operation_unique ON order_mappings(operation_id) WHERE operation_id IS NOT NULL');db.commit()
+        if 'request_hash' not in columns:
+            db.execute("ALTER TABLE allocations ADD COLUMN request_hash TEXT")
+            db.commit()
         return db
 
 def reply(ok, message, **extra):
@@ -50,6 +71,7 @@ def synchronize(mt5, payload, journal, connect, send):
     account=json.dumps([payload.login,payload.server],separators=(',',':'))
     scope=hashlib.sha256((account+payload.sourceKey).encode()).hexdigest()
     magic=(int(hashlib.sha256(payload.sourceKey.encode()).hexdigest()[:8],16)&0x3fffffff)|0x40000000
+    request_hash=hashlib.sha256(json.dumps(payload.model_dump(mode='json',exclude={'password'}),sort_keys=True,separators=(',',':'),allow_nan=False).encode()).hexdigest()
     db=journal.open()
     try:
         row=db.execute("SELECT * FROM allocations WHERE scope=?",[scope]).fetchone()
@@ -57,8 +79,10 @@ def synchronize(mt5, payload, journal, connect, send):
             return reply(False,"Broker symbol changed for an existing allocation; manual reconciliation required")
         if row and payload.revision<row['revision']:
             return reply(False,"Stale position revision rejected")
-        if row and row['phase']=='dispatching':
+        if row and row['phase'] in ('dispatching','reconciled_hold'):
             return reply(False,"Broker submission outcome is uncertain after restart; reconcile account history before retrying",uncertain=True)
+        if row and payload.revision==row['revision'] and row['phase']!='dispatching' and row['request_hash']!=request_hash:
+            return reply(False,"Revision payload conflict or unverifiable legacy revision; no orders submitted")
         if row and row['phase']=='external_reduction' and payload.target!=0:
             return reply(False,"Client exposure was reduced externally; reconcile manually or first process source-flat state")
         if row and payload.revision==row['revision'] and row['phase']=='done':
@@ -66,13 +90,22 @@ def synchronize(mt5, payload, journal, connect, send):
         if row is None:
             collision=db.execute("SELECT scope FROM allocations WHERE account=? AND magic=?",[account,magic]).fetchone()
             if collision:return reply(False,"Source magic allocation collision; no order submitted")
-            db.execute("INSERT INTO allocations VALUES(?,?,?,?,?,?,'planned',NULL)",[scope,account,payload.sourceKey,magic,payload.symbol,payload.revision]);db.commit()
+            db.execute("INSERT INTO allocations(scope,account,source,magic,symbol,revision,phase,response,request_hash) VALUES(?,?,?,?,?,?,'planned',NULL,?)",[scope,account,payload.sourceKey,magic,payload.symbol,payload.revision,request_hash]);db.commit()
         else:
-            db.execute("UPDATE allocations SET revision=?,phase='planned',response=NULL WHERE scope=?",[payload.revision,scope]);db.commit()
+            db.execute("UPDATE allocations SET revision=?,phase='planned',request_hash=? WHERE scope=?",[payload.revision,request_hash,scope]);db.commit()
         def finish(result):
-            db.execute("UPDATE allocations SET phase='done',response=? WHERE scope=?",[json.dumps(result),scope]);db.commit();return result
+            db.execute("UPDATE allocations SET phase='done',response=? WHERE scope=?",[json.dumps(result),scope])
+            if result.get('success'):
+                db.execute("UPDATE allocations SET confirmed_volume=? WHERE scope=?",[result['data']['volume'],scope])
+            db.commit();return result
         error=connect(payload.login,payload.password.get_secret_value(),payload.server)
-        if error is not None:return finish(reply(False,"Client MT5 connection failed"))
+        if error is not None:
+            if not getattr(error,'retriable',True):return finish(reply(False,"Account connection identity or mode rejected"))
+            # No send has occurred in this attempt. Preserve the last confirmed
+            # exposure across outages so reconnect cannot reopen a client stop.
+            # Keep revision/hash for stale/conflicting replay rejection.
+            db.execute("UPDATE allocations SET phase='waiting_connection' WHERE scope=?",[scope]);db.commit()
+            return reply(False,"Client MT5 connection unavailable before submission",retriable=True,submission_started=False)
         info=mt5.symbol_info(payload.symbol)
         if info is None or not mt5.symbol_select(payload.symbol,True):return finish(reply(False,"Broker symbol unavailable"))
         account_info=mt5.account_info()
@@ -88,11 +121,16 @@ def synchronize(mt5, payload, journal, connect, send):
         maximum=float(getattr(info,'volume_max',0) or 0)
         if step<=0 or minimum<=0 or maximum<=0:return finish(reply(False,"Invalid broker volume constraints"))
         target=math.copysign(math.floor((abs(payload.target)+1e-10)/step)*step,payload.target) if payload.target else 0.0
-        if target and abs(target)<minimum:return finish(reply(False,"Target is below broker minimum; no volume increase was invented"))
+        if payload.target and abs(target)<minimum:return finish(reply(False,"Target is below broker minimum; no volume increase was invented"))
         tolerance=step/4
+        submitted=False
         for attempt in range(32):
             positions=mt5.positions_get(symbol=payload.symbol)
-            if positions is None:return finish(reply(False,"Could not reconcile broker positions"))
+            if positions is None:
+                if submitted:
+                    db.execute("UPDATE allocations SET phase='dispatching' WHERE scope=?",[scope]);db.commit()
+                    return reply(False,"Post-submission broker snapshot unavailable; reconcile history",uncertain=True)
+                return finish(reply(False,"Could not reconcile broker positions"))
             owned=[p for p in positions if int(p.magic)==magic]
             if not hedging and any(int(p.magic)!=magic for p in positions):return finish(reply(False,"Netting symbol contains unrelated exposure; no orders submitted"))
             if not hedging:
@@ -103,7 +141,7 @@ def synchronize(mt5, payload, journal, connect, send):
             # A client SL/TP or manual reduction must not be silently reopened by
             # a later unchanged source snapshot. Reductions/closure remain allowed.
             previous=json.loads(row['response']) if row and row['response'] else None
-            expected=(previous or {}).get('data',{}).get('volume',0) if (previous or {}).get('success') else 0
+            expected=row['confirmed_volume'] if row and row['confirmed_volume'] is not None else ((previous or {}).get('data',{}).get('volume',0) if (previous or {}).get('success') else 0)
             if attempt==0 and abs(actual)+tolerance<abs(expected) and abs(target)>abs(actual)+tolerance:
                 db.execute("UPDATE allocations SET phase='external_reduction' WHERE scope=?",[scope]);db.commit()
                 return reply(False,"Client exposure was reduced outside the observer; manual reconciliation required before increasing it")
@@ -135,14 +173,22 @@ def synchronize(mt5, payload, journal, connect, send):
                 request={"action":mt5.TRADE_ACTION_DEAL,"symbol":payload.symbol,"volume":round(amount,8),"type":action,"price":tick.ask if action==mt5.ORDER_TYPE_BUY else tick.bid,"sl":payload.sl,"tp":payload.tp}
             else:
                 modify=next((p for p in owned if abs(float(p.sl)-payload.sl)>float(info.point)/2 or abs(float(p.tp)-payload.tp)>float(info.point)/2),None)
-                if modify is None:return finish(reply(True,"Exposure reconciled",data={"ticket":str(owned[0].ticket) if owned else None,"tickets":[str(p.ticket) for p in owned],"volume":actual,"target":target,"retcode":getattr(mt5,'TRADE_RETCODE_DONE',10009)}))
+                if modify is None:return finish(reply(True,"Exposure reconciled",data={"allocation":scope,"sourceKey":payload.sourceKey,"symbol":payload.symbol,"magic":magic,"ticket":str(owned[0].ticket) if owned else None,"tickets":[str(p.ticket) for p in owned],"volume":actual,"target":target,"retcode":getattr(mt5,'TRADE_RETCODE_DONE',10009)}))
                 request={"action":mt5.TRADE_ACTION_SLTP,"position":int(modify.ticket),"symbol":payload.symbol,"sl":payload.sl,"tp":payload.tp}
-            request.update({"magic":magic,"deviation":20,"comment":"OBS "+scope[:12]+" | EA CLOUD","type_time":mt5.ORDER_TIME_GTC})
+            operation=secrets.token_hex(14)
+            request.update({"magic":magic,"deviation":20,"comment":"EC:"+operation,"type_time":mt5.ORDER_TIME_GTC})
             # Commit BEFORE sending. If the process dies in this window, never
             # guess/retry the order after restart: require history reconciliation.
-            db.execute("UPDATE allocations SET phase='dispatching' WHERE scope=?",[scope]);db.commit()
+            pre=[dict(ticket=int(p.ticket),identifier=int(getattr(p,'identifier',p.ticket)),magic=int(p.magic),type=int(p.type),volume=float(p.volume),sl=float(p.sl),tp=float(p.tp),symbol=getattr(p,'symbol',payload.symbol)) for p in owned]
+            db.execute("UPDATE allocations SET phase='dispatching' WHERE scope=?",[scope])
+            mapping=db.execute("INSERT INTO order_mappings(scope,revision,phase,request,operation_id,created_at,pre_positions,target) VALUES(?,?,'dispatching',?,?,?,?,?)",[scope,payload.revision,json.dumps(request,sort_keys=True),operation,time.time(),json.dumps(pre,sort_keys=True),target]).lastrowid;db.commit()
+            submitted=True
             result=send(request,payload.symbol)
-            if result is None:return reply(False,"Broker returned no execution result; manual reconciliation required",uncertain=True)
+            if result is None:
+                db.execute("UPDATE order_mappings SET phase='uncertain' WHERE id=?",[mapping]);db.commit()
+                return reply(False,"Broker returned no execution result; manual reconciliation required",uncertain=True)
+            receipt={field:getattr(result,field) for field in ('retcode','order','deal','volume','price') if isinstance(getattr(result,field,None),(int,float))}
+            db.execute("UPDATE order_mappings SET phase='acknowledged',receipt=? WHERE id=?",[json.dumps(receipt),mapping]);db.commit()
             if result.retcode not in [getattr(mt5,'TRADE_RETCODE_DONE',10009),getattr(mt5,'TRADE_RETCODE_DONE_PARTIAL',10010)]:
                 return finish(reply(False,"Broker rejected position synchronization",data={"retcode":int(result.retcode)}))
             db.execute("UPDATE allocations SET phase='planned' WHERE scope=?",[scope]);db.commit()
@@ -164,4 +210,5 @@ def register_observer_routes(app, mt5, lock, connect, send, journal_path=None):
     @app.post('/observer/sync-position')
     def sync(payload:ObserverSync,authorization:Optional[str]=Header(default=None)):
         authorized(authorization)
-        with lock:return synchronize(mt5,payload,journal,connect,send)
+        with lock:result=synchronize(mt5,payload,journal,connect,send)
+        return JSONResponse(result,status_code=503 if result.get('retriable') is True else 200)

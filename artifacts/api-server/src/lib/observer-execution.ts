@@ -11,7 +11,7 @@ import {
 import { and, eq } from "drizzle-orm";
 import { resolveAppSessionAccess } from "./app-session-access";
 import { syncObserverPosition } from "./observer-vps";
-import { verifiedSource } from "./ea-builder/routing";
+import { sourceKey, verifiedSource } from "./ea-builder/routing";
 import type { VpsResult } from "./mt5-vps";
 const rejected = (message: string): VpsResult => ({
   ok: false,
@@ -31,6 +31,7 @@ export async function executeObserver(
   password: string,
   symbol: string,
   initialVolume: (source: number) => number,
+  dispatch: typeof syncObserverPosition = syncObserverPosition,
 ): Promise<VpsResult> {
   let payload: any;
   try {
@@ -70,6 +71,16 @@ export async function executeObserver(
     .limit(1);
   if (!event || !robot || !robot.copyEnabled || robot.revokedAt)
     return rejected("Observer copying disabled or revoked");
+  const receipt=event.payload as any;
+  if(event.robotId!==robot.id || !receipt || receipt.kind!=="SNAPSHOT" ||
+    receipt.sequence!==payload.sequence || receipt.volume!==payload.sourceVolume ||
+    receipt.side!==payload.side || !["BUY","SELL"].includes(payload.side) ||
+    receipt.symbol!==signal.symbol || receipt.sourceMagic!==robot.sourceMagic || receipt.mixed ||
+    receipt.sourceAccount!==event.sourceAccount || receipt.sourceServer!==event.sourceServer ||
+    receipt.sourceAccount!==robot.sourceAccount || receipt.sourceServer!==robot.sourceServer ||
+    sourceKey(signal.mentorId,receipt.sourceAccount,receipt.sourceServer,receipt.positionId)!==payload.sourceKey)
+    return rejected("Observer dispatch does not match its authenticated receipt");
+
   const [mentor] = await db
     .select()
     .from(usersTable)
@@ -173,7 +184,7 @@ export async function executeObserver(
   const target =
     Math.min(cap, payload.sourceVolume * scale) *
     (payload.side === "BUY" ? 1 : -1);
-  return syncObserverPosition({
+  return dispatch({
     login: settings.mt5Login,
     password,
     server: settings.mt5Server,

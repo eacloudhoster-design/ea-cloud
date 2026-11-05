@@ -8,7 +8,7 @@ function configuration() {
     );
   const url = new URL(raw);
   if (
-    url.protocol !== "https:" ||
+    (url.protocol !== "https:" && !(url.protocol === "http:" && ["127.0.0.1", "[::1]", "localhost"].includes(url.hostname))) ||
     url.username ||
     url.password ||
     url.pathname !== "/" ||
@@ -21,6 +21,7 @@ function configuration() {
 export async function observerCapabilities() {
   const { url, token } = configuration();
   const r = await fetch(new URL("/observer/capabilities", url), {
+    redirect: "error",
     headers: { Authorization: `Bearer ${token}` },
     signal: AbortSignal.timeout(10000),
   });
@@ -29,7 +30,7 @@ export async function observerCapabilities() {
   if (
     c.version !== 2 ||
     c.persistentJournal !== true ||
-    c.absoluteTargets !== true
+    c.absoluteTargets !== true || c.simulation !== false || c.account_mode !== "demo"
   )
     throw Error(
       "Upgrade and verify the observer VPS journal before enabling copying.",
@@ -54,6 +55,7 @@ export async function syncObserverPosition(input: {
     const { url, token } = configuration();
     const r = await fetch(new URL("/observer/sync-position", url), {
       method: "POST",
+      redirect:"error",
       headers: {
         Authorization: `Bearer ${token}`,
         "Content-Type": "application/json",
@@ -63,7 +65,7 @@ export async function syncObserverPosition(input: {
     });
     const data: any = await r.json().catch(() => null);
     return {
-      ok: r.ok && data?.success === true,
+      ok: r.ok && data?.success === true && data?.simulation === false && data?.account_mode === "demo",
       httpStatus: r.status,
       ticket: data?.data?.ticket ?? null,
       retcode: data?.data?.retcode ?? null,
@@ -72,7 +74,7 @@ export async function syncObserverPosition(input: {
           ? data.message
           : "Observer execution bridge rejected the request.",
       data,
-      retriable: r.status >= 500 && data?.uncertain !== true,
+      retriable: r.status >= 500 && data?.uncertain !== true && data?.retriable !== false,
       attempts: 1,
     };
   } catch {

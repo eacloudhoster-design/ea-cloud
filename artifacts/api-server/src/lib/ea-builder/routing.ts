@@ -169,6 +169,8 @@ export async function routeSnapshot(
     .limit(1);
   if (prior && Number(prior.sequence) >= sequence)
     return { state: "stale_snapshot", signalId: null };
+  if (prior && prior.symbol !== payload.symbol)
+    return {state:"blocked_position_identity_change",signalId:null};
   const value = {
     robotId: robot.id,
     mentorId: robot.mentorId,

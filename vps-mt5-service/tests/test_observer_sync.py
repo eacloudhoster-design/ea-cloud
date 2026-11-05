@@ -73,6 +73,47 @@ class ObserverTests(unittest.TestCase):
     def test_max_open_trades_is_enforced(self):
         self.sync(.1)
         self.assertFalse(self.sync(.2,2,maxOpenTrades=1)['success'])
+    def test_disconnect_retry_survives_reopen_without_duplicate_or_conflicting_revision(self):
+        payload=ObserverSync(login=123,password='test-only',server='demo',sourceKey='a'*64,revision=2,symbol='EURUSD',target=.1,sl=0,tp=0,maxVolume=1)
+        result=synchronize(self.broker,payload,self.journal,lambda *a:'Disconnected',self.broker.send)
+        self.assertFalse(result['success']);self.assertTrue(result['retriable']);self.assertFalse(result['submission_started'])
+        self.assertEqual(self.broker.sent,[])
+        self.journal=SyncJournal(self.journal.path)
+        self.assertFalse(self.sync(.1,1)['success'])
+        self.assertFalse(self.sync(.2,2)['success']);self.assertEqual(self.broker.sent,[])
+        self.assertTrue(self.sync(.1,2)['success']);self.assertTrue(self.sync(.1,2)['success'])
+        self.assertEqual(len(self.broker.sent),1)
+
+    def test_reconnect_preserves_previous_exposure_and_respects_client_stop(self):
+        self.assertTrue(self.sync(.1)['success'])
+        payload=ObserverSync(login=123,password='test-only',server='demo',sourceKey='a'*64,revision=2,symbol='EURUSD',target=.1,sl=0,tp=0,maxVolume=1)
+        for attempt in range(2):
+            result=synchronize(self.broker,payload,self.journal,lambda *a:'Disconnected',self.broker.send)
+            self.assertTrue(result['retriable'])
+        self.broker.positions=[]
+        self.journal=SyncJournal(self.journal.path)
+        self.assertFalse(self.sync(.1,2)['success']);self.assertEqual(len(self.broker.sent),1)
+        self.assertTrue(self.sync(0,3)['success'])
+
+    def test_failed_risk_check_does_not_erase_confirmed_client_exposure(self):
+        self.assertTrue(self.sync(.1)['success'])
+        self.broker.equity=900;self.assertFalse(self.sync(.2,2)['success'])
+        self.broker.equity=1000;self.broker.positions=[]
+        self.assertFalse(self.sync(.1,3)['success']);self.assertEqual(len(self.broker.sent),1)
+
+    def test_post_submission_snapshot_disconnect_is_uncertain_after_restart(self):
+        original=self.broker.positions_get
+        self.broker.positions_get=lambda **kw:None if self.broker.sent else original(**kw)
+        self.assertTrue(self.sync(.1)['uncertain']);self.assertEqual(len(self.broker.sent),1)
+        self.broker.positions_get=original;self.journal=SyncJournal(self.journal.path)
+        self.assertTrue(self.sync(.1,2)['uncertain']);self.assertEqual(len(self.broker.sent),1)
+
+    def test_subminimum_nonzero_target_never_becomes_flat_or_an_invented_open(self):
+        self.assertFalse(self.sync(.005)['success']);self.assertEqual(self.broker.sent,[])
+        self.assertTrue(self.sync(.1,2)['success']);count=len(self.broker.sent)
+        self.assertFalse(self.sync(.005,3)['success']);self.assertEqual(len(self.broker.sent),count)
+        self.assertAlmostEqual(self.broker.positions[0].volume,.1)
+
     def test_partial_fill_reconciles_remaining_exposure(self):
         self.broker.partial=True;self.assertTrue(self.sync(.1)['success'])
         self.assertAlmostEqual(sum(p.volume for p in self.broker.positions),.1)
@@ -97,3 +138,29 @@ class ObserverAuthTests(unittest.TestCase):
                 response=client.get('/observer/capabilities',headers={'Authorization':'Bearer '+'a'*32})
                 self.assertEqual(response.status_code,200);self.assertTrue(response.json()['persistentJournal'])
                 self.assertEqual(broker.sent,[])
+
+class ObserverReconnectHTTPTests(unittest.TestCase):
+    def test_only_known_pre_submission_disconnect_is_retryable_over_http(self):
+        import threading
+        from unittest.mock import patch
+        from fastapi import FastAPI
+        from fastapi.testclient import TestClient
+        from observer_sync import register_observer_routes
+        with tempfile.TemporaryDirectory() as directory:
+            online=[False];broker=Broker();app=FastAPI()
+            register_observer_routes(app,broker,threading.Lock(),lambda *a:None if online[0] else 'offline',broker.send,Path(directory)/'journal.db')
+            client=TestClient(app);headers={'Authorization':'Bearer '+'a'*32}
+            body=dict(login=123,password='fixture',server='demo',sourceKey='a'*64,revision=1,symbol='EURUSD',target=.1,sl=0,tp=0,maxVolume=1)
+            with patch.dict('os.environ',{'OBSERVER_MT5_VPS_TOKEN':'a'*32}):
+                response=client.post('/observer/sync-position',headers=headers,json=body)
+                self.assertEqual(response.status_code,503);self.assertTrue(response.json()['retriable']);self.assertFalse(response.json()['submission_started'])
+                self.assertEqual(broker.sent,[]);online[0]=True
+                self.assertTrue(client.post('/observer/sync-position',headers=headers,json=body).json()['success'])
+                self.assertTrue(client.post('/observer/sync-position',headers=headers,json=body).json()['success'])
+                self.assertEqual(len(broker.sent),1)
+                broker.uncertain=True;body.update(revision=2,target=.2)
+                response=client.post('/observer/sync-position',headers=headers,json=body)
+                self.assertTrue(response.json()['uncertain']);self.assertFalse(response.json()['retriable'])
+                count=len(broker.sent);broker.uncertain=False
+                response=client.post('/observer/sync-position',headers=headers,json=body)
+                self.assertTrue(response.json()['uncertain']);self.assertEqual(len(broker.sent),count)

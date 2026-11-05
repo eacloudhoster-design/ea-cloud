@@ -1,0 +1,15 @@
+[Unit]
+Description=EA Cloud private DEMO account display %i
+[Service]
+User=ea-account-%i
+Group=ea-account-%i
+EnvironmentFile=/etc/ea-cloud/accounts/%i.env
+ExecStart=/usr/bin/Xvfb ${DISPLAY} -screen 0 1280x800x24 -nolisten tcp -noreset -auth /var/lib/ea-cloud/accounts/%i/.Xauthority
+Restart=always
+RestartSec=5
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+ReadWritePaths=/tmp
+[Install]
+WantedBy=multi-user.target

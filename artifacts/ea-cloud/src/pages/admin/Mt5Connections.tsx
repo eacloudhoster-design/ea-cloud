@@ -1,3 +1,4 @@
+import EngineStatus from "./EngineStatus";
 import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { usePortalRedirect } from "@/contexts/AuthContext";
@@ -130,6 +131,7 @@ export default function Mt5Connections() {
         </p>
       </motion.div>
 
+      <EngineStatus />
       <div className="max-w-lg">
         {/* ── Connection Form ───────────────────────────────────────────────── */}
         <motion.form

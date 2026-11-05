@@ -37,7 +37,7 @@ export default function TradingControlsTab() {
     maxOpenTrades: 10,
     maxLotSize: "1.00",
     symbolFilters: "",
-    copyingEnabled: true,
+    copyingEnabled: false,
   });
   const [symbolConfigs, setSymbolConfigs] = useState<SymbolConfig[]>([]);
   const [loading, setLoading] = useState(true);
@@ -166,11 +166,13 @@ export default function TradingControlsTab() {
           <div className="grid grid-cols-3 gap-2">
             {([
               { id: "fixed", label: "Fixed Lot" },
-              { id: "risk_percent", label: "Risk %" },
+              { id: "risk_percent", label: "Risk % (unavailable)" },
               { id: "multiplier", label: "Multiplier" },
             ] as { id: LotMode; label: string }[]).map(mode => (
               <button
                 key={mode.id}
+                disabled={mode.id === "risk_percent"}
+                title={mode.id === "risk_percent" ? "Requires verified stop-distance sizing; choose fixed or multiplier" : undefined}
                 onClick={() => setControls(c => ({ ...c, lotMode: mode.id }))}
                 className="py-2.5 rounded-xl text-xs font-semibold transition-all"
                 style={{
@@ -188,10 +190,7 @@ export default function TradingControlsTab() {
             <NumberField label="Fixed Lot Size" value={controls.fixedLotSize} min="0.01" step="0.01"
               onChange={v => setControls(c => ({ ...c, fixedLotSize: v }))} accent={accentColor} />
           )}
-          {controls.lotMode === "risk_percent" && (
-            <NumberField label="Risk per Trade (%)" value={controls.riskPercent} min="0.1" max="20" step="0.1"
-              onChange={v => setControls(c => ({ ...c, riskPercent: v }))} accent={accentColor} suffix="%" />
-          )}
+          {controls.lotMode === "risk_percent" && <p role="status" className="text-sm text-amber-300">Risk-percent sizing is unavailable. Choose Fixed Lot or Multiplier before saving.</p>}
           {controls.lotMode === "multiplier" && (
             <NumberField label="Lot Multiplier" value={controls.lotMultiplier} min="0.1" step="0.1"
               onChange={v => setControls(c => ({ ...c, lotMultiplier: v }))} accent={accentColor} suffix="x" />

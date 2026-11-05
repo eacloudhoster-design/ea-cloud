@@ -57,10 +57,9 @@ async function claimSignals(): Promise<number[]> {
       SELECT DISTINCT ON (mentor_id) id
       FROM ${tradeSignalsTable}
       WHERE mentor_id NOT IN (SELECT mentor_id FROM active)
-        AND (
-          (status = 'pending' AND (next_attempt_at IS NULL OR next_attempt_at <= now()))
-          OR (status = 'executing' AND updated_at < now() - ${lease})
-        )
+        AND status IN ('pending', 'executing')
+      -- Choose the oldest outstanding signal BEFORE checking its due time.
+      -- An older OPEN in backoff must block a later CLOSE/MODIFY.
       ORDER BY mentor_id, created_at ASC, id ASC
     ),
     locked AS (

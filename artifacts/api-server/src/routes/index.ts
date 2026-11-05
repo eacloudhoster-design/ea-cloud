@@ -1,3 +1,4 @@
+import engineRouter from "./engine";
 import eaBuilderRouter from "./ea-builder";
 import privacyRouter from "./privacy";
 import webPushRouter from "./web-push";
@@ -40,6 +41,7 @@ router.use("/app", (req, res, next) => {
   void requireAppSession(req, res, next);
 });
 
+router.use(engineRouter);
 router.use(privacyRouter);
 router.use(healthRouter);
 router.use(assistantRouter);

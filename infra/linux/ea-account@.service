@@ -1,0 +1,31 @@
+# Prepared template: requires provisioned Unix identity, private prefix, runtime,
+# exact broker demo binding and root-owned credential files. Not enabled.
+[Unit]
+Description=EA Cloud isolated DEMO account worker %i
+Requires=ea-account-display@%i.service ea-account-terminal@%i.service ea-execution-gates.service
+After=ea-account-display@%i.service ea-account-terminal@%i.service ea-execution-gates.service network-online.target
+PartOf=ea-account-display@%i.service ea-account-terminal@%i.service
+ConditionPathExists=/etc/ea-cloud/accounts/%i/account.json
+StartLimitIntervalSec=300
+StartLimitBurst=3
+[Service]
+User=ea-account-%i
+Group=ea-account-%i
+EnvironmentFile=/etc/ea-cloud/accounts/%i.env
+LoadCredential=account.json:/etc/ea-cloud/accounts/%i/account.json
+LoadCredential=broker-password:/etc/ea-cloud/accounts/%i/broker-password
+LoadCredential=api-token:/etc/ea-cloud/accounts/%i/api-token
+WorkingDirectory=/var/lib/ea-cloud/accounts/%i
+ExecStart=/usr/bin/python3 /opt/ea-cloud/infra/linux/wine-account-worker.py
+Restart=always
+RestartSec=10
+TimeoutStopSec=8
+UMask=0077
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+ReadWritePaths=/var/lib/ea-cloud/accounts/%i /tmp
+MemoryMax=1G
+TasksMax=160
+[Install]
+WantedBy=multi-user.target

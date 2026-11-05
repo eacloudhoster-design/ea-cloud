@@ -1,0 +1,8 @@
+[Unit]
+Description=EA Cloud engine alert delivery cadence
+[Timer]
+OnBootSec=90
+OnUnitActiveSec=60
+Persistent=true
+[Install]
+WantedBy=timers.target

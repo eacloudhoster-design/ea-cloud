@@ -3,12 +3,14 @@ import {queueBotPush, queueSymbolPush} from "../lib/web-push";
 import { Router } from "express";
 import { db, clientSettingsTable, appAccessTable, symbolPairsTable, clientSymbolConfigsTable } from "@workspace/db";
 import { eq, and } from "drizzle-orm";
+import { requireAppSession } from "../middlewares/app-session";
+import { clientEngineStatus } from "../lib/engine-status";
+import { bindClientAccount } from "../lib/bind-client-account";
+import { readBoundAccount } from "../lib/mt5-account-status";
 import { encryptMT5Password } from "../lib/mt5-crypto";
 
 const router = Router();
 
-const EXTERNAL_MT5_BASE = "http://102.214.9.67:8000";
-const EXTERNAL_MT5_URL = `${EXTERNAL_MT5_BASE}/connect-mt5`;
 
 const requireClientAuth = async (req: any, res: any, next: any) => {
   const auth = req.headers.authorization as string | undefined;
@@ -55,7 +57,10 @@ router.patch("/app/trading-controls", requireClientAuth, async (req: any, res) =
     } = req.body as Record<string, unknown>;
 
     const updates: Record<string, unknown> = {};
-    if (lotMode !== undefined) updates.lotMode = lotMode;
+    if (lotMode !== undefined) {
+      if(!["fixed","multiplier"].includes(String(lotMode))){res.status(422).json({error:"Choose fixed or multiplier sizing; verified risk-percent sizing is not available",code:"LOT_MODE_UNSUPPORTED"});return;}
+      updates.lotMode=lotMode;
+    }
     if (fixedLotSize !== undefined) updates.fixedLotSize = String(fixedLotSize);
     if (riskPercent !== undefined) updates.riskPercent = String(riskPercent);
     if (lotMultiplier !== undefined) updates.lotMultiplier = String(lotMultiplier);
@@ -227,7 +232,7 @@ router.patch("/app/symbol-configs", requireClientAuth, async (req: any, res) => 
 // (same logic as the Admin Portal route), then saves the result to the
 // client's profile. Accepts both the new {login,password,server,broker}
 // payload and the legacy {mt5Login,mt5Server,mt5Broker} field names.
-router.post("/app/mt5-connect", requireClientAuth, async (req: any, res) => {
+router.post(["/app/mt5-connect","/client/mt5/connect"], requireAppSession, requireClientAuth, async (req: any, res) => {
   try {
     const body = req.body as Record<string, unknown>;
     const login = (body.login ?? body.mt5Login) as unknown;
@@ -236,7 +241,7 @@ router.post("/app/mt5-connect", requireClientAuth, async (req: any, res) => {
     const broker = (body.broker ?? body.mt5Broker) as string | undefined;
 
     req.log.info(
-      { clientId: req.clientId, login, server, broker, hasPassword: Boolean(password) },
+      { clientId: req.clientId },
       "[ClientMT5] connect request received",
     );
 
@@ -249,102 +254,24 @@ router.post("/app/mt5-connect", requireClientAuth, async (req: any, res) => {
       res.status(400).json({ error: "login must be a valid positive integer" }); return;
     }
 
-    // ── Forward to external MT5 backend ──────────────────────────────────────
-    let externalData: Record<string, unknown> = {};
-    let externalStatus = 0;
-    let connected = false;
-
-    try {
-      const payload = { login: loginNum, password, server };
-      req.log.info(
-        { url: EXTERNAL_MT5_URL, payload: { login: loginNum, server, hasPassword: true } },
-        "[ClientMT5] forwarding to external MT5 backend",
-      );
-
-      const externalRes = await fetch(EXTERNAL_MT5_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-        signal: AbortSignal.timeout(15_000),
-      });
-
-      externalStatus = externalRes.status;
-      externalData = (await externalRes.json().catch(() => ({}))) as Record<string, unknown>;
-      // The external backend can return HTTP 200 with {success:false} on a failed
-      // login, so a 2xx alone is not enough — also honour explicit failure flags.
-      connected =
-        externalRes.ok &&
-        externalData.success !== false &&
-        externalData.status !== "failed" &&
-        externalData.connected !== false;
-
-      req.log.info(
-        { externalStatus, connected, externalData },
-        "[ClientMT5] external MT5 backend response",
-      );
-    } catch (fetchErr: unknown) {
-      const message = (fetchErr as Error)?.message ?? "Connection timeout";
-      req.log.warn({ fetchErr: message }, "[ClientMT5] external MT5 backend unreachable");
-      res.status(502).json({ error: `MT5 backend unreachable: ${message}` });
-      return;
+    if (typeof password !== "string" || password.length > 1024 || typeof server !== "string" || server.length > 256 || !Number.isSafeInteger(loginNum)) {
+      res.status(400).json({error:"Invalid account credentials"});return;
     }
-
-    // ── Failure: return the exact backend error message + details ────────────
-    if (!connected) {
-      const backendError =
-        (externalData.error as string) ||
-        (externalData.message as string) ||
-        (externalData.detail as string) ||
-        (externalData.msg as string) ||
-        "Connection failed";
-      // Surface the raw MT5 diagnostic (e.g. mt5.last_error()) if the backend
-      // provides it, so the client can see the real initialization failure.
-      const details = externalData.details ?? externalData.last_error ?? null;
-      req.log.info(
-        { externalStatus, backendError, details },
-        "[ClientMT5] connection rejected by backend",
-      );
-      res.status(422).json({ error: backendError, details });
-      return;
-    }
-
-    // ── Success: extract account details (handles both flat and nested shapes)
-    // The external backend may return either flat fields or an `account` object:
-    //   { success:true, account:{ login, balance, equity, server, broker, account_name } }
-    const account =
-      (externalData.account as Record<string, unknown> | undefined) ?? externalData;
-
-    const pick = (...keys: string[]): unknown => {
-      for (const k of keys) {
-        if (account[k] !== undefined && account[k] !== null) return account[k];
-        if (externalData[k] !== undefined && externalData[k] !== null) return externalData[k];
-      }
-      return undefined;
-    };
-
-    const balanceRaw = pick("balance");
-    const balance = balanceRaw !== undefined ? String(balanceRaw) : null;
-    const equityRaw = pick("equity");
-    const equity = equityRaw !== undefined ? String(equityRaw) : null;
-    const resolvedBroker =
-      (pick("broker") as string | undefined) ?? broker ?? null;
-    const accountName = (pick("account_name", "accountName", "name") as string | undefined) ?? null;
-    const mt5LoginStr = String(loginNum);
-    const connectedAt = new Date().toISOString();
+    let account;
+    try { account=await readBoundAccount(loginNum,server,password); }
+    catch {res.status(422).json({error:"A provisioned demo account could not be verified",code:"MT5_BINDING_UNVERIFIED"});return;}
+    if(account.role!=="client"){res.status(403).json({error:"A receiving client account is required"});return;}
+    const balance=account.balance===null?null:String(account.balance),equity=account.equity===null?null:String(account.equity);
+    const resolvedBroker=account.broker,accountName=null,mt5LoginStr=String(loginNum),connectedAt=new Date().toISOString();
 
     // Encrypt the password for copy-trade execution — NEVER stored in plain text.
     const encryptedMt5Password = encryptMT5Password(password);
 
-    let [existing] = await db.select({ id: clientSettingsTable.id })
-      .from(clientSettingsTable).where(eq(clientSettingsTable.clientId, req.clientId)).limit(1);
-
-    if (existing) {
-      await db.update(clientSettingsTable)
-        .set({ mt5Login: mt5LoginStr, mt5Server: server, mt5Broker: resolvedBroker, encryptedMt5Password, mt5Connected: true })
-        .where(eq(clientSettingsTable.clientId, req.clientId));
-    } else {
-      await db.insert(clientSettingsTable)
-        .values({ clientId: req.clientId, mt5Login: mt5LoginStr, mt5Server: server, mt5Broker: resolvedBroker, encryptedMt5Password, mt5Connected: true });
+    try {await bindClientAccount(req.clientId,{login:mt5LoginStr,server,broker:resolvedBroker},encryptedMt5Password);}
+    catch(error){
+      const code=error instanceof Error?error.message:"";
+      if(["ACCOUNT_ALREADY_BOUND","ACCOUNT_REBIND_REQUIRES_RECONCILIATION"].includes(code)){res.status(409).json({error:"Account binding requires operator review",code});return;}
+      throw error;
     }
 
     req.log.info(
@@ -364,42 +291,27 @@ router.post("/app/mt5-connect", requireClientAuth, async (req: any, res) => {
       connectedAt,
     });
   } catch (err) {
-    req.log.error({ err }, "[ClientMT5] MT5Connect error");
+    req.log.error({ clientId:req.clientId }, "[ClientMT5] account verification or storage failed");
     res.status(500).json({ error: "Internal server error" });
   }
 });
 
-// MT5 service health check — proxies to the external MT5 backend's /mt5-health
-// endpoint so the client can diagnose terminal/initialization status. The
-// external (Python/MetaTrader5) service must implement GET /mt5-health.
-router.get("/app/mt5-health", requireClientAuth, async (req: any, res) => {
+// Account-owned health uses the same credential-bound status contract.
+router.get("/app/mt5-health", requireAppSession, async (req: any, res) => {
+  res.setHeader("Cache-Control","no-store");
   try {
-    const externalRes = await fetch(`${EXTERNAL_MT5_BASE}/mt5-health`, {
-      method: "GET",
-      signal: AbortSignal.timeout(10_000),
-    });
-    const data = await externalRes.json().catch(() => ({}));
-    req.log.info({ externalStatus: externalRes.status, data }, "[ClientMT5] mt5-health response");
-    res.status(externalRes.ok ? 200 : 502).json(data);
-  } catch (err: unknown) {
-    const message = (err as Error)?.message ?? "unreachable";
-    req.log.warn({ err: message }, "[ClientMT5] mt5-health unreachable");
-    res.status(502).json({
-      terminal_installed: null,
-      terminal_running: null,
-      mt5_initialized: false,
-      last_error: `MT5 backend unreachable: ${message}`,
-    });
-  }
+    const status=await clientEngineStatus(req.clientId,true);
+    res.json({mt5_initialized:status.connection.verified,connection:status.connection,copier:status.copier,observedAt:status.observedAt});
+  } catch {res.status(503).json({mt5_initialized:false,code:"ENGINE_STATUS_UNAVAILABLE"});}
 });
 
 // Disconnect MT5
 router.post("/app/mt5-disconnect", requireClientAuth, async (req: any, res) => {
   try {
     await db.update(clientSettingsTable)
-      .set({ mt5Connected: false, mt5Login: null, mt5Server: null, mt5Broker: null, encryptedMt5Password: null })
+      .set({ mt5Connected: false, copyingEnabled: false })
       .where(eq(clientSettingsTable.clientId, req.clientId));
-    res.json({ connected: false });
+    res.json({ connected: false, copyingEnabled:false, credentialsRetainedForReconciliation:true });
   } catch (err) {
     req.log.error({ err }, "MT5Disconnect error");
     res.status(500).json({ error: "Internal server error" });
