@@ -57,6 +57,11 @@ test('real browser sessions, owned engine status, strict broker proof and accoun
   await assert.rejects(api.bindClientAccount(12,{login:'91',server:'FixtureDemo',broker:'justmarkets'},'fixture'),/ACCOUNT_ALREADY_BOUND/);
   await f.engine.exec("INSERT INTO observer_allocations(id,client_id,source_key,mentor_id,symbol,scale) VALUES('alloc',10,'fixture',1,'XAUUSD.fixture','1')");
   await assert.rejects(api.bindClientAccount(10,{login:'92',server:'FixtureDemo',broker:'justmarkets'},'fixture'),/ACCOUNT_REBIND_REQUIRES_RECONCILIATION/);
+  // Explicit status-only relay proves connection but cannot assert journal or execution readiness.
+  response={...ack,read_only:true,protocol:'EA_READ_ONLY_STATUS_V1',financial_routes:false,journal_bound:false,journal_holds:null,emergency_stop_active:null,execution_enabled:false};
+  result=await request('/app/engine/status',{headers:{cookie:clientCookie}});state=await result.json();assert.equal(state.connection.code,'VERIFIED_DEMO_READ_ONLY');assert.equal(state.copier.state,'read_only');assert.equal(state.copier.executionPermitted,false);assert.equal(state.copier.unresolvedJournalHolds,null);
+  for(const bad of [{execution_enabled:true},{journal_bound:true},{journal_holds:0},{financial_routes:true},{protocol:'other'}]){const before=response;response={...response,...bad};await assert.rejects(api.readBoundAccount('91','FixtureDemo','fixture-broker-password'));response=before;}
+  response=ack;
   // Read-only canary consumes existing cookies without refresh/revocation writes.
   await f.engine.exec("UPDATE browser_sessions SET last_seen_at=now()-interval '2 days'");
   const sessionsBefore=(await f.engine.query('SELECT * FROM browser_sessions ORDER BY token_hash')).rows;

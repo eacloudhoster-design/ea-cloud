@@ -17,14 +17,14 @@ export async function clientEngineStatus(clientId: number, probe = false, mentor
     try {
       live=await readBoundAccount(settings.mt5Login,settings.mt5Server,decryptMT5Password(settings.encryptedMt5Password));
       if(live.role!=="client" || (settings.mt5Broker && live.broker!==settings.mt5Broker))throw Error("Binding mismatch");
-      code="VERIFIED_DEMO";
+      code=live.read_only?"VERIFIED_DEMO_READ_ONLY":"VERIFIED_DEMO";
     } catch { live=null;code="ACCOUNT_VERIFICATION_UNAVAILABLE"; }
   }
   const copyingRequested=settings?.copyingEnabled === true;
   return { clientId,observedAt:new Date().toISOString(),account:settings?.mt5Login ? {login:settings.mt5Login,server:settings.mt5Server,broker:settings.mt5Broker,storedConnected:settings.mt5Connected}:null,
     connection:{code,verified:live!==null,...(live?{mode:live.account_mode,positions:live.open_positions,pendingOrders:live.pending_orders,currency:live.currency}: {})},
-    copier:{requested:copyingRequested,state:!copyingRequested?"paused":!live?"unverified":live.journal_holds>0?"review_required":!settings?.mt5Connected || live.emergency_stop_active || !live.execution_enabled?"blocked":"worker_permitted",
-      executionPermitted:!!(copyingRequested && settings?.mt5Connected && live?.execution_enabled && live.emergency_stop_active===false && live.journal_holds===0),unresolvedJournalHolds:live?.journal_holds ?? null,emergencyStopActive:live?.emergency_stop_active ?? null,
+    copier:{requested:copyingRequested,state:!copyingRequested?"paused":!live?"unverified":live.read_only?"read_only":live.journal_holds!==null && live.journal_holds>0?"review_required":!settings?.mt5Connected || live.emergency_stop_active || !live.execution_enabled?"blocked":"worker_permitted",
+      executionPermitted:!!(copyingRequested && settings?.mt5Connected && live?.execution_enabled && !live.read_only && live.emergency_stop_active===false && live.journal_holds===0),unresolvedJournalHolds:live?.journal_holds ?? null,emergencyStopActive:live?.emergency_stop_active ?? null,
       endToEndAcceptanceVerified:false},
     mappings,recentExecutions:recent.map(row=>({...row,errorCode:row.status==="failed"?"EXECUTION_FAILED_REVIEW_REQUIRED":null})),
     limitations:["Mappings are retained allocations, not a live position count","No retries, reconciliation holds or execution flags are changed by status reads","Worker permission is not end-to-end trading acceptance"] };
