@@ -30,7 +30,7 @@ export async function observerCapabilities() {
   if (
     c.version !== 2 ||
     c.persistentJournal !== true ||
-    c.absoluteTargets !== true || c.simulation !== false || c.account_mode !== "demo"
+    c.absoluteTargets !== true || c.simulation !== false || c.account_mode !== "demo" || c.execution_enabled !== true || c.emergency_stop_active !== false || c.journal_holds !== 0
   )
     throw Error(
       "Upgrade and verify the observer VPS journal before enabling copying.",

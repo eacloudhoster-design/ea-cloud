@@ -1,0 +1,87 @@
+{
+  "observed_at": "2026-11-05T21:45:12.538561+00:00",
+  "pr131": {
+    "state": "merged",
+    "merged_by": "repository owner externally",
+    "merged_at": "2026-11-05T18:31:36Z",
+    "merge_commit": "ddd864ee769d0878f1e7cc1dea02602bbb4f3b39",
+    "merged_by_this_review": false
+  },
+  "code_review_hardening": "PASS_LOCAL",
+  "deployment_ready": false,
+  "production_ready": false,
+  "targeted_tests": {
+    "python_worker_router_mapping": 20,
+    "python_monitor_alerts": 9,
+    "python_release_launcher": 2,
+    "python_total": 31,
+    "node_account_status_and_portal_race": 2,
+    "node_explicit_capability": 1,
+    "node_total": 3,
+    "prior_full_simulations_repeated": false
+  },
+  "builds": {
+    "api_types": "PASS",
+    "portal_types": "PASS",
+    "isolated_portal_build": "PASS",
+    "isolated_readonly_api_build": "PASS",
+    "large_ui_chunk_warning": "Existing nonblocking warning"
+  },
+  "database_compatibility": {
+    "status": "BLOCKED",
+    "original_pair_located": false,
+    "project_processes_checked": 9,
+    "project_env_files_checked": 10,
+    "owned_eacloud_sites_found": 0,
+    "records_read": 0,
+    "records_modified": 0,
+    "original_secret_replaced": false,
+    "missing_values": [
+      "DATABASE_URL",
+      "SESSION_SECRET"
+    ]
+  },
+  "actual_mapping": {
+    "distinct_accounts": true,
+    "distinct_strong_service_credentials": true,
+    "source_effective_role": "client",
+    "source_required_role": "mentor",
+    "registry_provisioned": false,
+    "current_endpoints_are_readonly_not_v2_workers": true,
+    "loaded_runtime_credentials_accepted": false,
+    "production_database_account_associations_verified": false,
+    "cutover_ready": false
+  },
+  "safety": {
+    "both_stops_active": true,
+    "no_execution_grant": true,
+    "orders_submitted": 0,
+    "all_15_existing_services_active": true,
+    "private_bundles_preserved": true,
+    "financial_acceptance_artifact_unchanged": true,
+    "primary_checkout_branch": "infra/mt5-account-workers-20261104",
+    "primary_index_tree": "aeb833224552e2a86ca8bbf6cc09d5abbb5083ee",
+    "production_deployed": false,
+    "production_secrets_changed": false
+  },
+  "test_log_sha256": {
+    "safety": "b3b34fedfca7cd6135d1f7926ead657d9224514c3e89541835e35df2d80032c9",
+    "monitor": "1449b9ec8ecece81737bd97e375fd17f8cad92840931bd2b15a5483dd8ce0461",
+    "release_launcher": "ad59c4d5ea77c03f4d398762a37ea7817bf2dd14fc66be6bec929c4139819a64",
+    "node_status": "ee04919328496d643b9a6a3c12a832a93937dd637bbb92a9287368d4cc1bd4ff",
+    "node_capability": "84f76623390953a249199c5e443406a728d0776acc5d0d043c8b35eb2a4fdbe9",
+    "api_types": "b71a6c538e46e35441fc7d365844a7fe08abfca7fb146cda4954d7c6ed474000",
+    "portal_types": "8158f8f77b93841cedcf4159f6d23f564b5f5d005232d2b4d4989efbcc50a687",
+    "portal_build": "542ed86148c7207f3737c97297faa779cacfd58ba33e87fee09027ee933c8412",
+    "canary_build": "f81f3c99d475ace9adc425df0db936f13d55f10e1f8a90deed834e750c4ca1b6"
+  },
+  "source_bundle_sha256": "fb4821c46e8c176695bd797e9643396cc2bd044ef7e7451415f45c68c4268457",
+  "manifest_sha256": "4d49e1892cd0df1288d31c9c3e1c197d505292f76c12f4ee0a500aded2fe7674",
+  "pending": [
+    "Original production DB/key and SELECT-only canary access",
+    "Approved source-role/registry/V2 worker handover and DB associations",
+    "Approved external alert/offsite restore acceptance",
+    "Follow-up review and explicit pinned read-only deployment/restart window"
+  ],
+  "publication": "Follow-up PR result recorded separately on VPS"
+}

@@ -90,3 +90,11 @@ test('observer requires positive demo markers and refuses credential redirects',
   }
  });}finally{globalThis.fetch=original;if(previous.url===undefined)delete process.env.OBSERVER_MT5_VPS_URL;else process.env.OBSERVER_MT5_VPS_URL=previous.url;if(previous.token===undefined)delete process.env.OBSERVER_MT5_VPS_TOKEN;else process.env.OBSERVER_MT5_VPS_TOKEN=previous.token;}
 });
+
+test('observer capability requires an explicit execution-enabled receiver',async()=>{
+ const old=globalThis.fetch;const before={url:process.env.OBSERVER_MT5_VPS_URL,token:process.env.OBSERVER_MT5_VPS_TOKEN};process.env.OBSERVER_MT5_VPS_URL='http://127.0.0.1:8199';process.env.OBSERVER_MT5_VPS_TOKEN='a'.repeat(64);
+ try{await compiled('artifacts/api-server/src/lib/observer-vps.ts',async url=>{
+  const {observerCapabilities}=await import(url);let ack={version:2,persistentJournal:true,absoluteTargets:true,simulation:false,account_mode:'demo'};
+  globalThis.fetch=async()=>new Response(JSON.stringify(ack));await assert.rejects(observerCapabilities());ack={...ack,execution_enabled:false};await assert.rejects(observerCapabilities());ack.execution_enabled=true;await assert.rejects(observerCapabilities());ack.emergency_stop_active=false;ack.journal_holds=0;assert.equal(await observerCapabilities(),true);
+ });}finally{globalThis.fetch=old;for(const [key,value] of [['OBSERVER_MT5_VPS_URL',before.url],['OBSERVER_MT5_VPS_TOKEN',before.token]]){if(value===undefined)delete process.env[key];else process.env[key]=value;}}
+});

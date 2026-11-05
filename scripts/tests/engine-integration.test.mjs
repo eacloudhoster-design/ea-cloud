@@ -34,7 +34,7 @@ test('real browser sessions, owned engine status, strict broker proof and accoun
   let result=await request('/app/engine/status',{headers:{cookie:clientCookie}});assert.equal(result.status,200);assert.equal((await result.json()).connection.code,'ACCOUNT_NOT_CONFIGURED');
   const ack={success:true,connected:true,simulation:false,account_mode:'demo',broker:'justmarkets',role:'client',login:91,server:'FixtureDemo',execution_enabled:false,emergency_stop_active:true,journal_bound:true,journal_holds:0,open_positions:0,pending_orders:0,currency:'ZAR',balance:1000,equity:1000,password:'upstream-secret'};
   let calls=0,response=ack;globalThis.fetch=async(url,options)=>{calls++;assert.equal(new URL(url).pathname,'/observer/account-status');assert.equal(JSON.parse(options.body).password,'fixture-broker-password');return new Response(JSON.stringify(response),{status:200});};
-  for(const change of [{},{success:false},{login:92},{simulation:true},{account_mode:'live'},null]){
+  for(const change of [{},{success:false},{login:92},{simulation:true},{account_mode:'live'},{execution_enabled:true,emergency_stop_active:true},{execution_enabled:true,emergency_stop_active:false,role:'mentor'},{execution_enabled:true,emergency_stop_active:false,journal_holds:1},null]){
    response=change===null?null:{...ack,...change};if(change && !Object.keys(change).length){assert.ok(await api.readBoundAccount('91','FixtureDemo','fixture-broker-password'));continue;}
    await assert.rejects(api.readBoundAccount('91','FixtureDemo','fixture-broker-password'));
   }
@@ -48,6 +48,9 @@ test('real browser sessions, owned engine status, strict broker proof and accoun
   await f.engine.exec("UPDATE client_settings SET copying_enabled=true WHERE client_id=10");response={...ack,journal_holds:1};
   result=await request('/app/engine/status',{headers:{cookie:clientCookie}});state=await result.json();assert.equal(state.copier.state,'review_required');assert.equal(state.copier.unresolvedJournalHolds,1);assert.equal(state.copier.executionPermitted,false);response=ack;
   await f.engine.exec("INSERT INTO observer_allocations(id,client_id,source_key,mentor_id,symbol,scale) VALUES('other-mentor',10,'other',2,'PRIVATE_SYMBOL','1')");
+  response={...ack,execution_enabled:true,emergency_stop_active:true};result=await request('/app/engine/status',{headers:{cookie:clientCookie}});state=await result.json();assert.equal(state.connection.verified,false);assert.equal(state.copier.executionPermitted,false);
+  response={...ack,execution_enabled:true,emergency_stop_active:false};await f.engine.exec("UPDATE client_settings SET mt5_connected=false WHERE client_id=10");result=await request('/app/engine/status',{headers:{cookie:clientCookie}});state=await result.json();assert.equal(state.copier.state,'blocked');assert.equal(state.copier.executionPermitted,false);
+  await f.engine.exec("UPDATE client_settings SET mt5_connected=true WHERE client_id=10");response=ack;
   const before=calls;assert.equal((await request('/admin/engine/clients/12',{headers:{cookie:mentorCookie}})).status,404);
   const own=await request('/admin/engine/clients/10',{headers:{cookie:mentorCookie}});assert.equal(own.status,200);assert.equal((await own.json()).mappings.length,0,'A mentor cannot see prior mentors allocations for a reassigned client');assert.equal(calls,before+1,'Only the owned client may trigger a backend read-only proof; no credential is returned');
   assert.equal((await request('/admin/engine/clients',{headers:{cookie:clientCookie}})).status,401);
