@@ -1,0 +1,21 @@
+[Unit]
+Description=EA Cloud isolated DEMO account terminal %i
+Requires=ea-account-display@%i.service
+After=ea-account-display@%i.service network-online.target
+[Service]
+User=ea-account-%i
+Group=ea-account-%i
+EnvironmentFile=/etc/ea-cloud/accounts/%i.env
+LoadCredential=terminal-login.ini:/etc/ea-cloud/accounts/%i/terminal-login.ini
+WorkingDirectory=/var/lib/ea-cloud/accounts/%i/terminal
+ExecStart=/opt/wine-stable/bin/wine /var/lib/ea-cloud/accounts/%i/terminal/terminal64.exe /portable /config:Z:\\run\\credentials\\%n\\terminal-login.ini
+Restart=always
+RestartSec=10
+TimeoutStopSec=8
+UMask=0077
+NoNewPrivileges=yes
+ProtectHome=yes
+ProtectSystem=strict
+ReadWritePaths=/var/lib/ea-cloud/accounts/%i /tmp
+MemoryMax=850M
+TasksMax=160

@@ -1,0 +1,74 @@
+{
+  "observed_at": "2026-11-05T17:59:40.398375+00:00",
+  "ready_for_code_review": true,
+  "ready_for_controlled_readonly_deployment": false,
+  "production_ready": false,
+  "statuses": {
+    "focused_branch_dependency_build": "PASS",
+    "owned_client_mentor_status_api": "PASS_LOCAL",
+    "strict_canary_no_session_mutations": "PASS_LOCAL",
+    "canary_writable_db_refusal_restart": "PASS_ISOLATED",
+    "publisher_stale_missing_recovery": "PASS_ISOLATED",
+    "windows_wine_gate": "PASS_ISOLATED_NO_SDK",
+    "monitor_alert_outbox": "PASS_LOCAL_SINK_ONLY",
+    "original_production_database_encryption": "BLOCKED_BINDINGS_MISSING",
+    "external_alert_delivery_offsite_restore": "BLOCKED_DESTINATIONS_ACCESS_MISSING",
+    "actual_rollout_cold_reboot_acceptance": "NOT_RUN_REQUIRES_DEPLOYMENT_APPROVAL",
+    "broker_execution": "DISABLED"
+  },
+  "new_targeted_tests": {
+    "python_gates_and_worker_regression": 12,
+    "python_monitor_alerts": 6,
+    "node_cookie_api_canary": 1,
+    "node_normal_auth_regression": 1,
+    "node_canary_boot_restart": 1
+  },
+  "prior_successful_lifecycle_and_latency_tests": "Carried forward; not repeated. Previous synthetic p95 260.18ms, cold max 2706.25ms; actual broker latency unverified.",
+  "source_bundle_sha256": "0f5f35e297f5ef7e874690cceec15d3843eb247f6d18a120b069cb55eb1be4d6",
+  "file_manifest_sha256": "75b9a68a84177467855958d87eea3663a693512da77388f259792f9ce0c5b7c5",
+  "test_log_sha256": {
+    "gates": "7fe7c3bb5c0ea6ebf0ec8aa652eee4f57b68c928127f98610ecccdc9813af9fa",
+    "monitor_alerts": "9ef53e30d96d7fed5c7e4006ed1808ee7130869b27a646d94cab678cd3692488",
+    "canary_api": "8d43673857bbc47bdcaabd2ac4720388de36707a4bde0890a0716c8bf8591ae4",
+    "auth_regression": "5c0fc62acc9ba3373453b2bac9fbc81790bf0dadb92840372530893e99c3aa6b",
+    "boot_restart": "3f32cd0f9e03c32385c193f2a44c5ef614838ba52ef296719442499c8e8c8fb5",
+    "api_types": "d591b8a0bd0754c6ec4e65bca442f86199b189c340b018ea24caec35191d4507",
+    "portal_types": "985bc591f7b92afec98d00a2c28858081c909be0cca13499f3305b21200a310f",
+    "portal_build": "ade052119ae507718822d2842a80be3e421052e0c2a9e3ad61f658fce90b686b",
+    "canary_build": "b147d4d8bc53996d734aab6766270edd04befc4642ad42401c7ab2c1ece116d0",
+    "focused_libs": "9ababb491d236997fbb7185ea65089f3559564dae7bb5fbab20064f3a82c1ee9",
+    "focused_types": "d0acfb69a9bbc42d78f4ba1f6ebb3225c9bafd60111e76a86316c2ee11b88217",
+    "focused_build": "94ec0e442d6f9aa977e64d7503fd7bd2d26f2badbdd29c5b00b48de20960ea74",
+    "units": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "wine_evidence_sha256": "c16c20874d5cb3b839899b37760b818d0bd1addeca79e6a5d9db927f1e2d85f7",
+  "safety": {
+    "both_stops_active": true,
+    "no_active_grant": true,
+    "broker_orders_submitted": 0,
+    "all_15_existing_services_active": true,
+    "private_account_bundles_unchanged": true,
+    "original_checkout_branch": "infra/mt5-account-workers-20261104",
+    "original_index_tree": "aeb833224552e2a86ca8bbf6cc09d5abbb5083ee",
+    "production_secrets_replaced": false,
+    "production_deployed": false,
+    "publisher_installed_or_started": false,
+    "existing_financial_artifact_unchanged": true
+  },
+  "missing_private_values": [
+    "Original DATABASE_URL and TLS/CA/network/role binding",
+    "Original unchanged SESSION_SECRET",
+    "Authorized SELECT-only canary binding with default_transaction_read_only=on",
+    "Accepted router URL/token and existing client/account mappings",
+    "Approved external alert/offsite access"
+  ],
+  "broker_authentication": {
+    "justmarkets": "Existing read-only proof preserved, not retested",
+    "exness": "NOT_AUTHENTICATED",
+    "xm": "NOT_AUTHENTICATED; official installer acceptance needed",
+    "rcg": "NOT_AUTHENTICATED; official installer acceptance needed",
+    "deriv": "NOT_AUTHENTICATED"
+  },
+  "configured_secret_and_binding_scan": "PASS_BEFORE_PUBLICATION",
+  "git_publication": "Prepared reviewed branch; resulting PR/commit recorded separately on VPS"
+}

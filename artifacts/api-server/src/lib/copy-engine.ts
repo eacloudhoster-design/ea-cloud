@@ -1,4 +1,5 @@
 import {executeObserver} from "./observer-execution";
+import {syncObserverPosition} from "./observer-vps";
 import { recordExecutionActivity } from "./trading-activity";
 import {
   db,
@@ -42,7 +43,7 @@ function buildTradeComment(eaName: string, signalId: number): string {
 // Resolve copy volume from the signal, honouring the client's lot-sizing config.
 // A per-pair `customLot` (from the client's symbol config) takes precedence over
 // the global lot-sizing mode when present. The maxLotSize cap always applies.
-function resolveVolume(signalLots: number | null, s: ClientSettings, customLot: number | null = null): number {
+export function resolveVolume(signalLots: number | null, s: ClientSettings, customLot: number | null = null, brokerQuantizes = false): number {
   const base = signalLots ?? 0;
   let vol: number;
   if (customLot !== null && customLot > 0) {
@@ -55,13 +56,13 @@ function resolveVolume(signalLots: number | null, s: ClientSettings, customLot: 
       case "multiplier":
         vol = base * (num(s.lotMultiplier) ?? 1);
         break;
-      default: // risk_percent (needs balance/pip data we don't have here) → copy 1:1
-        vol = base;
+      default: // Missing verified stop-distance/account economics: never silently size risk_percent 1:1.
+        return 0;
     }
   }
   const cap = num(s.maxLotSize);
   if (cap !== null && cap > 0) vol = Math.min(vol, cap);
-  vol = Math.round(vol * 100) / 100; // 2dp lots
+  if (!brokerQuantizes) vol = Math.round(vol * 100) / 100; // Preserve legacy OPEN behavior; observer targets are floored by broker constraints.
   return vol > 0 ? vol : 0;
 }
 
@@ -97,6 +98,10 @@ function vpsSummary(r: VpsResult): Record<string, unknown> {
     volume: inner?.volume ?? null,
     price: inner?.price ?? null,
     partial: inner?.partial ?? null,
+    allocation: typeof inner?.allocation==='string'&&/^[a-f0-9]{64}$/.test(inner.allocation)?inner.allocation:null,
+    magic: Number.isSafeInteger(inner?.magic)?inner?.magic:null,
+    symbol: typeof inner?.symbol==='string'?inner.symbol:null,
+    tickets: Array.isArray(inner?.tickets)?inner.tickets.filter((v:unknown)=>typeof v==='string'&&/^\d+$/.test(v)).slice(0,100):[],
     detail: raw?.detail ?? null, // FastAPI error detail (e.g. "Not Found")
   };
 }
@@ -149,7 +154,7 @@ async function priorOutcome(signalId: number, clientId: number, idempotent=false
   const [prev] = await db.select({ status: tradeExecutionsTable.status, retryable: tradeExecutionsTable.retryable })
     .from(tradeExecutionsTable)
     .where(and(eq(tradeExecutionsTable.signalId, signalId), eq(tradeExecutionsTable.clientId, clientId)))
-    .orderBy(desc(tradeExecutionsTable.createdAt))
+    .orderBy(desc(tradeExecutionsTable.createdAt),desc(tradeExecutionsTable.id))
     .limit(1);
   if (!prev) return null;
   if (prev.status === "success") return "success";
@@ -177,7 +182,7 @@ async function findClientTicket(clientId: number, mentorTicket: string | null): 
       eq(tradeExecutionsTable.status, "success"),
       eq(tradeExecutionsTable.signalKind, "OPEN"),
     ))
-    .orderBy(desc(tradeExecutionsTable.createdAt))
+    .orderBy(desc(tradeExecutionsTable.createdAt),desc(tradeExecutionsTable.id))
     .limit(1);
   return prior?.ticket ?? null;
 }
@@ -190,7 +195,10 @@ async function settleExecution(
   log: Logger,
 ): Promise<ClientOutcome> {
   const retryable = !result.ok && result.retriable;
+  const brokerSymbol=(result.data as any)?.data?.symbol;
+  const mappedSymbol=typeof brokerSymbol==='string'&&brokerSymbol.length<=64?{symbol:brokerSymbol}:{};
   const [updated] = await db.update(tradeExecutionsTable).set({
+    ...mappedSymbol,
     status: result.ok ? "success" : "failed",
     ticket: result.ticket,
     retcode: result.retcode,
@@ -204,7 +212,7 @@ async function settleExecution(
   return retryable ? "failed_retryable" : "failed_terminal";
 }
 
-async function executeForClient(signal: TradeSignal, client: AppAccess, eaName: string, canonicalPair: string | null, log: Logger): Promise<ClientOutcome> {
+async function executeForClient(signal: TradeSignal, client: AppAccess, eaName: string, canonicalPair: string | null, log: Logger, observerDispatch: typeof syncObserverPosition): Promise<ClientOutcome> {
   // Idempotency: never repeat finished work or risk a duplicate fill on retry.
   const prior = await priorOutcome(signal.id, client.id,!!signal.observerEventId);
   if (prior !== null) {
@@ -256,7 +264,7 @@ async function executeForClient(signal: TradeSignal, client: AppAccess, eaName: 
     if(canonicalPair){const [cfg]=await db.select().from(clientSymbolConfigsTable).where(and(eq(clientSymbolConfigsTable.clientId,client.id),eq(clientSymbolConfigsTable.pairName,canonicalPair))).limit(1);if(cfg?.selectedSymbol)symbol=cfg.selectedSymbol;customLot=num(cfg?.customLotSize);}
     const [pending]=await db.insert(tradeExecutionsTable).values({signalId:signal.id,mentorId:signal.mentorId,clientId:client.id,signalKind:"SYNC",symbol,action:"SYNC",status:"pending",mentorTicket:signal.ticket}).returning();
     pushUpdate(client.id,pending);
-    const result=await executeObserver(signal,client,settings,password,symbol,source=>resolveVolume(source,settings,customLot));
+    const result=await executeObserver(signal,client,settings,password,symbol,source=>resolveVolume(source,settings,customLot,true),observerDispatch);
     return settleExecution(pending.id,client.id,result,log);
   }
 
@@ -347,7 +355,7 @@ export interface SignalRunResult {
 // Fan a single mentor signal out to every subscribed client.
 // One client failing must NOT stop the others, so each is wrapped in try/catch.
 // Returns a per-outcome tally so the worker can decide whether to retry the signal.
-export async function runSignal(signal: TradeSignal, log: Logger): Promise<SignalRunResult> {
+export async function runSignal(signal: TradeSignal, log: Logger, observerDispatch: typeof syncObserverPosition = syncObserverPosition): Promise<SignalRunResult> {
   const clients = await db.select().from(appAccessTable)
     .where(eq(appAccessTable.mentorId, signal.mentorId));
 
@@ -394,13 +402,16 @@ export async function runSignal(signal: TradeSignal, log: Logger): Promise<Signa
     failedRetryable: 0, failedTerminal: 0, skipped: 0,
   };
 
-  for (const client of clients) {
+  const queue=[...clients];
+  const consume=async()=>{
+  for (;;) {
+    const client=queue.shift();if(!client)return;
     if (client.status !== "approved") {
       log.info({ clientId: client.id, status: client.status }, "[CopyEngine] client not approved — skipping");
       continue;
     }
     try {
-      const outcome = await executeForClient(signal, client, eaName, canonicalPair, log);
+      const outcome = await executeForClient(signal, client, eaName, canonicalPair, log,observerDispatch);
       switch (outcome) {
         case "success": tally.succeeded++; tally.attempted++; break;
         case "failed_retryable": tally.failedRetryable++; tally.attempted++; break;
@@ -415,6 +426,9 @@ export async function runSignal(signal: TradeSignal, log: Logger): Promise<Signa
       log.error({ mentorId: signal.mentorId, clientId: client.id, signalId: signal.id, err }, "[CopyEngine] client execution errored — will retry");
     }
   }
+
+  };
+  await Promise.all(Array.from({length:Math.min(4,clients.length)},()=>consume()));
 
   log.info({ mentorId: signal.mentorId, signalId: signal.id, ...tally }, "[CopyEngine] signal processing complete");
   return tally;

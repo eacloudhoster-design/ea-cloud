@@ -1,10 +1,10 @@
+import { readBoundAccount } from "../lib/mt5-account-status";
 import { Router } from "express";
 import { db, mt5ConnectionsTable, usersTable } from "@workspace/db";
 import { eq, desc } from "drizzle-orm";
 
 const router = Router();
 
-const EXTERNAL_MT5_URL = "http://102.214.9.67:8000/connect-mt5";
 
 // ─── Auth helper (Bearer JWT → mentor row) ────────────────────────────────────
 const getBearerMentor = async (authHeader: string | undefined) => {
@@ -45,87 +45,15 @@ router.post("/admin/mt5/connect", async (req: any, res) => {
       res.status(400).json({ error: "login must be a valid positive integer" }); return;
     }
 
-    // ── Forward to external MT5 backend ──────────────────────────────────────
-    let externalData: Record<string, unknown> = {};
-    let externalStatus = 0;
-    let connectionStatus = "failed";
-
-    try {
-      const externalRes = await fetch(EXTERNAL_MT5_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ login: loginNum, password, server }),
-        signal: AbortSignal.timeout(15_000),
-      });
-
-      externalStatus = externalRes.status;
-      externalData = (await externalRes.json().catch(() => ({}))) as Record<string, unknown>;
-
-      // The external backend returns HTTP 200 with {success:false} on a failed
-      // login, so a 2xx alone is NOT enough — also honour explicit failure flags.
-      const connected =
-        externalRes.ok &&
-        externalData.success !== false &&
-        externalData.status !== "failed" &&
-        externalData.connected !== false;
-      if (connected) {
-        connectionStatus = "connected";
-      }
-
-      req.log.info(
-        { externalStatus, connectionStatus, externalData },
-        "External MT5 backend response",
-      );
-    } catch (fetchErr: unknown) {
-      req.log.warn({ fetchErr }, "External MT5 backend unreachable");
-      externalData = { error: (fetchErr as Error).message ?? "Connection timeout" };
-    }
-
-    // ── Persist to DB ─────────────────────────────────────────────────────────
-    const [saved] = await db
-      .insert(mt5ConnectionsTable)
-      .values({
-        mentorId: mentor.id,
-        mt5Login: loginNum,
-        mt5Server: server,
-        balance: externalData.balance !== undefined ? String(externalData.balance) : null,
-        status: connectionStatus,
-        rawResponse: JSON.stringify(externalData),
-      })
-      .returning();
-
-    req.log.info(
-      { mentorId: mentor.id, mt5Login: loginNum, server, status: connectionStatus },
-      "MT5 connect attempt saved",
-    );
-
-    // ── Derive a human-readable failure reason (real backend message) ─────────
-    const failureReason: string | undefined =
-      connectionStatus === "failed"
-        ? (
-            (externalData.error as string) ||
-            (externalData.message as string) ||
-            (externalData.detail as string) ||
-            (externalData.msg as string) ||
-            `MT5 backend returned HTTP ${externalStatus}`
-          )
-        : undefined;
-    const details = externalData.details ?? externalData.last_error ?? null;
-
-    res.status(connectionStatus === "connected" ? 200 : 422).json({
-      status: connectionStatus,
-      id: saved.id,
-      mt5Login: loginNum,
-      server,
-      balance: saved.balance,
-      connectedAt: saved.connectedAt,
-      ...(failureReason ? { error: failureReason, details } : {}),
-      ...externalData,
-    });
-  } catch (err) {
-    req.log.error({ err }, "MT5Connect error");
-    res.status(500).json({ error: "Internal server error" });
-  }
+    if(typeof password!=="string" || password.length>1024 || typeof server!=="string" || server.length>256 || !Number.isSafeInteger(loginNum) || loginNum>2147483647){res.status(400).json({error:"Invalid credentials or login exceeds current connection schema"});return;}
+    let account;
+    try {account=await readBoundAccount(loginNum,server,password);}
+    catch {res.status(422).json({error:"Provisioned demo mentor account verification unavailable",code:"MT5_BINDING_UNVERIFIED"});return;}
+    if(account.role!=="mentor"){res.status(403).json({error:"A dedicated mentor-role worker is required"});return;}
+    const [saved]=await db.insert(mt5ConnectionsTable).values({mentorId:mentor.id,mt5Login:loginNum,mt5Server:server,balance:account.balance===null?null:String(account.balance),status:"connected",rawResponse:JSON.stringify({verified:true,accountMode:"demo",executionEnabled:account.execution_enabled})}).returning();
+    res.setHeader("Cache-Control","no-store");
+    res.json({status:"connected",id:saved.id,mt5Login:loginNum,server,balance:saved.balance,connectedAt:saved.connectedAt,accountMode:"demo",executionEnabled:account.execution_enabled});
+  } catch {res.status(503).json({error:"Account verification or storage temporarily unavailable"});}
 });
 
 // ─── GET /api/admin/mt5/connections ───────────────────────────────────────────

@@ -1,0 +1,21 @@
+# Prepared only. Publishes latch metadata, never clears stops or authorizes trading.
+[Unit]
+Description=EA Cloud root emergency-stop metadata publisher
+[Service]
+Type=simple
+User=root
+RuntimeDirectory=ea-cloud-execution-gate
+RuntimeDirectoryMode=0755
+ExecStart=/usr/bin/python3 /opt/ea-cloud/infra/linux/publish-execution-gates.py
+Restart=always
+RestartSec=1
+UMask=0022
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+ReadWritePaths=/run/ea-cloud-execution-gate
+MemoryMax=40M
+TasksMax=8
+[Install]
+WantedBy=multi-user.target

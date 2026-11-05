@@ -1,0 +1,27 @@
+# Prepared only; requires isolated router identity, accepted registry and tokens.
+[Unit]
+Description=EA Cloud credential-bound DEMO account router
+After=network-online.target
+ConditionPathExists=/etc/ea-cloud/router/registry.json
+StartLimitIntervalSec=300
+StartLimitBurst=3
+[Service]
+User=ea-engine-router
+Group=ea-engine-router
+WorkingDirectory=/opt/ea-cloud/vps-mt5-service
+LoadCredential=registry.json:/etc/ea-cloud/router/registry.json
+LoadCredential=router-token:/etc/ea-cloud/router/router-token
+# Add one LoadCredential=<token_credential>:<private token path> per registry worker.
+ExecStart=/opt/ea-cloud/infra/linux/.venv/bin/uvicorn account_dispatch:from_environment --factory --host 127.0.0.1 --port 8004 --no-access-log
+Restart=always
+RestartSec=10
+TimeoutStopSec=10
+UMask=0077
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+MemoryMax=200M
+TasksMax=40
+[Install]
+WantedBy=multi-user.target

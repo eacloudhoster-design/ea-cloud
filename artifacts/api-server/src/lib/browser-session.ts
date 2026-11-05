@@ -81,6 +81,7 @@ export async function issueBrowserSession(
 export async function verifyBrowserSession(
   req: { headers: { cookie?: string } },
   kind: SessionKind,
+  readOnly = false,
 ) {
   const token = readSessionCookie(req, kind);
   if (!token) return null;
@@ -102,9 +103,7 @@ export async function verifyBrowserSession(
     (kind === "portal" &&
       !["mentor", "admin", "superadmin"].includes(account.role))
   ) {
-    await pool.query("DELETE FROM browser_sessions WHERE token_hash=$1", [
-      hash(token),
-    ]);
+    if (!readOnly) await pool.query("DELETE FROM browser_sessions WHERE token_hash=$1", [hash(token)]);
     return null;
   }
   return {

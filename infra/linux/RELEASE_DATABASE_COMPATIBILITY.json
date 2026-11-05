@@ -1,0 +1,18 @@
+{
+  "observed_at": "2026-11-05T17:54:43.631953+00:00",
+  "status": "BLOCKED",
+  "code": "UNCHANGED_PRODUCTION_BINDINGS_REQUIRED",
+  "production_database_url_bound": false,
+  "original_encryption_key_bound": false,
+  "known_production_api_env_exists": false,
+  "records_read": 0,
+  "records_modified": 0,
+  "secrets_exposed": false,
+  "required_values": [
+    "Original production DATABASE_URL with correct role/database/TLS/CA/network access",
+    "Original unchanged SESSION_SECRET",
+    "Separate authorized SELECT-only canary binding with default_transaction_read_only=on"
+  ],
+  "auditor_stdout_sha256": "118698366e5fc3f96414298b17b0adb19fd2cbcd1176ee7aad59d1ed9d7e6e60",
+  "known_env_key_candidates": []
+}

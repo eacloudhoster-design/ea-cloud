@@ -1,0 +1,16 @@
+# Prepared, not installed/enabled. Status only; never restarts terminals or clears holds.
+[Unit]
+Description=EA Cloud account-worker and execution-gate inventory
+After=network-online.target
+[Service]
+Type=oneshot
+User=root
+ExecStart=/usr/bin/python3 /opt/ea-cloud/infra/linux/engine-inventory.py --output /var/lib/ea-cloud/monitor/engine-status.json
+UMask=0077
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+TimeoutStartSec=35
+ReadWritePaths=/var/lib/ea-cloud/monitor
+StandardOutput=journal

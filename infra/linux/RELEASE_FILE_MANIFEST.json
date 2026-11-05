@@ -1,0 +1,338 @@
+{
+  "observed_at": "2026-11-05T17:59:40.398375+00:00",
+  "base_commit": "688da86ce8140e2d4ea87f3ea2484725a6e3de8d",
+  "file_count_including_metadata": 82,
+  "files": {
+    "artifacts/api-server/build-engine-readonly.mjs": {
+      "sha256": "704ef622537ccc50e955dbb42ea45e7b42a1cb59dc36598e16fcd890e789f329",
+      "bytes": 739
+    },
+    "artifacts/api-server/package.json": {
+      "sha256": "ec10dcc55614fb8832dfb4cfc61dce47396c4fd1187779d0cbbe1f6bf38fbb6e",
+      "bytes": 1484
+    },
+    "artifacts/api-server/src/engine-readonly-app.ts": {
+      "sha256": "43cce86ab4925fdb63b8cdc954d385f077f2b49819a76da6ef76f72a690136fe",
+      "bytes": 1527
+    },
+    "artifacts/api-server/src/engine-readonly.ts": {
+      "sha256": "67c0a024a8b547231a782ead3381939914b12ed3a98fa7c8cbb9dfe1dde8dfba",
+      "bytes": 874
+    },
+    "artifacts/api-server/src/lib/bind-client-account.ts": {
+      "sha256": "3af83e2d7fbe45343548cd6ea29b9834e45d7d3fddb20d80c301b11b496c3319",
+      "bytes": 1985
+    },
+    "artifacts/api-server/src/lib/browser-session.ts": {
+      "sha256": "aaf13fa467992d9cf5c5aaa2ee5deda61f4f3a8139f013b3189659e7d384cd51",
+      "bytes": 7267
+    },
+    "artifacts/api-server/src/lib/copy-engine.ts": {
+      "sha256": "e32d35baf3757db765932828219f6f1e7d97feec33ab0973ea199233459372b7",
+      "bytes": 20335
+    },
+    "artifacts/api-server/src/lib/ea-builder/routing.ts": {
+      "sha256": "eceac25b1fe3745fdf0619445fed56304b0ad99e2190102858bdcca606c20c88",
+      "bytes": 7399
+    },
+    "artifacts/api-server/src/lib/engine-status.ts": {
+      "sha256": "786782c8839349e44bf01b92d60cadf42727d02079aceff2657d271afd16791d",
+      "bytes": 3380
+    },
+    "artifacts/api-server/src/lib/mt5-account-status.ts": {
+      "sha256": "3914d0944a3d456c3f439dd27822364f3a1d81ce52e38d10c4e96e666f00bd65",
+      "bytes": 2663
+    },
+    "artifacts/api-server/src/lib/mt5-endpoint.ts": {
+      "sha256": "6aba1cad7915057cc86f9f5d35881f52151f2d5f07a238834258ea874c544eb2",
+      "bytes": 824
+    },
+    "artifacts/api-server/src/lib/mt5-vps.ts": {
+      "sha256": "dd166f0f1ae22f354afb8b10f5b2fb3e0c61292a8cf85f3c25f3845d15a4cdc8",
+      "bytes": 4808
+    },
+    "artifacts/api-server/src/lib/observer-execution.ts": {
+      "sha256": "f028d81e855e42069e21aa5493edead674718f2982a59dc638031da19dd29b83",
+      "bytes": 6406
+    },
+    "artifacts/api-server/src/lib/observer-vps.ts": {
+      "sha256": "1edfa3ca9e58d873be0f791548b9ad1cfbcf4f3450d8671d7eac1ee59406ddab",
+      "bytes": 2944
+    },
+    "artifacts/api-server/src/lib/signal-worker.ts": {
+      "sha256": "015d762ba86637ce349b63b242ff17b47173cb5f8f66d87e390c9d044a9bb988",
+      "bytes": 9145
+    },
+    "artifacts/api-server/src/routes/client-mt5.ts": {
+      "sha256": "2b7a06218e174bff70a7e9674dd5618044eaf56267edd43c44026fef59f2e665",
+      "bytes": 2370
+    },
+    "artifacts/api-server/src/routes/client-settings.ts": {
+      "sha256": "72e862c4adf69a6a65dcde47ab1c38688b4ce6e5510f3189b0c9eac971260782",
+      "bytes": 14901
+    },
+    "artifacts/api-server/src/routes/engine.ts": {
+      "sha256": "4ea59fc2cdde974c860e163723744235a031a6ebbb3df96d9f59510273b9aea2",
+      "bytes": 2194
+    },
+    "artifacts/api-server/src/routes/index.ts": {
+      "sha256": "11bb57161a381548e0f19f9b7af03834dd3524710e68788624b4a877851d85d8",
+      "bytes": 2766
+    },
+    "artifacts/api-server/src/routes/mt5-connect.ts": {
+      "sha256": "bb901c51fc201ddf7cb5b7295c6aa6849128c92203315a5ae413be4b6d916138",
+      "bytes": 4322
+    },
+    "artifacts/ea-app/src/lib/mt5-engine.ts": {
+      "sha256": "e7be6ce222eed50d2f8d1b8a909a95c0648b5faac7f2a83f0188816ecec04c86",
+      "bytes": 909
+    },
+    "artifacts/ea-app/src/pages/MetaTraderTab.tsx": {
+      "sha256": "ae4085f83f87f199088bdd9da2bfc3f7e85316b65b0ff556635029cd3d896df4",
+      "bytes": 11012
+    },
+    "artifacts/ea-app/src/pages/TradingControlsTab.tsx": {
+      "sha256": "a4d21e9afee397a63eda75614dcb1d4ad596da25c2c7549b06133f268e40a602",
+      "bytes": 14812
+    },
+    "artifacts/ea-cloud/src/pages/admin/EngineStatus.tsx": {
+      "sha256": "8a65897b380d1aaf1537d3ce651f28186fe695566ee692fbe1bfac6a74045b8f",
+      "bytes": 2520
+    },
+    "artifacts/ea-cloud/src/pages/admin/Mt5Connections.tsx": {
+      "sha256": "15ad54afbac55e3e0e5bbb7662b989de8e8f7e0c0c079c8843104549993b4b8a",
+      "bytes": 15833
+    },
+    "docs/MT5_ENGINE_API.md": {
+      "sha256": "5736c58b53fbe6f285c37f5770cdc0fc4714b3ff80aadbbe60a722a8ac34dc47",
+      "bytes": 3479
+    },
+    "infra/linux/.gitignore": {
+      "sha256": "c227c30a075186f287d1d0f84fafae3f0ea9955cf310a33159da155b8e36887a",
+      "bytes": 75
+    },
+    "infra/linux/BROKER_AUTH_REQUIREMENTS.md": {
+      "sha256": "cc4cb5c150bf8015c0821e8eb691670100bf1e2d28b28d0d621acfd596843e64",
+      "bytes": 5132
+    },
+    "infra/linux/PRODUCTION_DEPLOYMENT_CHECKLIST.md": {
+      "sha256": "832341879402af6174a023694675ff511204ee4a792aa2a9ead148833b869ef0",
+      "bytes": 5469
+    },
+    "infra/linux/READ_ONLY_RELEASE_READINESS.md": {
+      "sha256": "03e1b633a6adc0f1735e8ff8760e7d957fa0b31600daf7c1706557bc342300e3",
+      "bytes": 11234
+    },
+    "infra/linux/RELEASE_DATABASE_COMPATIBILITY.json": {
+      "sha256": "7ba010503b69e270f2385c354c3d8058ebe417f51f0dbd65c8defeb7d43c0016",
+      "bytes": 711
+    },
+    "infra/linux/ROLLBACK_PROCEDURE.md": {
+      "sha256": "e07a452716b71a3c4f27e921b490b829fbd96c6962692c9418047dd9e04635e1",
+      "bytes": 3688
+    },
+    "infra/linux/check-postgres-encryption.mjs": {
+      "sha256": "feb760dfa49e3357d9eb3ce88874dbc83edd208ed75df32f51670b79e7a18383",
+      "bytes": 3493
+    },
+    "infra/linux/ea-account-display@.service": {
+      "sha256": "4066141f77692b75b5e8e5277a85b498a9b1fa9501df8ad20b5751e7e8f78080",
+      "bytes": 425
+    },
+    "infra/linux/ea-account-router.service": {
+      "sha256": "a2bcd1af8150a5a47dcd272b43d7ff9213ce8669d29de56a0b260679e0c85944",
+      "bytes": 925
+    },
+    "infra/linux/ea-account-terminal@.service": {
+      "sha256": "7ef14afa02a25494448b63bac2dc8ec6fdbbf35c754fa8b77fc736a8042cc6a2",
+      "bytes": 734
+    },
+    "infra/linux/ea-account@.service": {
+      "sha256": "12611d4d10d0270f44b66c2b7efb65655332d56b6029f0ba6893a34879b78a37",
+      "bytes": 1246
+    },
+    "infra/linux/ea-engine-alerts.service": {
+      "sha256": "c63ecb37d37b19c234effe7018191012f65e288855d69ebb74f01fff3b3dfc08",
+      "bytes": 495
+    },
+    "infra/linux/ea-engine-alerts.timer": {
+      "sha256": "836ac8559b09a1263db29d95c6eaf6fa72e775c0398c1e4e409d3b3f9f72f952",
+      "bytes": 147
+    },
+    "infra/linux/ea-engine-inventory.service": {
+      "sha256": "c5668e67b4eb173d71783397400b6f5ae9fee5fa1bc0e461dbfa4eb082754f74",
+      "bytes": 516
+    },
+    "infra/linux/ea-engine-inventory.timer": {
+      "sha256": "9c10e79af4b81241f3fca270255470abbbd529ee22eb214223a417f07e57b5a0",
+      "bytes": 167
+    },
+    "infra/linux/ea-engine-readonly.service": {
+      "sha256": "9d5a973194908ff56c294c25d3e5c6bc12be9f180d059e76a431ef881983070b",
+      "bytes": 623
+    },
+    "infra/linux/ea-execution-gates.service": {
+      "sha256": "f34680458f4e0968560ce3d6a0697c172f116f348fe446a94df8c1c31260daad",
+      "bytes": 548
+    },
+    "infra/linux/engine-alerts.py": {
+      "sha256": "d8bddf1a30ebf19abbf7965e11bd04f91ee9e14d3aa6872e46162548f10d148b",
+      "bytes": 2023
+    },
+    "infra/linux/engine-inventory.py": {
+      "sha256": "03bf15c1b8f12d5b13180b076241b215bb519944684130b3076214953a39678f",
+      "bytes": 4789
+    },
+    "infra/linux/operations.py": {
+      "sha256": "ef45e993dc077190c5ccd0be7a5f6a9e6e49846ad9d0eed7be0e104e6387c024",
+      "bytes": 5943
+    },
+    "infra/linux/publish-execution-gates.py": {
+      "sha256": "abda6179ad66eb0ded86a53842c3e9de90469ea6c70b7e923368b836f5619a02",
+      "bytes": 450
+    },
+    "infra/linux/wine-account-worker.py": {
+      "sha256": "0062d1bd4845120ed89f25dd933855bfc5a09f60bf5ed49afc65fda5b2c4ccfe",
+      "bytes": 1186
+    },
+    "infra/linux/wine-requirements.txt": {
+      "sha256": "ea98a7710338d6575243d15e2fc03b8dc13008a50f51aba651ccd38833448673",
+      "bytes": 1396
+    },
+    "scripts/tests/copier-end-to-end.test.mjs": {
+      "sha256": "2d47671f23cb045132a5708df1211cdbe2715505db1ac39612adee8ec4883cc4",
+      "bytes": 14052
+    },
+    "scripts/tests/engine-integration.test.mjs": {
+      "sha256": "ee520f06e0d313719914dd6613edc8fcf6d9090034814a0bac0913078c3c0ba5",
+      "bytes": 10967
+    },
+    "scripts/tests/engine-postgres-binding.test.mjs": {
+      "sha256": "a0d45f3ed223c687fa979f25418c770811a1484a1bb5cda8f41bacca3c6e1ac1",
+      "bytes": 3996
+    },
+    "scripts/tests/engine-readonly-boot.test.mjs": {
+      "sha256": "e4d11e15a894b85b80c4fae4326cc636f9d0e069c2d449020b831c7b4f4d12b1",
+      "bytes": 2689
+    },
+    "scripts/tests/helpers/copier-fixture.mjs": {
+      "sha256": "7b79006f75ec0faf3950adb3003f7bb65fabcfa4a803c10898a9e583adb947c0",
+      "bytes": 7086
+    },
+    "scripts/tests/helpers/copier-simulation-server.py": {
+      "sha256": "9ba44eb5f0c9ec84d371794d78f636010e207f41ef2c37b5d4eb6b27f2ed97d0",
+      "bytes": 2041
+    },
+    "scripts/tests/infrastructure-safety.test.mjs": {
+      "sha256": "3b1024ad3453c9c753dc10251d347d8c60b226e1698cc48b40a1748c47b9a151",
+      "bytes": 6951
+    },
+    "scripts/tests/mt5-engine-client.test.mjs": {
+      "sha256": "d98d62b47a329db2c8a6b65c97fbe1021085cabf9f3ef2de964c18d201b3c638",
+      "bytes": 1716
+    },
+    "scripts/tests/postgres-encryption-compat.test.mjs": {
+      "sha256": "45accb0784ae6b19fb80e1a0f82c634b9da2c2dd83a3b395b0ca6e17e1b478ac",
+      "bytes": 6957
+    },
+    "scripts/tests/signal-ordering.test.mjs": {
+      "sha256": "1f1a1c19687dafcddb3d3caa51adda82ff3f7e809c8698eafe9eeb12c2d93026",
+      "bytes": 1559
+    },
+    "vps-mt5-service/.gitignore": {
+      "sha256": "ea4d33bc8ec8a2b4d720862050b3946f7c0f1e42045c2eb5a3b19ccaf0acf08f",
+      "bytes": 36
+    },
+    "vps-mt5-service/account_dispatch.py": {
+      "sha256": "1105b3ce8d426288f0bd8b97fd699739f750ccddf0cfb574ff8464a1ebdde0ef",
+      "bytes": 7430
+    },
+    "vps-mt5-service/account_gateway.py": {
+      "sha256": "d9e7b09e2c1f780937feb522dccd37a8bef29f3991495b263087699e29645137",
+      "bytes": 2551
+    },
+    "vps-mt5-service/account_workers.py": {
+      "sha256": "a252c50a00641e57676530155880fca2e3e7bb49d6581bf3fec37c61c38e83b8",
+      "bytes": 9738
+    },
+    "vps-mt5-service/broker_profiles.py": {
+      "sha256": "a91e1680a6f4ab8c7fa12cc6610bd6a7e8c822c20de391e3b8345dfac110e37a",
+      "bytes": 1104
+    },
+    "vps-mt5-service/demo_worker.py": {
+      "sha256": "707d04e91eb54b1ee981021324a33cdc611d53979decd2779d9aaa3334cf9d16",
+      "bytes": 11938
+    },
+    "vps-mt5-service/execution_gates.py": {
+      "sha256": "f4ac1e525e892f330062948f481061e22b7ea7dc537d84cb050554de465f5a90",
+      "bytes": 2985
+    },
+    "vps-mt5-service/history_reconcile.py": {
+      "sha256": "0557a8ebbff12edaa792939a65236f39aacbff8cd6c36aeb7424071af1f9681c",
+      "bytes": 10104
+    },
+    "vps-mt5-service/observer_sync.py": {
+      "sha256": "c39080152faf8f2cfad418206502013c3a5019a40cdebfb71c98bf0e0ff87a38",
+      "bytes": 16415
+    },
+    "vps-mt5-service/tests/test_account_dispatch.py": {
+      "sha256": "941d98042f2328375b7e1e33fc8ba46c64072cfe8d67a1a4bc4b5cd7005a0a06",
+      "bytes": 5248
+    },
+    "vps-mt5-service/tests/test_account_workers.py": {
+      "sha256": "80870d54bc067cf42dfe339ed6c48487ec571576a1c3f0c30e05cee2ce21215f",
+      "bytes": 8089
+    },
+    "vps-mt5-service/tests/test_broker_profiles.py": {
+      "sha256": "51827180698273498abefbd6d030304625db7727ad8e24fb74c251349d893312",
+      "bytes": 784
+    },
+    "vps-mt5-service/tests/test_demo_worker.py": {
+      "sha256": "52fb1b69b33945ba5971d0ebf869f61a22f0b21c8e59ffe3ac85327a9d501e02",
+      "bytes": 3391
+    },
+    "vps-mt5-service/tests/test_engine_alerts.py": {
+      "sha256": "85798d026dd93218b1f65415cc2ddcf8b33099a0a92f44eda5c97fc84f249683",
+      "bytes": 1597
+    },
+    "vps-mt5-service/tests/test_engine_inventory.py": {
+      "sha256": "eced733dee364bc5d12fc1c0ece1f9793491c262b391fede6901fc365cde7f6b",
+      "bytes": 1232
+    },
+    "vps-mt5-service/tests/test_execution_gates.py": {
+      "sha256": "008bab592788063542609f1414859d0880ac82182b6ac9b36e68f665bccd04a1",
+      "bytes": 3592
+    },
+    "vps-mt5-service/tests/test_history_reconcile.py": {
+      "sha256": "a3ea8d0b07aaf56b17585e8198792f21e4f45c8eb0abe1cf299fe396540889a3",
+      "bytes": 9309
+    },
+    "vps-mt5-service/tests/test_observer_sync.py": {
+      "sha256": "ed96b6231fbf7b23645ee55dff2c1cfb25cebc9c14cd484357d01cf65f401f0a",
+      "bytes": 11146
+    },
+    "vps-mt5-service/tests/test_wine_account_launcher.py": {
+      "sha256": "da1a172481c9866a0b28852eb3e62a5e5f39acaa7db1c6eb704cb6bf5cdf90f3",
+      "bytes": 1513
+    },
+    "vps-mt5-service/tests/test_worker_integration.py": {
+      "sha256": "845207f8d22f6ea0a91a85ea3ab14a3b0b2fc3acfae51c38921fe5d359e576c8",
+      "bytes": 5633
+    },
+    "vps-mt5-service/worker_state.py": {
+      "sha256": "9df0b7809af933646f121f08c269b644b9bda09964e31e1061780d0427e2de30",
+      "bytes": 1921
+    }
+  },
+  "metadata_files_excluded_from_recursive_hash": [
+    "infra/linux/RELEASE_FILE_MANIFEST.json",
+    "infra/linux/RELEASE_READINESS_VERIFICATION.json"
+  ],
+  "source_bundle_sha256": "0f5f35e297f5ef7e874690cceec15d3843eb247f6d18a120b069cb55eb1be4d6",
+  "exclusions": [
+    "Credentials/account bundles/private keys/backups",
+    "Historical runtime account/IPC evidence",
+    "XAUUSD broker execution runner and tests"
+  ],
+  "publication_scope": "Focused engine integration and its required uncommitted dependencies only"
+}

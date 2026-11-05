@@ -1,0 +1,9 @@
+[Unit]
+Description=EA Cloud account and journal status cadence
+[Timer]
+OnBootSec=60
+OnUnitActiveSec=60
+AccuracySec=10
+Persistent=true
+[Install]
+WantedBy=timers.target
