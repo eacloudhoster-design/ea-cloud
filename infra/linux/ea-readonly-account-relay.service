@@ -1,0 +1,38 @@
+[Unit]
+Description=EA Cloud credential-bound status relay (no financial routes)
+After=network.target
+ConditionPathExists=/etc/ea-cloud/readonly-relay/registry.json
+
+[Service]
+Type=simple
+User=ea-readonly-relay
+Group=ea-readonly-relay
+WorkingDirectory=/opt/ea-cloud/releases/readonly-relay/vps-mt5-service
+LoadCredential=readonly-registry.json:/etc/ea-cloud/readonly-relay/registry.json
+LoadCredential=relay-token:/etc/ea-cloud/readonly-relay/relay-token
+LoadCredential=source-password:/etc/ea-cloud/accounts/jm-demo/broker-password
+LoadCredential=source-api:/etc/ea-cloud/accounts/jm-demo/api-token
+LoadCredential=client-password:/etc/ea-cloud/accounts/jm-client-demo/broker-password
+LoadCredential=client-api:/etc/ea-cloud/accounts/jm-client-demo/api-token
+ExecStart=/opt/ea-cloud/infra/linux/.venv/bin/uvicorn readonly_account_relay:from_environment --factory --host 127.0.0.1 --port 8005 --no-access-log
+Restart=on-failure
+RestartSec=5
+TimeoutStopSec=20
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+IPAddressDeny=any
+IPAddressAllow=localhost
+UMask=0077
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
