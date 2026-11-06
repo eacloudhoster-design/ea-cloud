@@ -10,7 +10,7 @@
     "artifacts/api-server/src/lib/copy-engine.ts": "949e5e50713b6ff8273ac2222bee731e3ffe77ee065572952f5a7bc710c3a2c7",
     "artifacts/api-server/src/lib/copy-policy.ts": "f4ef5b77e8432a081d09402afc9ba7a302ba6d1767b703d08c69def67ee4e162",
     "artifacts/api-server/src/lib/engine-status.ts": "934dc72a5f30d738280981eb9f2e41fd63e8c5570ed1ca3974ef150f0d198c99",
-    "artifacts/api-server/src/lib/management-preflight.ts": "5e0faa7725bca6312dd9d4fa73db704143049241e94bf9d88b434606406a9815",
+    "artifacts/api-server/src/lib/management-preflight.ts": "fb460dad624dbcd7479e3e0e6b89b6e7306de8668e9f1dbfa475730af4b49d63",
     "artifacts/api-server/src/lib/observer-execution.ts": "a83adf9f49b78e0ea6e732b60770c7341c867d21dfc96b1f411da7dae9856863",
     "artifacts/api-server/src/lib/observer-vps.ts": "5128332ff5b3fe8374e02c80d6d0c435b183fddfedcb3ae9ce1545ef4269f037",
     "artifacts/api-server/src/routes/client-settings.ts": "1fb86739866ba6a1b5e9784b3ad418d780dc806c8aed658abe62486e3a175fc6",
@@ -27,13 +27,13 @@
     "artifacts/ea-cloud/src/pages/admin/EngineStatus.tsx": "2304dbcb01b58519d36fd1b242bf4b6a337a1f5f9e0c23427705bcd64d94bf96",
     "artifacts/ea-cloud/src/pages/admin/Mt5Connections.tsx": "b79895e0056619803ae6da23f61c52ba780168274a10d3c541dc9846c9f8867d",
     "functions/api/[[path]].js": "43ac1d2d0b88a5183faf073b6ecd2b69ce82db055a5dfdc7a141c649169e56dc",
-    "infra/linux/BROKER_APP_SPRINT_READINESS.md": "4d1a2673577955ab11bcea1b0f74532e02f9a2893ba1faf9a1898c894b2dc23d",
+    "infra/linux/BROKER_APP_SPRINT_READINESS.md": "f7807aad494ed7d2a99498079045c5ad9e3f1776711dcd01b6343da822a72a3e",
     "infra/linux/ea-account-display@.service": "15d558929ae5eb28b6e1cc55cd95bd0dcaf09383bd3b088ca4794ee83498c1c1",
     "infra/linux/ea-account-readonly@.service": "f3635f8c79b9d8a8d6ced687aca32ea0fc608cf2ba9599d2e4b3df3ee3c408a2",
     "infra/linux/ea-account-terminal@.service": "cafe772f48c1b54a2f49c8443acaf1c102a8c1cf9946c8d59319049ca59512fd",
-    "infra/linux/ea-demo-status.target": "fda6e5a1bdeb35676be9df76383967012cadf7909def4db93da61096e6ec4b92",
+    "infra/linux/ea-demo-status.target": "fbcefc034a9c03eaa222292e4f320b0ff03ba44b353dca9c211248e24ac235e4",
     "infra/linux/ea-engine-management.service": "9d2dad7760faa82216283f5933388c38a0f1bd54e6a6be472e0a92ff6ff17305",
-    "infra/linux/ea-readonly-account-relay.service": "fe6be9b9f2cf7b3f6fa60451bc370e9aa16cd507894c73dde229a591113cd928",
+    "infra/linux/ea-readonly-account-relay.service": "e4aeab2a5a22817cf5850e86b6e48e6691d3710057efb88a58ed09efb4d56523",
     "infra/linux/supervise-portable-terminal.py": "bd13864fc351fcd2145e4521acd585e9a538f4f5d85a8f985e5fd4c59902d7cd",
     "infra/linux/wine-readonly-api.py": "0a8f9c29fe9010097e4f6ffe7aec36cee0c3760e425795b173140680ce7455c7",
     "lib/db/src/schema/index.ts": "bb99cfa3d079f39e0ce3a9cd4e5bfba2fffa70538e3bacb5a0b816e22c5001af",
@@ -44,7 +44,7 @@
     "scripts/tests/copy-policy.test.mjs": "920abcad99746176432de57bcd991d5413bfe5989b2f4d2a9a4ada522f6092fe",
     "scripts/tests/engine-integration.test.mjs": "7d46a3cb0005085b79d7dd3d82879dd78ac5dc6eb2160bf9df3c8d89f1f09881",
     "scripts/tests/helpers/copier-fixture.mjs": "f07ee4bdf95024c12077256a2eedeaea93ca4f5db10d458297fead4db34cac78",
-    "scripts/tests/management-preflight.test.mjs": "cd2bd4ca1596e75016580f199d9ca1d34e0261f07203319b2af0682343074944",
+    "scripts/tests/management-preflight.test.mjs": "790c0d92f4bb302920ff73cfe8bf5f0da137fcdfe12eefd319239b34e95b774c",
     "scripts/tests/mt5-preview.test.mjs": "589fcab3e2da82327d6ae30bcff14cd6851ca6e11048ee15c3b77ff695929b10",
     "scripts/tests/pages.test.mjs": "d37f556c1bbae88543da3d90a435acdd6b6cfcc473e5d907e17c0370ee1e31b6",
     "vps-mt5-service/demo_readonly_api.py": "158e619aba04b005bde6ffd2a12e246fa6f280fe3138db2c31032fa052f6bcb7",
@@ -54,7 +54,9 @@
     "vps-mt5-service/tests/test_observer_sync.py": "25a92fbfb1bfcd6bf0a3298bb80f9670b078c77328102ffc46562466fa136bb4",
     "vps-mt5-service/tests/test_readonly_account_relay.py": "fd8d2301ed13d089466c16307e2fc6e2761464ef236b91053cd732f65fe60109",
     "vps-mt5-service/tests/test_readonly_release_launcher.py": "96eddee9c16bc5660cfa9efc1392d8c77a72a0540b2ce6ba685711a68e4f68d7",
-    "vps-mt5-service/tests/test_terminal_supervisor.py": "8a36657c53ef4a295ccb0b975da4f85cb07032deebd1df6c14e01d294e98b513"
+    "vps-mt5-service/tests/test_terminal_supervisor.py": "8a36657c53ef4a295ccb0b975da4f85cb07032deebd1df6c14e01d294e98b513",
+    "infra/linux/PRODUCTION_COMPATIBILITY_READINESS.md": "e35b95a25509c7ed5233669b09ca88dbdd1d5033999a2a2eaa9b16ad1a74d536"
   },
-  "execution_authorized": false
+  "execution_authorized": false,
+  "production_compatibility_continuation_base": "cfafa2f7028e3ad74a6169ed3b4c8e97062cf9ea"
 }
