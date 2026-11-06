@@ -29,7 +29,7 @@ export async function copierFixture(){
  const {drizzle}=await import('../../../lib/db/node_modules/drizzle-orm/node-postgres/index.js');
  const dialect=new PgDialect();
  const literal=v=>typeof v==='string'?"'"+v.replaceAll("'","''")+"'":typeof v==='number'||typeof v==='boolean'?String(v):dialect.sqlToQuery(v).sql;
- for(const name of ['usersTable','appAccessTable','licensesTable','easTable','clientSettingsTable','symbolPairsTable','clientSymbolConfigsTable','tradeExecutionsTable','tradeSignalsTable','robotBuildsTable','robotEventsTable','observerPositionsTable','observerAllocationsTable','mt5ConnectionsTable']){
+ for(const name of ['usersTable','appAccessTable','licensesTable','easTable','clientSettingsTable','symbolPairsTable','clientSymbolConfigsTable','tradeExecutionsTable','tradeSignalsTable','robotBuildsTable','robotEventsTable','observerPositionsTable','observerAllocationsTable','mt5ConnectionsTable','mentorCopyPoliciesTable','mentorCopyPolicyAuditTable']){
   const t=getTableConfig(schema[name]);
   const columns=t.columns.map(c=>`"${c.name}" ${c.getSQLType()}${c.primary?' PRIMARY KEY':''}${c.notNull?' NOT NULL':''}${c.isUnique?' UNIQUE':''}${c.default!==undefined?' DEFAULT '+literal(c.default):''}`);
   for(const u of t.uniqueConstraints)columns.push(`UNIQUE (${u.columns.map(c=>'"'+c.name+'"').join(',')})`);

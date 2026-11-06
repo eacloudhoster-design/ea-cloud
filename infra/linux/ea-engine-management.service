@@ -1,0 +1,25 @@
+# Prepared only. Render the immutable release and bind ORIGINAL configuration after compatibility gates.
+[Unit]
+Description=EA Cloud isolated MT5 connection and allocation management (no trading jobs)
+After=network-online.target
+ConditionPathExists=/etc/ea-cloud/engine-management.env
+[Service]
+User=ea-engine-management
+Group=ea-engine-management
+Environment=NODE_ENV=production
+Environment=EA_MT5_MANAGEMENT_ONLY=1
+EnvironmentFile=/etc/ea-cloud/engine-management.env
+WorkingDirectory=/opt/ea-cloud/releases/mt5-management/artifacts/api-server
+ExecStart=/usr/bin/node /opt/ea-cloud/releases/mt5-management/artifacts/api-server/management/engine-management.mjs
+Restart=on-failure
+RestartSec=5
+TimeoutStopSec=20
+NoNewPrivileges=true
+ProtectHome=true
+ProtectSystem=strict
+PrivateTmp=true
+PrivateDevices=true
+RestrictSUIDSGID=true
+UMask=0077
+[Install]
+WantedBy=multi-user.target

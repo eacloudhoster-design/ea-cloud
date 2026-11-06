@@ -12,21 +12,7 @@ import { encryptMT5Password } from "../lib/mt5-crypto";
 const router = Router();
 
 
-const requireClientAuth = async (req: any, res: any, next: any) => {
-  const auth = req.headers.authorization as string | undefined;
-  if (!auth?.startsWith("Bearer ")) { res.status(401).json({ error: "Unauthorized" }); return; }
-  const token = auth.slice(7);
-  try {
-    const decoded = Buffer.from(token, "base64").toString();
-    const [idStr, role] = decoded.split(":");
-    if (role !== "client") { res.status(401).json({ error: "Unauthorized" }); return; }
-    const id = parseInt(idStr);
-    const [client] = await db.select().from(appAccessTable).where(eq(appAccessTable.id, id)).limit(1);
-    if (!client) { res.status(401).json({ error: "Unauthorized" }); return; }
-    req.clientId = id;
-    next();
-  } catch { res.status(401).json({ error: "Unauthorized" }); }
-};
+const requireClientAuth = requireAppSession;
 
 // Get client's trading settings (create defaults if not exists)
 router.get("/app/trading-controls", requireClientAuth, async (req: any, res) => {
@@ -36,7 +22,7 @@ router.get("/app/trading-controls", requireClientAuth, async (req: any, res) => 
 
     if (!settings) {
       [settings] = await db.insert(clientSettingsTable)
-        .values({ clientId: req.clientId }).returning();
+        .values({ clientId: req.clientId, ...(process.env.EA_MT5_MANAGEMENT_ONLY==="1"?{copyingEnabled:false}:{}) }).returning();
     }
     // Never expose the encrypted password in API responses.
     const { encryptedMt5Password: _omit, ...safe } = settings;
@@ -56,6 +42,8 @@ router.patch("/app/trading-controls", requireClientAuth, async (req: any, res) =
       symbolFilters, copyingEnabled,
     } = req.body as Record<string, unknown>;
 
+    const ranges:any={fixedLotSize:[0.01,100],riskPercent:[0.01,25],lotMultiplier:[0.01,100],maxDailyDrawdown:[0.01,25],maxOpenTrades:[1,100],maxLotSize:[0.01,100]};
+    for(const [key,[min,max]] of Object.entries(ranges) as any){const value=req.body[key];if(value!==undefined&&(typeof value!=="number"||!Number.isFinite(value)||value<min||value>max||(key==="maxOpenTrades"&&!Number.isInteger(value))||(key!=="maxOpenTrades"&&Math.abs(value*100-Math.round(value*100))>1e-8))){res.status(422).json({error:"Invalid trading risk limit"});return;}}
     const updates: Record<string, unknown> = {};
     if (lotMode !== undefined) {
       if(!["fixed","multiplier"].includes(String(lotMode))){res.status(422).json({error:"Choose fixed or multiplier sizing; verified risk-percent sizing is not available",code:"LOT_MODE_UNSUPPORTED"});return;}
@@ -75,10 +63,10 @@ router.patch("/app/trading-controls", requireClientAuth, async (req: any, res) =
 
     const {settings,changed}=await db.transaction(async tx=>{
       const [existing]=await tx.select().from(clientSettingsTable).where(eq(clientSettingsTable.clientId,req.clientId)).limit(1).for("update");
-      const [settings]=existing?await tx.update(clientSettingsTable).set(updates).where(eq(clientSettingsTable.clientId,req.clientId)).returning():await tx.insert(clientSettingsTable).values({clientId:req.clientId,...updates}).returning();
+      const [settings]=existing?await tx.update(clientSettingsTable).set(updates).where(eq(clientSettingsTable.clientId,req.clientId)).returning():await tx.insert(clientSettingsTable).values({clientId:req.clientId,...(process.env.EA_MT5_MANAGEMENT_ONLY==="1"?{copyingEnabled:false}:{}),...updates}).returning();
       return {settings,changed:typeof copyingEnabled==="boolean"&&existing?.copyingEnabled!==settings.copyingEnabled};
     });
-    if(changed)await queueBotPush(req.clientId,settings.copyingEnabled?'started':'stopped',req.log,settings.updatedAt?.toISOString());
+    if(changed&&process.env.EA_MT5_MANAGEMENT_ONLY!=="1")await queueBotPush(req.clientId,settings.copyingEnabled?'started':'stopped',req.log,settings.updatedAt?.toISOString());
 
     // Never expose the encrypted password in API responses.
     const { encryptedMt5Password: _omit, ...safe } = settings;
@@ -262,6 +250,7 @@ router.post(["/app/mt5-connect","/client/mt5/connect"], requireAppSession, requi
     catch {res.status(422).json({error:"A provisioned demo account could not be verified",code:"MT5_BINDING_UNVERIFIED"});return;}
     if(account.role!=="client"){res.status(403).json({error:"A receiving client account is required"});return;}
     const balance=account.balance===null?null:String(account.balance),equity=account.equity===null?null:String(account.equity);
+    if(req.body.broker!==undefined && req.body.broker!==account.broker){res.status(422).json({error:"Selected broker does not match the verified account",code:"BROKER_BINDING_MISMATCH"});return;}
     const resolvedBroker=account.broker,accountName=null,mt5LoginStr=String(loginNum),connectedAt=new Date().toISOString();
 
     // Encrypt the password for copy-trade execution — NEVER stored in plain text.

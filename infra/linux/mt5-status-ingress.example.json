@@ -1,0 +1,12 @@
+{
+  "ingress": [
+    {
+      "hostname": "REPLACE_WITH_APPROVED_STATUS_HOSTNAME",
+      "path": "^/(healthz|observer/capabilities|observer/account-status|connect-mt5)/?$",
+      "service": "http://127.0.0.1:8005"
+    },
+    {
+      "service": "http_status:404"
+    }
+  ]
+}

@@ -1,35 +1,18 @@
+import {encryptMT5Password,decryptMT5Password} from "../lib/mt5-crypto";
+import {requireAuth} from "../middlewares/auth";
 import { readBoundAccount } from "../lib/mt5-account-status";
 import { Router } from "express";
 import { db, mt5ConnectionsTable, usersTable } from "@workspace/db";
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, and,ne,sql } from "drizzle-orm";
 
 const router = Router();
 
 
-// ─── Auth helper (Bearer JWT → mentor row) ────────────────────────────────────
-const getBearerMentor = async (authHeader: string | undefined) => {
-  if (!authHeader?.startsWith("Bearer ")) return null;
-  try {
-    const decoded = Buffer.from(authHeader.slice(7), "base64").toString();
-    const [idStr, role] = decoded.split(":");
-    if (role !== "mentor" && role !== "superadmin") return null;
-    const id = parseInt(idStr, 10);
-    const [mentor] = await db
-      .select({ id: usersTable.id, status: usersTable.status })
-      .from(usersTable)
-      .where(eq(usersTable.id, id))
-      .limit(1);
-    return mentor ?? null;
-  } catch {
-    return null;
-  }
-};
-
 // ─── POST /api/admin/mt5/connect ──────────────────────────────────────────────
 // Proxies credentials to the external MT5 backend, then saves the result.
-router.post("/admin/mt5/connect", async (req: any, res) => {
+router.post("/admin/mt5/connect", requireAuth, async (req: any, res) => {
   try {
-    const mentor = await getBearerMentor(req.headers.authorization);
+    const mentor = ["mentor","superadmin"].includes(req.userRole) ? {id:req.userId} : null;
     if (!mentor) { res.status(401).json({ error: "Unauthorized" }); return; }
 
     const { login, password, server } = req.body as {
@@ -49,8 +32,15 @@ router.post("/admin/mt5/connect", async (req: any, res) => {
     let account;
     try {account=await readBoundAccount(loginNum,server,password);}
     catch {res.status(422).json({error:"Provisioned demo mentor account verification unavailable",code:"MT5_BINDING_UNVERIFIED"});return;}
+    if(req.body.broker!==undefined && req.body.broker!==account.broker){res.status(422).json({error:"Selected broker does not match verified account"});return;}
     if(account.role!=="mentor"){res.status(403).json({error:"A dedicated mentor-role worker is required"});return;}
-    const [saved]=await db.insert(mt5ConnectionsTable).values({mentorId:mentor.id,mt5Login:loginNum,mt5Server:server,balance:account.balance===null?null:String(account.balance),status:"connected",rawResponse:JSON.stringify({verified:true,accountMode:"demo",executionEnabled:account.execution_enabled})}).returning();
+    const saved=await db.transaction(async tx=>{
+      await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtext(${"ea-account:"+server+":"+loginNum}))`);
+      const [other]=await tx.select({id:mt5ConnectionsTable.id}).from(mt5ConnectionsTable).where(and(eq(mt5ConnectionsTable.mt5Login,loginNum),eq(mt5ConnectionsTable.mt5Server,server),ne(mt5ConnectionsTable.mentorId,mentor.id))).limit(1);
+      if(other)return null;
+      const [row]=await tx.insert(mt5ConnectionsTable).values({mentorId:mentor.id,mt5Login:loginNum,mt5Server:server,encryptedMt5Password:encryptMT5Password(password),balance:account.balance===null?null:String(account.balance),status:"connected",rawResponse:JSON.stringify({verified:true,accountMode:"demo",executionEnabled:false})}).returning();return row;
+    });
+    if(!saved){res.status(409).json({error:"Account is already assigned to another mentor"});return;}
     res.setHeader("Cache-Control","no-store");
     res.json({status:"connected",id:saved.id,mt5Login:loginNum,server,balance:saved.balance,connectedAt:saved.connectedAt,accountMode:"demo",executionEnabled:account.execution_enabled});
   } catch {res.status(503).json({error:"Account verification or storage temporarily unavailable"});}
@@ -58,9 +48,9 @@ router.post("/admin/mt5/connect", async (req: any, res) => {
 
 // ─── GET /api/admin/mt5/connections ───────────────────────────────────────────
 // List all connection attempts for the authenticated mentor (newest first).
-router.get("/admin/mt5/connections", async (req: any, res) => {
+router.get("/admin/mt5/connections", requireAuth, async (req: any, res) => {
   try {
-    const mentor = await getBearerMentor(req.headers.authorization);
+    const mentor = ["mentor","superadmin"].includes(req.userRole) ? {id:req.userId} : null;
     if (!mentor) { res.status(401).json({ error: "Unauthorized" }); return; }
 
     const rows = await db
@@ -84,4 +74,26 @@ router.get("/admin/mt5/connections", async (req: any, res) => {
   }
 });
 
+router.get("/admin/mt5/status",requireAuth,async(req:any,res)=>{
+ res.setHeader("Cache-Control","no-store");if(!["mentor","superadmin"].includes(req.userRole)){res.status(403).json({error:"Forbidden"});return;}
+ try{
+  const [row]=await db.select().from(mt5ConnectionsTable).where(and(eq(mt5ConnectionsTable.mentorId,req.userId),eq(mt5ConnectionsTable.status,"connected"))).orderBy(desc(mt5ConnectionsTable.connectedAt)).limit(1);
+  if(!row?.encryptedMt5Password){res.json({connected:false,verified:false,code:"MENTOR_ACCOUNT_NOT_CONFIGURED"});return;}
+  const proof=await readBoundAccount(row.mt5Login,row.mt5Server,decryptMT5Password(row.encryptedMt5Password));
+  if(proof.role!=="mentor")throw Error();
+  res.json({connected:true,verified:true,login:proof.login,server:proof.server,broker:proof.broker,accountMode:"demo",executionEnabled:false,workerExecutionEnabled:proof.execution_enabled,readOnly:proof.read_only,observedAt:new Date().toISOString()});
+ }catch{res.status(503).json({connected:false,verified:false,code:"MENTOR_VERIFICATION_UNAVAILABLE"});}
+});
+router.post("/admin/mt5/disconnect",requireAuth,async(req:any,res)=>{
+ res.setHeader("Cache-Control","no-store");if(!["mentor","superadmin"].includes(req.userRole)){res.status(403).json({error:"Forbidden"});return;}
+ const id=req.body?.id;if(!Number.isSafeInteger(id)||id<=0){res.status(422).json({error:"Choose an owned connection"});return;}
+ try{
+  const disconnected=await db.transaction(async tx=>{
+   const [row]=await tx.select().from(mt5ConnectionsTable).where(and(eq(mt5ConnectionsTable.id,id),eq(mt5ConnectionsTable.mentorId,req.userId))).limit(1).for("update");if(!row)return false;
+   await tx.update(mt5ConnectionsTable).set({status:"disconnected"}).where(and(eq(mt5ConnectionsTable.mentorId,req.userId),eq(mt5ConnectionsTable.mt5Login,row.mt5Login),eq(mt5ConnectionsTable.mt5Server,row.mt5Server)));return true;
+  });
+  if(!disconnected){res.status(404).json({error:"Connection not found"});return;}
+  res.json({connected:false,credentialsRetainedForReconciliation:true,existingPositionsUnchanged:true});
+ }catch{res.status(503).json({error:"Disconnect not confirmed"});}
+});
 export default router;

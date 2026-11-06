@@ -1,5 +1,6 @@
 import express from "express";
 import helmet from "helmet";
+import mentorConnections from "./routes/mt5-connect";
 import engineRouter from "./routes/engine";
 import healthRouter from "./routes/health";
 import {verifyBrowserSession,identityHint} from "./lib/browser-session";
@@ -8,7 +9,7 @@ export function createReadOnlyEngineApp(){
  const app=express();app.disable("x-powered-by");app.use(helmet());
  app.use((req:any,res,next)=>{req.log={warn(){},error(){}};res.setHeader("Cache-Control","no-store");
   if(req.method!=="GET" && req.method!=="HEAD"){res.status(405).json({code:"READ_ONLY_RELEASE",error:"Read-only release: mutations disabled"});return;}
-  if(!/^\/api\/(?:healthz|readyz|app\/engine\/status|admin\/engine\/clients(?:\/[1-9]\d*)?)\/?$/.test(req.path)){res.status(404).json({code:"READ_ONLY_ROUTE_UNAVAILABLE"});return;}
+  if(!/^\/api\/(?:healthz|readyz|app\/engine\/status|admin\/engine\/clients(?:\/[1-9]\d*(?:\/policy)?)?|admin\/mt5\/(?:status|connections))\/?$/.test(req.path)){res.status(404).json({code:"READ_ONLY_ROUTE_UNAVAILABLE"});return;}
   next();
  });
  app.use("/api",healthRouter);
@@ -22,6 +23,6 @@ export function createReadOnlyEngineApp(){
    req.browserPrincipal=principal;req.headers.authorization=`Bearer ${identityHint(principal.id,principal.role)}`;next();
   }catch {res.status(503).json({code:"SESSION_CHECK_UNAVAILABLE"});}
  });
- app.use("/api",engineRouter);
+ app.use("/api",engineRouter,mentorConnections);
  return app;
 }

@@ -1,0 +1,25 @@
+# Review template only: render readonly-account to the pinned approved release.
+[Unit]
+Description=EA Cloud isolated read-only demo adapter %i
+Requires=ea-account-terminal@%i.service
+After=ea-account-terminal@%i.service
+PartOf=ea-account-terminal@%i.service
+ConditionPathExists=/etc/ea-cloud/accounts/%i/enrollment.json
+[Service]
+User=ea-account-%i
+Group=ea-account-%i
+EnvironmentFile=/etc/ea-cloud/accounts/%i/runtime.env
+LoadCredential=account.json:/etc/ea-cloud/accounts/%i/account.json
+LoadCredential=broker-password:/etc/ea-cloud/accounts/%i/broker-password
+LoadCredential=api-token:/etc/ea-cloud/accounts/%i/api-token
+ExecStart=/usr/bin/python3 /opt/ea-cloud/releases/readonly-account/infra/linux/wine-readonly-api.py
+Restart=always
+RestartSec=3
+TimeoutStopSec=8
+UMask=0077
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+ReadWritePaths=/var/lib/ea-cloud/accounts/%i /tmp
+MemoryMax=600M
+TasksMax=70

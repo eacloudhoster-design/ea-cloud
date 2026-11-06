@@ -36,6 +36,7 @@ class ObserverSync(BaseModel):
     tp: float = Field(ge=0)
     maxVolume: float = Field(gt=0)
     maxOpenTrades: int = Field(ge=1,le=10000,default=10)
+    maxExposureLots: Optional[float] = Field(gt=0,default=None)
     maxDailyDrawdown: float = Field(gt=0,le=100,default=5)
 
 class SyncJournal:
@@ -169,6 +170,9 @@ def synchronize(mt5, payload, journal, connect, send):
                 amount=min(abs(target-actual),maximum)
                 amount=math.floor((amount+1e-10)/step)*step
                 if amount<minimum:return finish(reply(False,"Adjustment is below broker minimum"))
+                exposure=sum(float(getattr(p,'volume',float('nan'))) for p in all_positions)
+                exposure_cap=payload.maxExposureLots if payload.maxExposureLots is not None else payload.maxVolume
+                if not math.isfinite(exposure_cap) or not math.isfinite(exposure) or exposure<0 or exposure+amount>exposure_cap+1e-9:return finish(reply(False,"Client gross lot exposure limit reached"))
                 action=mt5.ORDER_TYPE_BUY if target>actual else mt5.ORDER_TYPE_SELL
                 request={"action":mt5.TRADE_ACTION_DEAL,"symbol":payload.symbol,"volume":round(amount,8),"type":action,"price":tick.ask if action==mt5.ORDER_TYPE_BUY else tick.bid,"sl":payload.sl,"tp":payload.tp}
             else:
