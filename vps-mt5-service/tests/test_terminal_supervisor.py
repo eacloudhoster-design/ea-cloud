@@ -6,6 +6,8 @@ class SupervisorTests(unittest.TestCase):
   with tempfile.TemporaryDirectory() as d:
    root=Path(d);p=root/'100';p.mkdir();(p/'cmdline').write_bytes(b'Z:\\bound\\terminal\\terminal64.exe\0/portable\0')
    self.assertTrue(module.terminal_running(root,os.getuid(),own=999))
+   (p/'comm').write_text('wine\n');self.assertFalse(module.terminal_running(root,os.getuid(),own=999,ready=True))
+   (p/'comm').write_text('main\n');self.assertTrue(module.terminal_running(root,os.getuid(),own=999,ready=True))
    (p/'cmdline').write_bytes(b'C:\\users\\account\\liveupdate\\terminal64.exe\0/update\0')
    self.assertTrue(module.terminal_running(root,os.getuid(),own=999))
    self.assertFalse(module.terminal_running(root,os.getuid()+1,own=999))
