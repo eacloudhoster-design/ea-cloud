@@ -141,7 +141,7 @@ test('malformed optional origin token fails closed without fetching or exposing 
 
 test('optional management origin routes only MT5 controls and keeps origin tokens isolated',async()=>{
  const env={BACKEND_ORIGIN:'https://backend.example',BACKEND_PROXY_TOKEN:'a'.repeat(64),MT5_MANAGEMENT_ORIGIN:'https://management.example',MT5_MANAGEMENT_PROXY_TOKEN:'b'.repeat(64)};
- for(const [path,host,token] of [['/api/app/mt5-connect','management.example','b'],['/api/admin/engine/clients/10/policy','management.example','b'],['/api/auth/login','backend.example','a'],['/api/observer/sync-position','backend.example','a']]){
+ for(const [path,host,token] of [['/api/app/mt5-connect','management.example','b'],['/api/app/trading-controls','management.example','b'],['/api/app/trading-controls-extra','backend.example','a'],['/api/admin/engine/clients/10/policy','management.example','b'],['/api/auth/login','backend.example','a'],['/api/observer/sync-position','backend.example','a']]){
   globalThis.fetch=async req=>{assert.equal(new URL(req.url).hostname,host);assert.equal(req.headers.get('x-ea-cloud-origin-token'),token.repeat(64));return Response.json({ok:true});};
   assert.equal((await onRequest({request:new Request('https://website.example'+path),env})).status,200);
  }

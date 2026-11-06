@@ -22,7 +22,7 @@ router.get("/app/trading-controls", requireClientAuth, async (req: any, res) => 
 
     if (!settings) {
       [settings] = await db.insert(clientSettingsTable)
-        .values({ clientId: req.clientId }).returning();
+        .values({ clientId: req.clientId, ...(process.env.EA_MT5_MANAGEMENT_ONLY==="1"?{copyingEnabled:false}:{}) }).returning();
     }
     // Never expose the encrypted password in API responses.
     const { encryptedMt5Password: _omit, ...safe } = settings;
@@ -63,10 +63,10 @@ router.patch("/app/trading-controls", requireClientAuth, async (req: any, res) =
 
     const {settings,changed}=await db.transaction(async tx=>{
       const [existing]=await tx.select().from(clientSettingsTable).where(eq(clientSettingsTable.clientId,req.clientId)).limit(1).for("update");
-      const [settings]=existing?await tx.update(clientSettingsTable).set(updates).where(eq(clientSettingsTable.clientId,req.clientId)).returning():await tx.insert(clientSettingsTable).values({clientId:req.clientId,...updates}).returning();
+      const [settings]=existing?await tx.update(clientSettingsTable).set(updates).where(eq(clientSettingsTable.clientId,req.clientId)).returning():await tx.insert(clientSettingsTable).values({clientId:req.clientId,...(process.env.EA_MT5_MANAGEMENT_ONLY==="1"?{copyingEnabled:false}:{}),...updates}).returning();
       return {settings,changed:typeof copyingEnabled==="boolean"&&existing?.copyingEnabled!==settings.copyingEnabled};
     });
-    if(changed)await queueBotPush(req.clientId,settings.copyingEnabled?'started':'stopped',req.log,settings.updatedAt?.toISOString());
+    if(changed&&process.env.EA_MT5_MANAGEMENT_ONLY!=="1")await queueBotPush(req.clientId,settings.copyingEnabled?'started':'stopped',req.log,settings.updatedAt?.toISOString());
 
     // Never expose the encrypted password in API responses.
     const { encryptedMt5Password: _omit, ...safe } = settings;
