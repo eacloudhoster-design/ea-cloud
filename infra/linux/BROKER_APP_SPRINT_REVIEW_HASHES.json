@@ -56,9 +56,16 @@
     "vps-mt5-service/tests/test_readonly_release_launcher.py": "96eddee9c16bc5660cfa9efc1392d8c77a72a0540b2ce6ba685711a68e4f68d7",
     "vps-mt5-service/tests/test_terminal_supervisor.py": "8a36657c53ef4a295ccb0b975da4f85cb07032deebd1df6c14e01d294e98b513",
     "infra/linux/PRODUCTION_COMPATIBILITY_READINESS.md": "e35b95a25509c7ed5233669b09ca88dbdd1d5033999a2a2eaa9b16ad1a74d536",
-    "infra/linux/POST_MIGRATION_APP_READINESS.md": "30d04c9c890fc83775a0b7e4f9839fdc344fe06bbbe96d5746c9d2058f1a0879"
+    "infra/linux/POST_MIGRATION_APP_READINESS.md": "30d04c9c890fc83775a0b7e4f9839fdc344fe06bbbe96d5746c9d2058f1a0879",
+    "artifacts/api-server/src/lib/mt5-endpoint.ts": "9ad4833274c343d8da46fb9902c4bf4265e16e6084a8e22c30fe0da4788a35b2",
+    "infra/linux/SECURE_RENDER_VPS_RELEASE.md": "d06c079de9774978667c03c3396200afbebee40313590da1eeecc77972a66520",
+    "infra/linux/ea-mt5-status-tunnel.service": "df4b05ee3da0932e8b9333861456ac1195886411ac0e7d5f6524df816c34f6ea",
+    "infra/linux/mt5-status-ingress.example.json": "4066a9c2d55cd5236c3eefb6a681168158c927ffa2de5c14a9d06e10ae991844",
+    "infra/linux/render-mt5-transport.env.example": "a122ad69d7205db89e2a3d67058d8fddfc1c3f3880e78e45783c4a62eeca0e85",
+    "scripts/tests/mt5-edge-transport.test.mjs": "d9d413e63d7efba512cba5f2e16cc64b0cf58f35278bb0ba70ab6b78a864357f"
   },
   "execution_authorized": false,
   "production_compatibility_continuation_base": "cfafa2f7028e3ad74a6169ed3b4c8e97062cf9ea",
-  "postmigration_continuation_base": "2d357f7f654fe08eca62b6cca74379b07dca8c8f"
+  "postmigration_continuation_base": "2d357f7f654fe08eca62b6cca74379b07dca8c8f",
+  "secure_transport_base": "bbe69c6e4480ff6219d3767da992bf3e841d1a1b"
 }
