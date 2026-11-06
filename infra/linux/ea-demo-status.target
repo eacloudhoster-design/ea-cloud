@@ -1,6 +1,6 @@
 [Unit]
 Description=EA Cloud verified demo status only
-Wants=ea-jm-demo-readonly-api.service ea-account-readonly@jm-client-demo.service ea-account-readonly@deriv-demo.service ea-account-readonly@xm-demo.service ea-readonly-account-relay.service
+Wants=ea-jm-demo-readonly-api.service ea-account-readonly@jm-client-demo.service ea-account-readonly@deriv-demo.service ea-account-readonly@xm-demo.service ea-account-readonly@exness-demo.service ea-account-readonly@rcg-demo.service ea-readonly-account-relay.service
 After=network-online.target
 
 [Install]

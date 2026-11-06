@@ -1,5 +1,7 @@
 # MT5 broker and app integration sprint
 
+**Current continuation:** See `FINAL_MT5_RELEASE_READINESS.md`. Updated Exness and RCG credentials now pass actual SDK demo authentication, market data, restart/reconnect and isolated management API acceptance. The failure entries below are historical, superseded evidence. Public deployment remains blocked by original production configuration access.
+
 Continues merged PR #132 and the read-only relay in draft PR #133. Existing primary checkout/index, working JustMarkets accounts, financial acceptance artifacts, both emergency stops and production data are preserved. This sprint authorizes verified non-trading deployment; it does not authorize broker orders or PR merges.
 
 ## Broker evidence
