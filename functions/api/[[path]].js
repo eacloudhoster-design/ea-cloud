@@ -1,11 +1,16 @@
-// Pages serves both frontends; the existing Node service owns all API routes.
+// Preserve the existing backend; optionally route only MT5 management to an isolated non-trading service.
 export async function onRequest({ request, env }) {
   const unavailable = (message, status = 503, code = "API_UPSTREAM_UNREACHABLE", upstreamStatus) => Response.json({ error: message, code, ...(upstreamStatus ? {upstreamStatus} : {}) }, {
     status, headers: { "Cache-Control": "no-store" },
   });
+  const incoming = new URL(request.url);
+  const managedPath=/^\/api\/(?:app\/(?:engine\/status|mt5-(?:connect|disconnect))|admin\/(?:mt5\/(?:status|connections|connect|disconnect)|engine\/clients(?:\/[1-9]\d*(?:\/policy)?)?))\/?$/.test(incoming.pathname);
+  const management=managedPath&&Boolean(env.MT5_MANAGEMENT_ORIGIN);
+  const origin=management?env.MT5_MANAGEMENT_ORIGIN:env.BACKEND_ORIGIN;
+  const proxyToken=management?env.MT5_MANAGEMENT_PROXY_TOKEN:env.BACKEND_PROXY_TOKEN;
   let backend;
   try {
-    backend = new URL(env.BACKEND_ORIGIN);
+    backend = new URL(origin);
     if (backend.protocol !== "https:" || backend.username || backend.password ||
         backend.pathname !== "/" || backend.search || backend.hash ||
         backend.origin === new URL(request.url).origin) throw new Error("Invalid backend origin");
@@ -13,9 +18,8 @@ export async function onRequest({ request, env }) {
     console.warn({event:"api_proxy_failed",code:"API_BACKEND_NOT_CONFIGURED",status:503});
     return unavailable("The API backend is not configured. Please contact support.",503,"API_BACKEND_NOT_CONFIGURED");
   }
-  const incoming = new URL(request.url);
   const target = new URL(incoming.pathname + incoming.search, backend);
-  if (env.BACKEND_PROXY_TOKEN && (typeof env.BACKEND_PROXY_TOKEN !== "string" || !/^[A-Za-z0-9_-]{43,128}$/.test(env.BACKEND_PROXY_TOKEN))) {
+  if (proxyToken && (typeof proxyToken !== "string" || !/^[A-Za-z0-9_-]{43,128}$/.test(proxyToken))) {
     console.warn({event:"api_proxy_failed",code:"API_BACKEND_NOT_CONFIGURED",status:503});
     return unavailable("The API gateway is not configured correctly.",503,"API_BACKEND_NOT_CONFIGURED");
   }
@@ -23,7 +27,7 @@ export async function onRequest({ request, env }) {
   // Optional private-origin authentication for an approved VPS cutover. Never
   // trust a caller-supplied token; existing hosts need no new configuration.
   headers.delete("x-ea-cloud-origin-token");
-  if (env.BACKEND_PROXY_TOKEN) headers.set("x-ea-cloud-origin-token", env.BACKEND_PROXY_TOKEN);
+  if (proxyToken) headers.set("x-ea-cloud-origin-token", proxyToken);
   headers.delete("host");
   // Do not trust a caller-supplied forwarding chain at the API's trust boundary.
   headers.delete("forwarded");

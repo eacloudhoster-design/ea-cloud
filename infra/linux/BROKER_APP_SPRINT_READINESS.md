@@ -44,6 +44,16 @@ The deployed relay passed real Deriv/XM credential/account proof, unauthenticate
 
 The app/backend changes and migration are NOT deployed. No original production secret was replaced and no production records were changed. PR #133 remains unmerged; the sprint follow-up includes its relay dependency and does not merge either PR.
 
+## Prepared non-trading management release — not deployed
+
+`build:engine-management` now produces a separate loopback entry point without the normal API's signal worker, queue claiming/reconciliation, seeding, migrations or backfills. It allows only owned connection/status/disconnect and mentor-policy routes. Existing cookie/CSRF authentication is reused; browser-session metadata can renew during authorized requests, unlike the strict GET-only read-only canary. Broker/order/ingestion routes are absent. A private health probe checks database availability and explicitly does not claim broker connectivity.
+
+Startup requires an explicit management flag, original key, correct additive schema, existing nonempty original ciphertext that decrypts, required owner-management/session privileges and a verified status-only gateway. Its compatibility probes run inside BEGIN READ ONLY and never create/reset secrets or mutate original records. Empty/mismatched encryption evidence fails closed; no fresh-environment override is assumed. This prepares the requested Connect/Disconnect/allocation experience without starting financial producers when the original environment is recovered.
+
+Prepare `/etc/ea-cloud/engine-management.env` privately with ORIGINAL DATABASE_URL and SESSION_SECRET; an unused loopback PORT; EA_MT5_MANAGEMENT_ONLY=1; no EA_ENGINE_READ_ONLY flag; PUBLIC_WEBSITE_ORIGIN matching the existing website, plus only approved AUTH_ALLOWED_ORIGINS; and MT5_VPS_URL/TOKEN for the verified status-only relay. The relay token already exists privately on this VPS. Use an appropriately authorized owner-management database role; never change the SELECT-only canary role to make this entry pass. The service template and explicit isolated build are prepared, not installed.
+
+Pages optionally accepts MT5_MANAGEMENT_ORIGIN (an approved HTTPS origin) and a separate MT5_MANAGEMENT_PROXY_TOKEN if origin protection is used. Only exact MT5/control paths select that service; BACKEND_ORIGIN and its token remain responsible for auth, the rest of the app and existing WebSockets. Do not replace the entire backend origin with the management-only service. Invalid management configuration fails closed, and the old origin token is never forwarded to the new origin. No Pages configuration or public deployment has been changed.
+
 ## Exact outstanding requirements
 
 1. Identify the authorized backend hosting service and obtain its ORIGINAL DATABASE_URL and unchanged SESSION_SECRET through private runtime access, including correct schema/role/TLS/CA/network settings. Prior authorized VPS discovery found no usable pair; do not substitute fixture keys. Complete the bounded read-only compatibility audit against nonempty original encrypted records and verify existing ownership/licence/account mappings.

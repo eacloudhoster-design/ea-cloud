@@ -138,3 +138,17 @@ test('malformed optional origin token fails closed without fetching or exposing 
  globalThis.fetch=async()=>assert.fail('must not forward malformed gateway configuration');
  const response=await onRequest(c);assert.equal(response.status,503);assert.ok(!(await response.text()).includes('PRIVATE'));
 });
+
+test('optional management origin routes only MT5 controls and keeps origin tokens isolated',async()=>{
+ const env={BACKEND_ORIGIN:'https://backend.example',BACKEND_PROXY_TOKEN:'a'.repeat(64),MT5_MANAGEMENT_ORIGIN:'https://management.example',MT5_MANAGEMENT_PROXY_TOKEN:'b'.repeat(64)};
+ for(const [path,host,token] of [['/api/app/mt5-connect','management.example','b'],['/api/admin/engine/clients/10/policy','management.example','b'],['/api/auth/login','backend.example','a'],['/api/observer/sync-position','backend.example','a']]){
+  globalThis.fetch=async req=>{assert.equal(new URL(req.url).hostname,host);assert.equal(req.headers.get('x-ea-cloud-origin-token'),token.repeat(64));return Response.json({ok:true});};
+  assert.equal((await onRequest({request:new Request('https://website.example'+path),env})).status,200);
+ }
+});
+test('invalid management origin fails closed only for managed routes without leaking credentials',async()=>{
+ let calls=0;globalThis.fetch=async()=>{calls++;return Response.json({ok:true});};
+ const env={BACKEND_ORIGIN:'https://backend.example',MT5_MANAGEMENT_ORIGIN:'http://management.example'};
+ assert.equal((await onRequest({request:new Request('https://website.example/api/app/mt5-connect'),env})).status,503);assert.equal(calls,0);
+ assert.equal((await onRequest({request:new Request('https://website.example/api/auth/login'),env})).status,200);assert.equal(calls,1);
+});
