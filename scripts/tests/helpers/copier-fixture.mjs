@@ -10,15 +10,7 @@ export async function copierFixture(){
  const directory=await mkdtemp(join(tmpdir(),'ea-copier-e2e-'));
  let engine,postgres=false;
  if(process.env.EA_TEST_PG_URL){
-  const url=new URL(process.env.EA_TEST_PG_URL);
-  if(url.username!=='ea_db_test'||url.password||!/^\/ea_validation_[a-f0-9]+$/.test(url.pathname)||url.searchParams.get('host')!=='/var/lib/ea-cloud/validation/pg-test/socket')throw Error('Disposable PostgreSQL binding required');
-  const {default:pg}=await import('../../../lib/db/node_modules/pg/lib/index.js');
-  const pool=new pg.Pool({connectionString:url.href,max:4,application_name:'ea-cloud-disposable-copier-validation'});
-  const settings=await pool.query('SHOW data_directory');
-  if(settings.rows[0].data_directory!=='/var/lib/ea-cloud/validation/pg-test/data'){await pool.end();throw Error('Wrong validation server');}
-  const occupied=await pool.query("SELECT count(*)::int AS n FROM information_schema.tables WHERE table_schema='public'");
-  if(occupied.rows[0].n!==0){await pool.end();throw Error('Validation database must be new and empty');}
-  engine={query:(...args)=>pool.query(...args),exec:sql=>pool.query(sql),close:()=>pool.end(),connect:()=>pool.connect()};postgres=true;
+  engine=await (await import('./postgres-fixture.mjs')).postgresFixture();postgres=true;
  }else{
   const {PGlite}=await import(pathToFileURL(resolve(process.env.PGLITE_MODULE)));engine=new PGlite();
  }
@@ -45,7 +37,7 @@ export async function copierFixture(){
  const api=await import(pathToFileURL(join(directory,'engine.mjs')));
  const token=randomBytes(32).toString('hex');let child,port;
  const start=async()=>{
-  child=spawn('/opt/ea-cloud/infra/linux/.venv/bin/python',['scripts/tests/helpers/copier-simulation-server.py',join(directory,'workers')],{env:{...process.env,EA_WORKER_MODE:'simulation',EA_TEST_TOKEN:token},stdio:['ignore','pipe','pipe']});
+  child=spawn(process.env.EA_TEST_PYTHON || 'python3',['scripts/tests/helpers/copier-simulation-server.py',join(directory,'workers')],{env:{...process.env,EA_WORKER_MODE:'simulation',EA_TEST_TOKEN:token},stdio:['ignore','pipe','pipe']});
   port=await new Promise((yes,no)=>{let output='';const timer=setTimeout(()=>no(Error('Fixture startup timeout')),15000);child.stdout.on('data',chunk=>{output+=chunk;const line=output.split('\n')[0];try{const data=JSON.parse(line);clearTimeout(timer);yes(data.port);}catch{}});child.once('exit',()=>{clearTimeout(timer);no(Error('Simulation fixture exited'));});});
   for(let i=0;i<40;i++){try{if((await call('/healthz')).status===200)return;}catch{}await new Promise(r=>setTimeout(r,100));}throw Error('Fixture HTTP not ready');
  };

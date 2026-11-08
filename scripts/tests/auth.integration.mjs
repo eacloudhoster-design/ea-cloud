@@ -115,8 +115,11 @@ test("session storage failure returns a server error without issuing a cookie", 
   await pool.query("ALTER TABLE browser_sessions RENAME TO unavailable_test_sessions");
   try {
     const result = await post("/api/auth/login", { email: email("mentor"), password });
-    assert.equal(result.status, 500);
-    assert.deepEqual(await result.json(), { error: "Internal server error" });
+    assert.equal(result.status, 503);
+    assert.deepEqual(await result.json(), {
+      error: "The authentication service is temporarily unavailable. Please retry.",
+      code: "SESSION_STORAGE_SCHEMA_UNAVAILABLE",
+    });
     assert.equal(result.headers.get("set-cookie"), null);
   } finally {
     await pool.query("ALTER TABLE unavailable_test_sessions RENAME TO browser_sessions");
@@ -143,15 +146,17 @@ test(
   "admin bootstrap creates once and never replaces an existing password or role",
   {
     skip:
-      !!process.env.PGLITE_MODULE &&
+      !!process.env.PGLITE_MODULE && !process.env.EA_TEST_PG_URL &&
       "CLI bootstrap requires a disposable PostgreSQL TCP endpoint; unit coverage runs separately",
   },
   async () => {
+    if(fixture?.engine.pool)await pool.query('CREATE UNIQUE INDEX IF NOT EXISTS fixture_bootstrap_users_email_unique ON users(email)');
     const run = (kind) =>
-      spawnSync("pnpm", ["--filter", "@workspace/scripts", "bootstrap-admin"], {
+      spawnSync(process.execPath, [new URL('../node_modules/tsx/dist/cli.mjs',import.meta.url).pathname, 'scripts/src/bootstrap-admin.ts'], {
         cwd: new URL("../../", import.meta.url),
         env: {
           ...process.env,
+          DATABASE_URL: fixture?.engine.pool?.options.connectionString ?? databaseUrl,
           BOOTSTRAP_ADMIN_EMAIL: email(kind),
           BOOTSTRAP_ADMIN_PASSWORD: password,
         },

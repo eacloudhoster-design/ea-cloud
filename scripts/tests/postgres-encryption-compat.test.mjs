@@ -1,3 +1,4 @@
+import {postgresFixture} from './helpers/postgres-fixture.mjs';
 import {test} from 'node:test';
 import {spawnSync} from 'node:child_process';
 import assert from 'node:assert/strict';
@@ -10,9 +11,7 @@ import pg from '../../lib/db/node_modules/pg/lib/index.js';
 import {build} from '../../artifacts/api-server/node_modules/esbuild/lib/main.js';
 import {auditEncryptedRecords} from '../../infra/linux/check-postgres-encryption.mjs';
 test('PostgreSQL readonly audit preserves legacy encrypted rows; changed, missing and tampered keys fail closed',{skip:!process.env.EA_TEST_PG_URL},async()=>{
- const binding=new URL(process.env.EA_TEST_PG_URL);assert.equal(binding.searchParams.get('host'),'/var/lib/ea-cloud/validation/pg-test/socket');assert.equal(binding.username,'ea_db_test');
- const admin=new pg.Client({connectionString:binding.href});await admin.connect();assert.equal((await admin.query('SHOW data_directory')).rows[0].data_directory,'/var/lib/ea-cloud/validation/pg-test/data');
- const name='ea_validation_'+randomBytes(6).toString('hex');await admin.query('CREATE DATABASE '+name);await admin.end();binding.pathname='/'+name;
+ const engine=await postgresFixture();const binding=new URL(engine.pool.options.connectionString);
  const connection=()=>new pg.Client({connectionString:binding.href});
  const db=connection();await db.connect();await db.query('CREATE TABLE client_settings(id integer PRIMARY KEY,encrypted_mt5_password text)');
  const before=process.env.SESSION_SECRET;const secret='synthetic-legacy-secret-compatibility-v1';process.env.SESSION_SECRET=secret;
@@ -48,7 +47,7 @@ test('PostgreSQL readonly audit preserves legacy encrypted rows; changed, missin
   }
   const report={server_restart_preserves_ciphertext:serverRestartVerified,fresh_node_process_decrypts:true,engine:'isolated PostgreSQL 16',legacy_format_compatible:true,same_secret_restart_compatible:true,wrong_key_rejected:true,missing_key_rejected:true,tamper_rejected:true,audit_transactions_readonly:true,audit_rows_unchanged:true,production_binding_verified:false,production_records_accessed:0};
   if(process.env.EA_CRYPTO_REPORT)await writeFile(process.env.EA_CRYPTO_REPORT,JSON.stringify(report,null,2)+'\n');console.log(JSON.stringify(report));
- }finally{await db.end();await rm(dir,{recursive:true,force:true});if(before===undefined)delete process.env.SESSION_SECRET;else process.env.SESSION_SECRET=before;}
+ }finally{await db.end();await engine.close();await rm(dir,{recursive:true,force:true});if(before===undefined)delete process.env.SESSION_SECRET;else process.env.SESSION_SECRET=before;}
 });
 test('encryption audit refuses a non-readonly transaction before reading encrypted records',async()=>{
  const queries=[];let ended=false;

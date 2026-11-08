@@ -5,6 +5,7 @@ import { ArrowRight, ChevronRight, Eye, EyeOff, Fingerprint, LockKeyhole, Rotate
 import { useApp } from "@/context/AppContext";
 import { brokers, detectBroker, validateMt5Preview } from "@/lib/brokers";
 import { connectMt5Account,readEngineStatus } from "@/lib/mt5-engine";
+import { startMt5StatusRefresh } from "@/lib/mt5-status-refresh";
 import { requestJson } from "@/lib/request";
 import BrokerLogo from "@/components/mt5/BrokerLogo";
 import FloatingField from "@/components/mt5/FloatingField";
@@ -26,6 +27,8 @@ export default function MetaTraderTab({ backgroundHost, backgroundImage }: { bac
   const [saved, setSaved] = useState<SavedAccount | null>(null);
   const [savedError, setSavedError] = useState(false);
   const [engine,setEngine]=useState<any>(null);
+  const [enrollments,setEnrollments]=useState<any[]>([]);
+  const [enrolling,setEnrolling]=useState(false);
   const [restoreAttempt, setRestoreAttempt] = useState(0);
   const [backgroundFailed, setBackgroundFailed] = useState(false);
   const controller = useRef<AbortController | null>(null);
@@ -38,14 +41,41 @@ export default function MetaTraderTab({ backgroundHost, backgroundImage }: { bac
   useEffect(() => { setBackgroundFailed(false); }, [backgroundImage]);
   // Read-only restoration: a saved account is never treated as verified live auth.
   useEffect(() => {
-    let cancelled = false;
     setSaved(null);
     setEngine(null);
     setSavedError(false);
-    const statusController=new AbortController();
-    if(clientToken && activeTab==="metatrader") void readEngineStatus(clientToken,statusController.signal).then(data=>{if(!cancelled){setEngine(data);if(data.account?.login&&data.account?.server)setSaved({login:String(data.account.login),server:data.account.server});}}).catch(()=>{if(!cancelled)setSavedError(true);});
-    return () => { cancelled = true;statusController.abort(); };
+    if (!clientToken || activeTab !== "metatrader") return;
+    return startMt5StatusRefresh({
+      read: signal => readEngineStatus(clientToken, signal),
+      success: data => {
+        setEngine(data);
+        setSavedError(false);
+        setSaved(data.account?.login && data.account?.server ? {login:String(data.account.login),server:data.account.server} : null);
+      },
+      failure: () => { setEngine(null); setSavedError(true); },
+      window, document,
+    });
   }, [clientToken, restoreAttempt,activeTab]);
+
+  useEffect(() => {
+    setEnrollments([]);
+    if (!clientToken || activeTab !== "metatrader") return;
+    const c=new AbortController();
+    void requestJson("/api/app/mt5-enrollment",{signal:c.signal}).then(data=>{if(!c.signal.aborted)setEnrollments(data.requests??[]);}).catch(()=>{});
+    return ()=>c.abort();
+  },[clientToken,activeTab,restoreAttempt]);
+  const requestEnrollment = async () => {
+    const message=validateMt5Preview(login,password,server);
+    if(message||!selectedBroker||!clientToken){setError(message||"Select a broker and sign in.");return;}
+    if(enrolling)return;
+    const attempt=new AbortController();controller.current?.abort();controller.current=attempt;
+    const secret=password;setPassword("");setShowPassword(false);setEnrolling(true);setError("");
+    try{
+      const data=await requestJson("/api/app/mt5-enrollment",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({login:String(Number(login.trim())),server:server.trim(),password:secret,broker:selectedBroker}),signal:attempt.signal},25000);
+      if(!attempt.signal.aborted){setEnrollments(items=>[data.request,...items.filter(r=>r.id!==data.request.id)]);setRestoreAttempt(v=>v+1);}
+    }catch{if(!attempt.signal.aborted)setError("Provisioning request was not confirmed. The account may already be reserved or require owner review.");}
+    finally{setEnrolling(false);}
+  };
 
   const closeConnection = () => {
     controller.current?.abort();
@@ -140,8 +170,10 @@ export default function MetaTraderTab({ backgroundHost, backgroundImage }: { bac
             {["Exness-MT5Real1", "Deriv-Demo", "ICMarketsSC-MT5", "Pepperstone-MT5-Live01", "XMGlobal-MT5", "HFMarketsSV-Live", "FBS-Real", "Tickmill-Live", "ForexTimeFXTM-Live"].map(value => <option key={value} value={value} />)}
           </datalist>
           {error && <p className="mt5-form-error" role="alert">{error}</p>}
-          <button ref={connectButton} type="submit" className="mt5-connect-button"><span>Connect MT5</span><ArrowRight size={18} /></button>
+          <button ref={connectButton} type="submit" disabled={enrolling} className="mt5-connect-button"><span>Connect MT5</span><ArrowRight size={18} /></button>
         </form>
+        <button type="button" className="mt5-connect-button" disabled={enrolling} onClick={()=>void requestEnrollment()}>{enrolling?"Saving request...":"Request demo provisioning"}</button>
+        {enrollments.length>0&&<aside className="mt5-saved-account" aria-label="Account provisioning requests">{enrollments.map(r=><p key={r.id}>#{r.login} · {r.server} · {r.status==="verified"?"Account verified":"Awaiting operator provisioning; not connected"}</p>)}</aside>}
         <p className="mt5-availability-note">Only provisioned demo accounts can be verified.<br />Verification does not enable order execution.</p>
         {(saved || savedError) && <aside className={`mt5-saved-account ${engine?.connection?.verified?"mt5-status-connected":"mt5-status-disconnected"}`}>
           {saved ? <><span>{engine?.connection?.verified ? "Demo connection verified" : "Saved account · status unverified"}</span><p>#{saved.login} <ChevronRight size={12} /> {saved.server}</p><small>Copier: {engine?.copier?.state || "unverified"}. Checked: {engine?.observedAt?new Date(engine.observedAt).toLocaleTimeString():"unverified"}. {engine?.copier?.emergencyStopActive === true ? "Emergency stop active." : ""}</small><button type="button" onClick={()=>setRestoreAttempt(v=>v+1)}>Refresh status</button><button type="button" onClick={()=>{setLogin(saved.login);setServer(saved.server);setSelectedBroker(engine?.account?.broker||"");setState("idle");}}>Reconnect</button><button type="button" onClick={async()=>{try{await requestJson("/api/app/mt5-disconnect",{method:"POST",headers:{Authorization:`Bearer ${clientToken}`}});setSaved(null);setEngine(null);setRestoreAttempt(v=>v+1);}catch{setError("Disconnect could not be confirmed.");}}}>Disconnect</button></> : <><p>Saved account details are unavailable.</p><button type="button" onClick={() => setRestoreAttempt(v => v + 1)}>Retry loading details</button></>}

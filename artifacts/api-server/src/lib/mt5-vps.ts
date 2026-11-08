@@ -1,3 +1,4 @@
+import {nonTradingRelease,financialExecutionBlocked} from "./release-mode";
 import { MT5_VPS_BASE, mt5Headers } from "./mt5-endpoint";
 import type { Logger } from "pino";
 
@@ -51,6 +52,7 @@ interface ModifyParams {
 
 // Single POST attempt — classifies the outcome but does not retry.
 async function postOnce(path: string, body: Record<string, unknown>): Promise<Omit<VpsResult, "attempts">> {
+  if(nonTradingRelease())return financialExecutionBlocked();
   let res: Response;
   try {
     res = await fetch(`${EXTERNAL_MT5_BASE}${path}`, {
@@ -90,6 +92,7 @@ async function postOnce(path: string, body: Record<string, unknown>): Promise<Om
 }
 
 async function callOnce(path: string, body: Record<string, unknown>, log: Logger): Promise<VpsResult> {
+  if(nonTradingRelease())return financialExecutionBlocked();
   const result = await postOnce(path, body);
   if (!result.ok && result.httpStatus === 0) {
     log.warn({ path }, "VPS submission outcome unknown; automatic replay blocked");

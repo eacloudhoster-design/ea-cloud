@@ -246,7 +246,7 @@ test(
         purpose: "integration-toolkit",
       };
       assert.equal(
-        (await engine.query("SELECT count(*) FROM robot_builds")).rows[0].count,
+        (await engine.query("SELECT count(*)::integer FROM robot_builds")).rows[0].count,
         0,
       );
       assert.equal(
@@ -393,7 +393,7 @@ test(
       );
       assert.equal(
         Number(
-          (await engine.query("SELECT count(*) FROM robot_events")).rows[0]
+          (await engine.query("SELECT count(*)::integer FROM robot_events")).rows[0]
             .count,
         ),
         5,
@@ -442,7 +442,7 @@ test(
       // Exercise opt-in observer routing with actual cookie/credential middleware.
       assert.equal(
         Number(
-          (await engine.query("SELECT count(*) FROM trade_signals")).rows[0]
+          (await engine.query("SELECT count(*)::integer FROM trade_signals")).rows[0]
             .count,
         ),
         0,
@@ -530,11 +530,17 @@ test(
         });
       const routed = await snap(snapshot);
       assert.equal(routed.status, 201);
-      assert.equal((await routed.json()).execution, true);
-      assert.equal((await snap(snapshot)).status, 200);
+      const routedBody = await routed.json();
+      assert.equal(routedBody.execution, true);
+      const replay = await snap(snapshot);
+      assert.equal(replay.status, 200);
+      const replayBody = await replay.json();
+      assert.equal(replayBody.duplicate, true);
+      assert.equal(replayBody.execution, routedBody.execution);
+      assert.equal(replayBody.copyState, routedBody.copyState);
       assert.equal(
         Number(
-          (await engine.query("SELECT count(*) FROM trade_signals")).rows[0]
+          (await engine.query("SELECT count(*)::integer FROM trade_signals")).rows[0]
             .count,
         ),
         1,
@@ -558,7 +564,7 @@ test(
       );
       assert.equal(
         Number(
-          (await engine.query("SELECT count(*) FROM trade_signals")).rows[0]
+          (await engine.query("SELECT count(*)::integer FROM trade_signals")).rows[0]
             .count,
         ),
         1,
@@ -662,14 +668,14 @@ test(
       await engine.exec("DELETE FROM eas WHERE id=11");
       assert.equal(
         Number(
-          (await engine.query("SELECT count(*) FROM robot_builds")).rows[0]
+          (await engine.query("SELECT count(*)::integer FROM robot_builds")).rows[0]
             .count,
         ),
         0,
       );
       assert.equal(
         Number(
-          (await engine.query("SELECT count(*) FROM robot_events")).rows[0]
+          (await engine.query("SELECT count(*)::integer FROM robot_events")).rows[0]
             .count,
         ),
         0,
@@ -678,7 +684,7 @@ test(
       // observer migration now adds an opt-in link to the existing queue.
       assert.equal(
         Number(
-          (await engine.query("SELECT count(*) FROM trade_signals")).rows[0]
+          (await engine.query("SELECT count(*)::integer FROM trade_signals")).rows[0]
             .count,
         ),
         1,

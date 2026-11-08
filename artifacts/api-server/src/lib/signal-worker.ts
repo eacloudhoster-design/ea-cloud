@@ -1,3 +1,4 @@
+import {nonTradingRelease} from "./release-mode";
 import { db, tradeSignalsTable, tradeExecutionsTable, type TradeSignal } from "@workspace/db";
 import { eq, inArray, sql } from "drizzle-orm";
 import type { Logger } from "pino";
@@ -177,10 +178,12 @@ export async function reconcileOnStartup(log: Logger): Promise<void> {
 
 // Nudge the worker to run immediately (called right after a signal is enqueued).
 export function wakeWorker(log: Logger): void {
+  if(nonTradingRelease())return;
   void tick(log);
 }
 
 export function startWorker(log: Logger): void {
+  if(nonTradingRelease())throw Error("Signal worker disabled in non-trading release");
   stopped = false;
   if (pollTimer) return;
   pollTimer = setInterval(() => void tick(log), POLL_INTERVAL_MS);
