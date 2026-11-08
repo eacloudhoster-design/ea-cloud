@@ -26,6 +26,7 @@ try {
       writes = [];
     let next = 0,
       fail = false,
+      failSave = false,
       uploads = 0;
     await context.addInitScript(() => {
       window.AudioContext = undefined;
@@ -116,6 +117,7 @@ try {
       if (match) {
         const id = Number(match[1]);
         if (req.method() === "PUT") {
+          if(failSave)return r.fulfill({status:503,json:{error:"Mode persistence unavailable"}});
           records.set(id, req.postDataJSON().images);
           writes.push({ id, images: [...records.get(id)] });
         }
@@ -220,24 +222,17 @@ try {
         });
       await editor
         .getByRole("status")
-        .filter({ hasText: `${name} image uploaded` })
+        .filter({ hasText: `${name} image saved` })
         .waitFor();
+      // Refresh immediately, without a Save artwork click, after every mode.
+      await page.reload();
+      await page.waitForFunction(()=>document.querySelector('.mentor-background-editor')?.getAttribute('aria-busy')==='false');
+      assert.equal(await editor.getByAltText(`${name} artwork preview`).getAttribute('src'),records.get(11)[names.indexOf(name)]);
+
     }
     assert.equal(uploads, 4);
-    assert.equal(writes.length, 0, "uploads do not silently publish");
+    assert.equal(writes.length, 4, "each completed upload is persisted automatically");
     const select = page.getByLabel("EA for mode artwork");
-    page.once("dialog", (d) => d.dismiss());
-    await select.selectOption("12");
-    assert.equal(
-      await select.inputValue(),
-      "11",
-      "unsaved changes need confirmation",
-    );
-    await save.click();
-    await editor
-      .getByRole("status")
-      .filter({ hasText: "Artwork saved" })
-      .waitFor();
     const saved = [...records.get(11)];
     assert(saved.every(Boolean));
     assert.deepEqual(records.get(12), initialSecond);
@@ -300,6 +295,10 @@ try {
     await editor
       .getByRole("button", { name: "Remove Image for BEAST", exact: true })
       .click();
+    page.once("dialog", d=>d.dismiss());
+    await select.selectOption("12");
+    assert.equal(await select.inputValue(),"11","unsaved removal still requires confirmation");
+
     await save.click();
     await editor
       .getByRole("status")
@@ -332,7 +331,21 @@ try {
         buffer: Buffer.from("<svg/>"),
       });
     await editor.getByRole("alert").filter({ hasText: "up to 10MB" }).waitFor();
-    assert.equal(writes.length, 2);
+    assert.equal(writes.length, 5);
+    fail=false;failSave=true;
+    await editor.getByLabel("Upload NORMAL image",{exact:true}).setInputFiles({name:"save-failure.jpg",mimeType:"image/jpeg",buffer:picture});
+    await editor.getByRole("alert").filter({hasText:"Image uploaded but could not be saved"}).waitFor();
+    assert.equal(records.get(11)[0],saved[0],"save failures retain last persisted image");
+    assert.equal(await editor.getByRole("status").count(),0,"failed persistence never reports success");
+    const uploadCount=uploads;failSave=false;
+    await save.click();await editor.getByRole("status").filter({hasText:"Artwork saved"}).waitFor();
+    assert.equal(uploads,uploadCount,"retry saves existing uploaded object, no duplicate upload");
+    const recovered=records.get(11)[0];assert.notEqual(recovered,saved[0]);
+    assert.deepEqual(records.get(11).slice(1),[null,saved[2],saved[3]]);
+    await page.reload();await page.waitForFunction(()=>document.querySelector('.mentor-background-editor')?.getAttribute('aria-busy')==='false');
+    assert.equal(await editor.getByAltText("NORMAL artwork preview").getAttribute("src"),recovered);
+    assert.equal(writes.length,6);
+
     await page.goto(origin + "/admin/settings");
     await page
       .getByRole("heading", { name: "Settings", exact: true })
