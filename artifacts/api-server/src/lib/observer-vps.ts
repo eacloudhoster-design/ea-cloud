@@ -1,3 +1,4 @@
+import {nonTradingRelease,financialExecutionBlocked} from "./release-mode";
 import type { VpsResult } from "./mt5-vps";
 function configuration() {
   const raw = process.env.OBSERVER_MT5_VPS_URL,
@@ -19,6 +20,7 @@ function configuration() {
   return { url, token };
 }
 export async function observerCapabilities() {
+  if(nonTradingRelease())throw Error("Financial execution is disabled in this release");
   const { url, token } = configuration();
   const r = await fetch(new URL("/observer/capabilities", url), {
     redirect: "error",
@@ -52,6 +54,7 @@ export async function syncObserverPosition(input: {
   maxExposureLots?: number;
   maxDailyDrawdown: number;
 }): Promise<VpsResult> {
+  if(nonTradingRelease())return financialExecutionBlocked();
   try {
     const { url, token } = configuration();
     const r = await fetch(new URL("/observer/sync-position", url), {

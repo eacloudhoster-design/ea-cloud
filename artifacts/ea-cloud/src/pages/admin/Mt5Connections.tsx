@@ -55,6 +55,9 @@ export default function Mt5Connections() {
   const [selectedBroker,setSelectedBroker]=useState("");
   const [sourceStatus,setSourceStatus]=useState<any>(null);
   const [sourceRevision,setSourceRevision]=useState(0);
+  const [enrollments,setEnrollments]=useState<any[]>([]);
+  const [enrolling,setEnrolling]=useState(false);
+  useEffect(()=>{const c=new AbortController();fetch("/api/admin/mt5/enrollment",{credentials:"same-origin",cache:"no-store",signal:c.signal}).then(async r=>{if(!r.ok)throw Error();return r.json();}).then(d=>{if(!c.signal.aborted)setEnrollments(d.requests??[]);}).catch(()=>{});return()=>c.abort();},[sourceRevision]);
   useEffect(()=>{const c=new AbortController();setSourceStatus(null);fetch("/api/admin/mt5/status",{credentials:"same-origin",cache:"no-store",signal:c.signal}).then(async r=>{if(!r.ok)throw Error();return r.json();}).then(d=>{if(!c.signal.aborted)setSourceStatus(d);}).catch(()=>{if(!c.signal.aborted)setSourceStatus({verified:false});});return()=>c.abort();},[sourceRevision]);
   const [password, setPassword] = useState("");
   const [server, setServer] = useState("");
@@ -128,8 +131,18 @@ export default function Mt5Connections() {
     }
   };
 
+  const requestEnrollment=async()=>{
+    if(enrolling)return;
+    if(!/^[1-9]\d*$/.test(login.trim())||!password||!server.trim()||!selectedBroker){setFormError("Enter exact account credentials and select a broker.");return;}
+    const secret=password;setPassword("");setShowPassword(false);setEnrolling(true);setFormError("");
+    try{
+      const r=await fetch('/api/admin/mt5/enrollment',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({login:login.trim(),server:server.trim(),broker:selectedBroker,password:secret})});
+      if(r.status!==202)throw Error();setSourceRevision(v=>v+1);
+    }catch{setFormError('Provisioning request was not confirmed. This account may already be reserved or require owner review.');}finally{setEnrolling(false);}
+  };
   return (
     <div className="p-6 md:p-8">
+
       <section className="mb-6 rounded-xl border border-white/10 p-4" aria-label="Verified mentor connection">
         <span className={sourceStatus?.verified?'text-green-400':'text-red-400'}>{sourceStatus?.verified?'● MT5 Account Connected':'● Connection unverified or disconnected'}</span>
         {sourceStatus?.verified&&<p>{sourceStatus.broker} · {sourceStatus.server} · Demo verified. Financial execution is not enabled by this page.</p>}
@@ -231,7 +244,7 @@ export default function Mt5Connections() {
 
           <Button
             type="submit"
-            disabled={submitting}
+            disabled={submitting||enrolling}
             className="w-full mt-5 h-11 bg-gradient-to-r from-[#1a6bff] to-primary hover:opacity-90 disabled:opacity-50 text-white font-bold text-sm tracking-wider shadow-[0_0_24px_rgba(227,30,36,0.25)] transition-all duration-300 gap-2"
           >
             {submitting ? (
@@ -241,6 +254,11 @@ export default function Mt5Connections() {
             )}
           </Button>
         </motion.form>
+      <section className="mb-4" aria-label="Mentor account provisioning">
+        <button type="button" disabled={enrolling||submitting} onClick={()=>void requestEnrollment()}>{enrolling?'Saving request...':'Request dedicated demo provisioning'}</button>
+        <p>Requesting provisioning does not connect an account or enable copying. After operator provisioning, use Connect to verify it.</p>
+        {enrollments.map(r=><p key={r.id}>#{r.login} · {r.server} · {r.status==='verified'?'Account verified':'Awaiting operator provisioning'}</p>)}
+      </section>
 
         {/* ── Live Result Card ──────────────────────────────────────────────── */}
         <AnimatePresence>

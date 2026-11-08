@@ -9,7 +9,10 @@
     "start": "node ../../scripts/apply-browser-session-migration.mjs && node --enable-source-maps ./dist/index.mjs",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "build:engine-readonly": "node ./build-engine-readonly.mjs",
-    "build:engine-management": "node ./build-engine-management.mjs"
+    "build:engine-management": "node ./build-engine-management.mjs",
+    "build:application-nontrading": "node ./build-application-nontrading.mjs",
+    "start:application-nontrading": "node --enable-source-maps ./release-nontrading/application-nontrading.mjs",
+    "export:mt5-enrollment": "node ./release-nontrading/export-mt5-enrollment.mjs"
   },
   "dependencies": {
     "@google-cloud/storage": "^7.19.0",

@@ -10,15 +10,7 @@ export async function copierFixture(){
  const directory=await mkdtemp(join(tmpdir(),'ea-copier-e2e-'));
  let engine,postgres=false;
  if(process.env.EA_TEST_PG_URL){
-  const url=new URL(process.env.EA_TEST_PG_URL);
-  if(url.username!=='ea_db_test'||url.password||!/^\/ea_validation_[a-f0-9]+$/.test(url.pathname)||url.searchParams.get('host')!=='/var/lib/ea-cloud/validation/pg-test/socket')throw Error('Disposable PostgreSQL binding required');
-  const {default:pg}=await import('../../../lib/db/node_modules/pg/lib/index.js');
-  const pool=new pg.Pool({connectionString:url.href,max:4,application_name:'ea-cloud-disposable-copier-validation'});
-  const settings=await pool.query('SHOW data_directory');
-  if(settings.rows[0].data_directory!=='/var/lib/ea-cloud/validation/pg-test/data'){await pool.end();throw Error('Wrong validation server');}
-  const occupied=await pool.query("SELECT count(*)::int AS n FROM information_schema.tables WHERE table_schema='public'");
-  if(occupied.rows[0].n!==0){await pool.end();throw Error('Validation database must be new and empty');}
-  engine={query:(...args)=>pool.query(...args),exec:sql=>pool.query(sql),close:()=>pool.end(),connect:()=>pool.connect()};postgres=true;
+  engine=await (await import('./postgres-fixture.mjs')).postgresFixture();postgres=true;
  }else{
   const {PGlite}=await import(pathToFileURL(resolve(process.env.PGLITE_MODULE)));engine=new PGlite();
  }

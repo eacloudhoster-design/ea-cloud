@@ -1,5 +1,7 @@
 # Person 2 application integration review — 2026-11-08
 
+Historical first-sprint report. See [release-readiness follow-up](person2-release-readiness.md) for subsequent PostgreSQL, provisioning and deployment-profile work.
+
 ## Scope and repository audit
 
 Main is `e3076477fcdf4a687a019f96f9d9a70b23801815` (merge #132); preceding integration commits are #131 and #130. Remote main was fetched at sprint start. No existing worktree changes or AGENTS.md instructions were present. No merge, deployment, production database access, secret rotation or trading activation occurred.

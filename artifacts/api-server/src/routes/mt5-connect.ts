@@ -1,3 +1,4 @@
+import {assertAccountOwnership,markEnrollmentVerified} from "../lib/account-ownership";
 import {encryptMT5Password,decryptMT5Password} from "../lib/mt5-crypto";
 import {requireAuth} from "../middlewares/auth";
 import { readBoundAccount } from "../lib/mt5-account-status";
@@ -35,15 +36,22 @@ router.post("/admin/mt5/connect", requireAuth, async (req: any, res) => {
     if(req.body.broker!==undefined && req.body.broker!==account.broker){res.status(422).json({error:"Selected broker does not match verified account"});return;}
     if(account.role!=="mentor"){res.status(403).json({error:"A dedicated mentor-role worker is required"});return;}
     const saved=await db.transaction(async tx=>{
-      await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtext(${"ea-account:"+server+":"+loginNum}))`);
+      const [ownerRow]=await tx.select().from(usersTable).where(eq(usersTable.id,mentor.id)).limit(1).for("update");
+      if(ownerRow?.status!=="approved"||!["mentor","superadmin"].includes(ownerRow.role))throw Error("ACCOUNT_OWNER_UNAVAILABLE");
+      const owner={kind:"mentor" as const,id:mentor.id,mentorId:mentor.id};
+      await assertAccountOwnership(tx,owner,String(loginNum),server,account.broker);
       const [other]=await tx.select({id:mt5ConnectionsTable.id}).from(mt5ConnectionsTable).where(and(eq(mt5ConnectionsTable.mt5Login,loginNum),eq(mt5ConnectionsTable.mt5Server,server),ne(mt5ConnectionsTable.mentorId,mentor.id))).limit(1);
       if(other)return null;
-      const [row]=await tx.insert(mt5ConnectionsTable).values({mentorId:mentor.id,mt5Login:loginNum,mt5Server:server,encryptedMt5Password:encryptMT5Password(password),balance:account.balance===null?null:String(account.balance),status:"connected",rawResponse:JSON.stringify({verified:true,accountMode:"demo",executionEnabled:false})}).returning();return row;
+      const [row]=await tx.insert(mt5ConnectionsTable).values({mentorId:mentor.id,mt5Login:loginNum,mt5Server:server,encryptedMt5Password:encryptMT5Password(password),balance:account.balance===null?null:String(account.balance),status:"connected",rawResponse:JSON.stringify({verified:true,accountMode:"demo",executionEnabled:false})}).returning();await markEnrollmentVerified(tx,owner,String(loginNum),server);return row;
     });
     if(!saved){res.status(409).json({error:"Account is already assigned to another mentor"});return;}
     res.setHeader("Cache-Control","no-store");
     res.json({status:"connected",id:saved.id,mt5Login:loginNum,server,balance:saved.balance,connectedAt:saved.connectedAt,accountMode:"demo",executionEnabled:account.execution_enabled});
-  } catch {res.status(503).json({error:"Account verification or storage temporarily unavailable"});}
+  } catch(error) {
+    if(error instanceof Error&&error.message==="ACCOUNT_OWNER_UNAVAILABLE"){res.status(403).json({error:"Account owner is no longer authorized",code:"ACCOUNT_OWNER_UNAVAILABLE"});return;}
+    if(error instanceof Error&&error.message==="ACCOUNT_ALREADY_BOUND"){res.status(409).json({error:"Account is already reserved",code:"ACCOUNT_ALREADY_BOUND"});return;}
+    res.status(503).json({error:"Account verification or storage temporarily unavailable"});
+  }
 });
 
 // ─── GET /api/admin/mt5/connections ───────────────────────────────────────────

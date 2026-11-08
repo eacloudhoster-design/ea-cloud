@@ -5,10 +5,9 @@ import { createHash } from "node:crypto";
 import { build } from "../../../artifacts/api-server/node_modules/esbuild/lib/main.js";
 import express from "../../../artifacts/api-server/node_modules/express/index.js";
 export async function sessionFixture() {
-  const { PGlite } = await import(
-    pathToFileURL(resolve(process.env.PGLITE_MODULE))
-  );
-  const engine = new PGlite();
+  const engine = process.env.EA_TEST_PG_URL
+    ? await (await import("./postgres-fixture.mjs")).postgresFixture()
+    : new (await import(pathToFileURL(resolve(process.env.PGLITE_MODULE)))).PGlite();
   mkdirSync("work/browser-sessions", { recursive: true });
   const banner = {
     js: 'import {createRequire} from "node:module";const require=createRequire(import.meta.url);',
@@ -55,7 +54,7 @@ export async function sessionFixture() {
     return { rows: result.rows, fields: result.fields };
   };
   globalThis.__sessionSchema = schema;
-  globalThis.__sessionDb = drizzle({ query });
+  globalThis.__sessionDb = drizzle(engine.pool ?? { query });
   globalThis.__sessionPool = { query };
   const hash = createHash("sha256")
     .update("Test-only-pass-123!ea_cloud_salt_2024")

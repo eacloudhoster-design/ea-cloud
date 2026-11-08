@@ -10,6 +10,7 @@ test('MT5 edge authentication is server-only, paired, HTTPS-only and fail-closed
    api=await configure(config);assert.throws(()=>api.mt5Headers(),e=>!e.message.includes('fixture-access-secret')&&!e.message.includes('fixture-relay-token'));await assert.rejects(api.verifyManagementGateway());assert.equal(calls,1,'invalid configuration cannot fetch');
   }
   for(const url of ['https://user:fixture-password@status.example.invalid','https://status.example.invalid/path','https://status.example.invalid/?q=1','http://192.0.2.1:8005'])await assert.rejects(configure({url}));
+  await assert.rejects(configure({url:'invalid-url-fixture-password'}),e=>!e.message.includes('fixture-password')&&!('input' in e));
   api=await configure({url:'http://127.0.0.1:8005'});assert.ok(api.mt5Headers().Authorization,'unchanged private loopback bearer configuration stays supported');
  }finally{globalThis.fetch=oldFetch;for(const n of names)if(old[n]===undefined)delete process.env[n];else process.env[n]=old[n];await rm(dir,{recursive:true,force:true});}
 });

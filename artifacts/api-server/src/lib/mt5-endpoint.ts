@@ -1,6 +1,7 @@
 // Private transport configuration; no public plaintext credential transport.
 export const MT5_VPS_BASE = (process.env.MT5_VPS_URL || "http://127.0.0.1:8000").replace(/\/+$/, "");
-const endpoint = new URL(MT5_VPS_BASE);
+let endpoint:URL;
+try{endpoint=new URL(MT5_VPS_BASE);}catch{throw new Error("MT5_VPS_URL must be a valid origin");}
 if (endpoint.username || endpoint.password || endpoint.search || endpoint.hash || endpoint.pathname !== "/" ||
     (endpoint.protocol !== "https:" && !(endpoint.protocol === "http:" && ["127.0.0.1", "localhost", "[::1]"].includes(endpoint.hostname)))) {
   throw new Error("MT5_VPS_URL requires HTTPS or loopback HTTP and no embedded credentials");

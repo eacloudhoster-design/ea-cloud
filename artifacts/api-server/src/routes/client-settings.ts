@@ -259,6 +259,7 @@ router.post(["/app/mt5-connect","/client/mt5/connect"], requireAppSession, requi
     try {await bindClientAccount(req.clientId,{login:mt5LoginStr,server,broker:resolvedBroker},encryptedMt5Password);}
     catch(error){
       const code=error instanceof Error?error.message:"";
+      if(code==="ACCOUNT_OWNER_UNAVAILABLE"){res.status(403).json({error:"Account owner is no longer authorized",code});return;}
       if(["ACCOUNT_ALREADY_BOUND","ACCOUNT_REBIND_REQUIRES_RECONCILIATION"].includes(code)){res.status(409).json({error:"Account binding requires operator review",code});return;}
       throw error;
     }

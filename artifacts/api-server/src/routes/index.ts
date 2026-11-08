@@ -1,3 +1,4 @@
+import mt5EnrollmentRouter from "./mt5-enrollment";
 import engineRouter from "./engine";
 import eaBuilderRouter from "./ea-builder";
 import privacyRouter from "./privacy";
@@ -41,6 +42,7 @@ router.use("/app", (req, res, next) => {
   void requireAppSession(req, res, next);
 });
 
+router.use(mt5EnrollmentRouter);
 router.use(engineRouter);
 router.use(privacyRouter);
 router.use(healthRouter);

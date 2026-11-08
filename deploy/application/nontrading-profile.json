@@ -1,0 +1,22 @@
+{
+  "purpose": "Reviewable configuration for the existing Render service; does not provision hosting",
+  "serviceName": "ea-cloud-api",
+  "replaceInfrastructure": false,
+  "automaticDeployment": false,
+  "nodeVersionTested": "24.22.1",
+  "pnpmVersionTested": "11.25.0",
+  "rootDirectory": ".",
+  "buildCommand": "npx --yes pnpm@11.25.0 install --frozen-lockfile --prod=false --ignore-scripts && EA_RELEASE_OUTDIR=\"$PWD/artifacts/api-server/release-nontrading\" npx --yes pnpm@11.25.0 --filter @workspace/api-server run build:application-nontrading",
+  "startCommand": "npx --yes pnpm@11.25.0 --filter @workspace/api-server run start:application-nontrading",
+  "healthCheckPath": "/api/healthz",
+  "readinessPath": "/api/readyz",
+  "listenHost": "0.0.0.0",
+  "requiredExistingSecrets": ["DATABASE_URL", "SESSION_SECRET"],
+  "requiredPrivateConfiguration": ["EA_APPLICATION_ORIGIN_TOKEN", "MT5_VPS_URL", "MT5_VPS_TOKEN", "MT5_ACCESS_CLIENT_ID", "MT5_ACCESS_CLIENT_SECRET"],
+  "releaseFlags": {"EA_RELEASE_MODE": "nontrading", "EA_MT5_MANAGEMENT_ONLY": "1", "MT5_ACCESS_REQUIRED": "1", "NODE_ENV": "production"},
+  "forbiddenFlags": {"EA_ENGINE_READ_ONLY": "1"},
+  "migrationReviewRequired": ["migrations/20261108_mt5_enrollment_requests.sql"],
+  "preserveExistingPagesConfiguration": ["BACKEND_ORIGIN", "BACKGROUND_IMAGES"],
+  "pagesBackendProxyTokenMustMatch": "EA_APPLICATION_ORIGIN_TOKEN",
+  "financialExecution": false
+}

@@ -3,8 +3,8 @@ import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 import {pathToFileURL} from 'node:url';
 import {resolve} from 'node:path';
-test('mentor policy migration is additive, repeatable, disabled by default and enforces risk constraints',{skip:!process.env.PGLITE_MODULE},async()=>{
- const {PGlite}=await import(pathToFileURL(resolve(process.env.PGLITE_MODULE)));const db=new PGlite();
+test('mentor policy migration is additive, repeatable, disabled by default and enforces risk constraints',{skip:!process.env.PGLITE_MODULE&&!process.env.EA_TEST_PG_URL},async()=>{
+ const db=process.env.EA_TEST_PG_URL?await (await import('./helpers/postgres-fixture.mjs')).postgresFixture():new (await import(pathToFileURL(resolve(process.env.PGLITE_MODULE)))).PGlite();
  try{
   await db.exec("CREATE TABLE mt5_connections(id integer PRIMARY KEY, retained text); INSERT INTO mt5_connections VALUES(1,'original-ciphertext-marker')");
   const sql=await readFile('migrations/20261106_mentor_copy_policies.sql','utf8');await db.exec(sql);await db.exec(sql);

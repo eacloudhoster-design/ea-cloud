@@ -85,3 +85,26 @@ Execution-only existing contract (documented, NOT enabled): `GET /observer/capab
 4. Confirm durable journal/revision, uncertain-submission and reconciliation semantics against actual demo workers before any separate execution acceptance. No callback endpoint or remote stop/control API is assumed.
 5. Retain separate account credentials/ports/journals and both existing emergency stops. Do not expose worker SDK routes publicly. No automatic role reassignment or shared account substitution.
 6. Deployment owners must resolve the management entry's loopback binding, health/start configuration, proxy enforcement and original DB/SESSION_SECRET compatibility. This sprint neither provisions infrastructure nor deploys.
+
+## Release-readiness follow-up (2026-11-08)
+
+The checked-in Person 1 relay has now been exercised unchanged over actual local HTTP behind a certificate-verified TLS edge, using synthetic upstream snapshots and real PostgreSQL. Both Access and Bearer negative probes, mentor/client role proof, cross-owner denial, disconnect and persistent cookies through an actual application-process restart pass. This proves compatibility with the checked-in module and configured headers. It does NOT identify the deployed VPS commit, verify live broker evidence or provision Cloudflare/Render. No VPS/infra/worker files were changed.
+
+New **application** endpoints (not VPS endpoints):
+
+| Method/path | Contract |
+| --- | --- |
+| `GET /api/app/mt5-enrollment` | Approved/licensed client session; current-owner pending/verified requests only |
+| `POST /api/app/mt5-enrollment` | `{login:string,server:string,password:string,broker:string}`, strict keys; 202 pending, not connected |
+| `GET /api/admin/mt5/enrollment` | Approved mentor/superadmin portal session; own requests only |
+| `POST /api/admin/mt5/enrollment` | Same strict body; dedicated mentor-role request; 202 pending |
+
+Enrollment login is canonical positive digits and signed-int32 (matching the existing source-connection schema); server is exact trimmed text 1–100 chars without controls, password 1–1024 chars, broker is the existing five-profile enum. Owner/mentor/role are derived from server sessions/records, not body parameters. GET returns `{requests:[{id,login,server,broker,status,createdAt,updatedAt}],executionEnabled:false,provisioningAutomatic:false}`. POST returns `{request:<same projection>,executionEnabled:false,provisioningAutomatic:false,nextAction:string}`. It stores encrypted credentials only, never returns them, and performs zero engine calls or account/copy-setting changes. Same-owner/account/broker submissions retain the same UUID and can correct encrypted credentials; account/broker/role conflicts return 409. Eight pending requests per owner and ten submissions/hour; no VPS capacity promise.
+
+Errors: 401 unauthenticated/invalidated session; 403 origin/read-only/unavailable owner; 422 `INVALID_ENROLLMENT_REQUEST`; 409 `ACCOUNT_ALREADY_BOUND` or `ENROLLMENT_CAPACITY_REACHED`; 429 `ENROLLMENT_RATE_LIMITED`; 503 `ENROLLMENT_STORAGE_UNAVAILABLE`. Current mentor/licence changes invalidate or hide stale client requests, and private export refuses reassigned owners. Historical reservations, including disconnected identities, are never silently released or reassigned.
+
+New private **operator file protocol**, requiring Person 1 agreement: `EA_APP_DEMO_ENROLLMENT_V1` contains `requestId`, `role`, `applicationOwner:{kind,id,mentorId}`, `broker`, numeric `login`, exact `server`, private `password`, requested `accountMode:"demo"`, `brokerIdentityVerified:false`, `executionEnabled:false`. The explicit export command writes only a new mode-0600 file in a mode-0700 private directory after a read-only current-owner check. This file must use the existing approved secret channel, never a GitHub comment/attachment. The application's SESSION_SECRET must not be shared.
+
+There is no implemented VPS import/provisioning endpoint and no new callback endpoint. Person 1 must validate actual broker demo mode/credentials, agree to the packet and use their existing isolated provisioning process with execution disabled. Failed/capacity-limited requests remain pending for operator review; automated rejection/cancellation/reassignment is outside this contract. After provisioning, the owner uses existing Connect; only fresh exact credential-bound demo proof marks that owned request verified. Marking a request verified does not assert current connectivity or activate trading.
+
+The new `EA_RELEASE_MODE=nontrading` entry serves the original application/auth router on the existing Render service and enforces Pages origin-token authentication. It does not start maintenance, reconciliation, signal/push workers or WebSocket server. Signal ingress/activation writes and direct financial transports are blocked. `EA_MT5_MANAGEMENT_ONLY=1` keeps preferences/configuration non-trading. The original normal start path remains available for a separately reviewed execution-capable release; do not use it as a passive canary. See [exact deployment runbook](person2-release-runbook.md) and `deploy/application/nontrading-profile.json`.
