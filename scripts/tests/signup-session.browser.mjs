@@ -42,6 +42,7 @@ async function fillRegistration(page, mail) {
     password,
   }))
     await page.locator("#register-" + name).fill(value);
+  await page.getByLabel("Confirm Password", { exact: true }).fill(password);
 }
 try {
   for (const [kind, role] of [
@@ -88,7 +89,7 @@ try {
     await page
       .locator(".mentor-register-logo")
       .evaluate((image) => image.decode());
-    assert.equal(await page.locator("form input").count(), 6);
+    assert.equal(await page.locator("form input").count(), 7);
     assert.equal(await page.locator(".public-header, nav").count(), 0);
     assert(
       await page.evaluate(
@@ -103,7 +104,7 @@ try {
     await page
       .getByRole("button", { name: "Create Account", exact: true })
       .click();
-    assert.equal(await page.locator("input:invalid").count(), 5);
+    assert.equal(await page.locator("input:invalid").count(), 6);
     results.push(
       `Registration layout and required-field validation: ${viewport.width}×${viewport.height}`,
     );

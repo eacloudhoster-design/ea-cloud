@@ -173,7 +173,7 @@ try {
     await page.getByText("Account Approved!", { exact: true }).waitFor();
     await page.getByRole("link", { name: "Create one", exact: true }).click();
     await page.waitForURL("**/register");
-    assert.equal(await page.locator("form input").count(), 6);
+    assert.equal(await page.locator("form input").count(), 7);
     assert.equal(await page.locator(".public-header").count(), 0);
     assert.match(
       await page

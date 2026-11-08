@@ -84,6 +84,7 @@ export default function AppLogin() {
               <label className="text-xs text-white/50 uppercase tracking-wider block mb-1.5">Password</label>
               <div className="relative">
                 <input
+                  id="client-login-password" name="password" autoComplete="current-password"
                   type={showPw ? "text" : "password"}
                   value={form.password}
                   onChange={e => setForm(f => ({ ...f, password: e.target.value }))}
@@ -91,7 +92,7 @@ export default function AppLogin() {
                   className="w-full h-12 px-4 pr-12 rounded-xl bg-white/6 border border-white/10 text-white placeholder:text-white/25 focus:outline-none focus:border-primary/60 focus:bg-white/8 transition-all text-sm"
                   required
                 />
-                <button type="button" onClick={() => setShowPw(p => !p)} className="absolute right-4 top-1/2 -translate-y-1/2 text-white/30 hover:text-white/60">
+                <button type="button" aria-label={showPw ? "Hide password" : "Show password"} aria-controls="client-login-password" aria-pressed={showPw} onClick={() => setShowPw(p => !p)} className="absolute right-1 top-1/2 -translate-y-1/2 w-11 h-11 flex items-center justify-center text-white/30 hover:text-white/60">
                   {showPw ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
               </div>

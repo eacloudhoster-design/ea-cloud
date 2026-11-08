@@ -1,3 +1,4 @@
+import PasswordInput from "../../../ea-cloud/src/components/PasswordInput";
 import { useId, useState } from "react";
 import { Loader2 } from "lucide-react";
 import {
@@ -26,6 +27,9 @@ function Field({
   onChange,
   placeholder,
   onEnter,
+  autoComplete,
+  error,
+  onBlur,
 }: {
   label: string;
   type: string;
@@ -33,28 +37,50 @@ function Field({
   onChange: (v: string) => void;
   placeholder: string;
   onEnter?: () => void;
+  autoComplete?: string;
+  error?: string;
+  onBlur?: () => void;
 }) {
   const id = useId();
   return (
     <div className="get-app-field">
       <label htmlFor={id}>{label}</label>
-      <input
-        id={id}
-        type={type}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        placeholder={placeholder}
-        onKeyDown={(e) => e.key === "Enter" && onEnter?.()}
-        autoComplete={
-          type === "email"
-            ? "email"
-            : type === "password"
-              ? "current-password"
+      {type === "password" ? (
+        <PasswordInput
+          native
+          id={id}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder={placeholder}
+          onKeyDown={(e) => e.key === "Enter" && onEnter?.()}
+          autoComplete={autoComplete || "current-password"}
+          confirmation={label === "Confirm Password"}
+          onBlur={onBlur}
+          aria-invalid={!!error}
+          aria-describedby={error ? `${id}-error` : undefined}
+        />
+      ) : (
+        <input
+          id={id}
+          type={type}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder={placeholder}
+          onKeyDown={(e) => e.key === "Enter" && onEnter?.()}
+          autoComplete={
+            type === "email"
+              ? "email"
               : label === "FIRST NAME"
                 ? "given-name"
                 : "family-name"
-        }
-      />
+          }
+        />
+      )}
+      {error && (
+        <p id={`${id}-error`} role="alert" className="get-app-error">
+          {error}
+        </p>
+      )}
     </div>
   );
 }
@@ -65,6 +91,15 @@ export default function AccessScreen({ onAuthenticated }: AccessScreenProps) {
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [confirmationChecked, setConfirmationChecked] = useState(false);
+  const confirmationError = confirmationChecked
+    ? !confirmPassword
+      ? "Please confirm your password."
+      : confirmPassword !== password
+        ? "Passwords do not match."
+        : ""
+    : "";
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -74,6 +109,8 @@ export default function AccessScreen({ onAuthenticated }: AccessScreenProps) {
     setLastName("");
     setEmail("");
     setPassword("");
+    setConfirmPassword("");
+    setConfirmationChecked(false);
   };
 
   const handleRegister = async () => {
@@ -81,6 +118,8 @@ export default function AccessScreen({ onAuthenticated }: AccessScreenProps) {
       setError("All fields are required");
       return;
     }
+    setConfirmationChecked(true);
+    if (!confirmPassword || confirmPassword !== password) return;
     setError("");
     setLoading(true);
     try {
@@ -189,13 +228,30 @@ export default function AccessScreen({ onAuthenticated }: AccessScreenProps) {
             </>
           )}
           <Field
+            key={mode}
             label="PASSWORD"
             type="password"
             value={password}
             onChange={setPassword}
             placeholder="Your password"
+            autoComplete={
+              mode === "register" ? "new-password" : "current-password"
+            }
             onEnter={handle}
           />
+          {mode === "register" && (
+            <Field
+              label="Confirm Password"
+              type="password"
+              value={confirmPassword}
+              onChange={setConfirmPassword}
+              placeholder="Confirm your password"
+              autoComplete="new-password"
+              onBlur={() => setConfirmationChecked(true)}
+              error={confirmationError}
+              onEnter={handle}
+            />
+          )}
           {error && (
             <p role="alert" className="get-app-error">
               {error}
