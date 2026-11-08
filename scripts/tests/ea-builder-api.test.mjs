@@ -530,8 +530,14 @@ test(
         });
       const routed = await snap(snapshot);
       assert.equal(routed.status, 201);
-      assert.equal((await routed.json()).execution, true);
-      assert.equal((await snap(snapshot)).status, 200);
+      const routedBody = await routed.json();
+      assert.equal(routedBody.execution, true);
+      const replay = await snap(snapshot);
+      assert.equal(replay.status, 200);
+      const replayBody = await replay.json();
+      assert.equal(replayBody.duplicate, true);
+      assert.equal(replayBody.execution, routedBody.execution);
+      assert.equal(replayBody.copyState, routedBody.copyState);
       assert.equal(
         Number(
           (await engine.query("SELECT count(*) FROM trade_signals")).rows[0]

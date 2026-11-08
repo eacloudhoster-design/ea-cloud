@@ -45,7 +45,7 @@ export async function copierFixture(){
  const api=await import(pathToFileURL(join(directory,'engine.mjs')));
  const token=randomBytes(32).toString('hex');let child,port;
  const start=async()=>{
-  child=spawn('/opt/ea-cloud/infra/linux/.venv/bin/python',['scripts/tests/helpers/copier-simulation-server.py',join(directory,'workers')],{env:{...process.env,EA_WORKER_MODE:'simulation',EA_TEST_TOKEN:token},stdio:['ignore','pipe','pipe']});
+  child=spawn(process.env.EA_TEST_PYTHON || 'python3',['scripts/tests/helpers/copier-simulation-server.py',join(directory,'workers')],{env:{...process.env,EA_WORKER_MODE:'simulation',EA_TEST_TOKEN:token},stdio:['ignore','pipe','pipe']});
   port=await new Promise((yes,no)=>{let output='';const timer=setTimeout(()=>no(Error('Fixture startup timeout')),15000);child.stdout.on('data',chunk=>{output+=chunk;const line=output.split('\n')[0];try{const data=JSON.parse(line);clearTimeout(timer);yes(data.port);}catch{}});child.once('exit',()=>{clearTimeout(timer);no(Error('Simulation fixture exited'));});});
   for(let i=0;i<40;i++){try{if((await call('/healthz')).status===200)return;}catch{}await new Promise(r=>setTimeout(r,100));}throw Error('Fixture HTTP not ready');
  };

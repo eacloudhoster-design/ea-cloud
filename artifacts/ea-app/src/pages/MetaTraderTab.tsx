@@ -5,6 +5,7 @@ import { ArrowRight, ChevronRight, Eye, EyeOff, Fingerprint, LockKeyhole, Rotate
 import { useApp } from "@/context/AppContext";
 import { brokers, detectBroker, validateMt5Preview } from "@/lib/brokers";
 import { connectMt5Account,readEngineStatus } from "@/lib/mt5-engine";
+import { startMt5StatusRefresh } from "@/lib/mt5-status-refresh";
 import { requestJson } from "@/lib/request";
 import BrokerLogo from "@/components/mt5/BrokerLogo";
 import FloatingField from "@/components/mt5/FloatingField";
@@ -38,13 +39,20 @@ export default function MetaTraderTab({ backgroundHost, backgroundImage }: { bac
   useEffect(() => { setBackgroundFailed(false); }, [backgroundImage]);
   // Read-only restoration: a saved account is never treated as verified live auth.
   useEffect(() => {
-    let cancelled = false;
     setSaved(null);
     setEngine(null);
     setSavedError(false);
-    const statusController=new AbortController();
-    if(clientToken && activeTab==="metatrader") void readEngineStatus(clientToken,statusController.signal).then(data=>{if(!cancelled){setEngine(data);if(data.account?.login&&data.account?.server)setSaved({login:String(data.account.login),server:data.account.server});}}).catch(()=>{if(!cancelled)setSavedError(true);});
-    return () => { cancelled = true;statusController.abort(); };
+    if (!clientToken || activeTab !== "metatrader") return;
+    return startMt5StatusRefresh({
+      read: signal => readEngineStatus(clientToken, signal),
+      success: data => {
+        setEngine(data);
+        setSavedError(false);
+        setSaved(data.account?.login && data.account?.server ? {login:String(data.account.login),server:data.account.server} : null);
+      },
+      failure: () => { setEngine(null); setSavedError(true); },
+      window, document,
+    });
   }, [clientToken, restoreAttempt,activeTab]);
 
   const closeConnection = () => {

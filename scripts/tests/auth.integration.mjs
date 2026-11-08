@@ -115,8 +115,11 @@ test("session storage failure returns a server error without issuing a cookie", 
   await pool.query("ALTER TABLE browser_sessions RENAME TO unavailable_test_sessions");
   try {
     const result = await post("/api/auth/login", { email: email("mentor"), password });
-    assert.equal(result.status, 500);
-    assert.deepEqual(await result.json(), { error: "Internal server error" });
+    assert.equal(result.status, 503);
+    assert.deepEqual(await result.json(), {
+      error: "The authentication service is temporarily unavailable. Please retry.",
+      code: "SESSION_STORAGE_SCHEMA_UNAVAILABLE",
+    });
     assert.equal(result.headers.get("set-cookie"), null);
   } finally {
     await pool.query("ALTER TABLE unavailable_test_sessions RENAME TO browser_sessions");
