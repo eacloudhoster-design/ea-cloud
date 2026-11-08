@@ -1,3 +1,4 @@
+import {nonTradingRelease} from "./release-mode";
 import {effectiveCopySettings} from "./copy-policy";
 import { db, appAccessTable,mentorCopyPoliciesTable,clientSettingsTable, tradeExecutionsTable, observerAllocationsTable } from "@workspace/db";
 import { and, eq, desc } from "drizzle-orm";
@@ -25,10 +26,11 @@ export async function clientEngineStatus(clientId: number, probe = false, mentor
   const [policy]=await db.select().from(mentorCopyPoliciesTable).where(and(eq(mentorCopyPoliciesTable.clientId,clientId),eq(mentorCopyPoliciesTable.mentorId,owner?.mentorId??0))).limit(1);
   const allocationApproved=!!(settings && policy?.enabled===true && effectiveCopySettings(settings,policy));
   const copyingRequested=settings?.copyingEnabled === true;
+  const applicationExecutionBlocked=nonTradingRelease();
   return { clientId,observedAt:new Date().toISOString(),account:settings?.mt5Login ? {login:settings.mt5Login,server:settings.mt5Server,broker:settings.mt5Broker,storedConnected:settings.mt5Connected}:null,
     connection:{code,verified:live!==null,...(live?{mode:live.account_mode,positions:live.open_positions,pendingOrders:live.pending_orders,currency:live.currency}: {})},
-    copier:{requested:copyingRequested,state:!copyingRequested?"paused":!live?(code==="ACCOUNT_DISCONNECTED"?"disconnected":"unverified"):live.read_only?"read_only":live.journal_holds!==null && live.journal_holds>0?"review_required":!settings?.mt5Connected || live.emergency_stop_active || !live.execution_enabled?"blocked":!allocationApproved?"allocation_blocked":"worker_permitted",
-      mentorAllocationApproved:allocationApproved,executionPermitted:!!(allocationApproved && copyingRequested && settings?.mt5Connected && live?.execution_enabled && !live.read_only && live.emergency_stop_active===false && live.journal_holds===0),unresolvedJournalHolds:live?.journal_holds ?? null,emergencyStopActive:live?.emergency_stop_active ?? null,
+    copier:{requested:copyingRequested,state:!copyingRequested?"paused":!live?(code==="ACCOUNT_DISCONNECTED"?"disconnected":"unverified"):live.read_only?"read_only":live.journal_holds!==null && live.journal_holds>0?"review_required":applicationExecutionBlocked?"release_blocked":!settings?.mt5Connected || live.emergency_stop_active || !live.execution_enabled?"blocked":!allocationApproved?"allocation_blocked":"worker_permitted",
+      applicationExecutionBlocked,mentorAllocationApproved:allocationApproved,executionPermitted:!!(!applicationExecutionBlocked && allocationApproved && copyingRequested && settings?.mt5Connected && live?.execution_enabled && !live.read_only && live.emergency_stop_active===false && live.journal_holds===0),unresolvedJournalHolds:live?.journal_holds ?? null,emergencyStopActive:live?.emergency_stop_active ?? null,
       endToEndAcceptanceVerified:false},
     mappings,recentExecutions:recent.map(row=>({...row,errorCode:row.status==="failed"?"EXECUTION_FAILED_REVIEW_REQUIRED":null})),
     limitations:["Mappings are retained allocations, not a live position count","No retries, reconciliation holds or execution flags are changed by status reads","Worker permission is not end-to-end trading acceptance"] };
