@@ -41,7 +41,7 @@ class DemoGateTests(unittest.TestCase):
  def test_unreadable_root_owned_emergency_latch_is_closed(self):
   from unittest.mock import patch
   from demo_worker import emergency_stop_active
-  with patch('demo_worker.Path.exists',side_effect=PermissionError('fixture')):self.assertTrue(emergency_stop_active())
+  with patch('demo_worker.Path.lstat',side_effect=PermissionError('fixture')):self.assertTrue(emergency_stop_active())
 
  def ready_sdk(self):
   self.info.trade_allowed=True;self.info.trade_expert=True

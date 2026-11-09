@@ -1,5 +1,5 @@
 """One MT5 DEMO account per Wine prefix/process. No live trading mode exists."""
-import hmac,json,os,sys,threading,ntpath
+import hmac,json,os,sys,threading,ntpath,stat
 from contextlib import asynccontextmanager
 from worker_state import StateLease,bind_identity
 from pathlib import Path
@@ -29,11 +29,28 @@ class AccountCheck(BaseModel):
 
 def emergency_stop_active():
     root=Path(r'Z:\etc\ea-cloud\acceptance') if sys.platform=='win32' else Path('/etc/ea-cloud/acceptance')
-    try:return any((root/name).exists() for name in ('XAUUSD.STOP','XAUUSD.CLEANUP_STOP'))
+    try:
+        before=root.lstat()
+        # Absence of a latch is evidence only inside a verified directory.
+        # lstat rejects a redirected directory; listing also sees dangling latches.
+        if not stat.S_ISDIR(before.st_mode):return True
+        if sys.platform!='win32' and (before.st_uid!=0 or before.st_mode&0o022):return True
+        names={entry.name for entry in root.iterdir()}
+        if names.intersection(('XAUUSD.STOP','XAUUSD.CLEANUP_STOP')):return True
+        after=root.lstat()
+        # A disappeared/replaced directory or changed protection is not a clear state.
+        identity=lambda meta:(meta.st_dev,meta.st_ino,meta.st_mode,meta.st_uid)
+        return identity(before)!=identity(after)
+    except (FileNotFoundError,NotADirectoryError):
+        # Even a recently clear mirror must not override a known missing directory.
+        return True
     except OSError:
+        # The private directory may be unreadable to Wine. Retain the existing
+        # root-published, fixed-path, freshness-checked fallback in that case.
         from execution_gates import mirrored_stop_active,MIRROR
         path=Path('Z:'+str(MIRROR).replace('/','\\')) if sys.platform=='win32' else MIRROR
-        return mirrored_stop_active(path) # Missing/untrusted/stale mirror is closed.
+        try:return mirrored_stop_active(path) is not False
+        except (OSError,ValueError,TypeError):return True
 
 def create_demo_app(config,mt5,password,token,stop_checker=None):
     if len(token)<32 or not password:raise ValueError('Secure account credentials required')
