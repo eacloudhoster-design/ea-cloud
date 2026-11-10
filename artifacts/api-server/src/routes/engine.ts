@@ -4,12 +4,17 @@ import { db, appAccessTable,mentorCopyPoliciesTable,mentorCopyPolicyAuditTable }
 import { and,eq,desc } from "drizzle-orm";
 import { requireAuth } from "../middlewares/auth";
 import { requireAppSession } from "../middlewares/app-session";
-import { clientEngineStatus } from "../lib/engine-status";
+import { clientEngineStatus,clientBrokerSnapshot } from "../lib/engine-status";
 const router=Router();
 router.get("/app/engine/status",requireAppSession,async(req:any,res)=>{
   res.setHeader("Cache-Control","no-store");
   try {res.json(await clientEngineStatus(req.clientId,true));}
   catch {res.status(503).json({error:"Engine status temporarily unavailable",code:"ENGINE_STATUS_UNAVAILABLE"});}
+});
+router.get("/app/engine/history",requireAppSession,async(req:any,res)=>{
+  res.setHeader("Cache-Control","no-store");
+  try {res.json(await clientBrokerSnapshot(req.clientId));}
+  catch {res.status(503).json({error:"Broker history unavailable. Verify the assigned demo worker and private session authorization.",code:"BROKER_SNAPSHOT_UNAVAILABLE"});}
 });
 router.get("/admin/engine/clients",requireAuth,async(req:any,res)=>{
   res.setHeader("Cache-Control","no-store");

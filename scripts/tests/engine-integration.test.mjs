@@ -53,12 +53,28 @@ test('real browser sessions, owned engine status, strict broker proof and accoun
    response=change===null?null:{...ack,...change};if(change && !Object.keys(change).length){assert.ok(await api.readBoundAccount('91','FixtureDemo','fixture-broker-password'));continue;}
    await assert.rejects(api.readBoundAccount('91','FixtureDemo','fixture-broker-password'));
   }
+  const accountStatusFetch=globalThis.fetch;
+  for(const code of ['ACCOUNT_NOT_ASSIGNED','ACCOUNT_PROOF_REJECTED','MT5_SESSION_UNAVAILABLE']){
+    globalThis.fetch=async()=>new Response(JSON.stringify({success:false,code,message:'PRIVATE_VENDOR_ERROR'}),{status:503});
+    await assert.rejects(api.readBoundAccount('91','FixtureDemo','fixture-broker-password'),error=>error.code===code && !error.message.includes('PRIVATE_'));
+  }
+  globalThis.fetch=accountStatusFetch;
   response=ack;
   await f.engine.exec("INSERT INTO client_settings(client_id,copying_enabled) VALUES(10,true)");
   const connect=()=>request('/app/mt5-connect',{method:'POST',headers:{cookie:clientCookie,'Content-Type':'application/json'},body:JSON.stringify({login:'91',server:'FixtureDemo',password:'fixture-broker-password'})});
   result=await connect();assert.equal(result.status,200);assert.equal((await result.json()).connected,true);
   const stored=(await f.engine.query('SELECT * FROM client_settings WHERE client_id=10')).rows[0];assert.notEqual(stored.encrypted_mt5_password,'fixture-broker-password');assert.equal(stored.copying_enabled,false);
-  result=await request('/app/engine/status',{headers:{cookie:clientCookie}});let state=await result.json();assert.equal(state.connection.verified,true);assert.equal(state.copier.executionPermitted,false);assert.equal(state.copier.emergencyStopActive,true);assert.ok(!JSON.stringify(state).includes('upstream-secret'));assert.ok(!JSON.stringify(state).includes(stored.encrypted_mt5_password));
+  result=await request('/app/engine/status',{headers:{cookie:clientCookie}});let state=await result.json();assert.equal(state.connection.verified,true);assert.equal(state.connection.balance,1000);assert.equal(state.connection.equity,1000);assert.equal(state.copier.executionPermitted,false);assert.equal(state.copier.emergencyStopActive,true);assert.ok(!JSON.stringify(state).includes('upstream-secret'));assert.ok(!JSON.stringify(state).includes(stored.encrypted_mt5_password));
+  // The account is selected by the authenticated app session, not browser query parameters.
+  const statusFetch=globalThis.fetch;
+  const snapshot={success:true,simulation:false,account_mode:'demo',broker:'justmarkets',role:'client',login:91,server:'FixtureDemo',observed_at:new Date().toISOString(),history_from:new Date(Date.now()-86400000).toISOString(),truncated:{positions:false,orders:false,deals:false,historyOrders:false},positions:[],orders:[],historyOrders:[],deals:[{ticket:'18446744073709551610',symbol:'EURUSD',volume:.01,price:1.1,profit:3,password:'PRIVATE_SECRET',comment:'PRIVATE_VENDOR_COMMENT'}]};
+  let brokerSnapshot=snapshot;
+  globalThis.fetch=async(url,options)=>{assert.equal(new URL(url).pathname,'/observer/account-snapshot');assert.deepEqual(JSON.parse(options.body),{login:91,server:'FixtureDemo',password:'fixture-broker-password'});return new Response(JSON.stringify(brokerSnapshot),{status:200});};
+  assert.equal((await request('/app/engine/history')).status,401);
+  result=await request('/app/engine/history?clientId=11&login=92',{headers:{cookie:clientCookie}});assert.equal(result.status,200);
+  const history=await result.json();assert.equal(history.deals[0].ticket,'18446744073709551610');assert.equal(history.deals[0].profit,3);assert.ok(!JSON.stringify(history).includes('PRIVATE_'));
+  for(const bad of [{login:92},{role:'mentor'},{simulation:true},{deals:[{ticket:123,symbol:'EURUSD'}]},{truncated:{positions:'false'}},{observed_at:new Date(Date.now()-60000).toISOString()}]){brokerSnapshot={...snapshot,...bad};result=await request('/app/engine/history',{headers:{cookie:clientCookie}});assert.equal(result.status,503);assert.ok(!JSON.stringify(await result.json()).includes('PRIVATE_'));}
+  globalThis.fetch=statusFetch;
   await f.engine.exec("INSERT INTO app_access(id,email,first_name,last_name,status,mentor_id) VALUES(12,'other@example.invalid','Other','Client','approved',2)");
   await f.engine.exec("UPDATE client_settings SET copying_enabled=true WHERE client_id=10");response={...ack,journal_holds:1};
   result=await request('/app/engine/status',{headers:{cookie:clientCookie}});state=await result.json();assert.equal(state.copier.state,'review_required');assert.equal(state.copier.unresolvedJournalHolds,1);assert.equal(state.copier.executionPermitted,false);response=ack;
@@ -67,7 +83,7 @@ test('real browser sessions, owned engine status, strict broker proof and accoun
   response={...ack,execution_enabled:true,emergency_stop_active:false};await f.engine.exec("UPDATE client_settings SET mt5_connected=false WHERE client_id=10");result=await request('/app/engine/status',{headers:{cookie:clientCookie}});state=await result.json();assert.equal(state.copier.state,'disconnected');assert.equal(state.copier.executionPermitted,false);
   await f.engine.exec("UPDATE client_settings SET mt5_connected=true WHERE client_id=10");response=ack;
   const before=calls;assert.equal((await request('/admin/engine/clients/12',{headers:{cookie:mentorCookie}})).status,404);
-  const own=await request('/admin/engine/clients/10',{headers:{cookie:mentorCookie}});assert.equal(own.status,200);assert.equal((await own.json()).mappings.length,0,'A mentor cannot see prior mentors allocations for a reassigned client');assert.equal(calls,before+1,'Only the owned client may trigger a backend read-only proof; no credential is returned');
+  const own=await request('/admin/engine/clients/10',{headers:{cookie:mentorCookie}});assert.equal(own.status,200);const ownedStatus=await own.json();assert.equal(ownedStatus.connection.balance,undefined);assert.equal(ownedStatus.connection.equity,undefined);assert.equal(ownedStatus.mappings.length,0,'A mentor cannot see prior mentors allocations for a reassigned client');assert.equal(calls,before+1,'Only the owned client may trigger a backend read-only proof; no credential is returned');
   assert.equal((await request('/admin/engine/clients',{headers:{cookie:clientCookie}})).status,401);
   await assert.rejects(api.bindClientAccount(12,{login:'91',server:'FixtureDemo',broker:'justmarkets'},'fixture'),/ACCOUNT_ALREADY_BOUND/);
   await f.engine.exec("INSERT INTO observer_allocations(id,client_id,source_key,mentor_id,symbol,scale) VALUES('alloc',10,'fixture',1,'XAUUSD.fixture','1')");

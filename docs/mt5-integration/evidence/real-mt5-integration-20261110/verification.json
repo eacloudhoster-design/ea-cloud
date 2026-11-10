@@ -1,0 +1,64 @@
+{
+  "base_commit": "918b00714b41782f680e13aeec124873d1001dd0",
+  "branch": "feature/person2-real-mt5-integration-20261110",
+  "source_hashes_match_final_tree": true,
+  "environment": {
+    "platform": "Linux x86_64",
+    "python": "3.12.14",
+    "node": "v24.22.1"
+  },
+  "python": {
+    "passed": 549,
+    "failed": 0,
+    "skipped": 0,
+    "new_adapter_cases_included": 32,
+    "scope": "Existing ordinary vps-mt5-service/tests suite; six root execution-gate publisher tests excluded because they mutate privileged paths; root ad-hoc scripts are not discovered",
+    "command": "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=/workspace/work/offline-guard:vps-mt5-service python /workspace/work/stop-fix/python-suite.py"
+  },
+  "node": {
+    "passed": 6,
+    "failed": 0,
+    "skipped": 1,
+    "skip_reason": "engine-api-compatibility requires explicit disposable EA_TEST_PG_URL; no PostgreSQL server was configured",
+    "files": [
+      "engine-integration.test.mjs",
+      "guarded-copier-integration.test.mjs",
+      "copier-end-to-end.test.mjs",
+      "mt5-edge-transport.test.mjs",
+      "mt5-engine-client.test.mjs",
+      "engine-api-compatibility.test.mjs",
+      "engine-readonly-boot.test.mjs"
+    ],
+    "command": "NODE_OPTIONS=--require=/workspace/work/offline-guard/guard.cjs PGLITE_MODULE=/workspace/work/test-tools/node_modules/@electric-sql/pglite/dist/index.js node --test --test-concurrency=1 scripts/tests/<listed files>"
+  },
+  "browser": {
+    "passed": 1,
+    "failed": 0,
+    "file": "scripts/tests/mt5-status-recovery.browser.mjs",
+    "mode": "Built existing application, loopback only, all API and socket traffic intercepted; zero API writes"
+  },
+  "checks": {
+    "api_typescript": "passed",
+    "ui_typescript": "passed",
+    "ui_build": "passed; bundle-size warning",
+    "python_compilation": "passed",
+    "node_syntax": "passed",
+    "whitespace": "passed",
+    "secret_pattern_hits": 0,
+    "production_configuration_changed": false
+  },
+  "boundaries": {
+    "real_sdk_imports": 0,
+    "real_sdk_calls": 0,
+    "real_credentials_used": 0,
+    "broker_connections": 0,
+    "actual_orders": 0,
+    "native_windows_acceptance": "not run/unverified",
+    "wine_acceptance": "not rerun; no claim for changed source",
+    "push": false,
+    "merge": false,
+    "deployment": false,
+    "trading_activation": false
+  },
+  "ready": "Local code review candidate only; runtime provisioning/authorization, native Windows/SDK and controlled demo-broker acceptance remain required"
+}

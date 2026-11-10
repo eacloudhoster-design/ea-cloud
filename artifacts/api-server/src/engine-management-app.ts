@@ -12,7 +12,7 @@ export function createMt5ManagementApp(health:()=>Promise<boolean>=async()=>fals
  app.use((req:any,res,next)=>{
   req.log={info(){},warn(){},error(){}};res.setHeader('Cache-Control','no-store');
   const path=req.path,method=req.method;
-  const read=(method==='GET'||method==='HEAD')&&/^\/api\/(?:healthz|app\/(?:engine\/status|mt5-enrollment|trading-controls)|admin\/engine\/clients(?:\/[1-9]\d*(?:\/policy)?)?|admin\/mt5\/(?:status|connections|enrollment))\/?$/.test(path);
+  const read=(method==='GET'||method==='HEAD')&&/^\/api\/(?:healthz|app\/(?:engine\/(?:status|history)|mt5-enrollment|trading-controls)|admin\/engine\/clients(?:\/[1-9]\d*(?:\/policy)?)?|admin\/mt5\/(?:status|connections|enrollment))\/?$/.test(path);
   const connection=method==='POST'&&/^\/api\/(?:app\/mt5-(?:connect|disconnect|enrollment)|admin\/mt5\/(?:connect|disconnect|enrollment))\/?$/.test(path);
   const allocation=method==='PATCH'&&/^\/api\/(?:app\/trading-controls|admin\/engine\/clients\/[1-9]\d*\/policy)\/?$/.test(path);
   if(!read&&!connection&&!allocation){res.status(404).json({code:'MT5_MANAGEMENT_ROUTE_UNAVAILABLE'});return;}next();

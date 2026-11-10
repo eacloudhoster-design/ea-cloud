@@ -47,7 +47,7 @@ def create_dispatch_app(bindings,token,forward=None):
                 except Exception:data={}
                 if e.code==503 and isinstance(data,dict) and data.get('success') is False and data.get('retriable') is True and data.get('submission_started') is False and data.get('uncertain') is not True:
                     return 503,{'success':False,'message':'Bound account unavailable before submission','retriable':True,'submission_started':False}
-                return e.code,{'success':False,'message':'Account worker rejected request','retriable':False}
+                return e.code,{'success':False,'message':'Account worker rejected request','retriable':False,**({'code':data['code']} if isinstance(data,dict) and data.get('code') in ('ACCOUNT_PROOF_REJECTED','MT5_SESSION_UNAVAILABLE') else {})}
             except Exception:
                 return 503,{'success':False,'message':'Worker response unavailable; reconcile before retry','uncertain':True,'retriable':False}
     app=FastAPI(docs_url=None,redoc_url=None,openapi_url=None)
@@ -73,15 +73,30 @@ def create_dispatch_app(bindings,token,forward=None):
     @app.post('/observer/account-status')
     def account_status(payload:AccountCheck):
         binding=routes.get((payload.login,payload.server))
-        if binding is None:return JSONResponse({'success':False,'connected':False,'message':'Account not provisioned'},status_code=403)
+        if binding is None:return JSONResponse({'success':False,'connected':False,'code':'ACCOUNT_NOT_ASSIGNED','message':'Account not provisioned'},status_code=403)
         status,data=forward(binding,'/v1/account-status',{'login':payload.login,'server':payload.server,'password':payload.password.get_secret_value()})
         if status!=200 or not isinstance(data,dict) or data.get('success') is not True or data.get('connected') is not True or data.get('simulation') is not False or data.get('account_mode')!='demo' or data.get('login')!=payload.login or data.get('server')!=payload.server or data.get('broker')!=binding['broker'] or data.get('role')!=binding['role']:
-            return JSONResponse({'success':False,'connected':False,'message':'Bound account verification unavailable'},status_code=503)
+            return JSONResponse({'success':False,'connected':False,'code':data.get('code') if isinstance(data,dict) and data.get('code') in ('ACCOUNT_PROOF_REJECTED','MT5_SESSION_UNAVAILABLE') else 'MT5_SESSION_UNAVAILABLE','message':'Bound account verification unavailable'},status_code=503)
         valid_controls=all(type(data.get(k)) is bool for k in ('execution_enabled','emergency_stop_active')) and data.get('journal_bound') is True and all(type(data.get(k)) is int and data[k]>=0 for k in ('journal_holds','open_positions','pending_orders'))
         if not valid_controls or (data['execution_enabled'] and (data['emergency_stop_active'] or data['journal_holds']>0 or binding['role']!='client')):
             return JSONResponse({'success':False,'connected':False,'message':'Account safety snapshot is unavailable or contradictory'},status_code=503)
         allowed=('success','connected','simulation','account_mode','broker','login','server','role','currency','balance','equity','open_positions','pending_orders','execution_enabled','emergency_stop_active','journal_bound','journal_holds')
         return {key:data[key] for key in allowed if key in data}
+    @app.post('/observer/account-snapshot')
+    def account_snapshot(payload:AccountCheck):
+        binding=routes.get((payload.login,payload.server))
+        if binding is None:return JSONResponse({'success':False,'code':'ACCOUNT_NOT_ASSIGNED'},status_code=403)
+        status,data=forward(binding,'/v1/account-snapshot',{'login':payload.login,'server':payload.server,'password':payload.password.get_secret_value()})
+        try:
+            if status!=200 or data.get('success') is not True or data.get('simulation') is not False or data.get('account_mode')!='demo' or (data.get('login'),data.get('server'),data.get('broker'),data.get('role'))!=(payload.login,payload.server,binding['broker'],binding['role']):raise ValueError()
+            allowed={'ticket','identifier','time','type','magic','volume','price_open','price_current','sl','tp','profit','symbol','time_setup','time_done','state','volume_initial','volume_current','order','entry','position_id','price','commission','swap'}
+            out={k:data[k] for k in ('success','simulation','account_mode','login','server','broker','role','observed_at','history_from','truncated')}
+            for name in ('positions','orders','deals','historyOrders'):
+                rows=data[name]
+                if type(rows) is not list or len(rows)>200 or any(type(r) is not dict for r in rows):raise ValueError()
+                out[name]=[{k:v for k,v in row.items() if k in allowed} for row in rows]
+            return out
+        except Exception:return JSONResponse({'success':False,'code':'BROKER_SNAPSHOT_UNAVAILABLE'},status_code=503)
     @app.post('/observer/sync-position')
     def sync(payload:ObserverSync):
         binding=routes.get((payload.login,payload.server))

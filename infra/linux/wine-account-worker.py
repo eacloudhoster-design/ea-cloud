@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-"""Launch the gated account worker with LoadCredential values over stdin."""
+"""Launch the gated worker with metadata only; private references resolve in-worker."""
 import json,os,subprocess,sys
 from pathlib import Path
 
 def main():
     try:
         root=Path(os.environ['CREDENTIALS_DIRECTORY']);home=Path(os.environ['HOME'])
-        binding=dict(config=json.loads((root/'account.json').read_text()),password=(root/'broker-password').read_text().rstrip('\r\n'),token=(root/'api-token').read_text().strip(),port=int(os.environ['API_PORT']))
+        binding=dict(engine='real-sdk-v1',config=json.loads((root/'account.json').read_text()),port=int(os.environ['API_PORT']))
         if binding['config'].get('account_mode')!='demo' or not 1024<=binding['port']<=65535:raise ValueError('Invalid demo binding')
         # Launch the worker from THIS reviewed release, not the mutable primary checkout.
         entry=Path(__file__).resolve().parents[2]/'vps-mt5-service/demo_worker.py'

@@ -1,29 +1,12 @@
-"""
-EA Cloud — MT5 Trade Execution Service
-======================================
+"""Archived multi-account service. Startup is disabled before SDK import.
 
-A FastAPI service that runs on a Windows VPS alongside a MetaTrader 5 terminal.
-It exposes a small HTTP API the EA Cloud backend calls to verify accounts and
-execute copy trades.
-
-Key facts:
-- Requires the `MetaTrader5` Python package (Windows only) and an installed MT5
-  terminal on the same machine.
-- MT5's Python API allows only ONE logged-in account per terminal process at a
-  time, so every request initializes + logs in to the requested account. A
-  global lock serializes access to avoid interleaving between concurrent calls.
-- Every operation logs the initialize result, login result, order_send result,
-  and MT5 last_error for debugging.
-
-Run:
-    pip install -r requirements.txt
-    uvicorn main:app --host 0.0.0.0 --port 8000
-
-Interactive docs:  http://<vps-ip>:8000/docs
-OpenAPI schema:    http://<vps-ip>:8000/openapi.json
+Use the account-bound demo_worker private bootstrap and assigned account router.
+The legacy implementation below is retained for historical review, never startup.
 """
 
 from __future__ import annotations
+
+raise RuntimeError("LEGACY_UNGUARDED_SERVICE_DISABLED: use the privately authorized account-bound worker")
 
 import logging
 import threading

@@ -14,7 +14,7 @@ class AccountLauncherTests(unittest.TestCase):
    def run(args,**kwargs):
     self.assertEqual(args[2],'Z:'+str(path.resolve().parents[2]/'vps-mt5-service/demo_worker.py').replace('/','\\'))
     self.assertNotIn('fixture-broker-secret',str(args));self.assertNotIn('fixture-api-secret',str(args))
-    data=json.loads(kwargs['input']);self.assertEqual(data['password'],'fixture-broker-secret');self.assertEqual(data['token'],'fixture-api-secret')
+    data=json.loads(kwargs['input']);self.assertEqual(data['engine'],'real-sdk-v1');self.assertNotIn('fixture-broker-secret',kwargs['input']);self.assertNotIn('fixture-api-secret',kwargs['input'])
     self.assertEqual(kwargs['stdout'],module.subprocess.DEVNULL);self.assertEqual(kwargs['stderr'],module.subprocess.DEVNULL)
     return NS(returncode=0)
    with patch.dict(os.environ,dict(CREDENTIALS_DIRECTORY=directory,HOME=directory,API_PORT='8201')),patch.object(module.subprocess,'run',run):

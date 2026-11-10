@@ -1,0 +1,46 @@
+vite v7.3.2 building client environment for production...
+transforming...
+✓ 2205 modules transformed.
+rendering chunks...
+computing gzip size...
+../../../real-mt5-evidence/ui-dist/assets/avatrade-CNmfWjJx.png                             4.99 kB
+../../../real-mt5-evidence/ui-dist/assets/ic-markets-DkRTyyx8.png                           5.05 kB
+../../../real-mt5-evidence/ui-dist/assets/pepperstone-CyTvxf3c.png                          5.47 kB
+../../../real-mt5-evidence/ui-dist/assets/oanda-lkhQcztT.png                                5.79 kB
+../../../real-mt5-evidence/ui-dist/assets/orbitron-latin-900-normal-DrIi7unX.woff2          6.40 kB
+../../../real-mt5-evidence/ui-dist/assets/orbitron-latin-600-normal-mazHmDYu.woff2          6.59 kB
+../../../real-mt5-evidence/ui-dist/index.html                                               7.70 kB │ gzip:   1.54 kB
+../../../real-mt5-evidence/ui-dist/assets/rajdhani-latin-ext-700-normal-S6aYESQK.woff2     12.96 kB
+../../../real-mt5-evidence/ui-dist/assets/rajdhani-latin-ext-600-normal-C9ZjJQAt.woff2     13.12 kB
+../../../real-mt5-evidence/ui-dist/assets/exo-2-latin-ext-900-normal-Cod0E_eN.woff2        13.29 kB
+../../../real-mt5-evidence/ui-dist/assets/exo-2-latin-ext-600-normal-70qtqWxx.woff2        13.96 kB
+../../../real-mt5-evidence/ui-dist/assets/roboto-latin-ext-900-normal-Bg1HnWxG.woff2       15.05 kB
+../../../real-mt5-evidence/ui-dist/assets/roboto-latin-ext-600-normal-BPkjI5Ax.woff2       15.19 kB
+../../../real-mt5-evidence/ui-dist/assets/rajdhani-latin-700-normal-BPDUZo87.woff2         15.69 kB
+../../../real-mt5-evidence/ui-dist/assets/rajdhani-latin-600-normal-CXCVEoA9.woff2         15.73 kB
+../../../real-mt5-evidence/ui-dist/assets/exo-2-latin-900-normal-Bxo6NnJ-.woff2            16.58 kB
+../../../real-mt5-evidence/ui-dist/assets/exo-2-latin-600-normal-DOMk466V.woff2            17.26 kB
+../../../real-mt5-evidence/ui-dist/assets/flipside-Kn8-ZY1W.ttf                            21.86 kB
+../../../real-mt5-evidence/ui-dist/assets/roboto-latin-900-normal-lk0O8k6m.woff2           21.92 kB
+../../../real-mt5-evidence/ui-dist/assets/roboto-latin-600-normal-CzqH9ZEY.woff2           22.24 kB
+../../../real-mt5-evidence/ui-dist/assets/inter-latin-900-normal-D4nM5aha.woff2            23.90 kB
+../../../real-mt5-evidence/ui-dist/assets/inter-latin-600-normal-LgqL8muc.woff2            24.45 kB
+../../../real-mt5-evidence/ui-dist/assets/inter-latin-ext-900-normal-ty8Tfvw5.woff2        35.33 kB
+../../../real-mt5-evidence/ui-dist/assets/inter-latin-ext-600-normal-D2bJ5OIk.woff2        36.26 kB
+../../../real-mt5-evidence/ui-dist/assets/ort.wasm.bundle.min-BHusxC6p.mjs                 46.53 kB
+../../../real-mt5-evidence/ui-dist/assets/metatrader5-BR8t1cJM.png                         68.40 kB
+../../../real-mt5-evidence/ui-dist/assets/ea-cloud-logo-DCHsFmQA.jpeg                      93.35 kB
+../../../real-mt5-evidence/ui-dist/assets/default-robot-Bl0uSiU9.jpg                      197.46 kB
+../../../real-mt5-evidence/ui-dist/assets/ea-cloud-mobile-cloud-CH-l-DXo.png            1,329.97 kB
+../../../real-mt5-evidence/ui-dist/assets/kokoro.worker-jeAmP_Cg.js                     1,370.43 kB
+../../../real-mt5-evidence/ui-dist/assets/ea-cloud-auth-background-B2lJH4Ai.png         1,802.24 kB
+../../../real-mt5-evidence/ui-dist/assets/LiveShot-BwHUd2sV.css                             4.64 kB │ gzip:   1.48 kB
+../../../real-mt5-evidence/ui-dist/assets/index-fZCp9e8w.css                              208.53 kB │ gzip:  36.14 kB
+../../../real-mt5-evidence/ui-dist/assets/LiveShot-B6OHy1_0.js                            177.86 kB │ gzip:  58.14 kB
+../../../real-mt5-evidence/ui-dist/assets/index-CXaWic9m.js                               602.01 kB │ gzip: 194.03 kB
+
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+✓ built in 15.70s

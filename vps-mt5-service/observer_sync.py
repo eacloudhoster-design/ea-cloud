@@ -195,6 +195,8 @@ def synchronize(mt5, payload, journal, connect, send):
             db.execute("UPDATE order_mappings SET phase='acknowledged',receipt=? WHERE id=?",[json.dumps(receipt),mapping]);db.commit()
             if result.retcode not in [getattr(mt5,'TRADE_RETCODE_DONE',10009),getattr(mt5,'TRADE_RETCODE_DONE_PARTIAL',10010)]:
                 return finish(reply(False,"Broker rejected position synchronization",data={"retcode":int(result.retcode)}))
+            if getattr(result,'reconciliation_required',False):
+                return reply(False,"Broker execution requires history reconciliation; no follow-up submitted",uncertain=True,data={k:str(v) if k in ('order','deal') else v for k,v in receipt.items()})
             db.execute("UPDATE allocations SET phase='planned' WHERE scope=?",[scope]);db.commit()
         return finish(reply(False,"Reconciliation action limit reached; inspect partial fills"))
     finally:db.close()

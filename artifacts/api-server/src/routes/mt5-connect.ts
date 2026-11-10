@@ -1,7 +1,7 @@
 import {assertAccountOwnership,markEnrollmentVerified} from "../lib/account-ownership";
 import {encryptMT5Password,decryptMT5Password} from "../lib/mt5-crypto";
 import {requireAuth} from "../middlewares/auth";
-import { readBoundAccount } from "../lib/mt5-account-status";
+import { readBoundAccount,accountBindingFailure } from "../lib/mt5-account-status";
 import { Router } from "express";
 import { db, mt5ConnectionsTable, usersTable } from "@workspace/db";
 import { eq, desc, and,ne,sql } from "drizzle-orm";
@@ -32,7 +32,7 @@ router.post("/admin/mt5/connect", requireAuth, async (req: any, res) => {
     if(typeof password!=="string" || password.length>1024 || typeof server!=="string" || server.length>256 || !Number.isSafeInteger(loginNum) || loginNum>2147483647){res.status(400).json({error:"Invalid credentials or login exceeds current connection schema"});return;}
     let account;
     try {account=await readBoundAccount(loginNum,server,password);}
-    catch {res.status(422).json({error:"Provisioned demo mentor account verification unavailable",code:"MT5_BINDING_UNVERIFIED"});return;}
+    catch (error) {res.status(422).json(accountBindingFailure(error));return;}
     if(req.body.broker!==undefined && req.body.broker!==account.broker){res.status(422).json({error:"Selected broker does not match verified account"});return;}
     if(account.role!=="mentor"){res.status(403).json({error:"A dedicated mentor-role worker is required"});return;}
     const saved=await db.transaction(async tx=>{

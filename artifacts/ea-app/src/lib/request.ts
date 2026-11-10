@@ -35,6 +35,11 @@ export class ApiRequestError extends Error {
   }
 }
 const known: Record<string, [FailureCategory, string]> = {
+  ACCOUNT_NOT_ASSIGNED:["configuration","This account needs an assigned demo worker. Request provisioning."],
+  ACCOUNT_PROOF_REJECTED:["configuration","Account credentials do not match the assigned terminal. Check the account and password."],
+  MT5_SESSION_UNAVAILABLE:["configuration","The assigned demo terminal session is unavailable. Ask the operator to check its private authorization and connection."],
+  MT5_BINDING_UNVERIFIED:["configuration","The demo account could not be verified. Check its assignment and terminal session."],
+
   DATABASE_NOT_READY: [
     "database",
     "The service is temporarily unavailable. EA Cloud will retry automatically.",

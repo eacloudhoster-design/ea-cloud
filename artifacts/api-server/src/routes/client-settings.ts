@@ -6,7 +6,7 @@ import { eq, and } from "drizzle-orm";
 import { requireAppSession } from "../middlewares/app-session";
 import { clientEngineStatus } from "../lib/engine-status";
 import { bindClientAccount } from "../lib/bind-client-account";
-import { readBoundAccount } from "../lib/mt5-account-status";
+import { readBoundAccount,accountBindingFailure } from "../lib/mt5-account-status";
 import { encryptMT5Password } from "../lib/mt5-crypto";
 
 const router = Router();
@@ -247,7 +247,7 @@ router.post(["/app/mt5-connect","/client/mt5/connect"], requireAppSession, requi
     }
     let account;
     try { account=await readBoundAccount(loginNum,server,password); }
-    catch {res.status(422).json({error:"A provisioned demo account could not be verified",code:"MT5_BINDING_UNVERIFIED"});return;}
+    catch (error) {res.status(422).json(accountBindingFailure(error));return;}
     if(account.role!=="client"){res.status(403).json({error:"A receiving client account is required"});return;}
     const balance=account.balance===null?null:String(account.balance),equity=account.equity===null?null:String(account.equity);
     if(req.body.broker!==undefined && req.body.broker!==account.broker){res.status(422).json({error:"Selected broker does not match the verified account",code:"BROKER_BINDING_MISMATCH"});return;}

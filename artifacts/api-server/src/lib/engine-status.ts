@@ -3,7 +3,7 @@ import {effectiveCopySettings} from "./copy-policy";
 import { db, appAccessTable,mentorCopyPoliciesTable,clientSettingsTable, tradeExecutionsTable, observerAllocationsTable } from "@workspace/db";
 import { and, eq, desc } from "drizzle-orm";
 import { decryptMT5Password } from "./mt5-crypto";
-import { readBoundAccount } from "./mt5-account-status";
+import { readBoundAccount, readBoundSnapshot } from "./mt5-account-status";
 /** Read-only account-owned status. Stored connected=true is never live evidence. */
 export async function clientEngineStatus(clientId: number, probe = false, mentorId?:number) {
   const [settings] = await db.select().from(clientSettingsTable).where(eq(clientSettingsTable.clientId, clientId)).limit(1);
@@ -28,10 +28,17 @@ export async function clientEngineStatus(clientId: number, probe = false, mentor
   const copyingRequested=settings?.copyingEnabled === true;
   const applicationExecutionBlocked=nonTradingRelease();
   return { clientId,observedAt:new Date().toISOString(),account:settings?.mt5Login ? {login:settings.mt5Login,server:settings.mt5Server,broker:settings.mt5Broker,storedConnected:settings.mt5Connected}:null,
-    connection:{code,verified:live!==null,...(live?{mode:live.account_mode,positions:live.open_positions,pendingOrders:live.pending_orders,currency:live.currency}: {})},
+    connection:{code,verified:live!==null,...(live?{mode:live.account_mode,positions:live.open_positions,pendingOrders:live.pending_orders,currency:live.currency,...(!mentorId?{balance:live.balance,equity:live.equity}:{})}: {})},
     copier:{requested:copyingRequested,state:!copyingRequested?"paused":!live?(code==="ACCOUNT_DISCONNECTED"?"disconnected":"unverified"):live.read_only?"read_only":live.journal_holds!==null && live.journal_holds>0?"review_required":applicationExecutionBlocked?"release_blocked":!settings?.mt5Connected || live.emergency_stop_active || !live.execution_enabled?"blocked":!allocationApproved?"allocation_blocked":"worker_permitted",
       applicationExecutionBlocked,mentorAllocationApproved:allocationApproved,executionPermitted:!!(!applicationExecutionBlocked && allocationApproved && copyingRequested && settings?.mt5Connected && live?.execution_enabled && !live.read_only && live.emergency_stop_active===false && live.journal_holds===0),unresolvedJournalHolds:live?.journal_holds ?? null,emergencyStopActive:live?.emergency_stop_active ?? null,
       endToEndAcceptanceVerified:false},
     mappings,recentExecutions:recent.map(row=>({...row,errorCode:row.status==="failed"?"EXECUTION_FAILED_REVIEW_REQUIRED":null})),
     limitations:["Mappings are retained allocations, not a live position count","No retries, reconciliation holds or execution flags are changed by status reads","Worker permission is not end-to-end trading acceptance"] };
+}
+
+/** The session supplies clientId; browser account selectors are never accepted. */
+export async function clientBrokerSnapshot(clientId:number) {
+  const [settings]=await db.select().from(clientSettingsTable).where(eq(clientSettingsTable.clientId,clientId)).limit(1);
+  if(settings?.mt5Connected!==true || !settings.mt5Login || !settings.mt5Server || !settings.mt5Broker || !settings.encryptedMt5Password)throw Error("ACCOUNT_NOT_CONFIGURED");
+  return readBoundSnapshot(settings.mt5Login,settings.mt5Server,decryptMT5Password(settings.encryptedMt5Password),settings.mt5Broker);
 }

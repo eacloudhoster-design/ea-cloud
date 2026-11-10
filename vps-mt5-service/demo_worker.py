@@ -1,5 +1,5 @@
 """One MT5 DEMO account per Wine prefix/process. No live trading mode exists."""
-import hmac,json,os,sys,threading,ntpath,stat
+import hmac,json,os,sys,threading,ntpath,stat,time
 from contextlib import asynccontextmanager
 from worker_state import StateLease,bind_identity
 from pathlib import Path
@@ -21,6 +21,8 @@ class DemoAccount(BaseModel):
     account_mode:Literal['demo']='demo'
     role:Literal['mentor','client']='client'
     execution_approved:bool=False
+    expected_sdk_version:str|None=Field(default=None,pattern=r'^5\.0\.[0-9]{1,6}$')
+    credential_ref:str=Field(default='broker-password',pattern=r'^[a-zA-Z0-9_-]{1,64}$')
 
 class AccountCheck(BaseModel):
     login:int=Field(gt=0)
@@ -64,7 +66,10 @@ def create_demo_app(config,mt5,password,token,stop_checker=None):
     async def lifespan(app):
         lease.acquire()
         try:
-            bound();yield
+            journal.open().close()
+            bound()
+            if hasattr(mt5,'attach_owner'):mt5.attach_owner(lease)
+            yield
         finally:
             getattr(mt5,'shutdown',lambda:None)();lease.close()
     app=FastAPI(lifespan=lifespan,docs_url=None,redoc_url=None,openapi_url=None)
@@ -72,16 +77,18 @@ def create_demo_app(config,mt5,password,token,stop_checker=None):
     async def guard(request:Request,call_next):
         if not hmac.compare_digest(request.headers.get('authorization','').encode(),('Bearer '+token).encode()):
             return JSONResponse({'success':False,'message':'Unauthorized'},status_code=401)
-        if not config.enabled and request.url.path!='/v1/account-status':return JSONResponse({'success':False,'message':'Account worker disabled'},status_code=503)
+        if not config.enabled and request.url.path not in ('/v1/account-status','/v1/account-snapshot'):return JSONResponse({'success':False,'message':'Account worker disabled'},status_code=503)
         if request.url.path.startswith('/observer/') and (not config.execution_approved or config.role!='client'):
             return JSONResponse({'success':False,'message':'Execution not approved for this account','retriable':False},status_code=503)
         if request.url.path.startswith('/observer/') and stop_checker():
             return JSONResponse({'success':False,'message':'Emergency stop active','retriable':False,'submission_started':False},status_code=503)
+        request.state.execution_deadline=time.monotonic()+15
         return await call_next(request)
     @app.exception_handler(RequestValidationError)
     async def validation(request,exc):return JSONResponse({'success':False,'message':'Invalid request'},status_code=422)
-    def connected():
-        if not mt5.initialize(config.terminal_path,login=config.login,password=password,server=config.server,portable=True,timeout=15000):
+    def private_password():return password() if callable(password) else password
+    def _connected():
+        if not mt5.initialize(config.terminal_path,login=config.login,password=private_password(),server=config.server,portable=True,timeout=15000):
             return 'MT5 initialization failed'
         info=mt5.account_info();terminal=mt5.terminal_info()
         if not info or info.login!=config.login or info.server!=config.server:
@@ -93,6 +100,12 @@ def create_demo_app(config,mt5,password,token,stop_checker=None):
         if any(ntpath.normcase(ntpath.normpath(getattr(terminal,field,'')))!=expected for field in ('path','data_path')):
             return 'Portable terminal directory mismatch'
         return None
+    def connected():
+        try:return _connected()
+        except Exception:return 'Authorized terminal session unavailable'
+    def credential_matches(payload):
+        try:return payload.login==config.login and payload.server==config.server and hmac.compare_digest(payload.password.get_secret_value().encode(),private_password().encode())
+        except Exception:return False
     @app.get('/healthz')
     def health():
         with lock:
@@ -103,24 +116,66 @@ def create_demo_app(config,mt5,password,token,stop_checker=None):
     @app.post('/v1/account-status')
     def account_status(payload:AccountCheck):
         # Browser authentication is not proof of broker-account ownership.
-        if payload.login!=config.login or payload.server!=config.server or not hmac.compare_digest(payload.password.get_secret_value().encode(),password.encode()):
-            return JSONResponse({'success':False,'connected':False,'message':'Account credentials do not match provisioned binding'},status_code=403)
+        if not credential_matches(payload):
+            return JSONResponse({'success':False,'connected':False,'code':'ACCOUNT_PROOF_REJECTED','message':'Account credentials do not match provisioned binding'},status_code=403)
         with lock:
             try:
                 error=connected()
-                if error:return JSONResponse({'success':False,'connected':False,'message':'Bound account unavailable'},status_code=503)
+                if error:return JSONResponse({'success':False,'connected':False,'code':'MT5_SESSION_UNAVAILABLE','message':'Bound account unavailable'},status_code=503)
                 bound();a=mt5.account_info();t=mt5.terminal_info();positions=mt5.positions_get();orders=mt5.orders_get()
                 db=journal.open()
-                try:holds=db.execute("SELECT count(*) FROM allocations WHERE phase IN ('dispatching','reconciled_hold','external_reduction')").fetchone()[0]
+                try:holds=db.execute("SELECT count(*) FROM allocations WHERE phase IN ('dispatching','reconciled_hold','external_reduction')").fetchone()[0]+int(getattr(mt5,'held',False))
                 finally:db.close()
                 if a is None or t is None or positions is None or orders is None:raise ValueError('Account snapshot unavailable')
                 if a.login!=config.login or a.server!=config.server or a.trade_mode!=getattr(mt5,'ACCOUNT_TRADE_MODE_DEMO',0):raise ValueError('Account changed')
                 expected=ntpath.normcase(ntpath.normpath(ntpath.dirname(config.terminal_path)))
                 if not t.connected or any(ntpath.normcase(ntpath.normpath(getattr(t,k,'')))!=expected for k in ('path','data_path')):raise ValueError('Terminal changed')
                 stopped=bool(stop_checker())
-                return {'success':True,'connected':True,'simulation':False,'account_mode':'demo','broker':config.broker,'login':config.login,'server':config.server,'role':config.role,'currency':getattr(a,'currency',None),'balance':getattr(a,'balance',None),'equity':getattr(a,'equity',None),'open_positions':len(positions),'pending_orders':len(orders),'execution_enabled':bool(config.enabled and config.execution_approved and config.role=='client' and not stopped and holds==0 and getattr(t,'trade_allowed',False) and getattr(a,'trade_allowed',False) and getattr(a,'trade_expert',False) and not getattr(t,'tradeapi_disabled',True)),'emergency_stop_active':stopped,'journal_bound':True,'journal_holds':holds}
+                return {'success':True,'connected':True,'simulation':False,'account_mode':'demo','broker':config.broker,'login':config.login,'server':config.server,'role':config.role,'currency':getattr(a,'currency',None),'balance':getattr(a,'balance',None),'equity':getattr(a,'equity',None),'open_positions':len(positions),'pending_orders':len(orders),'execution_enabled':bool(getattr(mt5,'execution_authorized',True) and config.enabled and config.execution_approved and config.role=='client' and not stopped and holds==0 and getattr(t,'trade_allowed',False) and getattr(a,'trade_allowed',False) and getattr(a,'trade_expert',False) and not getattr(t,'tradeapi_disabled',True)),'emergency_stop_active':stopped,'journal_bound':True,'journal_holds':holds}
             except Exception:
-                return JSONResponse({'success':False,'connected':False,'message':'Account status unavailable; execution unchanged'},status_code=503)
+                return JSONResponse({'success':False,'connected':False,'code':'MT5_SESSION_UNAVAILABLE','message':'Account status unavailable; execution unchanged'},status_code=503)
+            finally:getattr(mt5,'shutdown',lambda:None)()
+    @app.post('/v1/account-snapshot')
+    def account_snapshot(payload:AccountCheck):
+        if not credential_matches(payload):return JSONResponse({'success':False,'code':'ACCOUNT_PROOF_REJECTED'},status_code=403)
+        with lock:
+            try:
+                if connected():raise ValueError()
+                from datetime import datetime,timezone,timedelta
+                import math
+                end=datetime.now(timezone.utc);start=end-timedelta(hours=24)
+                fields={
+                    'positions':('ticket','identifier','time','type','magic','volume','price_open','price_current','sl','tp','profit','symbol'),
+                    'orders':('ticket','time_setup','type','state','magic','volume_initial','volume_current','price_open','sl','tp','symbol'),
+                    'deals':('ticket','order','time','type','entry','magic','position_id','volume','price','profit','commission','swap','symbol'),
+                    'historyOrders':('ticket','time_setup','time_done','type','state','magic','position_id','volume_initial','volume_current','price_open','sl','tp','symbol')}
+                raw={'positions':mt5.positions_get(),'orders':mt5.orders_get(),'deals':mt5.history_deals_get(start,end),'historyOrders':mt5.history_orders_get(start,end)}
+                data={};truncated={}
+                for name,items in raw.items():
+                    if items is None or len(items)>100000:raise ValueError()
+                    # Cash/credit/commission-only entries have no symbol and do not
+                    # describe copied trades. Balance/equity are in account status.
+                    if name=='deals':items=[item for item in items if getattr(item,'type',None) in (0,1)]
+                    truncated[name]=len(items)>200
+                    selected=sorted(items,key=lambda r:int(getattr(r,'ticket',0)),reverse=True)[:200]
+                    rows=[]
+                    for item in selected:
+                        row={}
+                        for field in fields[name]:
+                            value=getattr(item,field,None)
+                            if field=='symbol':
+                                if type(value) is not str or not 1<=len(value)<=64 or any(ord(c)<32 for c in value):raise ValueError()
+                            elif type(value) not in (int,float) or not math.isfinite(value):raise ValueError()
+                            elif field in ('ticket','identifier','position_id','order'):value=str(value) # preserve 64-bit IDs in JS
+                            row[field]=value
+                        rows.append(row)
+                    data[name]=rows
+                if stop_checker() is not False:raise ValueError()
+                bound();a=mt5.account_info()
+                if a.login!=config.login or a.server!=config.server:raise ValueError()
+                return dict(success=True,simulation=False,account_mode='demo',broker=config.broker,login=config.login,server=config.server,role=config.role,
+                    observed_at=end.isoformat(),history_from=start.isoformat(),truncated=truncated,**data)
+            except Exception:return JSONResponse({'success':False,'code':'BROKER_SNAPSHOT_UNAVAILABLE','message':'Bound broker snapshot unavailable; no orders submitted'},status_code=503)
             finally:getattr(mt5,'shutdown',lambda:None)()
     @app.get('/observer/capabilities')
     def capabilities():
@@ -131,11 +186,11 @@ def create_demo_app(config,mt5,password,token,stop_checker=None):
                 try:bound()
                 except ValueError:return JSONResponse({'success':False,'message':'Unverified account journal binding'},status_code=503)
                 db=journal.open()
-                try:holds=db.execute("SELECT count(*) FROM allocations WHERE phase IN ('dispatching','reconciled_hold','external_reduction')").fetchone()[0]
+                try:holds=db.execute("SELECT count(*) FROM allocations WHERE phase IN ('dispatching','reconciled_hold','external_reduction')").fetchone()[0]+int(getattr(mt5,'held',False))
                 finally:db.close()
                 a=mt5.account_info();t=mt5.terminal_info()
                 expected=ntpath.normcase(ntpath.normpath(ntpath.dirname(config.terminal_path)))
-                permitted=bool(a and t and a.login==config.login and a.server==config.server and getattr(a,'trade_mode',None)==getattr(mt5,'ACCOUNT_TRADE_MODE_DEMO',0) and t.connected and all(ntpath.normcase(ntpath.normpath(getattr(t,k,'')))==expected for k in ('path','data_path')) and getattr(a,'trade_allowed',False) and getattr(a,'trade_expert',False) and getattr(t,'trade_allowed',False) and not getattr(t,'tradeapi_disabled',True) and holds==0 and not stop_checker())
+                permitted=bool(getattr(mt5,'execution_authorized',True) and a and t and a.login==config.login and a.server==config.server and getattr(a,'trade_mode',None)==getattr(mt5,'ACCOUNT_TRADE_MODE_DEMO',0) and t.connected and all(ntpath.normcase(ntpath.normpath(getattr(t,k,'')))==expected for k in ('path','data_path')) and getattr(a,'trade_allowed',False) and getattr(a,'trade_expert',False) and getattr(t,'trade_allowed',False) and not getattr(t,'tradeapi_disabled',True) and holds==0 and not stop_checker())
                 if not permitted:return JSONResponse({'success':False,'message':'Account safety gates or unresolved holds block execution','execution_enabled':False},status_code=503)
                 return {'execution_enabled':True,'emergency_stop_active':False,'journal_holds':0,'version':2,'persistentJournal':True,'absoluteTargets':True,'simulation':False,'account_mode':'demo','accountIsolation':'dedicated-prefix','login':config.login,'server':config.server}
             finally:getattr(mt5,'shutdown',lambda:None)()
@@ -151,7 +206,9 @@ def create_demo_app(config,mt5,password,token,stop_checker=None):
                 return JSONResponse({'success':False,'message':'History assessment unavailable; no state or orders changed'},status_code=409)
             finally:getattr(mt5,'shutdown',lambda:None)()
     @app.post('/observer/sync-position')
-    def sync(payload:ObserverSync):
+    def sync(payload:ObserverSync,request:Request):
+        deadline=request.state.execution_deadline
+        if getattr(mt5,'execution_authorized',True) is not True:return JSONResponse({'success':False,'code':'SESSION_EXECUTION_NOT_AUTHORIZED','retriable':False,'submission_started':False},status_code=503)
         if payload.login!=config.login or payload.server!=config.server:
             return JSONResponse({'success':False,'message':'Account identity mismatch'},status_code=403)
         with lock:
@@ -163,7 +220,7 @@ def create_demo_app(config,mt5,password,token,stop_checker=None):
                 return ConnectionFailure(error,error in ('MT5 initialization failed','Broker disconnected')) if error else None
             def send(request,symbol):
                 # Recheck immediately before EVERY submission, including closes.
-                if stop_checker():return None
+                if time.monotonic()>=deadline or stop_checker():return None
                 account=mt5.account_info();terminal=mt5.terminal_info()
                 if not account or account.login!=config.login or account.server!=config.server or getattr(account,'trade_mode',None)!=getattr(mt5,'ACCOUNT_TRADE_MODE_DEMO',0):
                     return None
@@ -176,8 +233,15 @@ def create_demo_app(config,mt5,password,token,stop_checker=None):
                 if request['action']==mt5.TRADE_ACTION_DEAL:
                     try:request['type_filling']=filling_policy(mt5,info)
                     except ValueError:return None
+                if hasattr(mt5,'execution_scope'):
+                    with mt5.execution_scope(lambda: time.monotonic()<deadline and lease.stream is not None and stop_checker() is False):
+                        return mt5.order_send(request)
                 return mt5.order_send(request)
             try:result=synchronize(mt5,payload,journal,connect,send)
+            except Exception:
+                # The journal may already contain a pre-send intent. Never assert
+                # no submission or expose SDK/credential exceptions to HTTP/logs.
+                result={'success':False,'code':'GUARDED_EXECUTION_REVIEW_REQUIRED','uncertain':True,'retriable':False}
             finally:getattr(mt5,'shutdown',lambda:None)()
             result.update(simulation=False,account_mode='demo')
             return JSONResponse(result,status_code=503 if result.get('retriable') is True else 200)
@@ -188,17 +252,47 @@ def _credential_path(name):
     if sys.platform=='win32' and root.startswith('/'):root='Z:'+root.replace('/','\\')
     return Path(root)/name
 
+def _read_private(name):
+    if not __import__('re').fullmatch(r'(?:account\.json|[a-zA-Z0-9_-]+)',name):raise ValueError('Invalid private selector')
+    path=_credential_path(name)
+    from windows_simulation_security import Win32Inspector
+    Win32Inspector().check(path)
+    return path.read_text().rstrip('\r\n')
+
+
 def from_environment():
-    if sys.platform!='win32':raise RuntimeError('Demo worker requires Windows Python in its dedicated Wine prefix')
-    import MetaTrader5 as mt5
-    config=DemoAccount(**json.loads(_credential_path('account.json').read_text()))
-    return create_demo_app(config,mt5,_credential_path('broker-password').read_text().rstrip('\r\n'),_credential_path('api-token').read_text().strip())
+    # No SDK or broker credential loading without the new private authorization path.
+    return from_private_binding(dict(engine='real-sdk-v1',config=json.loads(_read_private('account.json'))))
 
 
-def from_private_binding(binding):
-    if sys.platform!='win32':raise RuntimeError('Account worker requires its isolated Windows runtime')
-    import MetaTrader5 as mt5
-    return create_demo_app(DemoAccount(**binding['config']),mt5,binding['password'],binding['token'])
+def from_private_binding(binding,*,_credential_reader=None,_sdk_loader=None):
+    from real_mt5_adapter import RealMt5Adapter
+    if binding.get('engine')!='real-sdk-v1' or set(binding)-{'engine','config','port'}:
+        raise RuntimeError('Authorized credential-reference worker bootstrap required')
+    read=_credential_reader or _read_private
+    config=DemoAccount(**binding['config'])
+    from windows_simulation_security import windows_path
+    windows_path(config.terminal_path.replace('/','\\'))
+    if _credential_reader is None:
+        # Provision privately first; startup never repairs ACLs or adopts an unknown terminal.
+        from windows_simulation_security import Win32Inspector
+        inspector=Win32Inspector()
+        inspector.check(Path(config.terminal_path),private=False)
+        inspector.check(Path(config.terminal_path).parent,anchor=True)
+        inspector.check(Path(config.journal_path).parent,anchor=True)
+        inspector.check(Path(config.journal_path))
+    # Trust inputs come from private operator files, never execution payloads.
+    gateway=read('gateway-id');key=bytes.fromhex(read('mt5-session-verifier-key'))
+    frame=read('mt5-session-authorization').encode()
+    adapter=None
+    def password():
+        adapter._authorized()
+        return read(config.credential_ref)
+    options=dict(stop_checker=emergency_stop_active)
+    if _sdk_loader is not None:options['sdk_loader']=_sdk_loader
+    adapter=RealMt5Adapter(config,gateway,frame,key,password,**options)
+    return create_demo_app(config,adapter,password,read('api-token'),stop_checker=emergency_stop_active)
+
 
 def main():
     import uvicorn

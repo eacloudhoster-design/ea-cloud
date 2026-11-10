@@ -1,0 +1,12 @@
+{
+  "adapter.log": "b879ee1020d858e40aa5cd1a95f88df7e87c5d74abe89a0244c961d994e68f36",
+  "api-typecheck.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "browser.log": "be164a0f50ba7c7bbfc6dd627583d5f3fcc86753b6a59c6d7b8abaf3138610ba",
+  "checks.txt": "e6da77c8d0813dc5e260eb6c87b1c61c32b5a6b9a5e461420c1b1fc7f78fd40e",
+  "node-regressions.log": "b4dc993ead8a8f8486bb04061e80e1c3910bd1b2a632d842e3fc6eff92d6cbf9",
+  "python-regressions.log": "ab5c553c99c243eda690ff3e89e576abd0fdc1db196f9fad2aaa8bbf00306c23",
+  "source-sha256.json": "ec836d596acb00250c2342c645130505e7eff0f53ea4c3dce6099acc569d1db0",
+  "ui-build.log": "2a96e8d382437d89851e54b426d1e0e2d9f531d3a163265d6bd39c0460136879",
+  "ui-typecheck.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "verification.json": "1ab1993418a0528d9d9631931fae14cec46a5908eff8796fbcae37b3a6397acc"
+}

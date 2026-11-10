@@ -1,0 +1,21 @@
+{
+  "artifacts/api-server/src/engine-management-app.ts": "eea0c12306438792a69b0feb73ae77f111e219a700af830fb9b13aa50a6773db",
+  "artifacts/api-server/src/lib/engine-status.ts": "2b5c094c4fcd558846ad9b47d257925496d8a583c83d6d2718fffbd4dc3d2730",
+  "artifacts/api-server/src/lib/mt5-account-status.ts": "5b4ef8f4d48d88c44335dabda7df0af705b1eccb9fc055689d7867f6c5e5af8a",
+  "artifacts/api-server/src/routes/client-settings.ts": "9a0505440a944c5a56b8a9e7719293ba4ddf2c96e4b9c24b52913245cf1246bb",
+  "artifacts/api-server/src/routes/engine.ts": "966f3b7103596d07d8dfcf945b43cee49ab2540e6aba1ea763dd4e0b8cd59ae1",
+  "artifacts/api-server/src/routes/mt5-connect.ts": "ef57499ff33cdb5b3e7b81eae7841054e2943ea8d15f443a645d37c237a400fa",
+  "artifacts/ea-app/src/lib/request.ts": "a0d4b9068aedb4dd4813f2e845b7d7337821c45d560e4989193bd568381dd217",
+  "artifacts/ea-app/src/pages/MetaTraderTab.tsx": "280cc8417143115974bdd865fd849f3244a992a4fb07a1ffe4779d52afc64446",
+  "functions/api/[[path]].js": "8be78479c1e200c51cbb99397c7db09ef35e4c796f50324ccaa26517ed1a34c7",
+  "infra/linux/wine-account-worker.py": "4dfd3730468c2f489797a0c013f7a3830b885897911d6b3a25e19dd03b7ae21a",
+  "scripts/tests/engine-integration.test.mjs": "7d73ad07d2f258efe0233373ab31aaff03e21f5e5d409b73120f8ab30ae9c21c",
+  "scripts/tests/mt5-status-recovery.browser.mjs": "633cf5527e47f3025aaac693ba81a431cab14346ce024845e179d6dda0de99cc",
+  "vps-mt5-service/account_dispatch.py": "5397aff7600baf0bed0c1b3a4894b0ececabbb738349fd0f97ae5f658e1c3bab",
+  "vps-mt5-service/demo_worker.py": "9b4f13d0c3b3c76486506fe877f999d87931866e642fbc2f41e30e381eb55946",
+  "vps-mt5-service/main.py": "ab1eed06232e5153981f2a5e7f179a84783d18a6b1fe377c3e1a019b96e613f3",
+  "vps-mt5-service/observer_sync.py": "86cce19dd1c5bbcf357694276aed6a82c6f73e10b5014cfbf9f0b758239c5e01",
+  "vps-mt5-service/real_mt5_adapter.py": "1218c696af6d8d4044e8cc8a87ab142407fe0cc7eb4f6f24d49aae59e8b4d15d",
+  "vps-mt5-service/tests/test_real_mt5_adapter.py": "d2fe0c01719e505006386e35bdcbc16c66f099c93b53c7fc6d7d42cc26e7b3ea",
+  "vps-mt5-service/tests/test_wine_account_launcher.py": "7effc8a03dfd9e74e5ded92946b7c4c9c1a6938f08a36f716c9cf8cedc04154f"
+}
