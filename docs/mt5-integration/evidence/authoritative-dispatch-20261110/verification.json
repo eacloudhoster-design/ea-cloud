@@ -1,0 +1,29 @@
+{
+  "base_commit": "655e383e57925f6a651831a82d36c3967664c5b6",
+  "node": {
+    "passed": 18,
+    "failed": 0,
+    "skipped": 0,
+    "new_top_level_cases": 2
+  },
+  "python": {
+    "passed": 172,
+    "failed": 0,
+    "skipped": 0,
+    "new_router_cases": 2
+  },
+  "typescript": "passed",
+  "python_compilation": "passed",
+  "database": "Disposable PGlite",
+  "transport": "Mock fetch contract tests plus existing synthetic loopback HTTP/private IPC regressions",
+  "production_configuration_changed": false,
+  "real_sdk_calls": 0,
+  "broker_connections": 0,
+  "real_orders": 0,
+  "limits": [
+    "No unique global authority attestation",
+    "No cross-host lock or ownership guarantee",
+    "No production assignment populated",
+    "No native Windows or real MT5 verification"
+  ]
+}

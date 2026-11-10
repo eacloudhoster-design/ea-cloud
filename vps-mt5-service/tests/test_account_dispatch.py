@@ -83,3 +83,18 @@ class DispatchTests(unittest.TestCase):
    self.assertEqual(client.get('/observer/capabilities',headers=self.headers).status_code,503)
    if not ack['execution_enabled']:pass
    else:self.assertEqual(client.post('/observer/account-status',headers=self.headers,json={'login':1,'server':'DemoFixture','password':'fixture'}).status_code,503)
+
+ def test_router_advertises_only_exact_receiving_assignments_without_credentials(self):
+  response=self.client.get('/observer/capabilities',headers=self.headers)
+  data=response.json();self.assertEqual(data['service'],'ea-cloud-account-router-v1')
+  self.assertEqual(data['assignments'],[dict(login=1,server='DemoFixture',broker='deriv',role='client')])
+  self.assertNotIn('a'*64,response.text);self.assertNotIn('8201',response.text)
+  with self.assertRaises(ValueError):create_dispatch_app([self.binding,{**self.binding,'broker':'xm','url':'http://127.0.0.1:8202','token':'c'*64}],'b'*64,self.forward)
+
+ def test_contradictory_or_queued_receipts_are_uncertain_not_success(self):
+  base=dict(success=True,simulation=False,account_mode='demo')
+  for status,data in [(200,{**base,'uncertain':True}),(200,{**base,'retriable':True}),(200,{**base,'uncertain':'true'}),(202,base),(200,{})]:
+   with self.subTest(status=status,data=data):
+    client=TestClient(create_dispatch_app([self.binding],'b'*64,lambda *a:(status,data)))
+    response=client.post('/observer/sync-position',headers=self.headers,json=self.payload)
+    self.assertEqual(response.status_code,503);self.assertFalse(response.json()['success']);self.assertTrue(response.json()['uncertain'])

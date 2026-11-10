@@ -1,0 +1,9 @@
+{
+  "artifacts/api-server/src/lib/observer-vps.ts": "d9049f77bbc96abdef11879914cd98c798dc868cac13dd237e28373ce08d590c",
+  "artifacts/api-server/src/lib/copy-engine.ts": "1da7fbfcb44ecf15afeda72e5866d198ad80f9741c28ff6aeef7a54955fd0ab2",
+  "vps-mt5-service/account_dispatch.py": "dc2263d4b778be21917a7e6eaade20e095358057b75412c09bcea7115d72fbaf",
+  "vps-mt5-service/tests/test_account_dispatch.py": "c74139f7e2debb2e9c6dbe7b1ade7d3c0a424445dc2aa96bc13a66f215e8cd43",
+  "scripts/tests/authoritative-dispatch.test.mjs": "648567961b553e8b423d4ddc3587c4b88861414c58d594d43bb25dee5cb451ed",
+  "scripts/tests/infrastructure-safety.test.mjs": "e66cd239fa8b7a67029b4d97764bee9095334ca81ae3248e75c427a1fee5636d",
+  "scripts/tests/guarded-copier-integration.test.mjs": "e4d1580100b1cc693466550b9f64c7d59904b13613e0db9f9e704b845d5dbb01"
+}

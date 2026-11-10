@@ -17,11 +17,23 @@ function configuration() {
     url.hash
   )
     throw Error("Observer VPS URL must be an HTTPS origin.");
-  return { url, token };
+  const text = process.env.OBSERVER_MT5_ACCOUNT_ASSIGNMENTS;
+  if (!text || text.length > 65536) throw Error("Explicit account gateway assignments required");
+  const assignments: any = JSON.parse(text);
+  if (!Array.isArray(assignments) || !assignments.length || assignments.length > 1000) throw Error("Invalid gateway assignments");
+  const identities = new Set<string>();
+  for (const row of assignments) {
+    if (!row || typeof row !== "object" || Object.keys(row).sort().join(",") !== "broker,gatewayOrigin,login,server" ||
+        !Number.isSafeInteger(row.login) || row.login < 1 || row.login > 2147483647 ||
+        typeof row.server !== "string" || !row.server || row.server.length > 100 || row.server !== row.server.trim() || /[\x00-\x1f\x7f]/.test(row.server) ||
+        !["deriv","exness","justmarkets","xm","rcg"].includes(row.broker) || row.gatewayOrigin !== url.origin) throw Error("Invalid or conflicting gateway assignment");
+    const identity = JSON.stringify([row.login,row.server]);
+    if (identities.has(identity)) throw Error("Duplicate account gateway assignment");
+    identities.add(identity);
+  }
+  return { url, token, assignments };
 }
-export async function observerCapabilities() {
-  if(nonTradingRelease())throw Error("Financial execution is disabled in this release");
-  const { url, token } = configuration();
+async function verifyGateway({url, token, assignments}: ReturnType<typeof configuration>) {
   const r = await fetch(new URL("/observer/capabilities", url), {
     redirect: "error",
     headers: { Authorization: `Bearer ${token}` },
@@ -30,6 +42,8 @@ export async function observerCapabilities() {
   if (!r.ok) throw Error("Observer VPS capability check failed.");
   const c: any = await r.json();
   if (
+    c.service !== "ea-cloud-account-router-v1" || !Array.isArray(c.assignments) || c.assignments.length !== assignments.length ||
+    !assignments.every((assigned: any) => c.assignments.filter((row: any) => row && row.login === assigned.login && row.server === assigned.server && row.broker === assigned.broker && row.role === "client").length === 1) ||
     c.version !== 2 ||
     c.persistentJournal !== true ||
     c.absoluteTargets !== true || c.simulation !== false || c.account_mode !== "demo" || c.execution_enabled !== true || c.emergency_stop_active !== false || c.journal_holds !== 0
@@ -38,6 +52,10 @@ export async function observerCapabilities() {
       "Upgrade and verify the observer VPS journal before enabling copying.",
     );
   return true;
+}
+export async function observerCapabilities() {
+  if(nonTradingRelease())throw Error("Financial execution is disabled in this release");
+  return verifyGateway(configuration());
 }
 export async function syncObserverPosition(input: {
   login: string;
@@ -55,8 +73,16 @@ export async function syncObserverPosition(input: {
   maxDailyDrawdown: number;
 }): Promise<VpsResult> {
   if(nonTradingRelease())return financialExecutionBlocked();
+  let config: ReturnType<typeof configuration>;
   try {
-    const { url, token } = configuration();
+    config = configuration();
+    if (!/^[1-9]\d*$/.test(input.login) || !config.assignments.some((row: any) => row.login === Number(input.login) && row.server === input.server)) throw Error("Unassigned account");
+    await verifyGateway(config);
+  } catch {
+    return {ok:false,httpStatus:0,ticket:null,retcode:null,message:"Assigned authoritative gateway unavailable or unverified",data:{code:"GATEWAY_ASSIGNMENT_UNVERIFIED",uncertain:false,submission_started:false},retriable:false,attempts:0};
+  }
+  try {
+    const { url, token } = config;
     const r = await fetch(new URL("/observer/sync-position", url), {
       method: "POST",
       redirect:"error",
@@ -68,8 +94,14 @@ export async function syncObserverPosition(input: {
       signal: AbortSignal.timeout(20000),
     });
     const data: any = await r.json().catch(() => null);
+    const malformed = !data || typeof data !== "object" || Array.isArray(data) || typeof data.success !== "boolean" ||
+      ["uncertain","retriable"].some(key => data[key] !== undefined && typeof data[key] !== "boolean");
+    const ok = !malformed && r.status === 200 && data?.success === true && data?.simulation === false && data?.account_mode === "demo" && data?.uncertain !== true && data?.retriable !== true;
+    const noSubmission = !malformed && data?.success === false && data?.submission_started === false && data?.uncertain !== true;
+    const ambiguous = !ok && !noSubmission && (malformed || data?.success === true || data?.uncertain === true || r.status >= 500);
+    const evidence = ambiguous ? {...(data && typeof data === "object" ? data : {}),success:false,uncertain:true,retriable:false} : data;
     return {
-      ok: r.ok && data?.success === true && data?.simulation === false && data?.account_mode === "demo",
+      ok,
       httpStatus: r.status,
       ticket: data?.data?.ticket ?? null,
       retcode: data?.data?.retcode ?? null,
@@ -77,8 +109,8 @@ export async function syncObserverPosition(input: {
         typeof data?.message === "string"
           ? data.message
           : "Observer execution bridge rejected the request.",
-      data,
-      retriable: r.status >= 500 && data?.uncertain !== true && data?.retriable !== false,
+      data: evidence,
+      retriable: r.status === 503 && noSubmission && data?.retriable === true,
       attempts: 1,
     };
   } catch {
@@ -88,9 +120,9 @@ export async function syncObserverPosition(input: {
       ticket: null,
       retcode: null,
       message:
-        "Observer execution bridge unavailable. The same absolute target may be retried safely; unresolved broker submissions require manual reconciliation.",
-      data: null,
-      retriable: true,
+        "Observer execution outcome unknown; reconcile before retry",
+      data: {code:"GATEWAY_OUTCOME_UNKNOWN",uncertain:true,retriable:false},
+      retriable: false,
       attempts: 1,
     };
   }

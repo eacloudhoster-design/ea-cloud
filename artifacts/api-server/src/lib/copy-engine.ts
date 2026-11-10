@@ -19,7 +19,7 @@ import {
 import { eq, and, desc } from "drizzle-orm";
 import type { Logger } from "pino";
 import { decryptMT5Password } from "./mt5-crypto";
-import { executeTradeOnVps, closeTradeOnVps, modifyTradeOnVps, type VpsResult } from "./mt5-vps";
+import { type VpsResult } from "./mt5-vps";
 import { broadcastToClient } from "../ws";
 
 const num = (v: unknown): number | null => {
@@ -283,25 +283,9 @@ async function executeForClient(signal: TradeSignal, client: AppAccess, eaName: 
   // ── OPEN ────────────────────────────────────────────────────────────────
   if (signal.signal === "OPEN")return recordSkip(signal,client,"Legacy opening disabled; authenticated observer lifecycle required",log);
 
-  // ── CLOSE / MODIFY ──────────────────────────────────────────────────────
-  const clientTicket = await findClientTicket(client.id, signal.ticket ?? null);
-  if (!clientTicket) {
-    return recordSkip(signal, client, "No matching open position to " + signal.signal.toLowerCase(), log);
-  }
-
-  const action = signal.signal; // CLOSE | MODIFY
-  const [pending] = await db.insert(tradeExecutionsTable).values({
-    signalId: signal.id, mentorId: signal.mentorId, clientId: client.id,
-    signalKind: signal.signal, symbol: signal.symbol, action,
-    status: "pending", ticket: clientTicket, mentorTicket: signal.ticket ?? null,
-  }).returning();
-  pushUpdate(client.id, pending);
-
-  const result = signal.signal === "CLOSE"
-    ? await closeTradeOnVps({ login: settings.mt5Login, password, server: settings.mt5Server, ticket: clientTicket }, log)
-    : await modifyTradeOnVps({ login: settings.mt5Login, password, server: settings.mt5Server, ticket: clientTicket, sl: num(signal.stopLoss), tp: num(signal.takeProfit) }, log);
-  finalize(result, log, { ...baseCtx, action, clientTicket });
-  return settleExecution(pending.id, client.id, result, log);
+  // Legacy ticket mutations cannot establish an assigned absolute-target scope.
+  // Never fall back to a separate MT5 URL/controller for these old records.
+  return recordSkip(signal, client, "Legacy ticket mutation requires manual reconciliation through the assigned gateway", log);
 }
 
 export interface SignalRunResult {

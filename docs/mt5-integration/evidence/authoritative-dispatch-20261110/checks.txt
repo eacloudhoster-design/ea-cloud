@@ -1,0 +1,4 @@
+API TypeScript, Python source compilation and whitespace checks passed.
+Baseline reproduction uses git-show source with mocked fetch only.
+Raw logs normalized only for trailing whitespace; originals retained outside repository.
+No production configuration, hosting, journals, SDK, emergency-stop or execution activation changes.

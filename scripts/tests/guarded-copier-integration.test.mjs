@@ -59,6 +59,17 @@ test('application records through assigned fenced gateway process and signed IPC
   assert.equal(receipt.financialExecution,false);assert.equal(receipt.code,'SYNCED');assert.ok(receipt.allocation);
   assert.equal((await snapshot()).accounts['1'].positions[0].volume,.1,'mentor/client caps enforced');
   const baselineCalls=calls;await run(signal);assert.equal(calls,baselineCalls);assert.equal(await fills(1),1);
+  // A retained legacy OPEN ticket must not route CLOSE/MODIFY around this gateway.
+  await db.insert(s.tradeExecutionsTable).values({signalId:signal.id,mentorId:1,clientId:1,signalKind:'OPEN',symbol:'EURUSD',action:'BUY',status:'success',ticket:'1001',mentorTicket:'legacy-source'});
+  const oldFetch=globalThis.fetch;
+  try{
+   globalThis.fetch=async()=>{throw Error('Direct legacy transport must not be called')};
+   for(const kind of ['CLOSE','MODIFY']){
+    const [legacy]=await db.insert(s.tradeSignalsTable).values({mentorId:1,signal:kind,symbol:'EURUSD',orderType:'BUY',ticket:'legacy-source'}).returning();
+    assert.equal((await run(legacy)).skipped,1);
+   }
+  }finally{globalThis.fetch=oldFetch;}
+
   assert.equal((await enqueue(2,.12)).routed.state,'stale_snapshot');
   const clients=await db.select().from(s.appAccessTable),settings=(await db.select().from(s.clientSettingsTable))[0];
   assert.equal((await api.executeObserver(signal,clients.find(c=>c.id===2),settings,'fixture-only','EURUSD',()=>.1,dispatch)).ok,false);

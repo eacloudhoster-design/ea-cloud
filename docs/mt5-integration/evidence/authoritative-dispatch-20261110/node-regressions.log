@@ -1,0 +1,27 @@
+✔ explicit account assignment pins authoritative router and never accepts unknown/conflicting routing (97.568831ms)
+✔ lost, malformed or contradictory gateway outcomes never become success or automatic retry (21.157988ms)
+✔ persistent cookie sessions, revocation, expiry, renewal and role isolation (6783.379593ms)
+{"observed_at":"2026-11-10T18:18:37.093Z","simulation":true,"broker_orders":0,"brokers":["deriv","exness","justmarkets","xm","rcg"],"source_routing":"actual routeSnapshot + Drizzle/PGlite","queue":"actual claim SQL","queue_scheduler":"Claim invoked immediately by fixture; production polling/backoff excluded","copier":"actual runSignal + executeObserver guards, mapping and sizing","transport":"explicit test-only synthetic receipt adapter over real authenticated loopback HTTP","workers":"five real isolated subprocesses, durable SQLite fills/receipts","measured_warm_events":12,"p95_ms":201.94176300000072,"maximum_ms":1095.2358359999998,"cold_event_ms":1095.2358359999998,"cold_start_included":true,"simulation_target_met":true,"actual_broker_target_verified":false,"disconnect_recovery":true,"gateway_restart_replay":true,"lost_ack_duplicate_prevention":true,"uncertain_fill_blocked":true,"baseline_accounts_flat":true,"concurrent_backend_retry_verified":true,"sl_tp_modification_verified":true,"custom_lots_caps_and_symbol_pinning_verified":true,"subminimum_receiver_target_rejected_without_roundup":true,"excluded":["public mentor HTTP authentication","real PostgreSQL server","Windows SDK/broker execution","production deployment"]}
+✔ mentor database routing to five isolated HTTP workers: mapping, replay, disconnect, crash and latency (11339.402351ms)
+✔ mentor policies validate, preserve stricter client risk and never oversize allocation (16.756988ms)
+✔ EA builder uses real portal sessions, ownership, scoped revocable credentials and non-executing idempotent capture (4131.200643ms)
+✔ real browser sessions, owned engine status, strict broker proof and account binding (3906.99236ms)
+✔ application records through assigned fenced gateway process and signed IPC remain synthetic, isolated and fail closed (4446.861863ms)
+✔ MT5 encryption refuses absent secrets; roundtrip, tamper and wrong-key behavior verified with disposable keys (96.853125ms)
+✔ ambiguous legacy order submission is never automatically replayed (7.707333ms)
+✔ production observer client rejects simulation capabilities and results (31.799696ms)
+✔ observer reconnect retries only the journaled absolute target and stops on uncertain submission (9.627473ms)
+✔ observer requires positive demo markers and refuses credential redirects (8.121016ms)
+✔ observer capability requires an explicit execution-enabled receiver (7.858963ms)
+✔ independent enrollment is encrypted, owned, idempotent, non-trading and exported only through a private verified-owner handoff (3562.707783ms)
+✔ same-service non-trading profile preserves real cookie auth, enforces origin auth and prevents all execution transports and queue wakes (3506.191428ms)
+✔ existing-hosting profile selects the non-trading entry, public bind and matching private origin authentication without automatic migrations (8.54176ms)
+✔ follower signal feed uses session mentor, rejects overrides and omits private ingestion/queue data (3757.557336ms)
+ℹ tests 18
+ℹ suites 0
+ℹ pass 18
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 44198.655022

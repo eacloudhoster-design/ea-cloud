@@ -68,7 +68,7 @@ def create_dispatch_app(bindings,token,forward=None):
             status,data=forward(binding,'/observer/capabilities')
             if status!=200 or not isinstance(data,dict) or data.get('simulation') is not False or data.get('account_mode')!='demo' or data.get('login')!=login or data.get('server')!=server or data.get('version')!=2 or data.get('persistentJournal') is not True or data.get('absoluteTargets') is not True or data.get('execution_enabled') is not True or data.get('emergency_stop_active') is not False or type(data.get('journal_holds')) is not int or data['journal_holds']!=0:
                 return JSONResponse({'success':False,'message':'Account workers not ready'},status_code=503)
-        return {'version':2,'persistentJournal':True,'absoluteTargets':True,'simulation':False,'account_mode':'demo','accountIsolation':'dedicated-prefix','execution_enabled':True,'emergency_stop_active':False,'journal_holds':0,'accounts':len(clients),'registeredAccounts':len(routes)}
+        return {'service':'ea-cloud-account-router-v1','assignments':[dict(login=login,server=server,broker=binding['broker'],role='client') for (login,server),binding in clients],'version':2,'persistentJournal':True,'absoluteTargets':True,'simulation':False,'account_mode':'demo','accountIsolation':'dedicated-prefix','execution_enabled':True,'emergency_stop_active':False,'journal_holds':0,'accounts':len(clients),'registeredAccounts':len(routes)}
     @app.post('/connect-mt5')
     @app.post('/observer/account-status')
     def account_status(payload:AccountCheck):
@@ -89,7 +89,7 @@ def create_dispatch_app(bindings,token,forward=None):
         body=payload.model_dump(mode='json',exclude={'password'})
         body['password']='credential-bound-worker' # actual secret stays in worker
         status,data=forward(binding,'/observer/sync-position',body)
-        if not isinstance(data,dict) or data.get('simulation') is True or (data.get('success') is True and (data.get('simulation') is not False or data.get('account_mode')!='demo')):
+        if not isinstance(data,dict) or type(data.get('success')) is not bool or any(k in data and type(data[k]) is not bool for k in ('uncertain','retriable')) or data.get('simulation') is True or (data.get('success') is True and (status!=200 or data.get('simulation') is not False or data.get('account_mode')!='demo' or data.get('uncertain') is True or data.get('retriable') is True)):
             return JSONResponse({'success':False,'message':'Unexpected worker execution mode','uncertain':True,'retriable':False},status_code=503)
         return JSONResponse(data,status_code=status)
     return app
