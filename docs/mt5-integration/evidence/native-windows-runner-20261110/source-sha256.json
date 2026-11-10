@@ -1,0 +1,6 @@
+{
+  "tools/windows-simulation/acceptance.py": "ac0b9a5bcd9f76084f7fb7d219b0ce08c231c876a138a80dbf49ed6b7b8537d7",
+  "tools/windows-simulation/README.md": "a8aad84b13ace3c4b069687227499c6b7de1f60eea2d42f3d6dbb59d4ddd9fb1",
+  "vps-mt5-service/tests/test_windows_acceptance_runner.py": "42ac82330eee4dc894a2a912586391ee96e9d5ec4bbad8147378f5c2c6cf8508",
+  "tools/wine-simulation/runtime.lock.json": "9926496bd4106a4087b10ecc5a4cddd669f4d562485d3f8d1a93c650c171b1f8"
+}

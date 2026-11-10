@@ -1,0 +1,12 @@
+test_dependency_mismatch_and_vendor_distribution_are_refused (test_windows_acceptance_runner.RunnerTests.test_dependency_mismatch_and_vendor_distribution_are_refused) ... ok
+test_fixture_layout_requires_empty_individually_checked_roots (test_windows_acceptance_runner.RunnerTests.test_fixture_layout_requires_empty_individually_checked_roots) ... ok
+test_linux_cli_records_blocked_without_launch_or_state_changes (test_windows_acceptance_runner.RunnerTests.test_linux_cli_records_blocked_without_launch_or_state_changes) ... ok
+test_nonempty_evidence_never_overwritten (test_windows_acceptance_runner.RunnerTests.test_nonempty_evidence_never_overwritten) ... ok
+test_parent_guard_blocks_vendor_tcp_and_udp (test_windows_acceptance_runner.RunnerTests.test_parent_guard_blocks_vendor_tcp_and_udp) ... ok
+test_six_scenarios_on_explicit_linux_reference_only (test_windows_acceptance_runner.RunnerTests.test_six_scenarios_on_explicit_linux_reference_only) ... ok
+test_wine_win32_claim_is_refused (test_windows_acceptance_runner.RunnerTests.test_wine_win32_claim_is_refused) ... ok
+
+----------------------------------------------------------------------
+Ran 7 tests in 4.009s
+
+OK

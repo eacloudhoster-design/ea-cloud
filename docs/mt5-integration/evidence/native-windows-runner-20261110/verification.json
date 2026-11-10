@@ -1,0 +1,42 @@
+{
+  "base_commit": "fb37e9a61c7af4f92941de7dad4ffa7afbe684ee",
+  "environment": {
+    "system": "Linux",
+    "machine": "x86_64",
+    "python": "3.12.14"
+  },
+  "python_suite": {
+    "passed": 486,
+    "failed": 0,
+    "skipped": 0,
+    "new_tests": 7
+  },
+  "targeted": {
+    "passed": 7,
+    "failed": 0,
+    "included_in_python_total": true
+  },
+  "nested_reference_scenarios": {
+    "passed": 6,
+    "failed": 0,
+    "included_in_one_python_test": true,
+    "native_windows": false
+  },
+  "native_windows": {
+    "passed": 0,
+    "failed": 0,
+    "blocked": 6,
+    "reason": "No native Windows executor; Linux CLI refuses before component loading"
+  },
+  "not_rerun": [
+    "browser",
+    "Wine acceptance",
+    "Node",
+    "TypeScript",
+    "root-only publisher"
+  ],
+  "sdk_calls": 0,
+  "terminal_starts": 0,
+  "broker_connections": 0,
+  "production_changes": false
+}

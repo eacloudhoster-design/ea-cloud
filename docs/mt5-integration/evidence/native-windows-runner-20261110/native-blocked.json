@@ -1,0 +1,12 @@
+{
+  "mode": "simulation-only",
+  "native_acceptance": "blocked",
+  "expected": 6,
+  "passed": 0,
+  "failed": 0,
+  "errors": 0,
+  "blocked": 6,
+  "sdk_called": false,
+  "terminal_started": false,
+  "blocker_type": "RuntimeError"
+}
