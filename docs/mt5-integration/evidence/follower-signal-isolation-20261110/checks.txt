@@ -1,0 +1,5 @@
+API TypeScript check: passed.
+Whitespace check: passed.
+Runtime changes limited to follower signal authorization/projection; no production configuration or execution safety changes.
+New test uses captured broadcast/scheduler sinks; existing copier regression uses synthetic workers and loopback HTTP.
+Before-fix failure log normalized only to remove trailing whitespace; original retained in task scratch.

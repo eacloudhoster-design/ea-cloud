@@ -1,0 +1,23 @@
+{
+  "base_commit": "f7c05e6020f62a3ba73fba85d16650770e345261",
+  "node": {
+    "passed": 7,
+    "failed": 0,
+    "skipped": 0,
+    "new_test": 1
+  },
+  "python": {
+    "passed": 59,
+    "failed": 0,
+    "skipped": 0
+  },
+  "database": "Disposable PGlite; no real PostgreSQL locking claim",
+  "api_typescript": "passed",
+  "validation_harness_note": "Initial stdin Python run could not spawn children; stopped and rerun from guarded file",
+  "before_fix": "Expected failure: foreign mentor feed returned 200 instead of 403",
+  "native_windows": "unverified; not run",
+  "real_mt5": "unverified; no SDK calls",
+  "broker_connections": 0,
+  "real_orders": 0,
+  "production_changes": false
+}

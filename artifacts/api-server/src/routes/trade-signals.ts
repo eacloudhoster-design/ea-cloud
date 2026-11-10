@@ -3,6 +3,7 @@ import { Router } from "express";
 import { db, tradeSignalsTable, tradeExecutionsTable, appAccessTable } from "@workspace/db";
 import { eq, desc } from "drizzle-orm";
 import { type AuthRequest } from "../middlewares/auth";
+import { requireAppSession } from "../middlewares/app-session";
 import { broadcastToMentorClients } from "../ws";
 import { getMentorByApiKey } from "../lib/api-key";
 import { webhookLimiter } from "../lib/rate-limit";
@@ -10,6 +11,19 @@ import { wakeWorker } from "../lib/signal-worker";
 import { logger } from "../lib/logger";
 
 const router = Router();
+
+// Shared follower projection for HTTP history and real-time notifications.
+const followerSignalFields = {
+  id: tradeSignalsTable.id, mentorId: tradeSignalsTable.mentorId, eaId: tradeSignalsTable.eaId,
+  signal: tradeSignalsTable.signal, symbol: tradeSignalsTable.symbol, orderType: tradeSignalsTable.orderType,
+  lots: tradeSignalsTable.lots, openPrice: tradeSignalsTable.openPrice,
+  stopLoss: tradeSignalsTable.stopLoss, takeProfit: tradeSignalsTable.takeProfit,
+  ticket: tradeSignalsTable.ticket, comment: tradeSignalsTable.comment,
+  status: tradeSignalsTable.status, processedAt: tradeSignalsTable.processedAt, createdAt: tradeSignalsTable.createdAt,
+};
+const followerSignal = (row: any) => Object.fromEntries(
+  Object.keys(followerSignalFields).map(key => [key, row[key]]),
+);
 
 // Webhook endpoint — called by Mentor's MT5 EA to push a trade signal
 // Authenticated via apiKey header (looked up by hash)
@@ -54,7 +68,7 @@ router.post("/signals/webhook", webhookLimiter, async (req, res) => {
     // Broadcast to all WS clients subscribed to this mentor
     broadcastToMentorClients(mentor.id, {
       type: "TRADE_SIGNAL",
-      signal: saved,
+      signal: followerSignal(saved),
     });
 
     // The signal is now durably persisted as 'pending'. Nudge the background
@@ -100,14 +114,26 @@ router.get("/signals/recent", async (req: AuthRequest, res) => {
   }
 });
 
-// Get recent signals for client (by mentor)
-router.get("/app/signals", async (req, res) => {
+// The licensed session owns this feed; a query parameter is never routing authority.
+router.get("/app/signals", requireAppSession, async (req: any, res) => {
   try {
-    const { mentorId } = req.query as { mentorId?: string };
-    if (!mentorId) { res.status(400).json({ error: "mentorId required" }); return; }
+    const mentorId = req.appSession.mentorId;
+    const requestedMentor = req.query.mentorId;
+    // Preserve existing callers supplying their own mentor, but reject overrides.
+    if (requestedMentor !== undefined) {
+      if (typeof requestedMentor !== "string" || !/^[1-9]\d*$/.test(requestedMentor) ||
+          !Number.isSafeInteger(Number(requestedMentor)) || Number(requestedMentor) > 2147483647) {
+        res.status(422).json({ error: "Invalid mentorId" }); return;
+      }
+      if (Number(requestedMentor) !== mentorId) {
+        res.status(403).json({ error: "Mentor feed is not authorized" }); return;
+      }
+    }
 
-    const signals = await db.select().from(tradeSignalsTable)
-      .where(eq(tradeSignalsTable.mentorId, parseInt(mentorId)))
+    // Public trade fields only: raw ingress and internal queue errors can contain
+    // private source metadata and must not be returned to followers.
+    const signals = await db.select(followerSignalFields).from(tradeSignalsTable)
+      .where(eq(tradeSignalsTable.mentorId, mentorId))
       .orderBy(desc(tradeSignalsTable.createdAt))
       .limit(20);
 

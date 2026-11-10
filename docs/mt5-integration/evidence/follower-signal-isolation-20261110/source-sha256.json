@@ -1,0 +1,4 @@
+{
+  "artifacts/api-server/src/routes/trade-signals.ts": "bfbdb7830b2c2b79985d7c2c80320a83cdb2d1f48a207fb5fca05008e125e2f5",
+  "scripts/tests/trade-signal-access.test.mjs": "cde60db2d7b48f9bdeba21ab9294e3b419e711f0d9338e17fc86e388adf55432"
+}
