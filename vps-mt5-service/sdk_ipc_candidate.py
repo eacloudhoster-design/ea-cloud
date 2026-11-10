@@ -73,6 +73,20 @@ def check_simulation(root, binding):
     return root
 
 
+def bridge_stop_active(root):
+    """A sticky bridge fault is also a stop for standalone/recovered candidates."""
+    try:
+        _safe_root(root)
+        try:
+            (Path(root) / 'bridge-stop.json').lstat()
+        except FileNotFoundError:
+            _safe_root(root)
+            return False
+        return True
+    except (OSError, ValueError):
+        return True
+
+
 class CandidateEngine:
     """Single-owner worker. No operation can clear a hold or accept live bindings."""
     def __init__(self, root, binding, key, *, stop_checker=None, clock=wall_ms,
@@ -139,7 +153,7 @@ class CandidateEngine:
         self.db.commit()
 
     def _held(self):
-        return bool(self._state()['held'] or self.db.execute(
+        return bool(bridge_stop_active(self.root) or self._state()['held'] or self.db.execute(
             "SELECT 1 FROM allocations WHERE phase IN ('dispatching','reconciled_hold','external_reduction')").fetchone())
 
     def _valid_lease(self, request):
@@ -150,7 +164,7 @@ class CandidateEngine:
 
     def _stopped(self):
         try:
-            return self.stop_checker() is not False
+            return bridge_stop_active(self.root) or self.stop_checker() is not False
         except Exception:
             return True
 
@@ -320,22 +334,28 @@ def hold_after_transport_failure(root, binding):
     owner = StateLease(journal.path)
     owner.acquire()
     try:
-        bind_identity(journal, {**binding.model_dump(), 'ipc_version': 1})
-        with sqlite3.connect(journal.path, timeout=1) as db:
-            db.execute('PRAGMA synchronous=FULL')
-            db.execute('CREATE TABLE IF NOT EXISTS ipc_transport_hold(id INTEGER PRIMARY KEY CHECK(id=1))')
-            db.execute('INSERT OR IGNORE INTO ipc_transport_hold VALUES(1)')
-            # The marker also covers a child that failed before creating ipc_state.
-            if db.execute("SELECT 1 FROM sqlite_master WHERE name='ipc_state'").fetchone():
-                db.execute('UPDATE ipc_state SET held=1')
-                if db.execute("SELECT 1 FROM sqlite_master WHERE name='ipc_audit'").fetchone():
-                    if db.execute('SELECT count(*) FROM ipc_audit').fetchone()[0] < MAX_AUDIT:
-                        epoch = db.execute('SELECT epoch FROM ipc_state WHERE id=1').fetchone()[0]
-                        db.execute("INSERT INTO ipc_audit(event,observed_ms,epoch) VALUES('TRANSPORT_HELD',?,?)",
-                                   [wall_ms(), epoch])
-            db.commit()
+        record_transport_hold(root, binding)
     finally:
         owner.close()
+
+
+def record_transport_hold(root, binding):
+    """Internal: caller must already own the Linux journal lock after child quiescence."""
+    root = check_simulation(root, binding)
+    journal = SyncJournal(root / 'observer.sqlite3')
+    bind_identity(journal, {**binding.model_dump(), 'ipc_version': 1})
+    with sqlite3.connect(journal.path, timeout=1) as db:
+        db.execute('PRAGMA synchronous=FULL')
+        db.execute('CREATE TABLE IF NOT EXISTS ipc_transport_hold(id INTEGER PRIMARY KEY CHECK(id=1))')
+        db.execute('INSERT OR IGNORE INTO ipc_transport_hold VALUES(1)')
+        if db.execute("SELECT 1 FROM sqlite_master WHERE name='ipc_state'").fetchone():
+            db.execute('UPDATE ipc_state SET held=1')
+            if db.execute("SELECT 1 FROM sqlite_master WHERE name='ipc_audit'").fetchone():
+                if db.execute('SELECT count(*) FROM ipc_audit').fetchone()[0] < MAX_AUDIT:
+                    epoch = db.execute('SELECT epoch FROM ipc_state WHERE id=1').fetchone()[0]
+                    db.execute("INSERT INTO ipc_audit(event,observed_ms,epoch) VALUES('TRANSPORT_HELD',?,?)",
+                               [wall_ms(), epoch])
+        db.commit()
 
 
 class SimulationController:
@@ -420,11 +440,14 @@ class SimulationController:
                 if self.process.is_alive():
                     return result('WORKER_STOP_UNCONFIRMED', uncertain=True)
                 try:
-                    hold_after_transport_failure(self.root, self.binding)
+                    self._persist_transport_hold()
                 except Exception:
                     return result('TRANSPORT_HOLD_UNRECORDED', uncertain=True)
                 io.join(1)
                 return result('TRANSPORT_HELD', uncertain=True)
+
+    def _persist_transport_hold(self):
+        hold_after_transport_failure(self.root, self.binding)
 
     def _stop(self):
         for stop in (self.process.terminate, self.process.kill):
