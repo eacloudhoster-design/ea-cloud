@@ -315,6 +315,37 @@ class SharedAuthority:
             return result('STATUS',True,data=dict(held=bool(row['held']),stopped=self._stopped(request.binding),epoch=row['epoch']))
         return self._execute(request)
 
+    def _verify_cached_account(self,request,cached):
+        """Read-only receipt preflight; never initializes or repairs a journal."""
+        profile=Binding.model_validate_json(self._row(request.binding)['descriptor'])
+        root=self.account_root(profile);private(root);check_simulation(root,profile)
+        paths=[root/name for name in ('observer.sqlite3','simulated-broker.sqlite3')]
+        for path in paths:private(path)
+        with closing(sqlite3.connect(paths[0].as_uri()+'?mode=ro',uri=True,timeout=.1)) as observer, \
+             closing(sqlite3.connect(paths[1].as_uri()+'?mode=ro',uri=True,timeout=.1)) as sdk:
+            for db in (observer,sdk):db.execute('PRAGMA query_only=ON');db.execute('BEGIN')
+            witness=observer.execute('SELECT binding,version FROM sdk_adapter_installation WHERE id=1').fetchone()
+            identity=observer.execute('SELECT identity FROM worker_identity WHERE id=1').fetchone()
+            held=observer.execute('SELECT held FROM ipc_state WHERE id=1').fetchone()
+            adapter=sdk.execute('SELECT binding,version,held FROM sdk_adapter_state WHERE id=1').fetchone()
+            if (witness!=(profile.digest(),1) or not identity or
+                json.loads(identity[0])!={**profile.model_dump(),'ipc_version':1} or held!=(0,) or
+                adapter!=(profile.digest(),1,0)):
+                raise AuthorityError('CACHED_JOURNAL_UNVERIFIABLE')
+            if (observer.execute("SELECT 1 FROM allocations WHERE phase IN ('dispatching','reconciled_hold','external_reduction')").fetchone() or
+                observer.execute("SELECT 1 FROM ipc_requests WHERE state<>'done' OR response IS NULL").fetchone() or
+                sdk.execute("SELECT 1 FROM sdk_adapter_operations WHERE phase<>'done' OR receipt IS NULL").fetchone()):
+                raise AuthorityError('CACHED_JOURNAL_HELD')
+            if observer.execute("SELECT 1 FROM sqlite_master WHERE name='ipc_transport_hold'").fetchone():
+                if observer.execute('SELECT 1 FROM ipc_transport_hold LIMIT 1').fetchone():
+                    raise AuthorityError('CACHED_JOURNAL_HELD')
+            durable=observer.execute('SELECT state,response FROM ipc_requests WHERE id=?',[request.request_id]).fetchone()
+            if not durable or durable[0]!='done' or Result.model_validate_json(durable[1])!=cached:
+                raise AuthorityError('CACHED_RECEIPT_UNVERIFIABLE')
+            # Required mock history/position schemas must remain readable too.
+            sdk.execute('SELECT id,request FROM fills LIMIT 1').fetchall()
+            sdk.execute('SELECT ticket,volume FROM positions LIMIT 1').fetchall()
+
     def _execute(self,request):
         if self._row(request.binding)['held']:return result('HELD',uncertain=True)
         if self._stopped(request.binding):return result('STOPPED')
@@ -327,6 +358,7 @@ class SharedAuthority:
             try:
                 cached=Result.model_validate_json(prior['response'])
                 if cached.success:
+                    self._verify_cached_account(request,cached)
                     receipt=SyncReceipt.model_validate(cached.data)
                     if receipt.sourceKey!=request.body['sourceKey'] or receipt.symbol!=request.body['symbol']:
                         raise AuthorityError('CACHED_IDENTITY_MISMATCH')

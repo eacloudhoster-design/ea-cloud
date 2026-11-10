@@ -1,0 +1,22 @@
+test_history_authentication_replay_and_account_identity (native_acceptance.WineHistoryAcceptance.test_history_authentication_replay_and_account_identity) ... ok
+test_history_bad_signature_fails_closed_before_fill (native_acceptance.WineHistoryAcceptance.test_history_bad_signature_fails_closed_before_fill) ... ok
+test_history_conflicting_duplicate_fails_closed (native_acceptance.WineHistoryAcceptance.test_history_conflicting_duplicate_fails_closed) ... ok
+test_history_corruption_and_missing_mirror_fail_closed (native_acceptance.WineHistoryAcceptance.test_history_corruption_and_missing_mirror_fail_closed) ... ok
+test_history_crash_retains_fill_and_persistent_stop (native_acceptance.WineHistoryAcceptance.test_history_crash_retains_fill_and_persistent_stop) ... ok
+test_history_disconnect_after_commit_keeps_one_fill (native_acceptance.WineHistoryAcceptance.test_history_disconnect_after_commit_keeps_one_fill) ... ok
+test_history_duplicate_events_and_rpc_survive_restart (native_acceptance.WineHistoryAcceptance.test_history_duplicate_events_and_rpc_survive_restart) ... ok
+test_history_mode_separation_and_structured_audit (native_acceptance.WineHistoryAcceptance.test_history_mode_separation_and_structured_audit) ... ok
+test_history_out_of_order_fails_closed (native_acceptance.WineHistoryAcceptance.test_history_out_of_order_fails_closed) ... ok
+test_history_owner_conflict_and_stale_fence (native_acceptance.WineHistoryAcceptance.test_history_owner_conflict_and_stale_fence) ... ok
+test_history_partial_lifecycle_modify_close_cancel (native_acceptance.WineHistoryAcceptance.test_history_partial_lifecycle_modify_close_cancel) ... ok
+test_history_reconciliation_after_clean_restart_is_readonly (native_acceptance.WineHistoryAcceptance.test_history_reconciliation_after_clean_restart_is_readonly) ... ok
+test_history_reply_timeout_after_commit_retains_one_event (native_acceptance.WineHistoryAcceptance.test_history_reply_timeout_after_commit_retains_one_event) ... ok
+test_history_sticky_bridge_stop_is_independent (native_acceptance.WineHistoryAcceptance.test_history_sticky_bridge_stop_is_independent) ... ok
+test_history_stop_during_worker_delay (native_acceptance.WineHistoryAcceptance.test_history_stop_during_worker_delay) ... ok
+test_history_stop_overrides_execution_and_reconciliation (native_acceptance.WineHistoryAcceptance.test_history_stop_overrides_execution_and_reconciliation) ... ok
+test_history_timeout_before_dispatch_keeps_stop (native_acceptance.WineHistoryAcceptance.test_history_timeout_before_dispatch_keeps_stop) ... ok
+
+----------------------------------------------------------------------
+Ran 17 tests in 73.220s
+
+OK

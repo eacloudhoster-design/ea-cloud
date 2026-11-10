@@ -1,0 +1,15 @@
+{
+  "passed": 8,
+  "failed": 0,
+  "scope": "Linux spawned-process simulation only",
+  "cases": [
+    "test_committed_partial_fill_crash_is_proved_but_never_reexecuted (test_multiprocess_coordination.ProcessCoordinationTests.test_committed_partial_fill_crash_is_proved_but_never_reexecuted) ... ok",
+    "test_duplicate_replay_and_out_of_order_frames_never_add_fills (test_multiprocess_coordination.ProcessCoordinationTests.test_duplicate_replay_and_out_of_order_frames_never_add_fills) ... ok",
+    "test_emergency_stop_persists_across_crash_and_failover (test_multiprocess_coordination.ProcessCoordinationTests.test_emergency_stop_persists_across_crash_and_failover) ... ok",
+    "test_independent_workers_compete_and_only_one_executes (test_multiprocess_coordination.ProcessCoordinationTests.test_independent_workers_compete_and_only_one_executes) ... ok",
+    "test_kill_at_uncommitted_fill_rolls_back_and_incomplete_history_holds (test_multiprocess_coordination.ProcessCoordinationTests.test_kill_at_uncommitted_fill_rolls_back_and_incomplete_history_holds) ... ok",
+    "test_second_independent_gateway_cannot_open_same_authority (test_multiprocess_coordination.ProcessCoordinationTests.test_second_independent_gateway_cannot_open_same_authority) ... ok",
+    "test_separate_accounts_in_one_gateway_remain_isolated (test_multiprocess_coordination.ProcessCoordinationTests.test_separate_accounts_in_one_gateway_remain_isolated) ... ok",
+    "test_takeover_rejects_stale_tokens_and_deduplicates_previous_effect (test_multiprocess_coordination.ProcessCoordinationTests.test_takeover_rejects_stale_tokens_and_deduplicates_previous_effect) ... ok"
+  ]
+}

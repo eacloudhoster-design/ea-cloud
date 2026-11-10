@@ -1,0 +1,20 @@
+{
+  "base_commit": "782ef950513e1c0c9eeeeb37e771d39a51f555d0",
+  "simulation_only": true,
+  "baseline": {
+    "initial_code": "SYNCED",
+    "after_loss_code": "SYNCED",
+    "after_loss_success": true,
+    "after_loss_uncertain": false,
+    "shared_hold": false,
+    "journal_recreated": false
+  },
+  "fixed": {
+    "initial_code": "SYNCED",
+    "after_loss_code": "HELD",
+    "after_loss_success": false,
+    "after_loss_uncertain": true,
+    "shared_hold": true,
+    "journal_recreated": false
+  }
+}
