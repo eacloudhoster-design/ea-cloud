@@ -1,0 +1,12 @@
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+browserType.launch: ENOSPC: no space left on device, mkdtemp '/tmp/playwright-artifacts-bMRhw4'
+    at /workspace/work/ea-cloud/scripts/tests/mt5-enrollment.browser.mjs:13:25 {
+  log: [],
+  name: 'Error',
+  code: 'ENOSPC'
+}
+
+Node.js v24.22.1

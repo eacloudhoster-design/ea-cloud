@@ -1,0 +1,19 @@
+{
+  "harness/sitecustomize.py": "c0e7f984c8689a096132a014f9ff771b26f70b569247f20eb20a886403da3e35",
+  "harness/fixture.py": "4e90e3307641590476df1d381173628515f514ff3476c2bc4c42d86655e27b1e",
+  "harness/artifacts.py": "4c418086786184747b59677255cee72cbd28fdf24fbb73cb95dc848431a38815",
+  "harness/suite.py": "cb22c1965c6aef3a59c091a9cf8f9bc58b6d4f545e97e917e4125e534f8a7e06",
+  "harness/runtime.lock.json": "9926496bd4106a4087b10ecc5a4cddd669f4d562485d3f8d1a93c650c171b1f8",
+  "vps-mt5-service/observer_sync.py": "5992493de2700a020d3ceb5d60bb3cff919dcb087fd232db8869167e5f58489f",
+  "vps-mt5-service/demo_worker.py": "8f12000c6a9fac16740b3c3ac6769bd4f30f3868f3630251883cb4d94cc44533",
+  "vps-mt5-service/wine_worker_entry.py": "1c7943410b63f7817bf9b1539362188008d35dfcd45c527fb33595da77599482",
+  "vps-mt5-service/broker_profiles.py": "a91e1680a6f4ab8c7fa12cc6610bd6a7e8c822c20de391e3b8345dfac110e37a",
+  "vps-mt5-service/wine_bridge.py": "9d495ba46b958b9e3a6c94471219b4a4303fe982803243abbfd9a6bf7ef8f41e",
+  "vps-mt5-service/framed_stdio.py": "d32414c53ea800af38e978b3df295764a80efdb449717c51d354699a09b5ac71",
+  "vps-mt5-service/execution_gates.py": "f4ac1e525e892f330062948f481061e22b7ea7dc537d84cb050554de465f5a90",
+  "vps-mt5-service/sdk_ipc_candidate.py": "d3594c4c55292f07ff99c5fc6dfb394b188d78adb67f671f1f89e3513cadd343",
+  "vps-mt5-service/worker_state.py": "9df0b7809af933646f121f08c269b644b9bda09964e31e1061780d0427e2de30",
+  "vps-mt5-service/simulation_sdk.py": "ff5839c4b50cf602c6d56656ba89febd5d097a31535e1eeeaf7b31aea1b7e73c",
+  "vps-mt5-service/private_ipc.py": "9c9d7109950a65b5f72bd0eb52ed09d0ebfa7df4d221541da83a92f31550a5d7",
+  "vps-mt5-service/runtime_tests/wine_bridge_acceptance.py": "709940a6859e5708953d4e78295287b1eeeb83e8442b084a8bd1eb79d8bb7569"
+}

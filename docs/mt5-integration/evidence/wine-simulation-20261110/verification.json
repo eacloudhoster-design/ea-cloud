@@ -1,0 +1,65 @@
+{
+  "branch": "feature/person2-reproducible-wine-tests-20261110",
+  "base_commit": "b2ffb91f0fd3eb1474bb16eaed2af912c06a6eed",
+  "simulation_only": true,
+  "prior_checkpoint": {
+    "passed": 245,
+    "failed": 0,
+    "skipped": 0
+  },
+  "final_offline": {
+    "core": 39,
+    "pages": 14,
+    "workers": 186,
+    "root_gates": 6,
+    "existing_total_passed": 245,
+    "new_harness_tests_passed": 9,
+    "total_passed": 254,
+    "failed": 0,
+    "skipped": 0
+  },
+  "native": {
+    "distinct_cases": 6,
+    "passed_per_clean_run": 6,
+    "clean_runs": 2,
+    "failed": 0,
+    "skipped": 0,
+    "blocked": 0
+  },
+  "browser": {
+    "passed": 2,
+    "failed": 0,
+    "enrollment_fixture": "PGlite, final rerun",
+    "recovery_fixture": "loopback static frontend, intercepted API"
+  },
+  "typecheck_passed": true,
+  "whitespace_check_passed": true,
+  "acquisition": {
+    "empty_cache": true,
+    "artifacts": 182,
+    "all_sha256_verified": true
+  },
+  "earlier_attempts": {
+    "workers": {
+      "failures": 1,
+      "errors": 24,
+      "cause": "Concurrent Docker VFS copies exhausted filesystem; rerun after releasing own PostgreSQL container passed."
+    },
+    "root_gates": [
+      "Capability-free root could not read original private bind directory; used readable minimal source snapshot.",
+      "Docker VFS ENOSPC blocked container creation; later rerun passed."
+    ],
+    "browser_enrollment": "Chromium ENOSPC; rerun after releasing own PostgreSQL container passed."
+  },
+  "source_sha256": {
+    "tools/wine-simulation/sitecustomize.py": "c0e7f984c8689a096132a014f9ff771b26f70b569247f20eb20a886403da3e35",
+    "tools/wine-simulation/fixture.py": "402ef48c135786160391bada3144c1c0f4dbe4b736806d04ef5f26bcf0d0cc82",
+    "tools/wine-simulation/README.md": "dbd152302c23291e0d9d4084c11c3d69664f23053314804feb0b8002c0f53e03",
+    "tools/wine-simulation/.gitignore": "32dae3052f331ee34d628ef535709b301259a45df7c7522c4d35dcf49873f00b",
+    "tools/wine-simulation/artifacts.py": "4c418086786184747b59677255cee72cbd28fdf24fbb73cb95dc848431a38815",
+    "tools/wine-simulation/suite.py": "cb22c1965c6aef3a59c091a9cf8f9bc58b6d4f545e97e917e4125e534f8a7e06",
+    "tools/wine-simulation/runtime.lock.json": "9926496bd4106a4087b10ecc5a4cddd669f4d562485d3f8d1a93c650c171b1f8",
+    "tools/wine-simulation/run.py": "72ce1e723bb1340df455d7dbc6c64d0eaa107ca3014b52961b2b459e5bc5048d",
+    "tools/wine-simulation/test_harness.py": "e1b44906df68d82186735363e39ba7d317d3e37838929968103307d0dd35431b"
+  }
+}

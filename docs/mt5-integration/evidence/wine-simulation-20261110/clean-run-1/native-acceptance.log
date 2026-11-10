@@ -1,0 +1,11 @@
+test_mock_sdk_receipt_and_restart_idempotency (native_acceptance.WineAcceptance.test_mock_sdk_receipt_and_restart_idempotency) ... ok
+test_native_windows_and_linux_ownership_are_both_fenced (native_acceptance.WineAcceptance.test_native_windows_and_linux_ownership_are_both_fenced) ... ok
+test_prefix_scoped_shutdown_preserves_other_worker (native_acceptance.WineAcceptance.test_prefix_scoped_shutdown_preserves_other_worker) ... ok
+test_signed_win32_handshake_and_default_emergency_stop (native_acceptance.WineAcceptance.test_signed_win32_handshake_and_default_emergency_stop) ... ok
+test_win32_crash_hold_survives_stop_and_restart (native_acceptance.WineAcceptance.test_win32_crash_hold_survives_stop_and_restart) ... ok
+test_win32_timeout_and_prefix_quiescence (native_acceptance.WineAcceptance.test_win32_timeout_and_prefix_quiescence) ... ok
+
+----------------------------------------------------------------------
+Ran 6 tests in 28.148s
+
+OK

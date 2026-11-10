@@ -1,5 +1,9 @@
 # Person 2 isolated Linux-to-Wine simulation bridge — 2026-11-10
 
+> Historical implementation checkpoint. The runtime blocker below was subsequently
+> resolved in isolation. See [reproducible Wine validation](reproducible-wine-tests.md)
+> for the later six-case native results and repeatable testing setup.
+
 Base commit: `4f40c556fbb85c146f98f25a182e0d7090a91c11`.
 Branch: `feature/person2-linux-wine-simulation-bridge-20261110`.
 
