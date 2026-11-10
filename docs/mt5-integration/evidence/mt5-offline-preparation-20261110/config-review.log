@@ -1,0 +1,13 @@
+test_coerced_account_identity_cannot_evade_same_account_check (test_registry_review.RegistryTests.test_coerced_account_identity_cannot_evade_same_account_check) ... ok
+test_complete_pair_and_role_mismatch_are_distinguished_without_bindings_in_output (test_registry_review.RegistryTests.test_complete_pair_and_role_mismatch_are_distinguished_without_bindings_in_output) ... ok
+test_registry_rejects_duplicate_identity_endpoint_and_wrong_role (test_registry_review.RegistryTests.test_registry_rejects_duplicate_identity_endpoint_and_wrong_role) ... ok
+test_same_terminal_directory_rejected_after_windows_normalization (test_registry_review.RegistryTests.test_same_terminal_directory_rejected_after_windows_normalization) ... ok
+test_shared_or_executable_journal_aliases_rejected (test_registry_review.RegistryTests.test_shared_or_executable_journal_aliases_rejected) ... ok
+test_truthy_enablement_coercion_never_looks_disabled (test_registry_review.RegistryTests.test_truthy_enablement_coercion_never_looks_disabled) ... ok
+test_unsafe_terminal_and_journal_paths_rejected_offline (test_registry_review.RegistryTests.test_unsafe_terminal_and_journal_paths_rejected_offline) ... ok
+test_valid_static_review_is_redacted_and_never_execution_authorization (test_registry_review.RegistryTests.test_valid_static_review_is_redacted_and_never_execution_authorization) ... ok
+
+----------------------------------------------------------------------
+Ran 8 tests in 0.019s
+
+OK

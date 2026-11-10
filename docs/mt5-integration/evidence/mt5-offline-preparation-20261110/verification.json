@@ -1,0 +1,24 @@
+{
+  "base_commit": "33357049ca11f3975e37c952cb26c3fff98394fd",
+  "python_tests": {
+    "passed": 479,
+    "failed": 0,
+    "skipped": 0,
+    "includes_new_regressions": 6
+  },
+  "focused_tests": {
+    "passed": 8,
+    "included_in_python_total": true
+  },
+  "not_rerun": [
+    "root-only execution gates",
+    "Node and harness suites",
+    "browser scenarios",
+    "Wine acceptance",
+    "TypeScript"
+  ],
+  "sdk_invoked": false,
+  "terminal_started": false,
+  "broker_connected": false,
+  "production_configuration_changed": false
+}

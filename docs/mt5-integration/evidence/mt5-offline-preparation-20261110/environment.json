@@ -1,0 +1,11 @@
+{
+  "platform": "Linux",
+  "machine": "x86_64",
+  "python": "3.12.14",
+  "metatrader5_distribution": null,
+  "real_sdk_imported": false,
+  "terminal_started": false,
+  "broker_connected": false,
+  "service_pin": "MetaTrader5==5.0.45",
+  "infrastructure_profile": "# Tested Windows Python 3.13.17 embed runtime under Wine 11.0."
+}

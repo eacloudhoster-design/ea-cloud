@@ -1,21 +1,45 @@
 #!/usr/bin/env python3
 """Read-only routing review; exports no logins, servers, passwords or tokens."""
-import json,sys,os,urllib.request,urllib.error
+import json,sys,os,ntpath,urllib.request,urllib.error
 from pathlib import Path
 sys.path.insert(0,str(Path(__file__).resolve().parents[2]/'vps-mt5-service'))
 from demo_worker import DemoAccount
+from windows_simulation_security import windows_path
 from account_dispatch import worker_url,NoRedirect
 
 def assess_pair(configs,tokens):
- roles={'source':'mentor','receiver':'client'};rows={};identities=[]
+ """Configuration-only review. Never opens terminal files, imports SDK or authorizes execution."""
+ roles={'source':'mentor','receiver':'client'};rows={};identities=[];paths={}
  for role in roles:
-  cfg=configs[role];identities.append((cfg.get('login'),cfg.get('server')))
-  try:DemoAccount(**cfg);missing=[]
+  cfg=configs[role];parsed=None
+  try:parsed=DemoAccount(**cfg);missing=[]
   except Exception as e:missing=sorted({'.'.join(map(str,x['loc'])) for x in e.errors()}) if hasattr(e,'errors') else ['manifest_validation']
-  rows[role]={'demo_mode':cfg.get('account_mode')=='demo','effective_role':cfg.get('role','client'),'expected_role':roles[role],'role_matches':cfg.get('role','client')==roles[role],'worker_manifest_valid':not missing,'invalid_or_missing_fields':missing,'execution_disabled':cfg.get('enabled') is not True and cfg.get('execution_approved') is not True,'service_token_strong':len(tokens[role])>=32}
- distinct=identities[0]!=identities[1]
+  identities.append((parsed.login,parsed.server) if parsed is not None else None)
+  validated={}
+  for field in ('terminal_path','journal_path'):
+   try:
+    if parsed is None:raise ValueError()
+    value=windows_path(getattr(parsed,field).replace('/','\\'))
+    if field=='terminal_path' and not value.lower().endswith('.exe'):raise ValueError()
+    validated[field]=ntpath.normcase(value)
+   except (ValueError,TypeError,AttributeError):pass
+  paths[role]=validated
+  rows[role]={'demo_mode':cfg.get('account_mode')=='demo','effective_role':cfg.get('role','client'),'expected_role':roles[role],
+   'role_matches':cfg.get('role','client')==roles[role],'worker_manifest_valid':not missing,'invalid_or_missing_fields':missing,
+   'execution_disabled':bool(parsed is not None and parsed.enabled is False and parsed.execution_approved is False),
+   'service_token_strong':len(tokens[role])>=32,'terminal_path_valid':'terminal_path' in validated,'journal_path_valid':'journal_path' in validated}
+ distinct=all(identity is not None for identity in identities) and identities[0]!=identities[1]
  independent=tokens['source']!=tokens['receiver']
- return {'accounts':rows,'distinct_account_identities':distinct,'distinct_service_tokens':independent,'mapping_contract_ready':distinct and independent and all(row['demo_mode'] and row['role_matches'] and row['worker_manifest_valid'] and row['execution_disabled'] and row['service_token_strong'] for row in rows.values())}
+ complete=all(len(value)==2 for value in paths.values())
+ terminals=[value.get('terminal_path') for value in paths.values()];journals=[value.get('journal_path') for value in paths.values()]
+ terminal_isolation=bool(complete and ntpath.dirname(terminals[0])!=ntpath.dirname(terminals[1]))
+ journal_isolation=bool(complete and journals[0]!=journals[1])
+ disjoint=bool(complete and not (set(terminals)|{ntpath.dirname(path) for path in terminals}).intersection(journals))
+ ready=bool(distinct and independent and terminal_isolation and journal_isolation and disjoint and
+   all(row['demo_mode'] and row['role_matches'] and row['worker_manifest_valid'] and row['execution_disabled'] and row['service_token_strong'] for row in rows.values()))
+ return {'accounts':rows,'distinct_account_identities':distinct,'distinct_service_tokens':independent,
+  'distinct_terminal_directories':terminal_isolation,'distinct_journal_paths':journal_isolation,'terminal_journal_paths_disjoint':disjoint,
+  'terminal_files_verified':False,'sdk_runtime_verified':False,'execution_authorized':False,'mapping_contract_ready':ready}
 
 def inspect_registry(registry,configs):
  rows=registry.get('accounts',[]);identities=set();urls=set();roles=[]

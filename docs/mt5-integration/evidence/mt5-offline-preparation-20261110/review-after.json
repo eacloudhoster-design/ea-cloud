@@ -1,0 +1,9 @@
+{
+  "flag_coercion": {
+    "reviewer_ready": false,
+    "worker_parses_enabled": true,
+    "worker_parses_approved": true
+  },
+  "shared_paths_review_ready": false,
+  "relative_paths_review_ready": false
+}
