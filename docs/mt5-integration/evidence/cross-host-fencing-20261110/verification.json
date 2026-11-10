@@ -1,0 +1,71 @@
+{
+  "branch": "feature/person2-simulated-cross-host-fencing-20261110",
+  "base_commit": "b5f8cc205625464b1fe94b1c36c1269c0f6972dd",
+  "simulation_only": true,
+  "baseline": {
+    "passed": 348,
+    "failed": 0,
+    "skipped": 0,
+    "reproduced_before_branch": true
+  },
+  "final": {
+    "core": 39,
+    "pages": 14,
+    "python_existing": 280,
+    "python_new": 51,
+    "python_total": 331,
+    "root_gates": 6,
+    "harness": 9,
+    "passed": 399,
+    "failed": 0,
+    "skipped": 0
+  },
+  "browser": {
+    "passed": 2,
+    "failed": 0,
+    "enrollment_fixture": "PGlite fallback",
+    "recovery_fixture": "loopback static build with intercepted API"
+  },
+  "existing_wine": {
+    "passed": 6,
+    "failed": 0,
+    "skipped": 0,
+    "scope": "Existing Wine bridge, not real distributed or native Windows acceptance"
+  },
+  "new_tests": {
+    "hosts": "simulated labels and clients",
+    "transport": "in-process modeled partitions and reply faults, no sockets",
+    "crash": "actual spawned Linux process exits after durable mock fill",
+    "count": 51
+  },
+  "runtime": {
+    "platform": "linux",
+    "python": "3.12.14 (main, Aug 25 2026, 14:00:49) [Clang 22.1.3 ]",
+    "host_metatrader5_distribution": null
+  },
+  "safety": {
+    "financial_execution": false,
+    "production_changes": false,
+    "stops_removed": false,
+    "real_sdk_called": false,
+    "pushed": false,
+    "merged": false
+  },
+  "checks": {
+    "typecheck": true,
+    "python_compile": true,
+    "whitespace": true
+  },
+  "remaining_blockers": [
+    "Single local serialized simulator is not a replicated/HA distributed authority",
+    "Production needs a linearizable authority, secure host/transport authorization, epoch and rollback policy",
+    "Actual broker fencing requires a sole-executor/fenced effect path; controller checks alone are insufficient",
+    "Full fixture rollback, native kernel/storage hangs and real transport failover are not certified",
+    "Native Windows, real SDK, graphical MT5 and broker execution remain unverified and excluded"
+  ],
+  "source_sha256": {
+    "vps-mt5-service/shared_lease_simulation.py": "b0894b5649fcddfdd0bba2aad0b80c1618e443686e2ffc129ebe8ad848c4bd5f",
+    "vps-mt5-service/tests/test_shared_lease_simulation.py": "c5d0fe9ece6a23c7464bfbf27fb0a3488fcdd61bde3206a6b20225e2a986ebe2",
+    "docs/mt5-integration/simulated-cross-host-fencing.md": "5fd0dd2ea05417e92b253b60341f191a921fa97c113f9703b3f451ab0b594035"
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "image": "python:3.12-slim@sha256:5e2bdb1b0d542d5039cffb8181c65930093949194a65c365dfb1b0fe13a4fa5b",
+  "container": "ea-wine-simulation-2e4888ea703d411f",
+  "network": "none",
+  "read_only_root": true,
+  "uid": 1000,
+  "source_allowlist": [
+    "private_ipc.py",
+    "sdk_ipc_candidate.py",
+    "simulation_sdk.py",
+    "observer_sync.py",
+    "worker_state.py",
+    "demo_worker.py",
+    "execution_gates.py",
+    "broker_profiles.py",
+    "framed_stdio.py",
+    "wine_worker_entry.py",
+    "wine_bridge.py",
+    "runtime_tests/wine_bridge_acceptance.py"
+  ],
+  "lock_sha256": "9926496bd4106a4087b10ecc5a4cddd669f4d562485d3f8d1a93c650c171b1f8",
+  "production_credentials": false
+}

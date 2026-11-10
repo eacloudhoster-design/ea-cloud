@@ -1,0 +1,1 @@
+PASS: built mobile client verifies, invalidates stale evidence, recovers online and cancels on tab exit; zero API writes
