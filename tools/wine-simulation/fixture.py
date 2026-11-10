@@ -116,7 +116,12 @@ for family,address in [(socket.AF_INET,('127.0.0.1',9)),(socket.AF_INET6,('::1',
   try: sock.connect(address)
   except PermissionError: pass
   else: raise RuntimeError('Network guard missing')
-print(json.dumps(dict(platform=sys.platform,python=sys.version,pydantic=pydantic.__version__,fastapi=fastapi.__version__,sqlite=sqlite3.sqlite_version,guard=True)))
+try:
+ import ctypes
+ ctypes_status='available'
+except ImportError as error:
+ ctypes_status=type(error).__name__+': '+str(error)
+print(json.dumps(dict(ctypes_status=ctypes_status,platform=sys.platform,python=sys.version,pydantic=pydantic.__version__,fastapi=fastapi.__version__,sqlite=sqlite3.sqlite_version,guard=True)))
 '''
     def wine_path(path):
         return 'Z:' + str(path).replace('/', '\\')
@@ -135,10 +140,12 @@ print(json.dumps(dict(platform=sys.platform,python=sys.version,pydantic=pydantic
     env.update(EA_WINE_EXE=str(wine), EA_WINESERVER=str(server), EA_WINDOWS_PYTHON=str(python))
     logged('native-acceptance', [sys.executable, str(Path(__file__).with_name('suite.py'))], env, timeout=600)
     counts = json.loads((EVIDENCE / 'native-counts.json').read_text())
+    logged('history-acceptance', [sys.executable, str(Path(__file__).with_name('suite.py')), '--history'], env, timeout=600)
+    history = json.loads((EVIDENCE / 'history-counts.json').read_text())
     startup_lines = (EVIDENCE / 'windows-python-startup.log').read_text(errors='replace').splitlines()
     windows_versions = next(json.loads(line) for line in startup_lines if line.startswith('{'))
     result = dict(simulation_only=True, network='none', wine=version, windows=windows_versions,
-                  native=counts, artifacts_verified=len(artifacts), private_elf_patches=patched,
+                  native=counts, history=history, artifacts_verified=len(artifacts), private_elf_patches=patched,
                   runtime_lock_sha256=digest(Path(__file__).with_name('runtime.lock.json')))
     (EVIDENCE / 'results.json').write_text(json.dumps(result, indent=2) + '\n')
     print(json.dumps(result, indent=2), flush=True)

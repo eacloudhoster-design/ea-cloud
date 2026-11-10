@@ -1,0 +1,12 @@
+Fontconfig error: Cannot load default config file: No such file: (null)
+Fontconfig error: Cannot load default config file: No such file: (null)
+Fontconfig error: Cannot load default config file: No such file: (null)
+Fontconfig error: Cannot load default config file: No such file: (null)
+error: XDG_RUNTIME_DIR is invalid or not set in the environment.
+error: XDG_RUNTIME_DIR is invalid or not set in the environment.
+Fontconfig error: Cannot load default config file: No such file: (null)
+Fontconfig error: Cannot load default config file: No such file: (null)
+Fontconfig error: Cannot load default config file: No such file: (null)
+wine: failed to open L"C:\\windows\\syswow64\\rundll32.exe": c0000135
+Fontconfig error: Cannot load default config file: No such file: (null)
+{"ctypes_status": "ImportError: DLL load failed while importing _ctypes: Module not found.", "platform": "win32", "python": "3.12.10 (tags/v3.12.10:0cc8128, Apr  8 2025, 12:21:36) [MSC v.1943 64 bit (AMD64)]", "pydantic": "2.13.4", "fastapi": "0.141.1", "sqlite": "3.49.1", "guard": true}

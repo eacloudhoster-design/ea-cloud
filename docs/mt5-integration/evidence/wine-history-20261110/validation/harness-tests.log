@@ -1,0 +1,18 @@
+test_acceptance_requires_both_complete_separate_suites (__main__.HarnessTests.test_acceptance_requires_both_complete_separate_suites) ... ok
+test_blocked_skipped_failed_or_missing_cases_cannot_be_accepted (__main__.HarnessTests.test_blocked_skipped_failed_or_missing_cases_cannot_be_accepted) ... ok
+test_container_has_fixed_isolation_no_credentials_or_production_mounts (__main__.HarnessTests.test_container_has_fixed_isolation_no_credentials_or_production_mounts) ... ok
+test_corrupt_cached_input_stops_without_network_or_docker (__main__.HarnessTests.test_corrupt_cached_input_stops_without_network_or_docker) ... ok
+test_hash_mismatch_is_not_published_and_partial_file_is_removed (__main__.HarnessTests.test_hash_mismatch_is_not_published_and_partial_file_is_removed) ... ok
+test_lock_rejects_traversal_and_duplicate_inputs (__main__.HarnessTests.test_lock_rejects_traversal_and_duplicate_inputs) ... ok
+test_lock_rejects_untrusted_or_plaintext_download_endpoint (__main__.HarnessTests.test_lock_rejects_untrusted_or_plaintext_download_endpoint) ... ok
+test_malformed_boolean_counts_or_unexpected_fields_are_rejected (__main__.HarnessTests.test_malformed_boolean_counts_or_unexpected_fields_are_rejected) ... ok
+test_missing_artifact_prevents_container_launch (__main__.HarnessTests.test_missing_artifact_prevents_container_launch) ... ok
+test_missing_history_suite_cannot_be_accepted (__main__.HarnessTests.test_missing_history_suite_cannot_be_accepted) ... ok
+test_redirected_cache_directory_is_rejected_before_download (__main__.HarnessTests.test_redirected_cache_directory_is_rejected_before_download) ... ok
+test_remote_docker_endpoint_cannot_redirect_cleanup_or_launch (__main__.HarnessTests.test_remote_docker_endpoint_cannot_redirect_cleanup_or_launch) ... ok
+test_root_controller_is_refused (__main__.HarnessTests.test_root_controller_is_refused) ... ok
+
+----------------------------------------------------------------------
+Ran 13 tests in 0.048s
+
+OK

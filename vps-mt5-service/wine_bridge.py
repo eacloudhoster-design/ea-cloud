@@ -111,6 +111,7 @@ class ProcessView:
 
 
 class WineBridge(SimulationController):
+    protocol = 'absolute-target'
     """Reuse the existing controller's validation, leases, deadlines and failure policy."""
     def __init__(self, root, prefix, binding, key, runtime, *, startup_timeout=15.,
                  shutdown_timeout=2., timeout=3., mock_stop=False, faults=None):
@@ -122,6 +123,9 @@ class WineBridge(SimulationController):
         runtime.validate()
         self.binding = Binding.model_validate(binding)
         self.root = check_simulation(root, self.binding)
+        history_present=os.path.lexists(self.root/'history-worker.json') or os.path.lexists(self.root/'history-authority')
+        if history_present != (self.protocol=='trade-history-wine'):
+            raise ValueError('Wine bridge protocol mismatch')
         self.prefix = _safe_root(prefix)
         if self.root == self.prefix:
             raise ValueError('Separate state directory and prefix required')
@@ -169,14 +173,24 @@ class WineBridge(SimulationController):
                        if runtime.kind == 'wine' else [str(runtime.python), '-u', str(entry)])
             command.append('--simulation-stdio-worker')
             self.launch_attempted = True
-            self.child = subprocess.Popen(command, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
-                stderr=subprocess.DEVNULL, env=self.environment, cwd=self.prefix,
-                start_new_session=True, close_fds=True, bufsize=0)
+            diagnostics=None
+            try:
+                if self.protocol=='trade-history-wine':
+                    fd=os.open(self.root/'wine-worker-errors.jsonl',os.O_WRONLY|os.O_APPEND|os.O_CREAT|getattr(os,'O_NOFOLLOW',0),0o600)
+                    diagnostics=os.fdopen(fd,'ab')
+                    meta=os.fstat(fd)
+                    if not stat.S_ISREG(meta.st_mode) or meta.st_uid!=os.getuid() or meta.st_mode&0o077 or meta.st_size>65536:
+                        raise ValueError('Private diagnostic capacity/permissions unavailable')
+                self.child = subprocess.Popen(command, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+                    stderr=diagnostics if diagnostics else subprocess.DEVNULL, env=self.environment, cwd=self.prefix,
+                    start_new_session=True, close_fds=True, bufsize=0, umask=0o077)
+            finally:
+                if diagnostics:diagnostics.close()
             self.launched, self.quiesced = True, False
             self.process = ProcessView(self)
             self.pipe = FramedPipe(self.child.stdout, self.child.stdin)
             challenge = secrets.token_hex(32)
-            bootstrap = Bootstrap(version=1, binding=self.binding,
+            bootstrap = Bootstrap(version=1, protocol=self.protocol, binding=self.binding,
                 root=wine_path(self.root) if runtime.kind == 'wine' else str(self.root),
                 key=key.hex(), challenge=challenge, source_hashes=source_hashes(self.source),
                 mock_stop=mock_stop, faults=EntryFaults.model_validate(faults or {}))

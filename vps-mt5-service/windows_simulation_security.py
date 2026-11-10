@@ -1,5 +1,5 @@
 """Strict, read-only Windows fixture inspection. No ACL/policy provisioning here."""
-import ctypes
+ctypes = None  # Native APIs load only when their native inspector/job is constructed.
 import ntpath
 import os
 import re
@@ -58,6 +58,8 @@ class Win32Inspector:
     def __init__(self):
         if os.name != 'nt':
             raise ValueError('Native Microsoft Windows required')
+        global ctypes
+        import ctypes
         from ctypes import wintypes as w
         self.w = w
         self.kernel = ctypes.WinDLL('kernel32', use_last_error=True)
@@ -197,6 +199,8 @@ class WindowsJob:
     def __init__(self):
         if os.name != 'nt':
             raise ValueError('Native Windows job required')
+        global ctypes
+        import ctypes
         from ctypes import wintypes as w
         P = ctypes.c_void_p
         self.k = ctypes.WinDLL('kernel32', use_last_error=True)

@@ -4,6 +4,7 @@ No sockets, vendor SDK or production service. Hosts are signed simulated clients
 all mock account effects stay at one serialized, durable execution gateway.
 """
 from contextlib import closing
+from contextvars import ContextVar
 import hashlib
 import json
 import os
@@ -23,6 +24,8 @@ from sdk_adapter_candidate import AdapterEngine, persist_shared_hold
 from sdk_ipc_candidate import prepare_simulation, check_simulation, wall_ms, SimulationFaults
 from worker_state import StateLease
 from windows_simulation_security import LinuxReferenceInspector
+
+_wine_private = ContextVar('isolated_wine_private', default=None)
 
 TTL_MS = 2000
 MAX_ROWS = 10000
@@ -47,6 +50,11 @@ def digest(value):
 
 
 def private(path):
+    if sys.platform=='win32' and _wine_private.get() is not None:
+        from wine_history_paths import WineMappedInspector
+        inspector=_wine_private.get()
+        if type(inspector) is not WineMappedInspector:raise AuthorityError('INVALID_WINE_INSPECTOR')
+        return inspector.check(path)
     if sys.platform != 'linux' or os.geteuid() == 0:
         raise AuthorityError('ORDINARY_USER_LINUX_SIMULATION_REQUIRED')
     return LinuxReferenceInspector().check(path)

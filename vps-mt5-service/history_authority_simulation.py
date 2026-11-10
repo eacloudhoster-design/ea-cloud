@@ -32,6 +32,7 @@ def prepare_history_authority(root):
 
 class HistoryAuthority(SharedAuthority):
     history_protocol=True
+    execution_budget=.5
 
     def __init__(self,root,**kwargs):
         marker=Path(root).absolute()/'history-mode.json';private(marker)
@@ -109,7 +110,7 @@ class HistoryAuthority(SharedAuthority):
         try:
             profile=Binding.model_validate_json(self._row(request.binding)['descriptor'])
             root=self.account_root(profile);private(root)
-            deadline=self.monotonic()+min(.5,max(0,(request.deadline_ms-self.clock())/1000))
+            deadline=self.monotonic()+min(self.execution_budget,max(0,(request.deadline_ms-self.clock())/1000))
             permit=lambda:self._history_permit(request,readonly,deadline)
             if not self.db.execute('SELECT 1 FROM history_installations WHERE binding=?',[request.binding]).fetchone():
                 raise HistoryError('HISTORY_INSTALLATION_MISSING')

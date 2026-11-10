@@ -11,7 +11,11 @@ from sdk_ipc_candidate import SimulationFaults, wall_ms
 
 SOURCE_FILES = ('private_ipc.py', 'sdk_ipc_candidate.py', 'simulation_sdk.py',
                 'observer_sync.py', 'worker_state.py', 'demo_worker.py',
-                'execution_gates.py', 'broker_profiles.py', 'framed_stdio.py', 'wine_worker_entry.py')
+                'execution_gates.py', 'broker_profiles.py', 'framed_stdio.py', 'wine_worker_entry.py',
+                'sdk_adapter_candidate.py', 'windows_simulation_security.py', 'native_windows_candidate.py',
+                'native_windows_worker.py', 'native_history_pipeline.py', 'shared_lease_simulation.py',
+                'synthetic_trade_history.py', 'history_authority_simulation.py',
+                'wine_history_paths.py', 'wine_history_candidate.py', 'wine_bridge.py')
 
 
 class EntryFaults(SimulationFaults):
@@ -24,6 +28,7 @@ class EntryFaults(SimulationFaults):
 
 
 class Bootstrap(StrictModel):
+    protocol: Literal['absolute-target','trade-history-wine'] = 'absolute-target'
     version: Literal[1]
     binding: Binding
     root: str = Field(min_length=1, max_length=2048)

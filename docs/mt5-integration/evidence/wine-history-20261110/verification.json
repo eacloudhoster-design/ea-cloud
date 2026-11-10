@@ -1,0 +1,122 @@
+{
+  "branch": "feature/person2-wine-history-acceptance-20261110",
+  "base_commit": "b77572d5bd908e4167337cdc689dcc331c978fe1",
+  "simulation_only": true,
+  "baseline": {
+    "passed": 501,
+    "failed": 0,
+    "skipped": 0,
+    "recorded_evidence_and_source_hashes_verified_before_branch": true,
+    "evidence_path": "docs/mt5-integration/evidence/worker-history-ipc-20261110/verification.json",
+    "evidence_sha256": "e28db6a4a27d5c16b4efb7f69ab01240225b539c8ed68e2ef98ef8779a9a0753"
+  },
+  "final": {
+    "python_existing": 433,
+    "python_new": 21,
+    "python_total": 454,
+    "core": 39,
+    "pages": 14,
+    "root_gates": 6,
+    "harness": 13,
+    "passed": 526,
+    "failed": 0,
+    "skipped": 0
+  },
+  "browser": {
+    "passed": 2,
+    "failed": 0,
+    "enrollment_fixture": "PGlite fallback; existing PASS text names PostgreSQL generically",
+    "recovery_fixture": "loopback static build with intercepted API"
+  },
+  "existing_wine": {
+    "passed": 6,
+    "failed": 0,
+    "errors": 0,
+    "skipped": 0,
+    "expected": 6,
+    "run": 6,
+    "blocked": 0
+  },
+  "history_wine": {
+    "passed": 17,
+    "failed": 0,
+    "errors": 0,
+    "skipped": 0,
+    "expected": 17,
+    "run": 17,
+    "blocked": 0
+  },
+  "runtime": {
+    "wine": "wine-10.0 (Debian 10.0~repack-6)",
+    "windows_python": {
+      "ctypes_status": "ImportError: DLL load failed while importing _ctypes: Module not found.",
+      "platform": "win32",
+      "python": "3.12.10 (tags/v3.12.10:0cc8128, Apr  8 2025, 12:21:36) [MSC v.1943 64 bit (AMD64)]",
+      "pydantic": "2.13.4",
+      "fastapi": "0.141.1",
+      "sqlite": "3.49.1",
+      "guard": true
+    },
+    "host_python": "3.12.14 (main, Aug 25 2026, 14:00:49) [Clang 22.1.3 ]",
+    "host_platform": "linux",
+    "fastapi": "0.141.1",
+    "pydantic": "2.13.4",
+    "real_metatrader5_package_used": false
+  },
+  "checks": {
+    "typecheck": true,
+    "python_compile": true,
+    "whitespace": true,
+    "artifact_lock_unchanged": true
+  },
+  "scope": {
+    "wine_history_budget_ms": 1500,
+    "existing_history_budget_ms": 500,
+    "controller_lease_ms": 2000,
+    "existing_wine": "original six isolated bridge cases, counted separately",
+    "history_wine": "seventeen new integrated-history cases across Linux-to-Wine authenticated binary IPC",
+    "offline_new": "21 Linux reference/path tests plus 4 host-harness validation tests; not Wine acceptance",
+    "native_windows_verified": false,
+    "ownership": "Linux host flock retained until process and exact prefix quiescence; separate Windows child lock",
+    "safety": "no broker, real order, production change, emergency-stop removal, activation, merge or push"
+  },
+  "commands": {
+    "python": "ordinary-user vps-mt5-service/tests suite excluding root-only test_execution_gates; root refusal cases separately in pinned network-none container",
+    "core": "node --test --test-concurrency=1 [backend list from person2-release-readiness.md, excluding Pages]",
+    "pages": "node --test scripts/tests/pages.test.mjs",
+    "harness": "python tools/wine-simulation/test_harness.py",
+    "wine": "python tools/wine-simulation/run.py run --cache <verified cache> --evidence <new evidence directory>",
+    "browsers": [
+      "node scripts/tests/mt5-enrollment.browser.mjs",
+      "node scripts/tests/mt5-status-recovery.browser.mjs"
+    ],
+    "typecheck": "pnpm run typecheck",
+    "compile": "python -m compileall -q vps-mt5-service tools/wine-simulation",
+    "whitespace": "git diff --check"
+  },
+  "remaining_blockers": [
+    "Native Microsoft Windows and NTFS ACL/job acceptance unavailable and unverified",
+    "Optional ctypes native API import fails in pinned minimal Wine runtime; history mode avoids unused native imports, does not repair DLL loader",
+    "No graphical MT5, real SDK, broker or production acceptance",
+    "Single local simulated authority; external rollback, hostile same-user writers, kernel/storage hangs and actual distributed/broker fencing excluded",
+    "History limits and persistent holds remain; no automatic hold-release or effect-replay path"
+  ],
+  "source_sha256": {
+    "tools/wine-simulation/artifacts.py": "ce15d71855ce28bcefabe52663dd58fdd2f1a1a151aea68d8b2b1cfa3607117e",
+    "tools/wine-simulation/fixture.py": "2d0076a58a11c48f648aaa5c09b8da893686dd940403df0ec76498310e53e389",
+    "tools/wine-simulation/run.py": "563458036be2e04958ac8f0d8be3b8177d024e800ed34248111a9970c3c1638a",
+    "tools/wine-simulation/suite.py": "9202de438ef89be9708dc57f0c6f227717a41d3efba0802740b93d8e493428ec",
+    "tools/wine-simulation/test_harness.py": "4ef8fcd85c4cfbb46c521d945f2363fb7d48b1230e94b88a0c3e81c683949d04",
+    "vps-mt5-service/framed_stdio.py": "b93ba941b8fb91578d60b4b77c80b43aad33648e6f27300c8ab8b2f44f8be86c",
+    "vps-mt5-service/history_authority_simulation.py": "48cdc8c2f1ccebca0d38b61ea9366d6d23e2585a8544807a10214d698f58c19f",
+    "vps-mt5-service/native_history_pipeline.py": "3fe00bfc03ee583734d8f35683e447395569ede7e2338ee48f95a70ac33fe506",
+    "vps-mt5-service/runtime_tests/wine_history_acceptance.py": "92732be2468b58eb093ffa168298c2d048d5c9bc331943d23adf3f07da53f484",
+    "vps-mt5-service/shared_lease_simulation.py": "8228a927360828a11c7d2cb1f4c17f878f2506b91de5f26a968fdd9bad78277a",
+    "vps-mt5-service/tests/test_wine_history_candidate.py": "6ae5fccbfea7cb995f6be15d9817d1d858a47d9988cf3f51f4841cdb4a1c8775",
+    "vps-mt5-service/windows_simulation_security.py": "d5e618e003f43ec7280a3038db06125b71d2902986599330e9f3823cfc6224c5",
+    "vps-mt5-service/wine_bridge.py": "fd4bde4ab10db9e9739d4055f882f5f96180ec6fd0e062fffa54b092a3d5c145",
+    "vps-mt5-service/wine_history_candidate.py": "be79958c4b664f1f715725778b4a70086c64e7fd52743445f84ff834e0d81d49",
+    "vps-mt5-service/wine_history_paths.py": "5a2523225e7b694c3877186b9a28ef4426d73c25adbcb86a22ebbdbd138846d2",
+    "vps-mt5-service/wine_worker_entry.py": "7b8fc7d26083399b758a819b331435f1b58b94f50fe7b348d62f3da330fa9679"
+  }
+}

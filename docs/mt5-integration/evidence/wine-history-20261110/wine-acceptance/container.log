@@ -1,0 +1,41 @@
+Private ELF RPATH corrections: 378
+windows-python-startup: passed
+windows-minimal-executable: passed
+linux-python-startup: passed
+native-acceptance: passed
+history-acceptance: passed
+{
+  "simulation_only": true,
+  "network": "none",
+  "wine": "wine-10.0 (Debian 10.0~repack-6)",
+  "windows": {
+    "ctypes_status": "ImportError: DLL load failed while importing _ctypes: Module not found.",
+    "platform": "win32",
+    "python": "3.12.10 (tags/v3.12.10:0cc8128, Apr  8 2025, 12:21:36) [MSC v.1943 64 bit (AMD64)]",
+    "pydantic": "2.13.4",
+    "fastapi": "0.141.1",
+    "sqlite": "3.49.1",
+    "guard": true
+  },
+  "native": {
+    "passed": 6,
+    "failed": 0,
+    "errors": 0,
+    "skipped": 0,
+    "expected": 6,
+    "run": 6,
+    "blocked": 0
+  },
+  "history": {
+    "passed": 17,
+    "failed": 0,
+    "errors": 0,
+    "skipped": 0,
+    "expected": 17,
+    "run": 17,
+    "blocked": 0
+  },
+  "artifacts_verified": 182,
+  "private_elf_patches": 378,
+  "runtime_lock_sha256": "9926496bd4106a4087b10ecc5a4cddd669f4d562485d3f8d1a93c650c171b1f8"
+}

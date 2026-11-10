@@ -1,0 +1,88 @@
+(node:39542) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///workspace/work/ea-cloud/functions/api/%5B%5Bpath%5D%5D.js is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /workspace/work/ea-cloud/package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+{
+  event: 'api_proxy_failed',
+  code: 'API_BACKEND_NOT_CONFIGURED',
+  status: 503
+}
+{
+  event: 'api_proxy_failed',
+  code: 'API_BACKEND_NOT_CONFIGURED',
+  status: 503
+}
+{
+  event: 'api_proxy_failed',
+  code: 'API_BACKEND_NOT_CONFIGURED',
+  status: 503
+}
+{
+  event: 'api_proxy_failed',
+  code: 'API_BACKEND_NOT_CONFIGURED',
+  status: 503
+}
+{
+  event: 'api_proxy_failed',
+  code: 'API_BACKEND_NOT_CONFIGURED',
+  status: 503
+}
+{
+  event: 'api_proxy_failed',
+  code: 'API_UPSTREAM_HTML',
+  status: 502,
+  upstreamStatus: 200
+}
+{
+  event: 'api_proxy_failed',
+  code: 'API_UPSTREAM_UNREACHABLE',
+  status: 502
+}
+{
+  event: 'api_proxy_failed',
+  code: 'API_BACKEND_NOT_CONFIGURED',
+  status: 503
+}
+{
+  event: 'api_proxy_failed',
+  code: 'API_UPSTREAM_UNREACHABLE',
+  status: 502
+}
+{
+  event: 'api_proxy_failed',
+  code: 'API_UPSTREAM_UNAVAILABLE',
+  status: 502,
+  upstreamStatus: 503
+}
+{
+  event: 'api_proxy_failed',
+  code: 'API_BACKEND_NOT_CONFIGURED',
+  status: 503
+}
+{
+  event: 'api_proxy_failed',
+  code: 'API_BACKEND_NOT_CONFIGURED',
+  status: 503
+}
+✔ missing or invalid backend configuration fails closed with JSON (36.989927ms)
+✔ proxy preserves POST body, bearer auth and query while replacing spoofed forwarding headers (29.8107ms)
+✔ HTML fallback and unreachable backend are service errors (4.415061ms)
+✔ WebSocket upgrades are returned intact (0.600163ms)
+✔ login failures distinguish credentials, approval, throttling and infrastructure (1.781299ms)
+✔ Pages output contains distinct site and client bundles with API-only Function routing (4.870966ms)
+✔ build verification rejects the website-only output that caused the production router 404 (84.457976ms)
+✔ build verification rejects a missing or incorrectly based client bundle (50.284715ms)
+✔ startup proxy errors expose distinct safe codes and never replay mutations (2.83897ms)
+✔ Render-style HTML 503 remains a backend outage, distinct from a successful SPA fallback (1.031171ms)
+✔ optional VPS origin token replaces spoofed caller header without appearing in the response (1.065773ms)
+✔ malformed optional origin token fails closed without fetching or exposing it (0.497478ms)
+✔ optional management origin routes only MT5 controls and keeps origin tokens isolated (4.014519ms)
+✔ invalid management origin fails closed only for managed routes without leaking credentials (0.713553ms)
+ℹ tests 14
+ℹ suites 0
+ℹ pass 14
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 413.033565

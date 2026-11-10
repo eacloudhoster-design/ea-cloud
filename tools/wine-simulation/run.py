@@ -73,6 +73,15 @@ def container_command(lock, cache, output, snapshot, name, uid, gid):
             lock['base_image'], 'python', '-I', '-u', '/input/harness/fixture.py']
 
 
+def validate_acceptance(summary):
+    for kind,total in (('native',6),('history',17)):
+        expected=dict(passed=total,failed=0,errors=0,skipped=0,expected=total,run=total,blocked=0)
+        actual=summary.get(kind)
+        if (type(actual) is not dict or set(actual)!=set(expected) or
+            any(type(value) is not int for value in actual.values()) or actual!=expected):
+            raise RuntimeError('Wine acceptance incomplete: '+kind)
+
+
 def run(lock, cache, output):
     for entry in lock['artifacts']:
         verify(cache, entry)
@@ -111,8 +120,7 @@ def run(lock, cache, output):
             if result.returncode:
                 raise RuntimeError('Offline container failed; inspect ' + str(output / 'container.log'))
             summary = json.loads((output / 'results.json').read_text())
-            if summary['native'] != {'passed': 6, 'failed': 0, 'errors': 0, 'skipped': 0}:
-                raise RuntimeError('Native acceptance did not pass all six cases')
+            validate_acceptance(summary)
             print(json.dumps(summary, indent=2))
         finally:
             # Exact generated name only, including timeout/interruption cleanup.

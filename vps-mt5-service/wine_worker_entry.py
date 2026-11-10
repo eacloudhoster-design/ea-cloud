@@ -29,6 +29,7 @@ def install_offline_guard():
 
 def main():
     engine = None
+    scope = None
     try:
         if sys.argv[1:] != ['--simulation-stdio-worker']:
             return 64
@@ -41,7 +42,7 @@ def main():
         sys.path.insert(0, str(root))
         from framed_stdio import FramedPipe, decode_bootstrap, source_hashes, fixture_stop_active
         from private_ipc import sign, verify
-        from sdk_ipc_candidate import CandidateEngine, SimulationFaults
+        from sdk_ipc_candidate import CandidateEngine, SimulationFaults, bridge_stop_active
         pipe = FramedPipe(sys.stdin.buffer, sys.stdout.buffer)
         # stdout is exclusively framed bytes, including on Windows (no CRLF translation).
         sys.stdout = sys.stderr
@@ -50,8 +51,20 @@ def main():
             return 65
         if bootstrap.faults.exit_before_ready:
             return 71
-        checker = (lambda: fixture_stop_active(bootstrap.root, bootstrap.binding)) if bootstrap.mock_stop else None
-        engine = CandidateEngine(bootstrap.root, bootstrap.binding, bytes.fromhex(bootstrap.key),
+        if bootstrap.protocol=='trade-history-wine':
+            from native_windows_worker import install_guard
+            install_guard()
+            from wine_history_paths import history_scope
+            from wine_history_candidate import WineHistoryEngine
+            scope=history_scope(bootstrap.root,bootstrap.binding);scope.__enter__()
+            if bootstrap.mock_stop is not True:return 65
+            checker=lambda: (fixture_stop_active(bootstrap.root,bootstrap.binding) or bridge_stop_active(bootstrap.root))
+            factory=WineHistoryEngine
+        else:
+            if (Path(bootstrap.root)/'history-worker.json').exists() or (Path(bootstrap.root)/'history-authority').exists():return 65
+            checker = (lambda: fixture_stop_active(bootstrap.root, bootstrap.binding)) if bootstrap.mock_stop else None
+            factory=CandidateEngine
+        engine = factory(bootstrap.root, bootstrap.binding, bytes.fromhex(bootstrap.key),
             stop_checker=checker, faults=SimulationFaults(
                 before_send_ms=bootstrap.faults.before_send_ms,
                 crash_after_fill=bootstrap.faults.crash_after_fill))
@@ -74,11 +87,20 @@ def main():
             pipe.send_bytes(response)
     except EOFError:
         return 0
-    except Exception:
+    except Exception as error:
+        if engine is None:
+            import json
+            tb=error.__traceback__;locations=[]
+            while tb:
+                locations.append(dict(file=Path(tb.tb_frame.f_code.co_filename).name,
+                    function=tb.tb_frame.f_code.co_name,line=tb.tb_lineno));tb=tb.tb_next
+            print(json.dumps(dict(event='SIMULATION_STARTUP_REFUSED',error_type=type(error).__name__,
+                                  locations=locations[-6:])),file=sys.stderr,flush=True)
         return 70  # No raw request, bootstrap key or arbitrary exception text is emitted.
     finally:
         if engine is not None:
             engine.close()
+        if scope is not None:scope.__exit__(None,None,None)
 
 
 if __name__ == '__main__':

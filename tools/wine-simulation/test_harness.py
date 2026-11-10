@@ -8,7 +8,7 @@ import unittest
 from unittest.mock import patch
 
 from artifacts import SOURCE_FILES, load_lock, verify
-from run import acquire, container_command, docker_environment, run
+from run import acquire, container_command, docker_environment, run, validate_acceptance
 
 
 class HarnessTests(unittest.TestCase):
@@ -26,6 +26,28 @@ class HarnessTests(unittest.TestCase):
         path = self.root / 'lock.json'
         path.write_text(json.dumps(lock))
         return path
+
+    def acceptance(self):
+        return {kind:dict(passed=count,failed=0,errors=0,skipped=0,expected=count,run=count,blocked=0)
+                for kind,count in [('native',6),('history',17)]}
+
+    def test_acceptance_requires_both_complete_separate_suites(self):
+        validate_acceptance(self.acceptance())
+
+    def test_missing_history_suite_cannot_be_accepted(self):
+        data=self.acceptance();del data['history']
+        with self.assertRaises(RuntimeError):validate_acceptance(data)
+
+    def test_blocked_skipped_failed_or_missing_cases_cannot_be_accepted(self):
+        for field,value in [('blocked',17),('run',16),('skipped',1),('failed',1),('errors',1),('passed',16)]:
+            with self.subTest(field=field):
+                data=self.acceptance();data['history'][field]=value
+                with self.assertRaises(RuntimeError):validate_acceptance(data)
+
+    def test_malformed_boolean_counts_or_unexpected_fields_are_rejected(self):
+        for field,value in [('errors',False),('extra',0)]:
+            data=self.acceptance();data['native'][field]=value
+            with self.assertRaises(RuntimeError):validate_acceptance(data)
 
     def test_corrupt_cached_input_stops_without_network_or_docker(self):
         path = self.root / self.entry['path']

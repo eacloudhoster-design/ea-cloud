@@ -61,6 +61,19 @@ class HistoryCertificate(StrictModel):
         return value
 
 
+def validate_history_success(request,outcome):
+    command=COMMAND.validate_python(request.body)
+    code='HISTORY_VERIFIED' if isinstance(command,Reconcile) else 'SIMULATED_HISTORY_APPLIED'
+    if outcome['code']!=code or outcome['uncertain']:raise ProtocolError('INVALID_HISTORY_RESPONSE')
+    if isinstance(command,Reconcile):HistoryCertificate.model_validate(outcome['data'])
+    else:
+        receipt=ExecutionReceipt.model_validate(outcome['data'])
+        if receipt.order_id!=command.order_id:raise ProtocolError('HISTORY_ORDER_MISMATCH')
+        if command.action in ('create','modify') and receipt.requested_volume!=command.volume:
+            raise ProtocolError('HISTORY_VOLUME_MISMATCH')
+        if command.action=='cancel' and receipt.state!='cancelled':raise ProtocolError('HISTORY_STATE_MISMATCH')
+
+
 def prepare_history_worker(root,binding,key):
     """Operator fixture provisioning only; existing data is never adopted."""
     if sys.platform!='linux':raise ValueError('Linux reference fixture required')
@@ -89,11 +102,13 @@ class HistoryWorkerEngine:
     Shared frames are derived only after outer authentication; neither host nor
     service identity is supplied by an untrusted request body.
     """
+    authority_type=HistoryAuthority
+
     def __init__(self,root,binding,key,*,stop_checker,faults=None):
         self.binding=Binding.model_validate(binding);self.key=key
         self.faults=SimulationFaults.model_validate(faults or {})
         self.checker=stop_checker
-        self.authority=HistoryAuthority(Path(root)/'history-authority',stop_checker=lambda _:stop_checker())
+        self.authority=self.authority_type(Path(root)/'history-authority',stop_checker=lambda _:stop_checker())
         try:self.authority.register(self.binding,key)
         except Exception:self.authority.close();raise
 
@@ -129,6 +144,8 @@ class HistoryWorkerSimulation(NativeWindowsSimulation):
     def __init__(self,*args,**kwargs):
         if sys.platform!='linux' or kwargs.get('_reference') is not True:
             raise ValueError('History worker requires explicit Linux reference; native Windows acceptance blocked')
+        root=Path(args[0] if args else kwargs['root'])
+        if (root/'wine-history-fixture.json').exists():raise ValueError('Wine-only history fixture')
         super().__init__(*args,**kwargs)
 
     def _begin(self):
@@ -166,16 +183,7 @@ class HistoryWorkerSimulation(NativeWindowsSimulation):
 
     def _validate_success(self,request,outcome):
         if request.operation!='sync':return super()._validate_success(request,outcome)
-        command=COMMAND.validate_python(request.body)
-        code='HISTORY_VERIFIED' if isinstance(command,Reconcile) else 'SIMULATED_HISTORY_APPLIED'
-        if outcome['code']!=code or outcome['uncertain']:raise ProtocolError('INVALID_HISTORY_RESPONSE')
-        if isinstance(command,Reconcile):HistoryCertificate.model_validate(outcome['data'])
-        else:
-            receipt=ExecutionReceipt.model_validate(outcome['data'])
-            if receipt.order_id!=command.order_id:raise ProtocolError('HISTORY_ORDER_MISMATCH')
-            if command.action in ('create','modify') and receipt.requested_volume!=command.volume:
-                raise ProtocolError('HISTORY_VOLUME_MISMATCH')
-            if command.action=='cancel' and receipt.state!='cancelled':raise ProtocolError('HISTORY_STATE_MISMATCH')
+        validate_history_success(request,outcome)
 
     def _persist_transport_hold(self):
         if not self._hold() or not self.quiesced:raise ValueError('History lifecycle hold unconfirmed')
