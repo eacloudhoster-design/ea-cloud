@@ -99,8 +99,12 @@ class FencedEngine(AdapterEngine):
 
 
 class SharedAuthority:
+    history_protocol = False
+
     def __init__(self,root,*,clock=wall_ms,monotonic=time.monotonic,stop_checker=None,worker_faults=None):
         self.root=Path(root).absolute();private(self.root)
+        if os.path.lexists(self.root/'history-mode.json') != self.history_protocol:
+            raise AuthorityError('AUTHORITY_PROTOCOL_MISMATCH')
         marker=self.root/'simulation-authority.json';private(marker)
         if marker.stat().st_size>1024:raise AuthorityError('INVALID_AUTHORITY_MARKER')
         data=json.loads(marker.read_bytes(),object_pairs_hook=_unique)
@@ -117,6 +121,8 @@ class SharedAuthority:
             self.db.row_factory=sqlite3.Row;self.db.execute('PRAGMA synchronous=FULL')
             meta=self.db.execute('SELECT service,version FROM metadata').fetchall()
             if len(meta)!=1 or tuple(meta[0])!=(self.service,1):raise AuthorityError('AUTHORITY_IDENTITY_MISMATCH')
+            history_schema=bool(self.db.execute("SELECT 1 FROM sqlite_master WHERE name='history_installations'").fetchone())
+            if history_schema != self.history_protocol:raise AuthorityError('AUTHORITY_PROTOCOL_MISMATCH')
             # Server restart never carries a live grant into a new monotonic clock domain.
             with self.db:
                 for row in self.db.execute('SELECT * FROM accounts').fetchall():
@@ -251,10 +257,7 @@ class SharedAuthority:
             if request.service!=self.service:raise AuthorityError('AUTHORITY_IDENTITY_MISMATCH')
             now=self._now(request.binding);request.validate_time(now)
             if request.operation=='sync':
-                if 'password' in request.body:raise AuthorityError('INVALID_BODY')
-                target=SyncTarget.model_validate(request.body)
-                profile=Binding.model_validate_json(self._row(request.binding)['descriptor'])
-                if (target.login,target.server)!=(profile.login,profile.server):raise AuthorityError('IDENTITY_MISMATCH')
+                self._validate_sync(request)
             elif request.body:raise AuthorityError('INVALID_BODY')
             if self.db.execute('SELECT 1 FROM nonces WHERE binding=? AND nonce=?',[request.binding,request.nonce]).fetchone():
                 raise AuthorityError('REPLAY')
@@ -270,6 +273,12 @@ class SharedAuthority:
             self.lock.release()
         return sign(dict(service=self.service,host=request.host,binding=request.binding,controller=request.controller,
                          request_id=request.request_id,nonce=request.nonce,result=outcome),self.keys[request.binding],'response')
+
+    def _validate_sync(self,request):
+        if 'password' in request.body:raise AuthorityError('INVALID_BODY')
+        target=SyncTarget.model_validate(request.body)
+        profile=Binding.model_validate_json(self._row(request.binding)['descriptor'])
+        if (target.login,target.server)!=(profile.login,profile.server):raise AuthorityError('IDENTITY_MISMATCH')
 
     def _dispatch(self,request):
         row=self._row(request.binding);now=self._now(request.binding)

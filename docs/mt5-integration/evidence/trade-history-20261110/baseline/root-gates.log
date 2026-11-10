@@ -1,0 +1,11 @@
+test_actual_root_file_atomic_stop_changes_staleness_and_clock_reversal (test_execution_gates.GateTests.test_actual_root_file_atomic_stop_changes_staleness_and_clock_reversal) ... ok
+test_boolean_timestamps_never_establish_clear_metadata (test_execution_gates.GateTests.test_boolean_timestamps_never_establish_clear_metadata) ... ok
+test_invalid_latch_entries_or_missing_parent_remain_closed (test_execution_gates.GateTests.test_invalid_latch_entries_or_missing_parent_remain_closed) ... ok
+test_missing_malformed_writable_and_symlinked_mirrors_are_closed (test_execution_gates.GateTests.test_missing_malformed_writable_and_symlinked_mirrors_are_closed) ... ok
+test_nonroot_and_unsafe_directory_cannot_publish (test_execution_gates.GateTests.test_nonroot_and_unsafe_directory_cannot_publish) ... ok
+test_publisher_process_exit_expires_and_restart_requires_fresh_metadata (test_execution_gates.GateTests.test_publisher_process_exit_expires_and_restart_requires_fresh_metadata) ... ok
+
+----------------------------------------------------------------------
+Ran 6 tests in 0.189s
+
+OK

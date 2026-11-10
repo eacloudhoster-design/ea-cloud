@@ -1,0 +1,91 @@
+{
+  "branch": "feature/person2-simulated-trade-history-20261110",
+  "base_commit": "6f67c49f75e4dbf956b572d254bd0168b9293bb1",
+  "simulation_only": true,
+  "baseline": {
+    "passed": 399,
+    "failed": 0,
+    "skipped": 0,
+    "reproduced_before_branch": true
+  },
+  "final": {
+    "python_existing": 331,
+    "python_new": 62,
+    "python_total": 393,
+    "core": 39,
+    "pages": 14,
+    "root_gates": 6,
+    "harness": 9,
+    "passed": 461,
+    "failed": 0,
+    "skipped": 0
+  },
+  "browser": {
+    "passed": 2,
+    "failed": 0,
+    "enrollment_fixture": "PGlite fallback (existing PASS line names PostgreSQL generically)",
+    "recovery_fixture": "loopback static build, intercepted API"
+  },
+  "existing_wine": {
+    "passed": 6,
+    "failed": 0,
+    "skipped": 0,
+    "wine": "wine-10.0 (Debian 10.0~repack-6)",
+    "windows_python": "3.12.10",
+    "scope": "Unchanged existing Wine source closure; new history candidate NOT Wine/native Windows acceptance"
+  },
+  "runtime": {
+    "platform": "linux",
+    "python": "3.12.14 (main, Aug 25 2026, 14:00:49) [Clang 22.1.3 ]",
+    "pydantic": "2.13.4",
+    "fastapi": "0.141.1",
+    "host_metatrader5_distribution": null
+  },
+  "checks": {
+    "typecheck": true,
+    "python_compile": true,
+    "whitespace": true
+  },
+  "safety": {
+    "financial_execution": false,
+    "real_sdk_called": false,
+    "production_changes": false,
+    "stops_removed": false,
+    "pushed": false,
+    "merged": false
+  },
+  "new_test_scope": {
+    "count": 62,
+    "transport": "in-process signed frames and modeled faults",
+    "crash": "spawned Linux process exits 70 immediately after durable synthetic fill commit",
+    "ordering": "gaps/out-of-order fail closed; no reordering",
+    "recovery": "verification only; no retry or hold clearing"
+  },
+  "commands": {
+    "python_ordinary_user": "python -m unittest discover -s vps-mt5-service/tests (exclude test_execution_gates, tested separately as root)",
+    "core": "node --test --test-concurrency=1 [backend list in person2-release-readiness.md excluding pages.test.mjs]",
+    "pages": "node --test scripts/tests/pages.test.mjs",
+    "harness": "python tools/wine-simulation/test_harness.py",
+    "root_gates": "python -m unittest discover -s /service/tests -p test_execution_gates.py -v (pinned network-none container)",
+    "browser_enrollment": "node scripts/tests/mt5-enrollment.browser.mjs",
+    "browser_recovery": "node scripts/tests/mt5-status-recovery.browser.mjs (loopback static server)",
+    "wine": "python tools/wine-simulation/run.py run --cache <verified isolated cache> --evidence <evidence directory>",
+    "typescript": "pnpm run typecheck",
+    "python_compile": "python -m compileall -q vps-mt5-service",
+    "whitespace": "git diff --check"
+  },
+  "source_sha256": {
+    "vps-mt5-service/shared_lease_simulation.py": "9e1a6c2b3b55078f6d1e818010c001e95b8d90f28cd0a50176988ac5067e1698",
+    "vps-mt5-service/synthetic_trade_history.py": "d437e3a8240e92feb1054cb912801fbadcc4f69c53da78a82c991f7739227873",
+    "vps-mt5-service/history_authority_simulation.py": "464b77eab770bf5165c49315ea0aa027b5b1599e7cf42ae41a199e4a19d43df7",
+    "vps-mt5-service/tests/test_synthetic_trade_history.py": "36392903ce736794c3e642f74a5b793cf41b7889643839c6fdbd7386464a3402"
+  },
+  "blockers": [
+    "New isolated history roots only; no existing account migration or launcher integration",
+    "Single-authority synthetic gateway; no real MT5 history or market matching",
+    "Native Windows and new backend Wine acceptance unverified",
+    "Bounded book/deadline; larger journals need reviewed checkpoint design",
+    "Whole-root rollback, hostile same-user writes and kernel/storage hangs require external controls",
+    "No automatic safety-hold clearing or reconciliation repair"
+  ]
+}
