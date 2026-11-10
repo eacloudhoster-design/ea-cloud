@@ -1,0 +1,74 @@
+{
+  "branch": "feature/person2-single-authority-assignment-20261110",
+  "base_commit": "b261167ee02be360b1357c15229d865dc072ae8a",
+  "simulation_only": true,
+  "baseline": {
+    "recorded_passed": 540,
+    "source_and_evidence_hashes_verified": true,
+    "evidence": "docs/mt5-integration/evidence/multiprocess-recovery-20261110/verification.json",
+    "evidence_sha256": "bf66644d6635dc64a63c5b988faa1e0374fc61fee5266eb3c584e9dbfefb67d3"
+  },
+  "final": {
+    "python_existing": 468,
+    "python_new": 5,
+    "python_total": 473,
+    "core": 39,
+    "pages": 14,
+    "root_gates": 6,
+    "harness": 13,
+    "passed": 545,
+    "failed": 0,
+    "skipped": 0
+  },
+  "focused_assignment_tests": {
+    "passed": 5,
+    "failed": 0,
+    "scope": "included in Python total, not counted twice"
+  },
+  "browser": {
+    "passed": 2,
+    "failed": 0,
+    "enrollment_fixture": "PGlite fallback; existing PASS text names PostgreSQL generically",
+    "recovery_fixture": "loopback static build and intercepted API"
+  },
+  "wine": {
+    "rerun": false,
+    "prior_existing_passed": 6,
+    "prior_history_passed": 17,
+    "reason": "Modified simulation account pool is outside the Wine source closure; no new Wine/native Windows claim",
+    "prior_snapshot_inputs_unchanged": true
+  },
+  "checks": {
+    "typecheck": true,
+    "python_compile": true,
+    "whitespace": true
+  },
+  "runtime": {
+    "python": "3.12.14 (main, Aug 25 2026, 14:00:49) [Clang 22.1.3 ]",
+    "pydantic": "2.13.4",
+    "fastapi": "0.141.1"
+  },
+  "scope": {
+    "authority": "one assigned execution domain; local persistent alias reservation only",
+    "cross_host_guarantee": false,
+    "new_infrastructure": false,
+    "real_sdk_calls": false,
+    "broker_connections": false,
+    "production_changes": false,
+    "stops_disabled": false,
+    "trading_activation": false,
+    "pushed": false,
+    "merged": false
+  },
+  "deployment_dependencies": [
+    "One canonical account-to-gateway/host/alias/journal/prefix assignment",
+    "Restrict credentials and worker ingress to assigned executor/router; forbid parallel legacy/manual/second-host executors",
+    "Pinned observer routing with no uncertain-submission replay or alternate-executor fallback",
+    "Quiescence/fencing of old effect path and verified durable state/stop/hold transfer before host migration",
+    "Native Windows and real MT5 acceptance still required; no activation in this checkpoint"
+  ],
+  "source_sha256": {
+    "vps-mt5-service/account_workers.py": "2fb651e1f6ac119d617da0660b092e5a1fd5245152bbb8f1bf2d88b00b710720",
+    "vps-mt5-service/tests/test_account_assignment.py": "06c699d66deda7fff776f37107645bf05b539a0340127f6e1eda538a21ff2f12"
+  }
+}

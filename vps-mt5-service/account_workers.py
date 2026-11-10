@@ -40,6 +40,7 @@ class AccountWorkers:
         except BlockingIOError:
             self.lease.close();raise ValueError('Account worker state already owned by another gateway')
         self.accounts={};self.workers={};self.locks={};self.timeout=timeout
+        self.assignment_lock=threading.Lock()
         try:
             ids=set()
             for account in accounts:
@@ -53,6 +54,28 @@ class AccountWorkers:
         Legacy state without a binding needs explicit offline verification; it is
         never silently adopted or reset. The gateway lease serializes creation.
         """
+        # Existing bindings reserve a physical account even when its alias is
+        # absent from the current manifest. A renamed alias must not discard an
+        # unresolved journal by creating a fresh account directory.
+        for entry in self.root.iterdir():
+            if entry.name==account.id:continue
+            if entry.is_symlink():raise ValueError('Unverified account assignment')
+            if not entry.is_dir():continue
+            marker=entry/'account-binding.json'
+            if marker.is_symlink() or not marker.is_file() or marker.stat().st_size>4096:
+                raise ValueError('Unverified account assignment; offline review required')
+            recorded=json.loads(marker.read_text())
+            fields={'version','id','broker','login','server','role'}
+            if (type(recorded) is not dict or set(recorded)!=fields or type(recorded['version']) is not int or
+                recorded['version']!=1 or recorded['id']!=entry.name or type(recorded['login']) is not int or
+                type(recorded['server']) is not str):
+                raise ValueError('Invalid account assignment evidence')
+            try:
+                previous=Account(**{key:recorded[key] for key in fields if key!='version'});previous.validate()
+            except (TypeError,ValueError):raise ValueError('Invalid account assignment evidence') from None
+            # Match the pool/router's existing exact login/server routing key.
+            if (previous.login,previous.server)==(account.login,account.server):
+                raise ValueError('Account already bound to a different durable alias; offline reconciliation required')
         root = self.root / account.id
         root.mkdir(mode=0o700, exist_ok=True)
         if root.is_symlink():
@@ -76,7 +99,9 @@ class AccountWorkers:
         finally: os.close(directory_fd)
 
     def _start(self,key):
-        account=self.accounts[key];self._bind_state(account);context=mp.get_context('spawn');parent,child=context.Pipe()
+        account=self.accounts[key]
+        with self.assignment_lock:self._bind_state(account)
+        context=mp.get_context('spawn');parent,child=context.Pipe()
         process=context.Process(target=_worker,args=(child,account,str(self.root/account.id)),daemon=True)
         process.start();child.close();self.workers[key]=(process,parent)
         return process,parent

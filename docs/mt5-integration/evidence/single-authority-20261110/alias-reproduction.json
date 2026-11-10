@@ -1,0 +1,18 @@
+{
+  "base_commit": "b261167ee02be360b1357c15229d865dc072ae8a",
+  "simulation_only": true,
+  "before": {
+    "first_uncertain": true,
+    "original_phase": "dispatching",
+    "renamed_success": true,
+    "renamed_uncertain": false,
+    "renamed_journal_created": true
+  },
+  "after": {
+    "first_uncertain": true,
+    "original_phase": "dispatching",
+    "renamed_success": false,
+    "renamed_uncertain": false,
+    "renamed_journal_created": false
+  }
+}
