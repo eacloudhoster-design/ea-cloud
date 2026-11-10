@@ -1,0 +1,33 @@
+{
+  "base_commit": "3a90c0ca23a1420288b043d537eced109df01472",
+  "python": {
+    "passed": 184,
+    "failed": 0,
+    "skipped": 0,
+    "new_cases": 16
+  },
+  "focused": {
+    "passed": 16,
+    "included_in_regression_total": true
+  },
+  "scope": "Offline preparation consumer plus existing read-only preparation, private IPC, shared lease, cached evidence, multiprocess and history-worker regressions",
+  "python_compilation": "passed",
+  "real_sdk_calls": 0,
+  "broker_connections": 0,
+  "real_orders": 0,
+  "production_configuration_changes": false,
+  "not_claimed": [
+    "real-session authorization",
+    "credential delivery verified",
+    "production signing or secret service",
+    "execution worker startup integration",
+    "native Windows storage",
+    "cross-host replay or ownership exclusion"
+  ],
+  "not_rerun": [
+    "unrelated Node/UI suites",
+    "Wine acceptance",
+    "native Windows",
+    "whole-project baseline"
+  ]
+}

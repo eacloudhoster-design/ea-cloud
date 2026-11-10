@@ -1,0 +1,4 @@
+New Python sources compile; whitespace checks passed.
+No existing execution engine, IPC/default bootstrap, journal, stop or runtime source changed.
+New consumer is not imported by execution entry points; no SDK loader or secret resolver exists.
+Raw logs normalized only for trailing whitespace; originals retained outside repository.
