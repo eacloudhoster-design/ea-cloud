@@ -1,0 +1,39 @@
+{
+  "base_commit": "ab1dc8d07b16e8c93e48864dea66c74bf019b2cb",
+  "environment": {
+    "system": "Linux",
+    "machine": "x86_64",
+    "python": "3.12.14",
+    "metatrader5_distribution": null
+  },
+  "workers": {
+    "passed": 501,
+    "failed": 0,
+    "skipped": 0,
+    "new_cases": 13,
+    "scope": "ordinary-user Python worker discovery; unchanged root-only publisher cases excluded"
+  },
+  "targeted": {
+    "passed": 13,
+    "included_in_worker_total": true
+  },
+  "application": {
+    "passed": 2,
+    "failed": 0,
+    "skipped": 0,
+    "scope": "existing guarded gateway and five-worker synthetic copier"
+  },
+  "python_compilation": "passed",
+  "not_rerun": [
+    "root-only publisher",
+    "Wine acceptance",
+    "native Windows",
+    "browser/UI",
+    "TypeScript (no TypeScript changed)"
+  ],
+  "real_sdk_imports": 0,
+  "real_sdk_calls": 0,
+  "broker_connections": 0,
+  "real_orders": 0,
+  "production_configuration_changes": false
+}

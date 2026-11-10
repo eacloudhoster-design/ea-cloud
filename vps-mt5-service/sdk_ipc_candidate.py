@@ -128,14 +128,21 @@ class CandidateEngine:
                 if self.db.execute('SELECT 1 FROM ipc_transport_hold').fetchone():
                     self.db.execute('UPDATE ipc_state SET held=1')
             self.db.commit()
-            account = Account(self.binding.account, self.binding.broker, self.binding.login,
-                              self.binding.server, delay_ms=0,
-                              crash_after_commit=self.faults.crash_after_fill)
-            self.sdk = SimulatedBroker(account, self.root)
+            self.sdk = self._construct_sdk()
             self._audit('WORKER_STARTED')
         except Exception:
             self.close()
             raise
+
+    def _construct_sdk(self):
+        """Internal construction seam, after journal ownership; never a wire selector.
+
+        The default remains hardcoded simulation. No real binding or loader exists.
+        """
+        account = Account(self.binding.account, self.binding.broker, self.binding.login,
+                          self.binding.server, delay_ms=0,
+                          crash_after_commit=self.faults.crash_after_fill)
+        return SimulatedBroker(account, self.root)
 
     def _state(self):
         return self.db.execute('SELECT * FROM ipc_state WHERE id=1').fetchone()

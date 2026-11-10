@@ -1,0 +1,6 @@
+{
+  "vps-mt5-service/sdk_ipc_candidate.py": "f146f38103efa81851c6d353fb314faf1e7166b6210cea6817de0e8d4cf6ecdc",
+  "vps-mt5-service/sdk_adapter_candidate.py": "03db5cafc25b861e4154d897ce12fff4222a1ac000df804bb0cb334de98f66fb",
+  "vps-mt5-service/mt5_readonly_preparation.py": "96acdf4b6695a919caf80ea0b1a9b32536bf83624428a8ad0a264b36e22fcad2",
+  "vps-mt5-service/tests/test_mt5_readonly_preparation.py": "f2b0b78e1720772aebf7f81a16e4826f61b7a8b00123eb0b276338e5662c874d"
+}

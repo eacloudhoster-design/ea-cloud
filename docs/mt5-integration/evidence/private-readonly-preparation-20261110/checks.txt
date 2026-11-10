@@ -1,0 +1,5 @@
+Python source compilation and whitespace checks passed.
+SDK package presence checked via distribution metadata only; no SDK import or connection.
+No execution protocol, source hash closure membership, gateway assignment, runtime dependency or emergency-stop policy changed.
+Earlier Wine acceptance is historical because two existing runtime source files changed; native Windows remains unverified.
+Raw logs normalized only to remove trailing whitespace; originals retained outside Git.

@@ -402,13 +402,17 @@ class AdapterEngine(CandidateEngine):
                 if db.execute("SELECT 1 FROM sqlite_master WHERE name='sdk_adapter_installation'").fetchone():
                     if not (root/'simulated-broker.sqlite3').is_file():
                         raise AdapterError('SDK_JOURNAL_MISSING')
+        self._adapter_faults = adapter_faults
         super().__init__(root,binding,key,**kwargs)
+
+    def _construct_sdk(self):
+        backend = super()._construct_sdk()
         try:
-            self.sdk=SyntheticSdkAdapter(self.sdk,self.binding,self.root,self.owner,faults=adapter_faults)
+            return SyntheticSdkAdapter(backend,self.binding,self.root,self.owner,faults=self._adapter_faults)
         except Exception:
             try:persist_shared_hold(self.root,self.binding)
             except Exception:pass
-            self.close()
+            backend.db.close()
             raise
 
     def _held(self):

@@ -1,0 +1,8 @@
+{
+  "application-regressions.log": "35aca50eab2934ad51e68a5fda3a615882c4a331c01987a8ff5be9943539da37",
+  "checks.txt": "c9a32bb4a53b9eafa18d69668872a1c3f1e6f535a1247cea75ae751f2821ed41",
+  "source-sha256.json": "1b3338633a35d14de8e1e121a745c0bb3e5687d0689412382cbd94ae7005e5db",
+  "targeted.log": "6a6c4f52b328705b9b09627debe52c8362f4aa880e87dcff58441700f0141e8e",
+  "verification.json": "4675b14e7fd72f097cdbe85950708f7e20258782a6144b8b24120a5731c40e7f",
+  "worker-regressions.log": "9f6081d660e56c1d1753dfd17cf6c545a1bcf288ce758a91f2e8dbcb33b88028"
+}
