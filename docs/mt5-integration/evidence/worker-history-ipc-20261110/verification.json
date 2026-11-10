@@ -1,0 +1,93 @@
+{
+  "branch": "feature/person2-worker-history-ipc-20261110",
+  "base_commit": "397d29b6de950e9bbc2ed7722ee0bc31110fd63b",
+  "simulation_only": true,
+  "baseline": {
+    "passed": 461,
+    "failed": 0,
+    "skipped": 0,
+    "reproduced_before_branch": true
+  },
+  "final": {
+    "python_existing": 393,
+    "python_new": 40,
+    "python_total": 433,
+    "core": 39,
+    "pages": 14,
+    "root_gates": 6,
+    "harness": 9,
+    "passed": 501,
+    "failed": 0,
+    "skipped": 0
+  },
+  "browser": {
+    "passed": 2,
+    "failed": 0,
+    "enrollment_fixture": "PGlite fallback (existing PASS line names PostgreSQL generically)",
+    "recovery_fixture": "loopback static build, intercepted API"
+  },
+  "existing_wine": {
+    "passed": 6,
+    "failed": 0,
+    "skipped": 0,
+    "wine": "wine-10.0 (Debian 10.0~repack-6)",
+    "windows_python": "3.12.10",
+    "scope": "Existing Wine bridge source closure (including common response-validation hook); integrated history mode NOT Wine/native Windows acceptance"
+  },
+  "runtime": {
+    "platform": "linux",
+    "python": "3.12.14 (main, Aug 25 2026, 14:00:49) [Clang 22.1.3 ]",
+    "pydantic": "2.13.4",
+    "fastapi": "0.141.1",
+    "host_metatrader5_distribution": null
+  },
+  "checks": {
+    "typecheck": true,
+    "python_compile": true,
+    "whitespace": true
+  },
+  "safety": {
+    "financial_execution": false,
+    "real_sdk_called": false,
+    "production_changes": false,
+    "stops_removed": false,
+    "pushed": false,
+    "merged": false
+  },
+  "new_test_scope": {
+    "count": 40,
+    "transport": "actual guarded Linux subprocesses and authenticated framed stdio",
+    "crash": "worker exits 70 after committed synthetic fill/authority receipt; timeout and disconnection preserve native and shared holds",
+    "ordering": "gaps/out-of-order fail closed; no reordering",
+    "recovery": "verification only; no retry or hold clearing"
+  },
+  "commands": {
+    "python_ordinary_user": "python -m unittest discover -s vps-mt5-service/tests (exclude test_execution_gates, tested separately as root)",
+    "core": "node --test --test-concurrency=1 [backend list in person2-release-readiness.md excluding pages.test.mjs]",
+    "pages": "node --test scripts/tests/pages.test.mjs",
+    "harness": "python tools/wine-simulation/test_harness.py",
+    "root_gates": "python -m unittest discover -s /service/tests -p test_execution_gates.py -v (pinned network-none container)",
+    "browser_enrollment": "node scripts/tests/mt5-enrollment.browser.mjs",
+    "browser_recovery": "node scripts/tests/mt5-status-recovery.browser.mjs (loopback static server)",
+    "wine": "python tools/wine-simulation/run.py run --cache <verified isolated cache> --evidence <evidence directory>",
+    "typescript": "pnpm run typecheck",
+    "python_compile": "python -m compileall -q vps-mt5-service",
+    "whitespace": "git diff --check"
+  },
+  "source_sha256": {
+    "vps-mt5-service/sdk_ipc_candidate.py": "03447957d5b19eb6cb1055782946c02ee7c7e4a525817548719947f5b09c4ab6",
+    "vps-mt5-service/native_windows_candidate.py": "1f5f265d0742641c9dbbcce1487df29df635f765f22a0f0b5cfb5f8683cb45b8",
+    "vps-mt5-service/native_windows_worker.py": "a6e3cb2dc0ffdc00f122ead59b8bb3ca0211747c6a5092ddca2500d63d9f0b4f",
+    "vps-mt5-service/windows_simulation_security.py": "4d107a0c889a072fac6c443726c98a3e6ffc1b92fe2c2c0adf8e04b34f527094",
+    "vps-mt5-service/native_history_pipeline.py": "65fb48cfdd4a8f6e0c1e504636fb5d8dbe5bac177e7c675f60af4cff5b78f120",
+    "vps-mt5-service/tests/test_worker_history_pipeline.py": "247e7bb3de0b6863073ea73eb91bc8a8d2b1c2eaf9424f7851c4002b5921db83"
+  },
+  "blockers": [
+    "Explicit new isolated history-worker fixtures only; no existing account migration",
+    "Single-authority synthetic gateway; no real MT5 history or market matching",
+    "Native Windows blocked explicitly: shared authority and history permissions require Linux; integrated history Wine acceptance unverified",
+    "Bounded book/deadline; larger journals need reviewed checkpoint design",
+    "Whole-root rollback, hostile same-user writes and kernel/storage hangs require external controls",
+    "No automatic safety-hold clearing or reconciliation repair; native lifecycle holds also stop worker-side reconciliation"
+  ]
+}

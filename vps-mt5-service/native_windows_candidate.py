@@ -32,6 +32,28 @@ def hashes():
 
 class NativeBootstrap(Bootstrap):
     backend: Literal['windows', 'linux-reference']
+    protocol: Literal['absolute-target', 'trade-history'] = 'absolute-target'
+
+
+def check_worker_protocol(root,binding,protocol,inspector):
+    root=Path(root);marker=root/'history-worker.json';lifecycle=root/'native-lifecycle.sqlite3'
+    present=os.path.lexists(marker) or os.path.lexists(root/'history-authority')
+    if present != (protocol=='trade-history'):raise ValueError('Worker protocol/fixture mismatch')
+    if lifecycle.exists():
+        with closing(sqlite3.connect(lifecycle.as_uri()+'?mode=ro',uri=True,timeout=.1)) as db:
+            if db.execute("SELECT 1 FROM sqlite_master WHERE name='native_protocol'").fetchone():
+                if db.execute('SELECT protocol FROM native_protocol').fetchall()!=[(protocol,)]:
+                    raise ValueError('Durable worker protocol mismatch')
+    if protocol=='trade-history':
+        inspector.check(marker)
+        if marker.read_bytes()!=canonical(dict(binding=binding.digest(),protocol='trade-history')):
+            raise ValueError('Worker protocol marker invalid')
+        audit=root/'history-pipeline.sqlite3';inspector.check(audit)
+        with closing(sqlite3.connect(audit.as_uri()+'?mode=ro',uri=True,timeout=.1)) as db:
+            metadata=db.execute('SELECT binding,started FROM metadata').fetchall()
+        if len(metadata)!=1 or metadata[0][0]!=binding.digest() or metadata[0][1] not in (0,1):
+            raise ValueError('History pipeline identity invalid')
+        if metadata[0][1] and not lifecycle.exists():raise ValueError('Installed lifecycle missing')
 
 
 def private_tree(root, inspector):
@@ -100,6 +122,7 @@ class View:
 
 
 class NativeWindowsSimulation(SimulationController):
+    protocol = 'absolute-target'
     @classmethod
     def linux_reference(cls, *args, **kwargs):
         return cls(*args, _reference=True, **kwargs)
@@ -121,6 +144,7 @@ class NativeWindowsSimulation(SimulationController):
         self.root = Path(root).absolute()
         private_tree(self.root, self.inspector)
         check_simulation(self.root, self.binding)
+        check_worker_protocol(self.root,self.binding,self.protocol,self.inspector)
         lifecycle = self.root / 'native-lifecycle.sqlite3'
         if lifecycle.exists():
             # Never recreate lost/corrupt lifecycle authorization on recovery.
@@ -171,7 +195,7 @@ class NativeWindowsSimulation(SimulationController):
             challenge = secrets.token_hex(32)
             boot = NativeBootstrap(version=1, binding=self.binding, root=str(self.root), key=key.hex(),
                 challenge=challenge, source_hashes=hashes(), mock_stop=True,
-                backend=self.backend, faults=EntryFaults.model_validate(faults or {}))
+                backend=self.backend, protocol=self.protocol, faults=EntryFaults.model_validate(faults or {}))
             frames, errors = [], []
             def exchange():
                 try:
@@ -211,6 +235,9 @@ class NativeWindowsSimulation(SimulationController):
                 id INTEGER PRIMARY KEY CHECK(id=1),binding TEXT NOT NULL,active INTEGER NOT NULL,held INTEGER NOT NULL);
                 CREATE TABLE IF NOT EXISTS native_audit(id INTEGER PRIMARY KEY,event TEXT NOT NULL,
                 binding TEXT NOT NULL,observed_ms INTEGER NOT NULL,pid INTEGER);''')
+            if self.protocol=='trade-history':
+                db.execute('CREATE TABLE IF NOT EXISTS native_protocol(protocol TEXT PRIMARY KEY)')
+                db.execute("INSERT OR IGNORE INTO native_protocol VALUES('trade-history')")
             state = db.execute('SELECT binding,active,held FROM native_state WHERE id=1').fetchone()
             if state and state[0] != self.binding.digest():
                 raise ValueError('Lifecycle tenant/account conflict')

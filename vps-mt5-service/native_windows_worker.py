@@ -40,7 +40,7 @@ def main():
             import msvcrt
             msvcrt.setmode(sys.stdin.fileno(), os.O_BINARY)
             msvcrt.setmode(sys.stdout.fileno(), os.O_BINARY)
-        from native_windows_candidate import NativeBootstrap, hashes, stop_active, private_tree
+        from native_windows_candidate import NativeBootstrap, hashes, stop_active, private_tree, check_worker_protocol
         from windows_simulation_security import Win32Inspector, LinuxReferenceInspector, SOURCES
         from framed_stdio import FramedPipe
         from private_ipc import _unique, sign, verify
@@ -56,11 +56,17 @@ def main():
             return 65
         inspector = Win32Inspector() if boot.backend == 'windows' else LinuxReferenceInspector()
         private_tree(boot.root, inspector)
+        check_worker_protocol(boot.root,boot.binding,boot.protocol,inspector)
         for name in SOURCES:
             inspector.check(source / name, private=False)
         if boot.faults.exit_before_ready:
             return 71
-        engine = AdapterEngine(boot.root, boot.binding, bytes.fromhex(boot.key),
+        factory=AdapterEngine
+        if boot.protocol=='trade-history':
+            from native_history_pipeline import HistoryWorkerEngine
+            if boot.backend!='linux-reference':return 65
+            factory=HistoryWorkerEngine
+        engine = factory(boot.root, boot.binding, bytes.fromhex(boot.key),
             stop_checker=lambda: stop_active(boot.root, boot.binding, boot.backend),
             faults=SimulationFaults(before_send_ms=boot.faults.before_send_ms,
                                     crash_after_fill=boot.faults.crash_after_fill))

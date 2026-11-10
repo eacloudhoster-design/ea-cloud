@@ -12,7 +12,9 @@ SYSTEM = 'S-1-5-18'
 SOURCES = ('private_ipc.py', 'sdk_ipc_candidate.py', 'simulation_sdk.py', 'observer_sync.py',
            'worker_state.py', 'demo_worker.py', 'execution_gates.py', 'broker_profiles.py',
            'framed_stdio.py', 'wine_worker_entry.py', 'windows_simulation_security.py',
-           'native_windows_worker.py', 'native_windows_candidate.py', 'sdk_adapter_candidate.py')
+           'native_windows_worker.py', 'native_windows_candidate.py', 'sdk_adapter_candidate.py',
+           'shared_lease_simulation.py', 'synthetic_trade_history.py',
+           'history_authority_simulation.py', 'native_history_pipeline.py')
 
 
 def windows_path(value):

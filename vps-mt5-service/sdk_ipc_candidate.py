@@ -417,18 +417,7 @@ class SimulationController:
                     raise ProtocolError('DEADLINE')
                 outcome = reply.result.model_dump()
                 if outcome['success']:
-                    schemas = {'acquire': ('LEASED', LeaseGrant), 'renew': ('RENEWED', Renewal),
-                               'status': ('STATUS', Status), 'sync': ('SYNCED', SyncReceipt)}
-                    code, schema = schemas[operation]
-                    if outcome['code'] != code or outcome['uncertain']:
-                        raise ProtocolError('INVALID_RESPONSE')
-                    parsed = schema.model_validate(outcome['data'])
-                    if operation == 'acquire' and (parsed.epoch <= self.epoch or parsed.expires_ms <= wall_ms()
-                                                   or parsed.expires_ms > wall_ms() + LEASE_MS):
-                        raise ProtocolError('INVALID_RESPONSE')
-                    if operation == 'sync' and (parsed.sourceKey != request.body.get('sourceKey')
-                                               or parsed.symbol != request.body.get('symbol')):
-                        raise ProtocolError('INVALID_RESPONSE')
+                    self._validate_success(request, outcome)
                 if outcome['code'] == 'LEASED':
                     if not outcome['success'] or operation != 'acquire':
                         raise ProtocolError('INVALID_RESPONSE')
@@ -445,6 +434,20 @@ class SimulationController:
                     return result('TRANSPORT_HOLD_UNRECORDED', uncertain=True)
                 io.join(1)
                 return result('TRANSPORT_HELD', uncertain=True)
+
+    def _validate_success(self, request, outcome):
+        schemas = {'acquire': ('LEASED', LeaseGrant), 'renew': ('RENEWED', Renewal),
+                   'status': ('STATUS', Status), 'sync': ('SYNCED', SyncReceipt)}
+        code, schema = schemas[request.operation]
+        if outcome['code'] != code or outcome['uncertain']:
+            raise ProtocolError('INVALID_RESPONSE')
+        parsed = schema.model_validate(outcome['data'])
+        if request.operation == 'acquire' and (parsed.epoch <= self.epoch or parsed.expires_ms <= wall_ms()
+                                       or parsed.expires_ms > wall_ms() + LEASE_MS):
+            raise ProtocolError('INVALID_RESPONSE')
+        if request.operation == 'sync' and (parsed.sourceKey != request.body.get('sourceKey')
+                                   or parsed.symbol != request.body.get('symbol')):
+            raise ProtocolError('INVALID_RESPONSE')
 
     def _persist_transport_hold(self):
         hold_after_transport_failure(self.root, self.binding)
