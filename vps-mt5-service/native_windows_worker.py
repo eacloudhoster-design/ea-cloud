@@ -44,7 +44,8 @@ def main():
         from windows_simulation_security import Win32Inspector, LinuxReferenceInspector, SOURCES
         from framed_stdio import FramedPipe
         from private_ipc import _unique, sign, verify
-        from sdk_ipc_candidate import CandidateEngine, SimulationFaults
+        from sdk_ipc_candidate import SimulationFaults
+        from sdk_adapter_candidate import AdapterEngine
         pipe = FramedPipe(sys.stdin.buffer, sys.stdout.buffer)
         sys.stdout = sys.stderr
         data = json.loads(pipe.recv_bytes(), object_pairs_hook=_unique,
@@ -59,7 +60,7 @@ def main():
             inspector.check(source / name, private=False)
         if boot.faults.exit_before_ready:
             return 71
-        engine = CandidateEngine(boot.root, boot.binding, bytes.fromhex(boot.key),
+        engine = AdapterEngine(boot.root, boot.binding, bytes.fromhex(boot.key),
             stop_checker=lambda: stop_active(boot.root, boot.binding, boot.backend),
             faults=SimulationFaults(before_send_ms=boot.faults.before_send_ms,
                                     crash_after_fill=boot.faults.crash_after_fill))

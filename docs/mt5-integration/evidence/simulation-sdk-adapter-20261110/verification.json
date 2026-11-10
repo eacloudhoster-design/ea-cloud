@@ -1,0 +1,74 @@
+{
+  "branch": "feature/person2-simulation-sdk-adapter-20261110",
+  "base_commit": "89638db7487a49977d2ebd2c4e056d106d672439",
+  "simulation_only": true,
+  "existing_baseline_passed": 298,
+  "new_offline_cases": 50,
+  "results": {
+    "core": 39,
+    "pages": 14,
+    "python_existing": 230,
+    "python_new": 50,
+    "python_total": 280,
+    "root_gates": 6,
+    "harness": 9,
+    "total_passed": 348,
+    "failed": 0,
+    "skipped": 0
+  },
+  "browser": {
+    "passed": 2,
+    "failed": 0,
+    "enrollment_fixture": "PGlite fallback",
+    "recovery_fixture": "loopback static frontend with intercepted API"
+  },
+  "existing_wine_acceptance": {
+    "passed": 6,
+    "failed": 0,
+    "skipped": 0,
+    "scope": "Existing bridge only, not real SDK or native Microsoft Windows"
+  },
+  "runtime": {
+    "python": "3.12.14 (main, Aug 25 2026, 14:00:49) [Clang 22.1.3 ]",
+    "fastapi": "0.141.1",
+    "pydantic": "2.13.4",
+    "host_mt5_distribution": null
+  },
+  "native_microsoft_windows": {
+    "status": "blocked: no runner",
+    "executed": 0,
+    "compatibility_claimed": false
+  },
+  "real_sdk": {
+    "imported": false,
+    "called": false,
+    "version_pins_changed": false
+  },
+  "safety": {
+    "financial_execution": false,
+    "broker_connections": false,
+    "production_changes": false,
+    "stops_removed": false,
+    "pushed": false,
+    "merged": false
+  },
+  "checks": {
+    "typecheck": true,
+    "python_compile": true,
+    "whitespace": true
+  },
+  "source_sha256": {
+    "vps-mt5-service/sdk_adapter_candidate.py": "9074f905d06e5758c0b3b8371ad50504bcfa7a17b92c4f731cc8a627918dbeee",
+    "vps-mt5-service/native_windows_worker.py": "fd218c0861727f3a61d98eeba674d1825e939a0e082e66ced3c5a07efde6a8ce",
+    "vps-mt5-service/windows_simulation_security.py": "0ecffaafa65c8193502ddc581f131927d295bdb12fe0ec4cc9c4757d7065c2c7",
+    "vps-mt5-service/tests/test_sdk_adapter_candidate.py": "7ef1e6a58ae4fa6e78f26321317529bfc8b4d0d544261217148f9fd5b8cd0a3d",
+    "docs/mt5-integration/simulation-sdk-adapter-candidate.md": "2d58a574e7e7ef2ad1b94bdcb635ede9cbc1b5fc3f2f1dd6fdd049ae5c61db0b"
+  },
+  "remaining_blockers": [
+    "No native Windows runner; actual native API, permission, handle and recovery acceptance remains unverified",
+    "Real SDK, terminal, broker connectivity and financial execution are excluded",
+    "SDK service pin 5.0.45 lacks a cp312 wheel; future version/NumPy/terminal compatibility requires separate review",
+    "Pending orders, partial-fill/history/session/market semantics require a future reviewed interface extension",
+    "Cooperative mock budgets do not cancel arbitrary native/kernel/storage hangs; final-check-to-submit window remains"
+  ]
+}

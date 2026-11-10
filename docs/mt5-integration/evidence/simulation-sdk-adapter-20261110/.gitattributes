@@ -1,0 +1,2 @@
+# Preserve raw Windows CRLF startup evidence and its hashes.
+*.log -text whitespace=cr-at-eol
