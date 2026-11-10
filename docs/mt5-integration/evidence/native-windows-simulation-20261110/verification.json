@@ -1,0 +1,78 @@
+{
+  "branch": "feature/person2-native-windows-simulation-20261110",
+  "base_commit": "7f99fbb79ef3b5976c6640bda34b1ab5607b37e8",
+  "simulation_only": true,
+  "reference_host": {
+    "platform": "linux",
+    "python": "3.12.14 (main, Aug 25 2026, 14:00:49) [Clang 22.1.3 ]"
+  },
+  "existing_baseline_passed": 254,
+  "new_offline_cases": 44,
+  "results": {
+    "core": 39,
+    "pages": 14,
+    "python_existing": 186,
+    "python_new": 44,
+    "python_total": 230,
+    "root_gates": 6,
+    "harness": 9,
+    "total_passed": 298,
+    "failed": 0,
+    "skipped": 0
+  },
+  "browser": {
+    "passed": 2,
+    "failed": 0,
+    "enrollment_fixture": "PGlite fallback, no production database",
+    "recovery_fixture": "loopback static frontend and intercepted API"
+  },
+  "existing_wine_acceptance": {
+    "passed": 6,
+    "failed": 0,
+    "skipped": 0,
+    "wine": "wine-10.0 (Debian 10.0~repack-6)",
+    "python": "3.12.10 (tags/v3.12.10:0cc8128, Apr  8 2025, 12:21:36) [MSC v.1943 64 bit (AMD64)]",
+    "scope": "Existing Wine bridge, not the native candidate"
+  },
+  "native_microsoft_windows": {
+    "status": "blocked: no runner",
+    "executed": 0,
+    "compatibility_claimed": false
+  },
+  "graphical_mt5": {
+    "status": "unavailable and excluded",
+    "started": false
+  },
+  "real_sdk": {
+    "imported": false,
+    "called": false,
+    "version_pins_changed": false
+  },
+  "safety": {
+    "financial_execution": false,
+    "production_changes": false,
+    "stops_removed": false,
+    "pushed": false,
+    "merged": false
+  },
+  "checks": {
+    "typecheck": true,
+    "python_compile": true,
+    "whitespace": true
+  },
+  "source_sha256": {
+    "vps-mt5-service/native_windows_candidate.py": "efe1106cc96e9ae2ca8ea5ef64394c63500107314f86c18abda401e81f44f0a5",
+    "vps-mt5-service/native_windows_worker.py": "f0ebd6440846e68cff3a8c2610eb00b9008136df4c21449d62b148a2e94b6a8d",
+    "vps-mt5-service/windows_simulation_security.py": "826eb9a3b39629d11f628a460c8855557e4a8574088fe9d94bdee3ec450097b4",
+    "vps-mt5-service/tests/test_native_windows_candidate.py": "2d8b96ad8739aec2fc8b8671cb05cf52217ad8de3abb41de8b89d177999c5e70",
+    "docs/mt5-integration/native-windows-simulation-candidate.md": "7245ccd57bac1b2d51c48f0e67136df9a4d92bf9aa50283ec98741945259d116"
+  },
+  "remaining_blockers": [
+    "Native Windows SID/DACL inheritance and two-user denial acceptance",
+    "Native fixed NTFS/reparse and race acceptance",
+    "Native Job Object ABI, handle inheritance, process tree and quiescence acceptance",
+    "Native byte locks, stop freshness and crash/power-loss durability acceptance",
+    "Synchronous filesystem/OS calls are not bounded by protocol thread timeouts",
+    "Service SDK 5.0.45 has no cp312 wheel; real SDK integration remains excluded"
+  ]
+}

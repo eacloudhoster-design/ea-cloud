@@ -1,0 +1,2 @@
+# Preserve raw Windows startup logs and their recorded hashes.
+*.log -text whitespace=cr-at-eol

@@ -1,0 +1,49 @@
+✔ mentor and superadmin credentials authenticate and read their identity (64.2909ms)
+✔ incorrect passwords and pending accounts stay denied (5.5614ms)
+✔ session storage failure returns a server error without issuing a cookie (17.604445ms)
+✔ both client login URLs require the correct password (15.534243ms)
+✔ admin bootstrap creates once and never replaces an existing password or role (2719.42739ms)
+✔ persistent cookie sessions, revocation, expiry, renewal and role isolation (877.226043ms)
+{"observed_at":"2026-11-10T09:46:39.427Z","simulation":true,"broker_orders":0,"brokers":["deriv","exness","justmarkets","xm","rcg"],"source_routing":"actual routeSnapshot + Drizzle/PostgreSQL16","queue":"actual claim SQL","queue_scheduler":"Claim invoked immediately by fixture; production polling/backoff excluded","copier":"actual runSignal + executeObserver guards, mapping and sizing","transport":"explicit test-only synthetic receipt adapter over real authenticated loopback HTTP","workers":"five real isolated subprocesses, durable SQLite fills/receipts","measured_warm_events":12,"p95_ms":196.3306649999995,"maximum_ms":811.1099979999999,"cold_event_ms":811.1099979999999,"cold_start_included":true,"simulation_target_met":true,"actual_broker_target_verified":false,"disconnect_recovery":true,"gateway_restart_replay":true,"lost_ack_duplicate_prevention":true,"uncertain_fill_blocked":true,"baseline_accounts_flat":true,"concurrent_backend_retry_verified":true,"sl_tp_modification_verified":true,"custom_lots_caps_and_symbol_pinning_verified":true,"subminimum_receiver_target_rejected_without_roundup":true,"excluded":["public mentor HTTP authentication","Windows SDK/broker execution","production deployment"]}
+✔ mentor database routing to five isolated HTTP workers: mapping, replay, disconnect, crash and latency (8819.382421ms)
+✔ mentor policies validate, preserve stricter client risk and never oversize allocation (12.669932ms)
+✔ EA builder uses real portal sessions, ownership, scoped revocable credentials and non-executing idempotent capture (1402.64626ms)
+✔ actual non-trading release talks to unchanged Person 1 relay over HTTP and preserves PostgreSQL sessions through process restart (3750.685131ms)
+✔ real browser sessions, owned engine status, strict broker proof and account binding (1220.301471ms)
+✔ real PostgreSQL locks isolate concurrent client, mentor and pending account reservations (588.860234ms)
+✔ read-only canary refuses writable DB; isolated restart serves health but rejects mutations (513.252671ms)
+✔ real PostgreSQL management preflight requires application auth writes and serial sequence privileges (249.905356ms)
+✔ management startup requires a status-only gateway and original-key read-only audit, never startup mutations (277.504163ms)
+✔ mentor policy migration is additive, repeatable, disabled by default and enforces risk constraints (97.178194ms)
+✔ late cancelled and wrong-client status responses cannot populate mentor view (28.517103ms)
+✔ MT5 edge authentication is server-only, paired, HTTPS-only and fail-closed without disclosing credentials (36.370474ms)
+✔ client sends credentials once, requires exact verification and cancels bounded requests (34.536405ms)
+✔ independent enrollment is encrypted, owned, idempotent, non-trading and exported only through a private verified-owner handoff (977.417131ms)
+✔ broker detection recognises common MT5 server names and regional/legacy aliases (1.203861ms)
+✔ unknown, ambiguous or spoofed server strings use the neutral fallback (0.205009ms)
+✔ branded brokers retain pinned local assets; new profiles use explicit text fallbacks (4.113987ms)
+✔ account validation preserves digit strings and rejects floats, signs and exponents (0.29935ms)
+✔ preview supports cancellation without a backend call (0.742326ms)
+✔ completed preview always returns unverified without calling fetch (3202.399048ms)
+✔ MetaTrader 5 uses the pinned full-colour original asset, not a generated icon (1.108657ms)
+✔ status refresh serializes reads, recovers online and clears stale evidence on failure (3.624469ms)
+✔ backgrounding invalidates evidence; late cancelled reads cannot overwrite foreground recovery (1.924493ms)
+✔ deployment transport probe requires edge and service auth independently, accepts the intentional read-only 503 and never sends account credentials (26.04729ms)
+✔ same-service non-trading profile preserves real cookie auth, enforces origin auth and prevents all execution transports and queue wakes (942.881876ms)
+{"server_restart_preserves_ciphertext":false,"fresh_node_process_decrypts":true,"engine":"isolated PostgreSQL 16","legacy_format_compatible":true,"same_secret_restart_compatible":true,"wrong_key_rejected":true,"missing_key_rejected":true,"tamper_rejected":true,"audit_transactions_readonly":true,"audit_rows_unchanged":true,"production_binding_verified":false,"production_records_accessed":0}
+✔ PostgreSQL readonly audit preserves legacy encrypted rows; changed, missing and tampered keys fail closed (466.243789ms)
+✔ encryption audit refuses a non-readonly transaction before reading encrypted records (1.085102ms)
+✔ existing-hosting profile selects the non-trading entry, public bind and matching private origin authentication without automatic migrations (5.332777ms)
+✔ runner applies the exact checked-in migration before verifying columns (9.632361ms)
+✔ migration and verification failures roll back and propagate (4.680326ms)
+✔ start command fails closed on missing configuration or refused database, without leaking secrets (97.423384ms)
+✔ existing migration is retryable, preserves accounts/sessions and enforces schema (1926.118105ms)
+✔ older pending OPEN in backoff blocks later CLOSE while another mentor remains claimable (2017.639646ms)
+ℹ tests 39
+ℹ suites 0
+ℹ pass 39
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 33421.044288
