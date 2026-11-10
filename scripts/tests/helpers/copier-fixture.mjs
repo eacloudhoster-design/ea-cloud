@@ -6,7 +6,7 @@ import {randomBytes} from 'node:crypto';
 import {spawn} from 'node:child_process';
 import {once} from 'node:events';
 import {build} from '../../../artifacts/api-server/node_modules/esbuild/lib/main.js';
-export async function copierFixture(){
+export async function copierFixture({guarded=false}={}){
  const directory=await mkdtemp(join(tmpdir(),'ea-copier-e2e-'));
  let engine,postgres=false;
  if(process.env.EA_TEST_PG_URL){
@@ -32,12 +32,12 @@ export async function copierFixture(){
   if(postgres)return engine.query(config,params);
   const r=await engine.query(typeof config==='string'?config:config.text,params,{rowMode:config.rowMode==='array'?'array':'object'});return {rows:r.rows,fields:r.fields};
  };
- globalThis.__copierSchema=schema;globalThis.__copierDb=drizzle({query,connect:async()=>postgres?await engine.connect():({query,release(){}})});
- await build({stdin:{contents:`export {routeSnapshot,sourceKey} from './artifacts/api-server/src/lib/ea-builder/routing';export {robotEvent} from './artifacts/api-server/src/lib/ea-builder/contracts';export {runSignal,resolveVolume} from './artifacts/api-server/src/lib/copy-engine';export {executeObserver} from './artifacts/api-server/src/lib/observer-execution';export {encryptMT5Password} from './artifacts/api-server/src/lib/mt5-crypto';`,resolveDir:process.cwd()},bundle:true,platform:'node',format:'esm',outfile:join(directory,'engine.mjs'),banner,logLevel:'silent',plugins:[{name:'isolated-db',setup(b){b.onResolve({filter:/^@workspace\/db$/},()=>({path:'db',namespace:'fixture'}));b.onLoad({filter:/.*/,namespace:'fixture'},()=>({contents:`export const db=globalThis.__copierDb;${Object.keys(schema).filter(k=>k.endsWith('Table')).map(k=>`export const ${k}=globalThis.__copierSchema.${k};`).join('')}`,loader:'js'}));b.onResolve({filter:/^\.\.\/ws$/},()=>({path:'ws',namespace:'quiet'}));b.onResolve({filter:/^\.\/trading-activity$/},()=>({path:'activity',namespace:'quiet'}));b.onLoad({filter:/.*/,namespace:'quiet'},()=>({contents:'export const broadcastToClient=()=>{};export const recordExecutionActivity=async()=>{};',loader:'js'}));}}]});
+ globalThis.__copierUpdates=[];globalThis.__copierSchema=schema;globalThis.__copierDb=drizzle({query,connect:async()=>postgres?await engine.connect():({query,release(){}})});
+ await build({stdin:{contents:`export {routeSnapshot,sourceKey} from './artifacts/api-server/src/lib/ea-builder/routing';export {robotEvent} from './artifacts/api-server/src/lib/ea-builder/contracts';export {runSignal,resolveVolume} from './artifacts/api-server/src/lib/copy-engine';export {executeObserver} from './artifacts/api-server/src/lib/observer-execution';export {encryptMT5Password} from './artifacts/api-server/src/lib/mt5-crypto';`,resolveDir:process.cwd()},bundle:true,platform:'node',format:'esm',outfile:join(directory,'engine.mjs'),banner,logLevel:'silent',plugins:[{name:'isolated-db',setup(b){b.onResolve({filter:/^@workspace\/db$/},()=>({path:'db',namespace:'fixture'}));b.onLoad({filter:/.*/,namespace:'fixture'},()=>({contents:`export const db=globalThis.__copierDb;${Object.keys(schema).filter(k=>k.endsWith('Table')).map(k=>`export const ${k}=globalThis.__copierSchema.${k};`).join('')}`,loader:'js'}));b.onResolve({filter:/^\.\.\/ws$/},()=>({path:'ws',namespace:'quiet'}));b.onResolve({filter:/^\.\/trading-activity$/},()=>({path:'activity',namespace:'quiet'}));b.onLoad({filter:/.*/,namespace:'quiet'},()=>({contents:'export const broadcastToClient=(clientId,payload)=>{globalThis.__copierUpdates?.push({clientId,payload})};export const recordExecutionActivity=async()=>{};',loader:'js'}));}}]});
  const api=await import(pathToFileURL(join(directory,'engine.mjs')));
  const token=randomBytes(32).toString('hex');let child,port;
  const start=async()=>{
-  child=spawn(process.env.EA_TEST_PYTHON || 'python3',['scripts/tests/helpers/copier-simulation-server.py',join(directory,'workers')],{env:{...process.env,EA_WORKER_MODE:'simulation',EA_TEST_TOKEN:token},stdio:['ignore','pipe','pipe']});
+  child=spawn(process.env.EA_TEST_PYTHON || 'python3',['scripts/tests/helpers/copier-simulation-server.py',join(directory,'workers'),...(guarded?['--guarded-ipc']:[])],{env:{...process.env,EA_WORKER_MODE:'simulation',EA_TEST_TOKEN:token},stdio:['ignore','pipe','pipe']});
   port=await new Promise((yes,no)=>{let output='';const timer=setTimeout(()=>no(Error('Fixture startup timeout')),15000);child.stdout.on('data',chunk=>{output+=chunk;const line=output.split('\n')[0];try{const data=JSON.parse(line);clearTimeout(timer);yes(data.port);}catch{}});child.once('exit',()=>{clearTimeout(timer);no(Error('Simulation fixture exited'));});});
   for(let i=0;i<40;i++){try{if((await call('/healthz')).status===200)return;}catch{}await new Promise(r=>setTimeout(r,100));}throw Error('Fixture HTTP not ready');
  };
@@ -46,5 +46,5 @@ export async function copierFixture(){
  await start();
  const workerSource=await readFile('artifacts/api-server/src/lib/signal-worker.ts','utf8');
  const claimSQL=workerSource.match(/WITH active AS \([\s\S]*?RETURNING id/)[0].replaceAll('${tradeSignalsTable}','trade_signals').replaceAll('${lease}',"interval '10 minutes'");
- return {databaseKind:postgres?'PostgreSQL16':'PGlite',api,db:globalThis.__copierDb,schema,engine,call,claimSQL,restart:async()=>{await stop();await start();},close:async()=>{await stop();await engine.close();await rm(directory,{recursive:true,force:true});delete globalThis.__copierDb;delete globalThis.__copierSchema;}};
+ return {updates:globalThis.__copierUpdates,databaseKind:postgres?'PostgreSQL16':'PGlite',api,db:globalThis.__copierDb,schema,engine,call,claimSQL,restart:async()=>{await stop();await start();},close:async()=>{await stop();await engine.close();await rm(directory,{recursive:true,force:true});delete globalThis.__copierDb;delete globalThis.__copierSchema;delete globalThis.__copierUpdates;}};
 }

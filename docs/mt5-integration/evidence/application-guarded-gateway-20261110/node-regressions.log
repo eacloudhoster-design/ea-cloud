@@ -1,0 +1,17 @@
+✔ persistent cookie sessions, revocation, expiry, renewal and role isolation (2708.244904ms)
+{"observed_at":"2026-11-10T18:04:05.463Z","simulation":true,"broker_orders":0,"brokers":["deriv","exness","justmarkets","xm","rcg"],"source_routing":"actual routeSnapshot + Drizzle/PGlite","queue":"actual claim SQL","queue_scheduler":"Claim invoked immediately by fixture; production polling/backoff excluded","copier":"actual runSignal + executeObserver guards, mapping and sizing","transport":"explicit test-only synthetic receipt adapter over real authenticated loopback HTTP","workers":"five real isolated subprocesses, durable SQLite fills/receipts","measured_warm_events":12,"p95_ms":185.39001000000007,"maximum_ms":876.47048,"cold_event_ms":876.47048,"cold_start_included":true,"simulation_target_met":true,"actual_broker_target_verified":false,"disconnect_recovery":true,"gateway_restart_replay":true,"lost_ack_duplicate_prevention":true,"uncertain_fill_blocked":true,"baseline_accounts_flat":true,"concurrent_backend_retry_verified":true,"sl_tp_modification_verified":true,"custom_lots_caps_and_symbol_pinning_verified":true,"subminimum_receiver_target_rejected_without_roundup":true,"excluded":["public mentor HTTP authentication","real PostgreSQL server","Windows SDK/broker execution","production deployment"]}
+✔ mentor database routing to five isolated HTTP workers: mapping, replay, disconnect, crash and latency (10142.474303ms)
+✔ mentor policies validate, preserve stricter client risk and never oversize allocation (14.044485ms)
+✔ EA builder uses real portal sessions, ownership, scoped revocable credentials and non-executing idempotent capture (3253.966384ms)
+✔ real browser sessions, owned engine status, strict broker proof and account binding (3267.749504ms)
+✔ application records through assigned fenced gateway process and signed IPC remain synthetic, isolated and fail closed (4271.528423ms)
+✔ independent enrollment is encrypted, owned, idempotent, non-trading and exported only through a private verified-owner handoff (2739.222257ms)
+✔ follower signal feed uses session mentor, rejects overrides and omits private ingestion/queue data (2674.041591ms)
+ℹ tests 8
+ℹ suites 0
+ℹ pass 8
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 30541.276487

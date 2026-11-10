@@ -92,6 +92,12 @@ function vpsSummary(r: VpsResult): Record<string, unknown> {
   return {
     ok: r.ok,
     httpStatus: r.httpStatus,
+    // Preserve explicit safety facts from the worker receipt. Missing evidence is
+    // unknown, never inferred safe from HTTP status or a successful mock fill.
+    simulation: typeof raw?.simulation === "boolean" ? raw.simulation : null,
+    financialExecution: typeof raw?.financial_execution === "boolean" ? raw.financial_execution : null,
+    uncertain: typeof raw?.uncertain === "boolean" ? raw.uncertain : null,
+    code: typeof raw?.code === "string" && /^[A-Z_]{1,40}$/.test(raw.code) ? raw.code : null,
     message: r.message,
     ticket: r.ticket,
     retcode: r.retcode,

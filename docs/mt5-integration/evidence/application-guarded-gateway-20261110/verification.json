@@ -1,0 +1,34 @@
+{
+  "base_commit": "e323accff824ba0880bf7884ed9ace449fe25f72",
+  "node": {
+    "passed": 8,
+    "failed": 0,
+    "skipped": 0,
+    "new_integration": 1
+  },
+  "python": {
+    "passed": 160,
+    "failed": 0,
+    "skipped": 0
+  },
+  "typescript": "passed",
+  "python_compilation": "passed",
+  "database": "Disposable PGlite",
+  "new_path": "Actual routeSnapshot/runSignal/executeObserver -> explicit test transport -> authenticated HTTP -> SimulatedHost HMAC/PipeLink -> separate existing SharedAuthority gateway process -> signed FencedEngine/AdapterEngine -> SimulatedBroker -> retained journals/records/notification sink",
+  "before_fix": "Expected failure: summary omitted explicit simulation evidence",
+  "not_claimed": [
+    "production connector",
+    "automatic enrollment assignment",
+    "simulation engine-status endpoint",
+    "absolute-target to partial-fill event mapping",
+    "real PostgreSQL concurrency",
+    "browser notification delivery",
+    "native Windows",
+    "Wine acceptance",
+    "real SDK or broker execution"
+  ],
+  "real_sdk_calls": 0,
+  "broker_connections": 0,
+  "real_orders": 0,
+  "production_changes": false
+}

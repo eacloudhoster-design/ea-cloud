@@ -1,0 +1,4 @@
+API TypeScript, Python helper compilation and whitespace checks passed.
+New bridge runs exclusively in the existing disposable copier test fixture; production observer transport remains unchanged.
+Raw logs normalized only to remove trailing whitespace; originals retained in task scratch.
+No SDK, broker, production configuration or emergency-stop changes.

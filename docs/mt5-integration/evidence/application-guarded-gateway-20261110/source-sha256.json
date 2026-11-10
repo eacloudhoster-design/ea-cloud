@@ -1,0 +1,9 @@
+{
+  "artifacts/api-server/src/lib/copy-engine.ts": "33f883b3f19b525efc848479ed982b194daf2785d084eca61e246d8dbf614428",
+  "scripts/tests/helpers/copier-fixture.mjs": "c446466ef855f2c5d56aad728bfddbf41b10243b8aca27eaeb766c22b1e29b8d",
+  "scripts/tests/helpers/copier-simulation-server.py": "df63dcb6868d9dc6753b4168300aa242e341aa217f33024e73299e67cc50f3b0",
+  "scripts/tests/guarded-copier-integration.test.mjs": "f0687c81738af13d0ff4fbb463b9ddadce3526e0b7e349d4070a813903f7157a",
+  "vps-mt5-service/tests/test_multiprocess_coordination.py": "a6bbaa35664d5733bf774220babe2fc98bb18e411723faff8ad36c025f356e6f",
+  "vps-mt5-service/shared_lease_simulation.py": "f831b3acf3607f141435bc7e9b1c665ffe8ce51f00323a8b9b467321f9e8abc7",
+  "vps-mt5-service/sdk_adapter_candidate.py": "9074f905d06e5758c0b3b8371ad50504bcfa7a17b92c4f731cc8a627918dbeee"
+}

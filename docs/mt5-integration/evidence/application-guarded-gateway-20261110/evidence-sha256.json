@@ -1,0 +1,9 @@
+{
+  "before-expected-failure.log": "a95e55d9ab247a11fafa8f7736f2ed0a99e0131ed34577f71071911e9756d26e",
+  "checks.txt": "0f7ca85b4f56d3fdc75f47bab3474624eea1d997ed796eec0dbedb5a893beacb",
+  "node-regressions.log": "912a0621fe1b377cb3a8708bacf8034817bb6fa739993402f504f66274fd0193",
+  "python-regressions.log": "665cf872ef1dcef2e10c6629303a0698955a4b8ab8cdbef53a050501a2e692e6",
+  "source-sha256.json": "fbc3f11bc5ce329c8ecd519eca50e53ae5cf8cdbb55d1fa4bb5e6ac3e292c271",
+  "typecheck.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "verification.json": "80c62ac004efcb0e4cbdd32693863c278822039e9fc2b590c8d7800d3335332c"
+}
