@@ -1,0 +1,6 @@
+Verified clean expected base before branching.
+Relevant suites ran with offline SDK/network guard.
+API/UI TypeScript, UI production build, changed Python compilation, Node syntax and whitespace passed.
+All changed source files reviewed; no new production configuration, actual secrets, credential artifacts or generated runtime files.
+Default optional native stop fields preserve prior grant/journal digest; explicit native paths require signed configuration and protected storage.
+Previously committed checkpoint is an ancestor; no push, merge, deployment or actual SDK/broker activity.

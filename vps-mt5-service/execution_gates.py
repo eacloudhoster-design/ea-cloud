@@ -4,6 +4,47 @@ from pathlib import Path
 
 MIRROR=Path('/run/ea-cloud-execution-gate/state.json')
 
+def _mirror_data_stopped(data,now):
+    observed=data['observed_at'];expires=data['expires_at']
+    if type(observed) not in (int,float) or type(expires) not in (int,float):return True
+    if not 0<=now-observed<=3 or not now<expires<=observed+3:return True
+    return data.get('stops_active') is not False
+
+
+def native_stop_active(directory,mirror=None,*,inspector=None,now=None):
+    """Private account-configured native NTFS stop paths; never provisions/clears.
+
+    The existing Wine/Linux fixed-path reader is unchanged. Native paths are
+    signed into the account grant. An optional mirror is an additional gate,
+    never permission to override a missing directory or an existing latch.
+    """
+    try:
+        if inspector is None:
+            from windows_simulation_security import Win32Inspector
+            inspector=Win32Inspector()
+        root=inspector.check(Path(directory),anchor=True)
+        identity=lambda m:(m.st_dev,m.st_ino,m.st_mode,m.st_mtime_ns,m.st_ctime_ns)
+        before=root.lstat()
+        if not stat.S_ISDIR(before.st_mode) or root.is_symlink():return True
+        names={entry.name.casefold() for entry in root.iterdir()}
+        if names.intersection(('xauusd.stop','xauusd.cleanup_stop')):return True
+        inspector.check(root,anchor=True)
+        if identity(before)!=identity(root.lstat()):return True
+        if mirror is None:return False
+        path=inspector.check(Path(mirror))
+        inspector.check(path.parent,anchor=True)
+        fd=os.open(path,os.O_RDONLY|getattr(os,'O_NOFOLLOW',0))
+        try:
+            meta=os.fstat(fd)
+            if not stat.S_ISREG(meta.st_mode) or meta.st_size>2048:return True
+            data=json.loads(os.read(fd,2049))
+        finally:os.close(fd)
+        inspector.check(path)
+        if identity(meta)!=identity(path.lstat()):return True
+        return _mirror_data_stopped(data,time.time() if now is None else now)
+    except (OSError,ValueError,KeyError,TypeError,AttributeError):return True
+
+
 def mirrored_stop_active(path=MIRROR,now=None):
     now=time.time() if now is None else now
     try:
@@ -23,11 +64,7 @@ def mirrored_stop_active(path=MIRROR,now=None):
             if not windows and (meta.st_uid!=0 or meta.st_mode&0o022):return True
             data=json.loads(os.read(fd,2049))
         finally:os.close(fd)
-        observed=data['observed_at'];expires=data['expires_at']
-        if type(observed) not in (int,float) or type(expires) not in (int,float):return True
-        # Clock jumps, stale publishers and malformed fields close the gate.
-        if not 0<=now-observed<=3 or not now<expires<=observed+3:return True
-        return data.get('stops_active') is not False
+        return _mirror_data_stopped(data,now)
     except (OSError,ValueError,KeyError,TypeError):return True
 
 def publish_stop_mirror(directory,stops,now=None):

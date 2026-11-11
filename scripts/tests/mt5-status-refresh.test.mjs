@@ -25,3 +25,11 @@ test('backgrounding invalidates evidence; late cancelled reads cannot overwrite 
  f.doc.visibilityState='visible';f.doc.dispatchEvent(new Event('visibilitychange'));assert.equal(requests.length,2);
  requests[1].resolve('fresh');await tick();requests[0].resolve('stale');await tick();assert.deepEqual(values,['unverified','fresh']);stop();
 });
+
+test('execution notifications refresh owned status without writes, overlap or listeners after disposal',async()=>{
+ const f=fixture();let calls=0,resolve;const values=[];
+ const stop=startMt5StatusRefresh({window:f.win,document:f.doc,read:()=>{calls++;return new Promise(done=>{resolve=done;});},success:d=>values.push(d),failure:()=>values.push('unverified')});
+ resolve('before');await tick();f.win.dispatchEvent(new Event('ea:engine-refresh'));assert.equal(calls,2);
+ f.win.dispatchEvent(new Event('ea:engine-refresh'));assert.equal(calls,2);resolve('actual reread');await tick();assert.equal(values.at(-1),'actual reread');
+ stop();f.win.dispatchEvent(new Event('ea:engine-refresh'));assert.equal(calls,2);
+});

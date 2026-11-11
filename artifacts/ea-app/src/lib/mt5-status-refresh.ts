@@ -35,6 +35,7 @@ export function startMt5StatusRefresh<T>(options: {
       invalidate();
     } else onRefresh();
   };
+  options.window.addEventListener("ea:engine-refresh", onRefresh);
   options.window.addEventListener("online", onOnline);
   options.window.addEventListener("offline", onOffline);
   options.document.addEventListener("visibilitychange", onVisibility);
@@ -44,6 +45,7 @@ export function startMt5StatusRefresh<T>(options: {
     stopped = true;
     pending?.abort();
     options.window.clearInterval(timer);
+    options.window.removeEventListener("ea:engine-refresh", onRefresh);
     options.window.removeEventListener("online", onOnline);
     options.window.removeEventListener("offline", onOffline);
     options.document.removeEventListener("visibilitychange", onVisibility);

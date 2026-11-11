@@ -1,0 +1,18 @@
+✔ explicit account assignment pins authoritative router and never accepts unknown/conflicting routing (79.351364ms)
+✔ lost, malformed or contradictory gateway outcomes never become success or automatic retry (47.801569ms)
+{"observed_at":"2026-11-11T11:26:32.255Z","simulation":true,"broker_orders":0,"brokers":["deriv","exness","justmarkets","xm","rcg"],"source_routing":"actual routeSnapshot + Drizzle/PGlite","queue":"actual claim SQL","queue_scheduler":"Claim invoked immediately by fixture; production polling/backoff excluded","copier":"actual runSignal + executeObserver guards, mapping and sizing","transport":"explicit test-only synthetic receipt adapter over real authenticated loopback HTTP","workers":"five real isolated subprocesses, durable SQLite fills/receipts","measured_warm_events":12,"p95_ms":187.4216120000001,"maximum_ms":944.1320229999997,"cold_event_ms":944.1320229999997,"cold_start_included":true,"simulation_target_met":true,"actual_broker_target_verified":false,"disconnect_recovery":true,"gateway_restart_replay":true,"lost_ack_duplicate_prevention":true,"uncertain_fill_blocked":true,"baseline_accounts_flat":true,"concurrent_backend_retry_verified":true,"sl_tp_modification_verified":true,"custom_lots_caps_and_symbol_pinning_verified":true,"subminimum_receiver_target_rejected_without_roundup":true,"excluded":["public mentor HTTP authentication","real PostgreSQL server","Windows SDK/broker execution","production deployment"]}
+✔ mentor database routing to five isolated HTTP workers: mapping, replay, disconnect, crash and latency (11010.470277ms)
+✔ real browser sessions, owned engine status, strict broker proof and account binding (3310.678183ms)
+✔ application records through assigned fenced gateway process and signed IPC remain synthetic, isolated and fail closed (4256.568217ms)
+✔ MT5 edge authentication is server-only, paired, HTTPS-only and fail-closed without disclosing credentials (46.951348ms)
+✔ status refresh serializes reads, recovers online and clears stale evidence on failure (3.922781ms)
+✔ backgrounding invalidates evidence; late cancelled reads cannot overwrite foreground recovery (2.192969ms)
+✔ execution notifications refresh owned status without writes, overlap or listeners after disposal (0.967946ms)
+ℹ tests 9
+ℹ suites 0
+ℹ pass 9
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 20253.617477

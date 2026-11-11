@@ -32,7 +32,13 @@ export default function MetaTraderTab({ backgroundHost, backgroundImage }: { bac
   const [historyError,setHistoryError]=useState("");
   const [historyLoading,setHistoryLoading]=useState(false);
   const historyController=useRef<AbortController|null>(null);
-  useEffect(()=>{historyController.current?.abort();setSnapshot(null);setHistoryError("");setHistoryLoading(false);return ()=>historyController.current?.abort();},[clientToken,activeTab,restoreAttempt]);
+  useEffect(()=>{
+    const invalidate=()=>{historyController.current?.abort();setSnapshot(null);setHistoryError("");setHistoryLoading(false);};
+    invalidate();
+    if(!clientToken || activeTab!=="metatrader")return;
+    window.addEventListener("ea:engine-refresh",invalidate);
+    return ()=>{historyController.current?.abort();window.removeEventListener("ea:engine-refresh",invalidate);};
+  },[clientToken,activeTab,restoreAttempt]);
   const refreshHistory=async()=>{
     historyController.current?.abort();const c=new AbortController();historyController.current=c;
     setHistoryLoading(true);setHistoryError("");setSnapshot(null);

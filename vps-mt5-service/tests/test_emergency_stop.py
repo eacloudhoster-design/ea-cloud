@@ -252,3 +252,47 @@ class EmergencyStopTests(unittest.TestCase):
     @staticmethod
     def headers():
         return {'Authorization': 'Bearer ' + 'a' * 64}
+
+
+class NativeStopTests(unittest.TestCase):
+    """Native path/ACL facts are injected; files are disposable Linux fixtures."""
+    def setUp(self):
+        self.tmp=tempfile.TemporaryDirectory();self.addCleanup(self.tmp.cleanup)
+        self.root=Path(self.tmp.name)/'stops';self.root.mkdir()
+        self.mirror=Path(self.tmp.name)/'mirror.json';self.checks=[]
+        class FixtureInspector:
+            def check(_,path,**kw):self.checks.append((str(path),kw));return Path(path)
+        self.inspector=FixtureInspector()
+    def stopped(self,mirror=None):
+        from execution_gates import native_stop_active
+        return native_stop_active(self.root,mirror,inspector=self.inspector,now=100)
+    def test_verified_native_directory_is_clear_without_creating_or_clearing_files(self):
+        self.assertFalse(self.stopped());self.assertEqual(list(self.root.iterdir()),[])
+        self.assertTrue(all(kw.get('anchor') for _,kw in self.checks))
+    def test_missing_directory_cannot_be_overridden_by_clear_mirror(self):
+        self.root.rmdir();self.mirror.write_text(json.dumps(dict(observed_at=100,expires_at=103,stops_active=False)))
+        self.assertTrue(self.stopped(self.mirror))
+    def test_both_latches_case_insensitive_and_dangling_links_override_mirror(self):
+        self.mirror.write_text(json.dumps(dict(observed_at=100,expires_at=103,stops_active=False)))
+        for name in ('XAUUSD.STOP','xauusd.cleanup_stop'):
+            latch=self.root/name;latch.touch();self.assertTrue(self.stopped(self.mirror));latch.unlink()
+        (self.root/'XAUUSD.STOP').symlink_to(self.root/'missing')
+        self.assertTrue(self.stopped(self.mirror))
+    def test_acl_failure_unreadable_directory_and_reparse_root_fail_closed(self):
+        with patch.object(self.inspector,'check',side_effect=ValueError('Untrusted ACL')):self.assertTrue(self.stopped())
+        with patch.object(Path,'iterdir',side_effect=PermissionError('unreadable')):self.assertTrue(self.stopped())
+        target=Path(self.tmp.name)/'other';target.mkdir();self.root.rmdir();self.root.symlink_to(target,target_is_directory=True)
+        self.assertTrue(self.stopped())
+    def test_native_mirror_missing_stale_active_malformed_and_recovery(self):
+        self.assertTrue(self.stopped(self.mirror))
+        for data in ['not-json',dict(observed_at=96,expires_at=99,stops_active=False),dict(observed_at=101,expires_at=103,stops_active=False),dict(observed_at=100,expires_at=103,stops_active=True),dict(observed_at=100,expires_at=103,stops_active=0)]:
+            self.mirror.write_text(data if isinstance(data,str) else json.dumps(data));self.assertTrue(self.stopped(self.mirror))
+        self.mirror.write_text(json.dumps(dict(observed_at=100,expires_at=103,stops_active=False)));self.assertFalse(self.stopped(self.mirror))
+    def test_replaced_directory_is_not_clear_evidence(self):
+        calls=[]
+        def check(path,**kw):
+            calls.append(path)
+            if len(calls)==2:
+                self.root.rename(Path(self.tmp.name)/'old');self.root.mkdir()
+            return Path(path)
+        with patch.object(self.inspector,'check',side_effect=check):self.assertTrue(self.stopped())

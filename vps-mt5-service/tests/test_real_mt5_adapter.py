@@ -248,6 +248,51 @@ class RealAdapterTests(unittest.TestCase):
         self.sdk.order_send=lagging
         self.assertTrue(self.run_sync(d)['uncertain']);self.assertTrue(d.held);self.assertEqual(len(self.sdk.sent),1)
         self.assertTrue(self.run_sync(d,2)['uncertain']);self.assertEqual(len(self.sdk.sent),1)
+    def test_liveness_is_owned_authenticated_and_never_loads_sdk_or_credentials(self):
+        d=self.driver();self.cfg.enabled=False
+        with TestClient(create_demo_app(self.cfg,d,'fixture','t'*64,stop_checker=lambda:True)) as client:
+            self.assertEqual(client.get('/livez').status_code,401)
+            r=client.get('/livez',headers={'Authorization':'Bearer '+'t'*64})
+            self.assertEqual(r.status_code,200);self.assertTrue(r.json()['process_alive']);self.assertFalse(r.json()['sdk_checked']);self.assertFalse(r.json()['execution_readiness_claimed'])
+        self.assertEqual((self.loads,self.secrets),(0,0));self.assertEqual(self.sdk.initialized,[])
+    def test_strict_bootstrap_rejects_embedded_credentials_ports_and_unbound_mirror(self):
+        fixtures=[dict(config={**self.cfg.model_dump(),'login':'PRIVATE_SECRET'}),dict(config={**self.cfg.model_dump(),'password':'PRIVATE_SECRET'}),dict(config=self.cfg.model_dump(),port=0),dict(config=self.cfg.model_dump(),port='8201'),dict(config={**self.cfg.model_dump(),'native_stop_mirror':r'C:\fixture\mirror.json'})]
+        for fields in fixtures:
+            with self.subTest(fields=list(fields)):
+                with self.assertRaises(RuntimeError) as error:
+                    from_private_binding(dict(engine='real-sdk-v1',**fields),_credential_reader=lambda _:self.fail('Invalid metadata must not read private files'),_sdk_loader=lambda:self.fail('No SDK'))
+                self.assertNotIn('PRIVATE_SECRET',str(error.exception))
+    def test_default_binding_is_backward_compatible_but_native_paths_are_immutable(self):
+        import hashlib
+        from private_ipc import canonical
+        metadata=self.cfg.model_dump();metadata.pop('native_stop_directory');metadata.pop('native_stop_mirror')
+        old=hashlib.sha256(canonical(dict(gateway_id=self.gateway,config=metadata))).hexdigest()
+        self.assertEqual(assignment_digest(self.cfg,self.gateway),old)
+        self.cfg.native_stop_directory=r'C:\fixture\stops'
+        self.assertNotEqual(assignment_digest(self.cfg,self.gateway),old)
+        with self.assertRaises(Mt5IntegrationError):self.driver(assignment_digest=old)
+        self.assertEqual(self.loads,0)
+    def test_native_stop_configuration_is_used_before_any_sdk_access(self):
+        self.cfg.native_stop_directory=r'C:\fixture\stops';self.cfg.native_stop_mirror=r'C:\fixture\mirror.json'
+        values={'gateway-id':self.gateway,'mt5-session-verifier-key':self.key.hex(),'mt5-session-authorization':self.frame().decode(),'api-token':'t'*64,'broker-password':'test-only-secret'}
+        with patch('real_mt5_adapter.time.time_ns',return_value=self.clock*1000000),patch('execution_gates.native_stop_active',return_value=True) as stop:
+            app=from_private_binding(dict(engine='real-sdk-v1',config=self.cfg.model_dump()),_credential_reader=values.__getitem__,_sdk_loader=lambda:self.sdk)
+            with TestClient(app) as client:
+                payload=dict(login=123,server='FixtureDemo',password='test-only-secret');headers={'Authorization':'Bearer '+'t'*64}
+                r=client.post('/v1/account-status',headers=headers,json=payload);self.assertEqual(r.status_code,503);self.assertEqual(r.json()['code'],'MT5_SESSION_UNAVAILABLE');self.assertEqual(self.sdk.initialized,[])
+                stop.return_value=False
+                self.assertEqual(client.post('/v1/account-status',headers=headers,json=payload).status_code,200)
+                stop.assert_called_with(self.cfg.native_stop_directory,self.cfg.native_stop_mirror)
+    def test_disconnect_and_terminal_reinitialization_never_clear_existing_hold(self):
+        d=self.driver();self.own(d);self.connect(d);self.sdk.terminal.connected=False
+        with self.assertRaises(Mt5IntegrationError):d.positions_get()
+        d.shutdown();self.sdk.terminal.connected=True;self.assertTrue(self.connect(d));self.assertEqual(d.positions_get(),())
+        self.assertTrue(d.held);self.assertFalse(d.execution_authorized);self.assertEqual(self.sdk.sent,[])
+    def test_windows_case_aliases_cannot_select_private_control_secrets_as_passwords(self):
+        for ref in ('API-TOKEN','Gateway-Id','MT5-SESSION-VERIFIER-KEY','Mt5-Session-Authorization'):
+            self.cfg.credential_ref=ref
+            with self.assertRaises(Mt5IntegrationError):self.driver()
+        self.assertEqual((self.loads,self.secrets),(0,0))
     def test_legacy_raw_credential_bootstrap_is_rejected_before_loader(self):
         with self.assertRaises(RuntimeError):from_private_binding(dict(config=self.cfg.model_dump(),password='secret',token='t'*64),_sdk_loader=lambda:self.fail('Must not load SDK'))
 

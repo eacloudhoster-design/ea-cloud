@@ -1,0 +1,15 @@
+{
+  "artifacts/api-server/src/lib/mt5-endpoint.ts": "58bd7f4090846a6a6a54dd61cdfd2b0843f0ed3bcce21dbdce7f9840393161e9",
+  "artifacts/api-server/src/lib/observer-vps.ts": "653bdee4de2185085f88f40b53a7be66c40128ad5d9cb4408c5a430dd21bee09",
+  "artifacts/ea-app/src/components/TradingActivityMonitor.tsx": "a8688a684a34eceafc45d515a51c87787fec6b6f14b3d9d95508794c04f0ef43",
+  "artifacts/ea-app/src/lib/mt5-status-refresh.ts": "971096b53672b5f7e83af80379c9c4d025d438f5b59fd367fe1ef523fe84ea2d",
+  "artifacts/ea-app/src/pages/MetaTraderTab.tsx": "5812e73cfa21a6d03456c71986f28facd845acf9682dc4edc1c5e3b041bbdbf1",
+  "scripts/tests/mt5-edge-transport.test.mjs": "9af8e15e2a81f7d185e46ec0ad259d279dee65825298a83210c9546c94ac594a",
+  "scripts/tests/mt5-status-recovery.browser.mjs": "e527e9d79314a490367382fa1bb4a0603bb4a9e8a594837667ca11cd6cfa6ccd",
+  "scripts/tests/mt5-status-refresh.test.mjs": "ddc8e8671c35183ffb1729b5d618d3a2a5d0eec149d0bd276e3f5ac97b0d2915",
+  "vps-mt5-service/demo_worker.py": "e7ef326d516d6c8ab9d4d45a812a236ca736a31c90c2494fd9083a793a8d727b",
+  "vps-mt5-service/execution_gates.py": "893d42667b5f48afdce99d3c68804abf722c45d2ea96443eb3f6ee5af72d596b",
+  "vps-mt5-service/real_mt5_adapter.py": "87a6921b55ace4ba011b63c880549404cd8ac25ebac3390c8e26ddc67fa3c7d1",
+  "vps-mt5-service/tests/test_emergency_stop.py": "43305f53a317b581d6d5e7aceb4a16d845552aad7088da4027da0c73b6d8858f",
+  "vps-mt5-service/tests/test_real_mt5_adapter.py": "4d56d00ac04eda5602d64a69604fbffc628488c96cbf087212cf99f88031a441"
+}

@@ -22,6 +22,8 @@ class DemoAccount(BaseModel):
     role:Literal['mentor','client']='client'
     execution_approved:bool=False
     expected_sdk_version:str|None=Field(default=None,pattern=r'^5\.0\.[0-9]{1,6}$')
+    native_stop_directory:str|None=Field(default=None,min_length=1,max_length=200)
+    native_stop_mirror:str|None=Field(default=None,min_length=1,max_length=200)
     credential_ref:str=Field(default='broker-password',pattern=r'^[a-zA-Z0-9_-]{1,64}$')
 
 class AccountCheck(BaseModel):
@@ -77,7 +79,7 @@ def create_demo_app(config,mt5,password,token,stop_checker=None):
     async def guard(request:Request,call_next):
         if not hmac.compare_digest(request.headers.get('authorization','').encode(),('Bearer '+token).encode()):
             return JSONResponse({'success':False,'message':'Unauthorized'},status_code=401)
-        if not config.enabled and request.url.path not in ('/v1/account-status','/v1/account-snapshot'):return JSONResponse({'success':False,'message':'Account worker disabled'},status_code=503)
+        if not config.enabled and request.url.path not in ('/livez','/v1/account-status','/v1/account-snapshot'):return JSONResponse({'success':False,'message':'Account worker disabled'},status_code=503)
         if request.url.path.startswith('/observer/') and (not config.execution_approved or config.role!='client'):
             return JSONResponse({'success':False,'message':'Execution not approved for this account','retriable':False},status_code=503)
         if request.url.path.startswith('/observer/') and stop_checker():
@@ -105,7 +107,12 @@ def create_demo_app(config,mt5,password,token,stop_checker=None):
         except Exception:return 'Authorized terminal session unavailable'
     def credential_matches(payload):
         try:return payload.login==config.login and payload.server==config.server and hmac.compare_digest(payload.password.get_secret_value().encode(),private_password().encode())
-        except Exception:return False
+        except Exception:return None
+    @app.get('/livez')
+    def liveness():
+        # Hosting probes must not load the SDK or authenticate to a broker.
+        return JSONResponse({'service':'account-worker','process_alive':lease.stream is not None,
+            'sdk_checked':False,'execution_readiness_claimed':False},status_code=200 if lease.stream is not None else 503)
     @app.get('/healthz')
     def health():
         with lock:
@@ -116,7 +123,9 @@ def create_demo_app(config,mt5,password,token,stop_checker=None):
     @app.post('/v1/account-status')
     def account_status(payload:AccountCheck):
         # Browser authentication is not proof of broker-account ownership.
-        if not credential_matches(payload):
+        proof=credential_matches(payload)
+        if proof is None:return JSONResponse({'success':False,'connected':False,'code':'MT5_SESSION_UNAVAILABLE','message':'Private session authorization or credential delivery unavailable'},status_code=503)
+        if not proof:
             return JSONResponse({'success':False,'connected':False,'code':'ACCOUNT_PROOF_REJECTED','message':'Account credentials do not match provisioned binding'},status_code=403)
         with lock:
             try:
@@ -137,7 +146,9 @@ def create_demo_app(config,mt5,password,token,stop_checker=None):
             finally:getattr(mt5,'shutdown',lambda:None)()
     @app.post('/v1/account-snapshot')
     def account_snapshot(payload:AccountCheck):
-        if not credential_matches(payload):return JSONResponse({'success':False,'code':'ACCOUNT_PROOF_REJECTED'},status_code=403)
+        proof=credential_matches(payload)
+        if proof is None:return JSONResponse({'success':False,'code':'BROKER_SNAPSHOT_UNAVAILABLE'},status_code=503)
+        if not proof:return JSONResponse({'success':False,'code':'ACCOUNT_PROOF_REJECTED'},status_code=403)
         with lock:
             try:
                 if connected():raise ValueError()
@@ -262,13 +273,26 @@ def _read_private(name):
 
 def from_environment():
     # No SDK or broker credential loading without the new private authorization path.
-    return from_private_binding(dict(engine='real-sdk-v1',config=json.loads(_read_private('account.json'))))
+    try:return from_private_binding(dict(engine='real-sdk-v1',config=json.loads(_read_private('account.json'))))
+    except Exception:raise RuntimeError('PRIVATE_WORKER_BOOTSTRAP_UNAVAILABLE') from None
 
 
 def from_private_binding(binding,*,_credential_reader=None,_sdk_loader=None):
+    try:return _from_private_binding(binding,_credential_reader=_credential_reader,_sdk_loader=_sdk_loader)
+    except Exception:
+        # Pydantic/JSON/private-provider errors can contain input values. Uvicorn
+        # startup diagnostics must never echo credential/configuration contents.
+        raise RuntimeError('PRIVATE_WORKER_BOOTSTRAP_UNAVAILABLE') from None
+
+
+def _from_private_binding(binding,*,_credential_reader=None,_sdk_loader=None):
     from real_mt5_adapter import RealMt5Adapter
     if binding.get('engine')!='real-sdk-v1' or set(binding)-{'engine','config','port'}:
         raise RuntimeError('Authorized credential-reference worker bootstrap required')
+    if type(binding.get('config')) is not dict or set(binding['config'])-set(DemoAccount.model_fields):
+        raise RuntimeError('Private account metadata contains unsupported fields')
+    if 'port' in binding and (type(binding['port']) is not int or not 1024<=binding['port']<=65535):
+        raise RuntimeError('Private worker port outside allowed range')
     read=_credential_reader or _read_private
     config=DemoAccount(**binding['config'])
     from windows_simulation_security import windows_path
@@ -281,6 +305,14 @@ def from_private_binding(binding,*,_credential_reader=None,_sdk_loader=None):
         inspector.check(Path(config.terminal_path).parent,anchor=True)
         inspector.check(Path(config.journal_path).parent,anchor=True)
         inspector.check(Path(config.journal_path))
+    if config.native_stop_mirror and not config.native_stop_directory:
+        raise RuntimeError('Native mirror requires an assigned stop directory')
+    if config.native_stop_directory:
+        windows_path(config.native_stop_directory)
+        if config.native_stop_mirror:windows_path(config.native_stop_mirror)
+        from execution_gates import native_stop_active
+        stop_checker=lambda:native_stop_active(config.native_stop_directory,config.native_stop_mirror)
+    else:stop_checker=emergency_stop_active # Preserve existing fixed-path Wine/Linux behavior.
     # Trust inputs come from private operator files, never execution payloads.
     gateway=read('gateway-id');key=bytes.fromhex(read('mt5-session-verifier-key'))
     frame=read('mt5-session-authorization').encode()
@@ -288,10 +320,10 @@ def from_private_binding(binding,*,_credential_reader=None,_sdk_loader=None):
     def password():
         adapter._authorized()
         return read(config.credential_ref)
-    options=dict(stop_checker=emergency_stop_active)
+    options=dict(stop_checker=stop_checker)
     if _sdk_loader is not None:options['sdk_loader']=_sdk_loader
     adapter=RealMt5Adapter(config,gateway,frame,key,password,**options)
-    return create_demo_app(config,adapter,password,read('api-token'),stop_checker=emergency_stop_active)
+    return create_demo_app(config,adapter,password,read('api-token'),stop_checker=stop_checker)
 
 
 def main():

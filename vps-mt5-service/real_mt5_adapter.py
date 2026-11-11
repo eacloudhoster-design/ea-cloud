@@ -40,7 +40,11 @@ class DemoSessionGrant(StrictModel):
 
 def assignment_digest(config,gateway_id):
     if not re.fullmatch(r'[a-f0-9]{32}',gateway_id):raise Mt5IntegrationError('GATEWAY_ID_INVALID')
-    return hashlib.sha256(canonical(dict(gateway_id=gateway_id,config=config.model_dump()))).hexdigest()
+    metadata=config.model_dump()
+    # New optional paths must not invalidate existing legacy grants/journals.
+    for name in ('native_stop_directory','native_stop_mirror'):
+        if metadata.get(name) is None:metadata.pop(name,None)
+    return hashlib.sha256(canonical(dict(gateway_id=gateway_id,config=metadata))).hexdigest()
 
 
 def verify_session_grant(frame,key,config,gateway_id,now):
@@ -73,15 +77,16 @@ class RealMt5Adapter:
         # Revalidate immutable approved config; do not retain the mutable HTTP config object.
         self.__config=type(config).model_validate(config.model_dump())
         if not self.__config.expected_sdk_version:raise Mt5IntegrationError('PINNED_SDK_VERSION_REQUIRED')
-        if self.__config.credential_ref in ('api-token','gateway-id','mt5-session-verifier-key','mt5-session-authorization'):
+        if self.__config.credential_ref.casefold() in ('api-token','gateway-id','mt5-session-verifier-key','mt5-session-authorization'):
             raise Mt5IntegrationError('INVALID_CREDENTIAL_REFERENCE')
         self.__digest=assignment_digest(self.__config,gateway_id)
-        self.__grant=verify_session_grant(authorization_frame,verification_key,self.__config,gateway_id,clock())
+        now=clock()
+        self.__grant=verify_session_grant(authorization_frame,verification_key,self.__config,gateway_id,now)
         self.__binding=hashlib.sha256(canonical(dict(assignment=self.__digest,key_hash=hashlib.sha256(verification_key).hexdigest()))).hexdigest()
         self.__provider,self.__stop,self.__clock,self.__loader=credential_provider,stop_checker,clock,sdk_loader
         self.__sdk=None;self.__owner=None;self.__epoch=None;self.__claimed=False;self.__initialized=False
         self.__volatile_hold=False
-        self.__highwater=clock()
+        self.__highwater=now
         self.__monotonic=monotonic;self.__started=monotonic()
         self.__deadline=self.__started+(self.__grant.expires_ms-self.__highwater)/1000
         self.__permit=ContextVar('real_mt5_final_permit',default=None)

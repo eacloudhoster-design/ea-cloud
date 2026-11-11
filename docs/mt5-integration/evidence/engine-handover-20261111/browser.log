@@ -1,0 +1,1 @@
+PASS: current mobile MT5 screen verifies, renders bounded broker snapshot, clears on tab exit, re-reads state after execution WebSocket notifications; zero API writes

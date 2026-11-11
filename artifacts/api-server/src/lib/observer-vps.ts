@@ -1,3 +1,4 @@
+import {executionGatewayHeaders} from "./mt5-endpoint";
 import {nonTradingRelease,financialExecutionBlocked} from "./release-mode";
 import type { VpsResult } from "./mt5-vps";
 function configuration() {
@@ -36,7 +37,7 @@ function configuration() {
 async function verifyGateway({url, token, assignments}: ReturnType<typeof configuration>) {
   const r = await fetch(new URL("/observer/capabilities", url), {
     redirect: "error",
-    headers: { Authorization: `Bearer ${token}` },
+    headers: executionGatewayHeaders(url.origin,token),
     signal: AbortSignal.timeout(10000),
   });
   if (!r.ok) throw Error("Observer VPS capability check failed.");
@@ -86,10 +87,7 @@ export async function syncObserverPosition(input: {
     const r = await fetch(new URL("/observer/sync-position", url), {
       method: "POST",
       redirect:"error",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
+      headers: executionGatewayHeaders(url.origin,token),
       body: JSON.stringify({ ...input, login: Number(input.login) }),
       signal: AbortSignal.timeout(20000),
     });

@@ -1,0 +1,66 @@
+{
+  "base_commit": "4e3e115989882a467e5524fc36bec1e7153e9845",
+  "branch": "feature/person2-engine-handover-20261111",
+  "python": {
+    "passed": 137,
+    "failed": 0,
+    "skipped": 0,
+    "new_cases": 12,
+    "modules": [
+      "test_real_mt5_adapter",
+      "test_emergency_stop",
+      "test_demo_worker",
+      "test_account_dispatch",
+      "test_observer_sync",
+      "test_history_reconcile",
+      "test_worker_integration",
+      "test_mt5_bootstrap_preparation"
+    ]
+  },
+  "node": {
+    "passed": 9,
+    "failed": 0,
+    "skipped": 0,
+    "files": [
+      "mt5-edge-transport.test.mjs",
+      "authoritative-dispatch.test.mjs",
+      "mt5-status-refresh.test.mjs",
+      "engine-integration.test.mjs",
+      "guarded-copier-integration.test.mjs",
+      "copier-end-to-end.test.mjs"
+    ]
+  },
+  "browser": {
+    "passed": 1,
+    "failed": 0,
+    "file": "mt5-status-recovery.browser.mjs",
+    "description": "Built existing Linux app; intercepted API/WebSocket; verifies actual notification handler refreshes status and clears stale history; zero API writes"
+  },
+  "checks": {
+    "api_typescript": "passed",
+    "ui_typescript": "passed",
+    "ui_build": "passed (bundle-size warning)",
+    "python_compilation": "passed",
+    "node_syntax": "passed",
+    "whitespace": "passed",
+    "high_risk_secret_pattern_hits": 0
+  },
+  "execution": {
+    "platform": "Linux x86_64",
+    "python": "3.12.14",
+    "vendor_sdk_imports": 0,
+    "vendor_sdk_calls": 0,
+    "real_credentials_read": 0,
+    "broker_connections": 0,
+    "real_orders": 0,
+    "native_windows": "not run; unverified",
+    "wine": "not rerun",
+    "postgresql": "PGlite fixtures only; no real PostgreSQL run",
+    "deployment": false,
+    "production_configuration_changes": false,
+    "push": false,
+    "merge": false
+  },
+  "scope": "Person 2 code complete for existing guarded demo/hedging market-copying scope. Person 1 must supply approved infrastructure, assignment inventory, authorization/credential delivery and runtime. Native Windows/MT5/broker acceptance still required.",
+  "regression_limit": "Targeted relevant regression suites rerun; prior 549-test full checkpoint preserved but not claimed as rerun on this commit."
+}
