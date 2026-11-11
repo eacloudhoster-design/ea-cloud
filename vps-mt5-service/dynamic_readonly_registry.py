@@ -35,4 +35,4 @@ def load(login,server,*,root=ROOT,decrypt=None):
  password=decode('broker-password',safe(expected/'broker-password',root))
  token=decode('api-token',safe(expected/'api-token',root))
  from readonly_account_relay import Binding
- return Binding(broker=descriptor['broker'],login=login,server=server,role=descriptor['role'],url=descriptor['url'],password=password,api_token=token,account_mode=descriptor.get('accountMode','demo'))
+ return Binding(broker=descriptor['broker'],login=login,server=server,role=descriptor['role'],url=descriptor['url'],password=password,api_token=token,account_mode=descriptor.get('accountMode','demo'),owner_kind=descriptor['owner'][0],owner_id=descriptor['owner'][1])

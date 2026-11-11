@@ -1,0 +1,70 @@
+{
+  "observed_at": "2026-11-11T20:31:34Z",
+  "results": [
+    {
+      "broker": "justmarkets",
+      "role": "mentor",
+      "observed_at": "2026-11-11T20:31:33Z",
+      "connection_verified": true,
+      "http": 200,
+      "account_mode": "demo",
+      "read_only": true,
+      "execution_enabled": false
+    },
+    {
+      "broker": "justmarkets",
+      "role": "client",
+      "observed_at": "2026-11-11T20:31:33Z",
+      "connection_verified": true,
+      "http": 200,
+      "account_mode": "demo",
+      "read_only": true,
+      "execution_enabled": false
+    },
+    {
+      "broker": "deriv",
+      "role": "client",
+      "observed_at": "2026-11-11T20:31:33Z",
+      "connection_verified": true,
+      "http": 200,
+      "account_mode": "demo",
+      "read_only": true,
+      "execution_enabled": false
+    },
+    {
+      "broker": "xm",
+      "role": "client",
+      "observed_at": "2026-11-11T20:31:34Z",
+      "connection_verified": true,
+      "http": 200,
+      "account_mode": "demo",
+      "read_only": true,
+      "execution_enabled": false
+    },
+    {
+      "broker": "exness",
+      "role": "client",
+      "observed_at": "2026-11-11T20:31:34Z",
+      "connection_verified": true,
+      "http": 200,
+      "account_mode": "demo",
+      "read_only": true,
+      "execution_enabled": false
+    },
+    {
+      "broker": "rcg",
+      "role": "client",
+      "observed_at": "2026-11-11T20:31:34Z",
+      "connection_verified": true,
+      "http": 200,
+      "account_mode": "demo",
+      "read_only": true,
+      "execution_enabled": false
+    }
+  ],
+  "all_accounts_verified": true,
+  "actual_broker_identity_proof": true,
+  "orders_submitted": 0,
+  "account_configurations_changed": false,
+  "both_stops_present": true
+}

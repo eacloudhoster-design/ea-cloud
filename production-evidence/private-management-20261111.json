@@ -1,0 +1,30 @@
+{
+  "observed_at": "2026-11-11T20:34:29Z",
+  "source_commit": "0c71aafc033d9d1ee89362539f91353c3807e762",
+  "release_path": "/opt/ea-cloud/releases/api-0c71aafc033d",
+  "unit": "ea-engine-management.service",
+  "enabled": true,
+  "loopback_url": "http://127.0.0.1:8006",
+  "publicly_routed": false,
+  "checks": {
+    "liveness": true,
+    "origin_missing_denied": true,
+    "origin_wrong_denied": true,
+    "production_database_ready": true,
+    "anonymous_client_denied": true,
+    "anonymous_portal_denied": true
+  },
+  "systemd": {
+    "MainPID": "459175",
+    "MemoryCurrent": "69693440",
+    "ActiveState": "active",
+    "SubState": "running"
+  },
+  "original_database_and_session_binding_reused": true,
+  "origin_credential_printed": false,
+  "provisioning_consumer_enabled": false,
+  "financial_execution_enabled": false,
+  "both_stops_present": true,
+  "unit_sha256": "eba591a65c394735124ca13c3efb8bdd287c2ccd72be8735394ce61ebb5e9e96",
+  "initial_probe_note": "First 5-second cold readiness probe timed out; bounded 25-second follow-up passed; no service restart was needed"
+}

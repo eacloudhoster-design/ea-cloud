@@ -1,0 +1,36 @@
+{
+  "expected_merge": "6119f8f210352d735734ae5e9905e011bc130503",
+  "results": [
+    {
+      "path": "/build-info.json",
+      "observation": "200 application/json",
+      "curl_exit": 0,
+      "commit": "6119f8f210352d735734ae5e9905e011bc130503"
+    },
+    {
+      "path": "/",
+      "observation": "200 text/html; charset=utf-8",
+      "curl_exit": 0
+    },
+    {
+      "path": "/ea-app/",
+      "observation": "200 text/html; charset=utf-8",
+      "curl_exit": 0
+    },
+    {
+      "path": "/api/healthz",
+      "observation": "200 application/json; charset=utf-8",
+      "curl_exit": 0
+    },
+    {
+      "path": "/api/readyz",
+      "observation": "200 application/json; charset=utf-8",
+      "curl_exit": 0
+    },
+    {
+      "path": "/api/app/me",
+      "observation": "401 application/json; charset=utf-8",
+      "curl_exit": 0
+    }
+  ]
+}

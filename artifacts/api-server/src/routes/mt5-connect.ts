@@ -31,7 +31,7 @@ router.post("/admin/mt5/connect", requireAuth, async (req: any, res) => {
 
     if(typeof password!=="string" || password.length>1024 || typeof server!=="string" || server.length>256 || !Number.isSafeInteger(loginNum) || loginNum>2147483647){res.status(400).json({error:"Invalid credentials or login exceeds current connection schema"});return;}
     let account;
-    try {account=await readBoundAccount(loginNum,server,password);}
+    try {account=await readBoundAccount(loginNum,server,password,{kind:"mentor",id:req.userId});}
     catch {res.status(422).json({error:"Provisioned demo mentor account verification unavailable",code:"MT5_BINDING_UNVERIFIED"});return;}
     if(req.body.broker!==undefined && req.body.broker!==account.broker){res.status(422).json({error:"Selected broker does not match verified account"});return;}
     if(account.role!=="mentor"){res.status(403).json({error:"A dedicated mentor-role worker is required"});return;}
@@ -87,7 +87,7 @@ router.get("/admin/mt5/status",requireAuth,async(req:any,res)=>{
  try{
   const [row]=await db.select().from(mt5ConnectionsTable).where(and(eq(mt5ConnectionsTable.mentorId,req.userId),eq(mt5ConnectionsTable.status,"connected"))).orderBy(desc(mt5ConnectionsTable.connectedAt)).limit(1);
   if(!row?.encryptedMt5Password){res.json({connected:false,verified:false,code:"MENTOR_ACCOUNT_NOT_CONFIGURED"});return;}
-  const proof=await readBoundAccount(row.mt5Login,row.mt5Server,decryptMT5Password(row.encryptedMt5Password));
+  const proof=await readBoundAccount(row.mt5Login,row.mt5Server,decryptMT5Password(row.encryptedMt5Password),{kind:"mentor",id:req.userId});
   if(proof.role!=="mentor")throw Error();
   res.json({connected:true,verified:true,login:proof.login,server:proof.server,broker:proof.broker,accountMode:proof.account_mode,executionEnabled:false,workerExecutionEnabled:proof.execution_enabled,readOnly:proof.read_only,observedAt:new Date().toISOString()});
  }catch{res.status(503).json({connected:false,verified:false,code:"MENTOR_VERIFICATION_UNAVAILABLE"});}

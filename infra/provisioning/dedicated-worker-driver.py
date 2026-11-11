@@ -8,7 +8,8 @@ from pathlib import Path
 
 def require(v):
  if not v:raise RuntimeError('WORKER_CREATION_HELD')
-def sha(p):return hashlib.sha256(Path(p).read_bytes()).hexdigest()
+def sha(p):
+ with Path(p).open('rb') as stream:return hashlib.file_digest(stream,'sha256').hexdigest()
 def canonical(v):return json.dumps(v,sort_keys=True,separators=(',',':'),allow_nan=False)
 def save(p,value):
  fd=os.open(p,os.O_WRONLY|os.O_CREAT|os.O_EXCL|os.O_NOFOLLOW,0o600)
@@ -47,6 +48,12 @@ class Driver:
   require(self.config.get('enabled') is True and len(self.config['stops'])==2 and all(Path(p).is_file() for p in self.config['stops']))
  def create(self,v):
   validate(v);self.gate();require(v['accountMode']=='demo' or self.config.get('allow_live_readonly') is True);owner=[v['ownerKind'],v['ownerId']]
+  registry=self.config.get('existing_registry')
+  if registry is not None:
+   path=Path(registry);meta=path.lstat()
+   require(str(path)=='/etc/ea-cloud/readonly-relay/registry.json' and stat.S_ISREG(meta.st_mode) and meta.st_uid==0 and meta.st_mode&0o077==0)
+   existing=json.loads(path.read_text())
+   require(not any(str(row.get('login'))==v['login'] and row.get('server')==v['server'] for row in existing['accounts']))
   account=hashlib.sha256(canonical([v['login'],v['server']]).encode()).hexdigest()
   lock=os.open(self.root/'allocator.lock',os.O_CREAT|os.O_RDWR|os.O_NOFOLLOW,0o600)
   try:
@@ -56,9 +63,14 @@ class Driver:
     # No replay/recovery by rerunning driver, even if prior host action may have completed.
     require(existing is None)
     require(db.execute('SELECT 1 FROM allocations WHERE account=?',(account,)).fetchone() is None)
+    maximum=self.config.get('max_active_workers',len(self.config['slots']))
+    require(type(maximum) is int and maximum>0)
+    active=db.execute("SELECT count(*) FROM allocations WHERE state IN ('reserved','verified_readonly','held')").fetchone()[0]
+    require(active<maximum)
     used={x[0] for x in db.execute('SELECT slot FROM allocations')}
     candidates=[s for s in self.config['slots'] if s['id'] not in used and s['broker']==v['broker']]
     require(candidates);slot=candidates[0]
+    require(type(slot.get('servers')) is list and v['server'] in slot['servers'])
     require(re.fullmatch('ss-[a-z0-9]{1,20}',slot['id']) and type(slot['uid']) is int and slot['uid']>0 and type(slot['gid']) is int and slot['gid']>0)
     require(type(slot['port']) is int and 10000<=slot['port']<=11000 and type(slot['display']) is int and 100<=slot['display']<=999)
     require(len({s['id'] for s in self.config['slots']})==len(self.config['slots']))
@@ -69,12 +81,12 @@ class Driver:
     db.execute("INSERT INTO allocations VALUES(?,?,?,?,'reserved')",(v['requestId'],account,canonical(owner),slot['id']))
     db.execute('INSERT INTO audit(request,event,observed) VALUES(?,?,?)',(v['requestId'],'reserved',time.time()));db.commit()
    try:
-    self.gate();shutil.copytree(image,home,symlinks=False)
+    self.gate();shutil.copytree(image,home,symlinks=False);os.chmod(home,0o700)
     secrets_dir=self.root/(slot['id']+'-credentials');secrets_dir.mkdir(mode=0o700)
     cfg={'broker':v['broker'],'login':int(v['login']),'server':v['server'],'role':v['role'],'account_mode':v['accountMode'],'allow_live_readonly':v['accountMode']=='live','enabled':False,'execution_approved':False,'terminal_path':'Z:'+str(home/'terminal/terminal64.exe').replace('/','\\'),'journal_path':'Z:'+str(home/'readonly-unused.sqlite3').replace('/','\\')}
     token=secrets.token_urlsafe(48)
     # systemd encrypted credentials at rest. Only transient private stdin carries plaintext.
-    for name,value in [('account.json',canonical(cfg)),('broker-password',v['password']),('api-token',token)]:
+    for name,value in [('account.json',canonical(cfg)),('broker-password',v['password']),('api-token',token),('terminal-login.ini','[Experts]\nEnabled=0\nAllowLiveTrading=0\nAllowDllImport=0\n')]:
      self.host.encrypt(name,value,secrets_dir/name)
     self.host.prepare(slot)
     self.gate();self.host.start(slot,secrets_dir)
@@ -109,12 +121,14 @@ class Driver:
 class SystemdHost:
  """Deployment-only host port. Unit names, users and images are operator-approved."""
  def __init__(self,config):self.config=config
- def run(self,args,data=None):
-  return subprocess.run(args,input=data,stdout=subprocess.PIPE,stderr=subprocess.DEVNULL,timeout=6,check=True).stdout
+ def run(self,args,data=None,timeout=6):
+  return subprocess.run(args,input=data,stdout=subprocess.PIPE,stderr=subprocess.DEVNULL,timeout=timeout,check=True).stdout
  def verify_slot(self,s):
   import pwd
   user=pwd.getpwuid(s['uid']);require(user.pw_name=='ea-account-'+s['id'] and user.pw_gid==s['gid'])
-  require(Path(s['home']).parent.resolve()==Path(self.config['accounts_root']).resolve())
+  parent=Path(self.config['accounts_root']);meta=parent.stat()
+  require(meta.st_uid==0 and meta.st_mode&0o777==0o711 and not parent.is_symlink())
+  require(Path(s['home']).parent.resolve()==parent.resolve())
   require(self.config['state_root']=='/var/lib/ea-cloud/private-provisioner' and self.config['accounts_root']=='/var/lib/ea-cloud/selfservice-accounts')
   require(Path(s['home'])==Path(self.config['accounts_root'])/s['id'])
   require(Path(s['image']).resolve().is_relative_to(Path(self.config['images_root']).resolve()))
@@ -125,7 +139,7 @@ class SystemdHost:
  def prepare(self,s):
   runtime=Path(self.config['state_root'])/(s['id']+'-runtime.env')
   home=str(Path(s['home']));require(not any(c in home for c in '\r\n\" '))
-  text='HOME='+home+'\nWINEPREFIX='+home+'/wine\nDISPLAY=:'+str(s['display'])+'\nAPI_PORT='+str(s['port'])+'\nWINEDEBUG=-all\n'
+  text='HOME='+home+'\nWINEPREFIX='+home+'/wine\nDISPLAY=:'+str(s['display'])+'\nAPI_PORT='+str(s['port'])+'\nWINEDEBUG=-all\nWINEDLLOVERRIDES=mscoree,mshtml,winemenubuilder.exe=\n'
   fd=os.open(runtime,os.O_WRONLY|os.O_CREAT|os.O_EXCL|os.O_NOFOLLOW,0o600)
   with os.fdopen(fd,'w') as f:f.write(text);f.flush();os.fsync(f.fileno())
   self.run(['/usr/bin/xauth','-f',home+'/.Xauthority'],('add :'+str(s['display'])+' . '+secrets.token_hex(16)+'\n').encode())
@@ -134,14 +148,25 @@ class SystemdHost:
   # Pre-reviewed templates read encrypted credentials from fixed operator config roots.
   # The config validator must match those roots to this driver's credential directory.
   self.run(['/usr/bin/systemctl','start','ea-selfservice-display@'+s['id']+'.service'])
+  deadline=time.monotonic()+5
+  display=Path('/tmp/.X11-unix/X'+str(s['display']))
+  while True:
+   try:
+    meta=display.stat()
+    if stat.S_ISSOCK(meta.st_mode) and meta.st_uid==s['uid']:break
+   except FileNotFoundError:pass
+   require(time.monotonic()<deadline);time.sleep(.1)
+  self.run(['/usr/bin/systemctl','start','ea-selfservice-bootstrap@'+s['id']+'.service'],timeout=185)
+  self.run(['/usr/bin/systemctl','start','ea-selfservice-terminal@'+s['id']+'.service'],timeout=65)
   self.run(['/usr/bin/systemctl','start','ea-selfservice-readonly@'+s['id']+'.service'])
  def stop(self,s):
-  self.run(['/usr/bin/systemctl','stop','ea-selfservice-readonly@'+s['id']+'.service','ea-selfservice-display@'+s['id']+'.service'])
+  self.run(['/usr/bin/systemctl','stop','ea-selfservice-readonly@'+s['id']+'.service','ea-selfservice-terminal@'+s['id']+'.service','ea-selfservice-bootstrap@'+s['id']+'.service','ea-selfservice-display@'+s['id']+'.service'],timeout=35)
  def inactive(self,s):
-  for name in ('readonly','display'):
+  for name in ('readonly','terminal','bootstrap','display'):
    value=self.run(['/usr/bin/systemctl','show','--property=ActiveState','--value','ea-selfservice-'+name+'@'+s['id']+'.service']).decode().strip()
    if value not in ('inactive','failed'):return False
-  return True
+  result=subprocess.run(['/usr/bin/pgrep','-u',str(s['uid'])],stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL,timeout=2)
+  return result.returncode==1
  def snapshot(self,s,token):
   import urllib.request
   class NoRedirect(urllib.request.HTTPRedirectHandler):

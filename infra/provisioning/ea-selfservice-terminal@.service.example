@@ -1,0 +1,28 @@
+# Dedicated portable terminal; bootstrap contains only disabled Experts settings.
+[Unit]
+Requires=ea-selfservice-display@%i.service ea-selfservice-bootstrap@%i.service
+After=ea-selfservice-display@%i.service ea-selfservice-bootstrap@%i.service network-online.target
+PartOf=ea-selfservice-display@%i.service
+StartLimitIntervalSec=120
+StartLimitBurst=3
+[Service]
+Type=notify
+NotifyAccess=main
+User=ea-account-%i
+Group=ea-account-%i
+EnvironmentFile=/var/lib/ea-cloud/private-provisioner/%i-runtime.env
+LoadCredentialEncrypted=terminal-login.ini:/var/lib/ea-cloud/private-provisioner/%i-credentials/terminal-login.ini
+WorkingDirectory=/var/lib/ea-cloud/selfservice-accounts/%i/terminal
+ExecStart=/usr/bin/python3 /opt/ea-cloud/releases/REVIEW_REQUIRED/infra/linux/supervise-portable-terminal.py
+TimeoutStartSec=60
+TimeoutStopSec=8
+KillMode=control-group
+Restart=on-failure
+RestartSec=5
+UMask=0077
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+ReadWritePaths=/var/lib/ea-cloud/selfservice-accounts/%i /tmp
+MemoryMax=850M
+TasksMax=160

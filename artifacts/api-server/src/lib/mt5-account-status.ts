@@ -3,11 +3,12 @@ export interface BoundAccountStatus {
   success: true; connected: true; simulation: false; account_mode: "demo" | "live";
   login: number; server: string; broker: string; role: "client" | "mentor";
   execution_enabled: boolean; emergency_stop_active: boolean | null; journal_bound: boolean; read_only:boolean;
+  owner?:{kind:"client"|"mentor";id:number};
   currency: string | null; balance: number | null; equity: number | null;
   open_positions: number; pending_orders: number; journal_holds:number | null;
 }
 /** Credential proof and exact binding, never a generic HTTP-200 connectivity claim. */
-export async function readBoundAccount(login: string | number, server: string, password: string): Promise<BoundAccountStatus> {
+export async function readBoundAccount(login: string | number, server: string, password: string, expectedOwner?:{kind:"client"|"mentor";id:number}): Promise<BoundAccountStatus> {
   if (!/^[1-9]\d*$/.test(String(login)) || !Number.isSafeInteger(Number(login)) || !server || typeof password !== "string" || !password)
     throw Error("Invalid account binding");
   const response = await fetch(`${MT5_VPS_BASE}/observer/account-status`, {
@@ -16,6 +17,11 @@ export async function readBoundAccount(login: string | number, server: string, p
   });
   const data: any = await response.json().catch(() => null);
   const readonly=data?.read_only===true;
+  let owner:BoundAccountStatus["owner"];
+  if(data?.owner_kind!==undefined||data?.owner_id!==undefined){
+    if(!["client","mentor"].includes(data.owner_kind)||!Number.isSafeInteger(data.owner_id)||data.owner_id<=0||!expectedOwner||expectedOwner.kind!==data.owner_kind||expectedOwner.id!==data.owner_id)throw Error("Account tenant binding does not match authenticated owner");
+    owner={kind:data.owner_kind,id:data.owner_id};
+  }
   const validJournal=readonly ? data.protocol==="EA_READ_ONLY_STATUS_V1" && data.financial_routes===false && data.execution_enabled===false && data.journal_bound===false && data.journal_holds===null && (data.emergency_stop_active===null || typeof data.emergency_stop_active==="boolean") : typeof data?.emergency_stop_active==="boolean" && data.journal_bound===true && Number.isSafeInteger(data.journal_holds) && data.journal_holds>=0;
   const brokers = ["deriv", "exness", "justmarkets", "xm", "rcg"];
   if (!response.ok || data?.success !== true || data.connected !== true || data.simulation !== false || (data.account_mode !== "demo" && !(data.account_mode === "live" && process.env.MT5_LIVE_READONLY_ACCOUNTS === "1" && readonly && data.execution_enabled === false)) ||
@@ -28,6 +34,6 @@ export async function readBoundAccount(login: string | number, server: string, p
   const cash = (v: unknown) => typeof v === "number" && Number.isFinite(v) ? v : null;
   return { success:true, connected:true, simulation:false, account_mode:data.account_mode,login:data.login,server:data.server,broker:data.broker,role:data.role,
     execution_enabled:data.execution_enabled, emergency_stop_active:data.emergency_stop_active,journal_bound:data.journal_bound,read_only:readonly,
-    currency:typeof data.currency === "string" && /^[A-Z]{3}$/.test(data.currency) ? data.currency : null,
+    ...(owner?{owner}:{}),currency:typeof data.currency === "string" && /^[A-Z]{3}$/.test(data.currency) ? data.currency : null,
     balance:cash(data.balance),equity:cash(data.equity),open_positions:data.open_positions,pending_orders:data.pending_orders,journal_holds:data.journal_holds };
 }

@@ -21,6 +21,11 @@ def main():
  if os.geteuid()==0:raise RuntimeError('Dedicated account user required')
  home=Path(os.environ['HOME']);terminal=home/'terminal/terminal64.exe'
  if not terminal.is_file() or home.stat().st_uid!=os.getuid():raise RuntimeError('Bound terminal unavailable')
+ # Fresh portable homes have no user settings to preserve. Persist disabled
+ # built-in listeners before every restart, including terminal live updates.
+ assistant=home/'terminal/Config/assistant.ini';assistant.parent.mkdir(exist_ok=True)
+ if assistant.is_symlink():raise RuntimeError('Unsafe terminal configuration')
+ assistant.write_text('[MCP.MetaEditor]\nEnable=0\n[MCP.MetaTrader]\nEnable=0\n',encoding='utf-16');assistant.chmod(0o600)
  bootstrap=home/'terminal-bootstrap.ini'
  # Linux reads its own credential mount; Wine's shared namespace need not see it.
  content=(Path(os.environ['CREDENTIALS_DIRECTORY'])/'terminal-login.ini').read_bytes()

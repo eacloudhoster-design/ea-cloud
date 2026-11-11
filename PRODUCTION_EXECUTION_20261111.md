@@ -11,3 +11,12 @@ Default backend startup is now migration-free management mode, including direct 
 Render is discoverable but not connected. No Cloudflare management credential was found. The owner was asked only to make those secure provider connections available. Existing GitHub-linked Pages deployment is verified from its successful commit check; its pipeline can be used for the authorized source rollout once the final startup/source checks pass. Provider configuration, private transport, actual user-session acceptance and real broker verification must be recorded separately from source publication.
 
 Production remains NO-GO for customer trading. No real-money order or emergency-stop removal is authorized. Live-account grants, simultaneous multi-account execution, new clean-image worker provisioning and actual copier acceptance still require completion/verification; flags or simulated receipts must not be described as acceptance.
+
+
+## Verified public rollout and broker authentication
+
+PR136 merged at `6119f8f210352d735734ae5e9905e011bc130503`. Existing Cloudflare Pages deployment `d583f21d-58c8-40f0-ac61-d9c05d02039d` succeeded. Public website `/`, app `/ea-app/`, `/api/healthz` and database `/api/readyz` returned200; anonymous `/api/app/me` returned401 JSON. The Pages build-info reports the merge commit. Anonymous desktop/mobile Chromium acceptance passed with no page errors. Exact Render source SHA still requires the new release diagnostic endpoint on the next rollout; HTTP readiness alone is not that proof.
+
+All six existing broker identities freshly passed actual credential-bound read-only SDK proof. The public receipt redacts account login/server. This verifies those existing demo connections, not new customer provisioning, live-account authentication, copier orders or latency. No account data, real orders or emergency stops changed for these checks.
+
+The private loopback management service runs a pinned `0c71aafc033d` build with original database/encryption bindings and separate origin authorization. Clean isolated worker startup exposed and corrected a missing Wine bootstrap sequence. A new fresh prefix then passed real dependency imports (Python3.13.17/MT5 SDK5.0.6231); failed prefixes and diagnostics were retained. The new source adds asynchronous provisioning, bounded supervised startup, broker admission and dynamic tenant projection, with actual clean worker provisioning still pending. No claim of full customer readiness is made.

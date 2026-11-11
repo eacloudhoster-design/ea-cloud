@@ -1,5 +1,7 @@
 # REVIEW ONLY. Do not install/start without separate infrastructure approval.
 [Unit]
+StartLimitIntervalSec=120
+StartLimitBurst=3
 Description=EA Cloud private read-only account provisioner
 After=network.target
 [Service]
@@ -12,7 +14,13 @@ ExecStart=/usr/bin/node /opt/ea-cloud/releases/REVIEW_REQUIRED/infra/provisionin
 Restart=on-failure
 RestartSec=10
 NoNewPrivileges=true
-PrivateTmp=true
+PrivateTmp=false
 ProtectHome=true
+ProtectSystem=strict
+ReadWritePaths=/var/lib/ea-cloud/private-provisioner /var/lib/ea-cloud/selfservice-accounts /tmp
+MemoryHigh=192M
+MemoryMax=256M
+CPUQuota=50%
+TasksMax=96
 [Install]
 WantedBy=multi-user.target
