@@ -7,7 +7,7 @@ def main():
     try:
         root=Path(os.environ['CREDENTIALS_DIRECTORY']);home=Path(os.environ['HOME'])
         binding=dict(config=json.loads((root/'account.json').read_text()),password=(root/'broker-password').read_text().rstrip('\r\n'),token=(root/'api-token').read_text().strip(),port=int(os.environ['API_PORT']))
-        if binding['config'].get('account_mode')!='demo' or not 1024<=binding['port']<=65535:raise ValueError('Invalid demo binding')
+        if (binding['config'].get('account_mode') not in ('demo','live') or (binding['config'].get('account_mode')=='live' and binding['config'].get('allow_live_readonly') is not True)) or not 1024<=binding['port']<=65535:raise ValueError('Invalid demo binding')
         # No credential in argv/environment; suppress arbitrary vendor output.
         release=Path(__file__).resolve().parents[2]
         module_path='Z:'+str(release/'vps-mt5-service').replace('/','\\')

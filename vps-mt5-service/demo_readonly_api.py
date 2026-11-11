@@ -5,7 +5,7 @@ from fastapi.responses import JSONResponse
 from demo_readonly_probe import probe
 
 def create_app(mt5,config,password,token):
-    if len(token)<32 or not password or config.get('account_mode')!='demo':raise ValueError('Secure demo binding required')
+    if len(token)<32 or not password or (config.get('account_mode') not in ('demo','live') or (config.get('account_mode')=='live' and config.get('allow_live_readonly') is not True)):raise ValueError('Secure demo binding required')
     app=FastAPI(docs_url=None,redoc_url=None,openapi_url=None);lock=threading.Lock()
     @app.middleware('http')
     async def auth(request:Request,call_next):

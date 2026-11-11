@@ -1,0 +1,28 @@
+{
+  "pass": true,
+  "fixtureOnly": true,
+  "brokerConnections": 0,
+  "orders": 0,
+  "results": [
+    {
+      "role": "follower",
+      "viewport": "desktop",
+      "pass": true
+    },
+    {
+      "role": "follower",
+      "viewport": "mobile",
+      "pass": true
+    },
+    {
+      "role": "master",
+      "viewport": "desktop",
+      "pass": true
+    },
+    {
+      "role": "master",
+      "viewport": "mobile",
+      "pass": true
+    }
+  ]
+}

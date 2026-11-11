@@ -19,6 +19,7 @@ function configuration() {
   return { url, token };
 }
 export async function observerCapabilities() {
+  if(process.env.EA_MT5_MANAGEMENT_ONLY==="1")throw Error("Execution disabled in account management runtime");
   const { url, token } = configuration();
   const r = await fetch(new URL("/observer/capabilities", url), {
     redirect: "error",
@@ -52,6 +53,7 @@ export async function syncObserverPosition(input: {
   maxExposureLots?: number;
   maxDailyDrawdown: number;
 }): Promise<VpsResult> {
+  if(process.env.EA_MT5_MANAGEMENT_ONLY==="1")return {ok:false,httpStatus:409,ticket:null,retcode:null,message:"Execution disabled in account management runtime",data:{submission_started:false},retriable:false,attempts:0};
   try {
     const { url, token } = configuration();
     const r = await fetch(new URL("/observer/sync-position", url), {

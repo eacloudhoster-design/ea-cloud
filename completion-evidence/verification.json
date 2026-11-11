@@ -1,0 +1,69 @@
+{
+  "observed_at": "2026-11-11T19:40:38.853964+00:00",
+  "parent_checkpoint": "ea4a42c7496e25ff1161956b3eaf25d05dfde28c",
+  "branch": "release/ea-cloud-integration-20261111",
+  "decision": "NO_GO_PRODUCTION",
+  "deployed": false,
+  "real_broker_authentication_performed": false,
+  "financial_orders": 0,
+  "production_migrations_applied": false,
+  "typecheck": "PASS",
+  "backend_build": "PASS",
+  "combined_pages_build": "PASS",
+  "disposable_postgres_inventory_assertions": 29,
+  "fixture_broker_proofs": true,
+  "database_cluster_stopped": true,
+  "driver_tests": 14,
+  "new_live_readonly_tests": 4,
+  "affected_relay_tests": 5,
+  "dynamic_registry_relay_tests": 10,
+  "provisioning_assertions": 25,
+  "hardening_assertions": 10,
+  "private_service_assertions": 12,
+  "private_port_assertions": 7,
+  "account_proxy_assertions": 13,
+  "browser": {
+    "pass": true,
+    "fixtureOnly": true,
+    "brokerConnections": 0,
+    "orders": 0,
+    "results": [
+      {
+        "role": "follower",
+        "viewport": "desktop",
+        "pass": true
+      },
+      {
+        "role": "follower",
+        "viewport": "mobile",
+        "pass": true
+      },
+      {
+        "role": "master",
+        "viewport": "desktop",
+        "pass": true
+      },
+      {
+        "role": "master",
+        "viewport": "mobile",
+        "pass": true
+      }
+    ]
+  },
+  "original_release_evidence_unchanged": true,
+  "simultaneous_multi_account_execution_implemented": false,
+  "live_execution_implemented": false,
+  "runtime_services_changed": false,
+  "both_stop_files_present": true,
+  "known_limits": [
+    "One selected follower execution binding per app user",
+    "Legacy mentor-source login schema is signed int32",
+    "Real runtime authentication and end-to-end execution not accepted",
+    "No new worker images, slots or installation approved",
+    "No provider deployment or migration authorization established"
+  ],
+  "evidence_kind": "Results recorded from tool executions in this continuation; original logs remain in session history",
+  "compiled_management_runtime_smoke": "PASS",
+  "changed_copier_regression": "PASS synthetic workers only",
+  "real_session_engine_regression": "PASS disposable PGlite, real cookie middleware, mocked broker transport"
+}

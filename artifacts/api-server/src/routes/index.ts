@@ -1,3 +1,5 @@
+import accountInventoryRouter from "./mt5-accounts";
+import provisioningRouter from "./mt5-provisioning";
 import engineRouter from "./engine";
 import eaBuilderRouter from "./ea-builder";
 import privacyRouter from "./privacy";
@@ -41,6 +43,8 @@ router.use("/app", (req, res, next) => {
   void requireAppSession(req, res, next);
 });
 
+router.use(accountInventoryRouter);
+router.use(provisioningRouter);
 router.use(engineRouter);
 router.use(privacyRouter);
 router.use(healthRouter);

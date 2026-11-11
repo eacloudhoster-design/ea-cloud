@@ -1,3 +1,4 @@
+import {startProvisioningConsumer} from "./lib/mt5-provisioning-runtime";
 import {startPushWorker, stopPushWorker} from "./lib/web-push";
 import http from "http";
 import app from "./app";
@@ -67,8 +68,9 @@ const server = http.createServer(app);
 const sockets = createWsServer(server);
 const stopDiagnostics = startBackendDiagnostics(pool, logger, signalWorkerHealthy);
 let shuttingDown = false;
+let stopProvisioningConsumer=()=>{};
 const shutdown = createShutdown({ server, sockets, pool, log: logger,
-  stop: () => { shuttingDown = true; stopWorker(); stopPushWorker(); stopDiagnostics(); },
+  stop: () => { shuttingDown = true; stopWorker(); stopPushWorker(); stopDiagnostics(); stopProvisioningConsumer(); },
   exit: () => process.exit(0),
 });
 process.once("SIGTERM", () => shutdown("SIGTERM"));
@@ -85,8 +87,10 @@ process.on("uncaughtExceptionMonitor", (_error, origin) => {
 server.listen({port, ...(process.env.API_LISTEN_HOST ? {host:process.env.API_LISTEN_HOST} : {})}, () => {
   if (shuttingDown) return;
   logger.info({ port }, "Server listening");
-  startPushWorker(logger,signalWorkerHealthy);
-  void runStartupTasks();
+  if(process.env.EA_MT5_MANAGEMENT_ONLY!=="1")startPushWorker(logger,signalWorkerHealthy);
+  try{stopProvisioningConsumer=startProvisioningConsumer(logger);}catch{logger.warn({code:"PRIVATE_PROVISIONER_NOT_CONFIGURED"},"Provisioning consumer not started");}
+  if(process.env.EA_MT5_MANAGEMENT_ONLY!=="1")void runStartupTasks();
+  else logger.info({mode:"management",executionEnabled:false,startupMaintenance:false},"Account management runtime; signal execution and startup maintenance disabled");
 });
 
 async function runStartupTasks() {

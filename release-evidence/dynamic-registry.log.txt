@@ -1,0 +1,10 @@
+test_cross_owner_descriptor_rejected (__main__.Tests.test_cross_owner_descriptor_rejected) ... ok
+test_insecure_ciphertext_permissions_rejected (__main__.Tests.test_insecure_ciphertext_permissions_rejected) ... ok
+test_symlink_descriptor_rejected (__main__.Tests.test_symlink_descriptor_rejected) ... ok
+test_unknown_and_held_never_resolve (__main__.Tests.test_unknown_and_held_never_resolve) ... ok
+test_verified_descriptor_returns_exact_binding (__main__.Tests.test_verified_descriptor_returns_exact_binding) ... ok
+
+----------------------------------------------------------------------
+Ran 5 tests in 0.042s
+
+OK

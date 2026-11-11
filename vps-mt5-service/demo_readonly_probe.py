@@ -4,7 +4,7 @@ from pathlib import Path
 
 def probe(mt5, config, password, timeout=15000):
     report={'read_only':True,'financial_trades':0,'initialized':False,'identity_verified':False,'market_data_verified':False,'execution_enabled':False}
-    if config.get('account_mode')!='demo' or int(config.get('login',0))<=0 or not config.get('server') or not password:
+    if config.get('account_mode') not in ('demo','live') or (config.get('account_mode')=='live' and config.get('allow_live_readonly') is not True) or int(config.get('login',0))<=0 or not config.get('server') or not password:
         return {**report,'error':'Invalid demo binding'}
     started=time.monotonic()
     try:
@@ -16,14 +16,14 @@ def probe(mt5, config, password, timeout=15000):
         account=mt5.account_info();terminal=mt5.terminal_info()
         normalize=lambda value:ntpath.normcase(ntpath.normpath(value))
         expected=normalize(ntpath.dirname(config['terminal_path']))
-        identity=bool(account and account.login==config['login'] and account.server==config['server'] and account.trade_mode==mt5.ACCOUNT_TRADE_MODE_DEMO)
+        identity=bool(account and account.login==config['login'] and account.server==config['server'] and account.trade_mode==(mt5.ACCOUNT_TRADE_MODE_DEMO if config['account_mode']=='demo' else mt5.ACCOUNT_TRADE_MODE_REAL))
         paths=bool(terminal and all(normalize(getattr(terminal,field,''))==expected for field in ('path','data_path')))
         report.update(identity_verified=identity,portable_paths_verified=paths,connected=bool(terminal and terminal.connected),automated_trading_enabled=bool(terminal and terminal.trade_allowed))
         if not identity or not paths or not report['connected']:
             report['error']='Demo identity, path or connection verification failed';return report
         if report['automated_trading_enabled']:
             report['error']='Read-only acceptance requires automated trading disabled';return report
-        report['account']={'login':account.login,'server':account.server,'mode':'demo','currency':account.currency,'balance':account.balance,'equity':account.equity}
+        report['account']={'login':account.login,'server':account.server,'mode':config['account_mode'],'currency':account.currency,'balance':account.balance,'equity':account.equity}
         positions=mt5.positions_get();orders=mt5.orders_get()
         report.update(positions_read_verified=positions is not None,orders_read_verified=orders is not None,
                       open_positions=None if positions is None else len(positions),pending_orders=None if orders is None else len(orders))

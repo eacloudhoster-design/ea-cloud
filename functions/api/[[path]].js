@@ -4,7 +4,7 @@ export async function onRequest({ request, env }) {
     status, headers: { "Cache-Control": "no-store" },
   });
   const incoming = new URL(request.url);
-  const managedPath=/^\/api\/(?:app\/(?:engine\/status|trading-controls|mt5-(?:connect|disconnect))|admin\/(?:mt5\/(?:status|connections|connect|disconnect)|engine\/clients(?:\/[1-9]\d*(?:\/policy)?)?))\/?$/.test(incoming.pathname);
+  const managedPath=/^\/api\/(?:app\/(?:mt5-accounts(?:\/[0-9a-f-]{36}\/(?:status|select|disconnect))?|mt5-provisioning\/requests(?:\/[0-9a-f-]+\/cancel)?|engine\/status|trading-controls|mt5-(?:connect|disconnect|health|provisioning))|admin\/(?:mt5-account-capabilities|mt5-accounts(?:\/[0-9a-f-]{36}\/(?:status|select|disconnect))?|mt5-provisioning\/requests(?:\/[0-9a-f-]+\/cancel)?|mt5\/(?:status|connections|connect|disconnect)|engine\/clients(?:\/[1-9]\d*(?:\/policy)?)?))\/?$/.test(incoming.pathname);
   const management=managedPath&&Boolean(env.MT5_MANAGEMENT_ORIGIN);
   const origin=management?env.MT5_MANAGEMENT_ORIGIN:env.BACKEND_ORIGIN;
   const proxyToken=management?env.MT5_MANAGEMENT_PROXY_TOKEN:env.BACKEND_PROXY_TOKEN;

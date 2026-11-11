@@ -53,3 +53,11 @@ Thumbs.db
 .dev.vars
 .dev.vars.*
 /work/web-push.env
+
+# Isolated release verification and Python compilation output
+**/__pycache__/
+*.pyc
+.release-artifacts/
+
+# Supplemental continuation packages; retain original release artifacts
+.completion-artifacts/

@@ -1,0 +1,20 @@
+{
+  "observed_at": "2026-11-10T23:54:56.840203+00:00",
+  "new_provisioning_assertions_passed": 25,
+  "external_services_used": false,
+  "migration_applied": false,
+  "consumer_started": false,
+  "deployment": false,
+  "broker_orders": 0,
+  "execution_enabled": false,
+  "checks": {
+    "runtime_preserved": true,
+    "stops_preserved": true
+  },
+  "limitations": [
+    "mock SQL only",
+    "no browser acceptance",
+    "no full project build/typecheck",
+    "private worker manager port implementation absent"
+  ]
+}

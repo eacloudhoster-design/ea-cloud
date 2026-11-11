@@ -31,6 +31,8 @@ export const observerAllocationsTable = pgTable(
     mentorId: integer("mentor_id").notNull(),
     symbol: text("symbol").notNull(),
     scale: text("scale").notNull(),
+    accountLogin: text("account_login"),
+    accountServer: text("account_server"),
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
       .defaultNow(),

@@ -1,8 +1,9 @@
+import {markProvisioningBound} from "../lib/mt5-provisioning";
 import {encryptMT5Password,decryptMT5Password} from "../lib/mt5-crypto";
 import {requireAuth} from "../middlewares/auth";
 import { readBoundAccount } from "../lib/mt5-account-status";
 import { Router } from "express";
-import { db, mt5ConnectionsTable, usersTable } from "@workspace/db";
+import { db, mt5ConnectionsTable, usersTable,clientSettingsTable } from "@workspace/db";
 import { eq, desc, and,ne,sql } from "drizzle-orm";
 
 const router = Router();
@@ -36,13 +37,20 @@ router.post("/admin/mt5/connect", requireAuth, async (req: any, res) => {
     if(account.role!=="mentor"){res.status(403).json({error:"A dedicated mentor-role worker is required"});return;}
     const saved=await db.transaction(async tx=>{
       await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtext(${"ea-account:"+server+":"+loginNum}))`);
+      if(process.env.MT5_ACCOUNT_INVENTORY==="1"){
+       const claims=await tx.execute(sql`SELECT owner_kind,owner_id FROM mt5_account_inventory WHERE login=${String(loginNum)} AND server=${server}`);
+       if(claims.rows.some((r:any)=>r.owner_kind!=="mentor"||r.owner_id!==mentor.id))return null;
+      }
+      const [receiver]=await tx.select({id:clientSettingsTable.id}).from(clientSettingsTable).where(and(eq(clientSettingsTable.mt5Login,String(loginNum)),eq(clientSettingsTable.mt5Server,server))).limit(1);
+      if(receiver)return null;
       const [other]=await tx.select({id:mt5ConnectionsTable.id}).from(mt5ConnectionsTable).where(and(eq(mt5ConnectionsTable.mt5Login,loginNum),eq(mt5ConnectionsTable.mt5Server,server),ne(mt5ConnectionsTable.mentorId,mentor.id))).limit(1);
       if(other)return null;
-      const [row]=await tx.insert(mt5ConnectionsTable).values({mentorId:mentor.id,mt5Login:loginNum,mt5Server:server,encryptedMt5Password:encryptMT5Password(password),balance:account.balance===null?null:String(account.balance),status:"connected",rawResponse:JSON.stringify({verified:true,accountMode:"demo",executionEnabled:false})}).returning();return row;
+      const [row]=await tx.insert(mt5ConnectionsTable).values({mentorId:mentor.id,mt5Login:loginNum,mt5Server:server,encryptedMt5Password:encryptMT5Password(password),balance:account.balance===null?null:String(account.balance),status:"connected",rawResponse:JSON.stringify({verified:true,accountMode:account.account_mode,executionEnabled:false})}).returning();return row;
     });
     if(!saved){res.status(409).json({error:"Account is already assigned to another mentor"});return;}
+    try{await markProvisioningBound({kind:"mentor",id:mentor.id},String(loginNum),server);}catch{req.log.warn({code:"PROVISIONING_STATUS_UPDATE_UNAVAILABLE"},"Connection verified; provisioning status update pending");}
     res.setHeader("Cache-Control","no-store");
-    res.json({status:"connected",id:saved.id,mt5Login:loginNum,server,balance:saved.balance,connectedAt:saved.connectedAt,accountMode:"demo",executionEnabled:account.execution_enabled});
+    res.json({status:"connected",id:saved.id,mt5Login:loginNum,server,balance:saved.balance,connectedAt:saved.connectedAt,accountMode:account.account_mode,executionEnabled:account.execution_enabled});
   } catch {res.status(503).json({error:"Account verification or storage temporarily unavailable"});}
 });
 
@@ -81,7 +89,7 @@ router.get("/admin/mt5/status",requireAuth,async(req:any,res)=>{
   if(!row?.encryptedMt5Password){res.json({connected:false,verified:false,code:"MENTOR_ACCOUNT_NOT_CONFIGURED"});return;}
   const proof=await readBoundAccount(row.mt5Login,row.mt5Server,decryptMT5Password(row.encryptedMt5Password));
   if(proof.role!=="mentor")throw Error();
-  res.json({connected:true,verified:true,login:proof.login,server:proof.server,broker:proof.broker,accountMode:"demo",executionEnabled:false,workerExecutionEnabled:proof.execution_enabled,readOnly:proof.read_only,observedAt:new Date().toISOString()});
+  res.json({connected:true,verified:true,login:proof.login,server:proof.server,broker:proof.broker,accountMode:proof.account_mode,executionEnabled:false,workerExecutionEnabled:proof.execution_enabled,readOnly:proof.read_only,observedAt:new Date().toISOString()});
  }catch{res.status(503).json({connected:false,verified:false,code:"MENTOR_VERIFICATION_UNAVAILABLE"});}
 });
 router.post("/admin/mt5/disconnect",requireAuth,async(req:any,res)=>{

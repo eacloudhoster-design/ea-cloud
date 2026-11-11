@@ -1,3 +1,4 @@
+import {requireAuth} from "../middlewares/auth";
 import {zipSync,strToU8} from "fflate";
 import {safeFilename} from "../lib/ea-builder/contracts";
 import { Router } from "express";
@@ -8,31 +9,10 @@ import { getRawApiKeyForEmbed } from "../lib/api-key";
 const router = Router();
 
 // ─── Mentor auth helper ────────────────────────────────────────────────────────
-const getMentorFromBearer = async (authHeader: string | undefined) => {
-  if (!authHeader?.startsWith("Bearer ")) return null;
-  try {
-    const decoded = Buffer.from(authHeader.slice(7), "base64").toString();
-    const [idStr, role] = decoded.split(":");
-    if (role !== "mentor" && role !== "superadmin") return null;
-    const id = parseInt(idStr, 10);
-    const [mentor] = await db
-      .select({
-        id: usersTable.id,
-        apiKey: usersTable.apiKey,
-        apiKeyEncrypted: usersTable.apiKeyEncrypted,
-        webhookUrl: usersTable.webhookUrl,
-        robotName: usersTable.robotName,
-        mentorName: usersTable.mentorName,
-        firstName: usersTable.firstName,
-        status: usersTable.status,
-      })
-      .from(usersTable)
-      .where(eq(usersTable.id, id))
-      .limit(1);
-    return mentor ?? null;
-  } catch {
-    return null;
-  }
+const getOwnedMentor = async (req:any) => {
+  if(!["mentor","superadmin"].includes(req.userRole))return null;
+  const [mentor]=await db.select().from(usersTable).where(eq(usersTable.id,req.userId)).limit(1);
+  return mentor?.status==="approved"?mentor:null;
 };
 
 // ─── MQ5 EA template ──────────────────────────────────────────────────────────
@@ -277,9 +257,9 @@ void OnTick() {}
 // ─── GET /api/admin/copier/download ───────────────────────────────────────────
 // Returns a personalised MQ5 EA file. Embeds the decrypted raw API key so the EA
 // can authenticate against the hash-based webhook.
-router.get("/admin/copier/download", async (req: any, res) => {
+router.get("/admin/copier/download", requireAuth, async (req: any, res) => {
   try {
-    const mentor = await getMentorFromBearer(req.headers.authorization);
+    const mentor = await getOwnedMentor(req);
     if (!mentor) { res.status(401).json({ error: "Unauthorized" }); return; }
     if (mentor.status !== "approved") {
       res.status(403).json({ error: "Your account must be approved before downloading the EA." }); return;

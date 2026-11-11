@@ -1,3 +1,4 @@
+import {markProvisioningBound} from "../lib/mt5-provisioning";
 import { randomUUID } from "node:crypto";
 import {queueBotPush, queueSymbolPush} from "../lib/web-push";
 import { Router } from "express";
@@ -22,7 +23,7 @@ router.get("/app/trading-controls", requireClientAuth, async (req: any, res) => 
 
     if (!settings) {
       [settings] = await db.insert(clientSettingsTable)
-        .values({ clientId: req.clientId, ...(process.env.EA_MT5_MANAGEMENT_ONLY==="1"?{copyingEnabled:false}:{}) }).returning();
+        .values({ clientId: req.clientId, copyingEnabled:false }).returning();
     }
     // Never expose the encrypted password in API responses.
     const { encryptedMt5Password: _omit, ...safe } = settings;
@@ -58,12 +59,19 @@ router.patch("/app/trading-controls", requireClientAuth, async (req: any, res) =
     if (symbolFilters !== undefined) updates.symbolFilters = String(symbolFilters);
     if (copyingEnabled !== undefined) {
       if(typeof copyingEnabled!=="boolean"){res.status(400).json({error:"copyingEnabled must be boolean"});return;}
+      if(copyingEnabled){
+        if(process.env.EA_MT5_MANAGEMENT_ONLY==="1"){res.status(409).json({code:"EXECUTION_NOT_APPROVED",error:"Order execution is unavailable in this deployment"});return;}
+        const engine=await clientEngineStatus(req.clientId,true);
+        if(!engine.connection.verified || !engine.copier.workerExecutionPermitted || !engine.copier.mentorAllocationApproved || engine.copier.emergencyStopActive!==false || engine.copier.unresolvedJournalHolds!==0 || engine.copier.state==="read_only"){
+          res.status(409).json({code:"EXECUTION_NOT_APPROVED",error:"Account verification, allocation and worker safety gates are required"});return;
+        }
+      }
       updates.copyingEnabled = copyingEnabled;
     }
 
     const {settings,changed}=await db.transaction(async tx=>{
       const [existing]=await tx.select().from(clientSettingsTable).where(eq(clientSettingsTable.clientId,req.clientId)).limit(1).for("update");
-      const [settings]=existing?await tx.update(clientSettingsTable).set(updates).where(eq(clientSettingsTable.clientId,req.clientId)).returning():await tx.insert(clientSettingsTable).values({clientId:req.clientId,...(process.env.EA_MT5_MANAGEMENT_ONLY==="1"?{copyingEnabled:false}:{}),...updates}).returning();
+      const [settings]=existing?await tx.update(clientSettingsTable).set(updates).where(eq(clientSettingsTable.clientId,req.clientId)).returning():await tx.insert(clientSettingsTable).values({clientId:req.clientId,copyingEnabled:false,...updates}).returning();
       return {settings,changed:typeof copyingEnabled==="boolean"&&existing?.copyingEnabled!==settings.copyingEnabled};
     });
     if(changed&&process.env.EA_MT5_MANAGEMENT_ONLY!=="1")await queueBotPush(req.clientId,settings.copyingEnabled?'started':'stopped',req.log,settings.updatedAt?.toISOString());
@@ -220,7 +228,7 @@ router.patch("/app/symbol-configs", requireClientAuth, async (req: any, res) => 
 // (same logic as the Admin Portal route), then saves the result to the
 // client's profile. Accepts both the new {login,password,server,broker}
 // payload and the legacy {mt5Login,mt5Server,mt5Broker} field names.
-router.post(["/app/mt5-connect","/client/mt5/connect"], requireAppSession, requireClientAuth, async (req: any, res) => {
+router.post(["/app/mt5-connect","/client/mt5/connect"], requireAppSession, async (req: any, res) => {
   try {
     const body = req.body as Record<string, unknown>;
     const login = (body.login ?? body.mt5Login) as unknown;
@@ -247,10 +255,10 @@ router.post(["/app/mt5-connect","/client/mt5/connect"], requireAppSession, requi
     }
     let account;
     try { account=await readBoundAccount(loginNum,server,password); }
-    catch {res.status(422).json({error:"A provisioned demo account could not be verified",code:"MT5_BINDING_UNVERIFIED"});return;}
+    catch {res.status(422).json({error:"A provisioned account could not be verified",code:"MT5_BINDING_UNVERIFIED"});return;}
     if(account.role!=="client"){res.status(403).json({error:"A receiving client account is required"});return;}
     const balance=account.balance===null?null:String(account.balance),equity=account.equity===null?null:String(account.equity);
-    if(req.body.broker!==undefined && req.body.broker!==account.broker){res.status(422).json({error:"Selected broker does not match the verified account",code:"BROKER_BINDING_MISMATCH"});return;}
+    if(broker!==undefined && broker!==account.broker){res.status(422).json({error:"Selected broker does not match the verified account",code:"BROKER_BINDING_MISMATCH"});return;}
     const resolvedBroker=account.broker,accountName=null,mt5LoginStr=String(loginNum),connectedAt=new Date().toISOString();
 
     // Encrypt the password for copy-trade execution — NEVER stored in plain text.
@@ -263,6 +271,7 @@ router.post(["/app/mt5-connect","/client/mt5/connect"], requireAppSession, requi
       throw error;
     }
 
+    try{await markProvisioningBound({kind:"client",id:req.clientId},mt5LoginStr,server);}catch{req.log.warn({code:"PROVISIONING_STATUS_UPDATE_UNAVAILABLE"},"Connection verified; provisioning status update pending");}
     req.log.info(
       { clientId: req.clientId, login: loginNum, server, balance },
       "[ClientMT5] connection saved to client profile",
@@ -292,6 +301,15 @@ router.get("/app/mt5-health", requireAppSession, async (req: any, res) => {
     const status=await clientEngineStatus(req.clientId,true);
     res.json({mt5_initialized:status.connection.verified,connection:status.connection,copier:status.copier,observedAt:status.observedAt});
   } catch {res.status(503).json({mt5_initialized:false,code:"ENGINE_STATUS_UNAVAILABLE"});}
+});
+
+// Provisioning capabilities are configuration facts, never a broker authentication claim.
+router.get("/app/mt5-provisioning",requireAppSession,async(req:any,res)=>{
+ res.setHeader("Cache-Control","no-store");
+ res.json({brokers:["deriv","exness","justmarkets","xm","rcg"],accountMode:"demo",accountModes:process.env.MT5_LIVE_READONLY_ACCOUNTS==="1"?["demo","live"]:["demo"],multiAccountManagement:process.env.MT5_ACCOUNT_INVENTORY==="1",
+  connectionMode:"provisioned-account-only",selfServiceProvisioning:false,requestSubmissionAvailable:process.env.MT5_SELF_SERVICE_PROVISIONING==="1",executionEnabled:false,
+  requirements:["Dedicated operator-provisioned account worker","Verified account ownership and role","Private authenticated API-to-engine transport"],
+  credentialsStored:"encrypted-after-broker-verification",passwordReturned:false});
 });
 
 // Disconnect MT5

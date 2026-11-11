@@ -181,6 +181,7 @@ export function wakeWorker(log: Logger): void {
 }
 
 export function startWorker(log: Logger): void {
+  if(process.env.EA_MT5_MANAGEMENT_ONLY==="1")return;
   stopped = false;
   if (pollTimer) return;
   pollTimer = setInterval(() => void tick(log), POLL_INTERVAL_MS);

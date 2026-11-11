@@ -18,7 +18,7 @@ export async function clientEngineStatus(clientId: number, probe = false, mentor
     try {
       live=await readBoundAccount(settings.mt5Login,settings.mt5Server,decryptMT5Password(settings.encryptedMt5Password));
       if(live.role!=="client" || (settings.mt5Broker && live.broker!==settings.mt5Broker))throw Error("Binding mismatch");
-      code=live.read_only?"VERIFIED_DEMO_READ_ONLY":"VERIFIED_DEMO";
+      code=live.read_only?`VERIFIED_${live.account_mode.toUpperCase()}_READ_ONLY`:"VERIFIED_DEMO";
     } catch { live=null;code="ACCOUNT_VERIFICATION_UNAVAILABLE"; }
   }
   const [owner]=await db.select({mentorId:appAccessTable.mentorId}).from(appAccessTable).where(eq(appAccessTable.id,clientId)).limit(1);
@@ -29,7 +29,7 @@ export async function clientEngineStatus(clientId: number, probe = false, mentor
     connection:{code,verified:live!==null,...(live?{mode:live.account_mode,positions:live.open_positions,pendingOrders:live.pending_orders,currency:live.currency}: {})},
     copier:{requested:copyingRequested,state:!copyingRequested?"paused":!live?(code==="ACCOUNT_DISCONNECTED"?"disconnected":"unverified"):live.read_only?"read_only":live.journal_holds!==null && live.journal_holds>0?"review_required":!settings?.mt5Connected || live.emergency_stop_active || !live.execution_enabled?"blocked":!allocationApproved?"allocation_blocked":"worker_permitted",
       mentorAllocationApproved:allocationApproved,executionPermitted:!!(allocationApproved && copyingRequested && settings?.mt5Connected && live?.execution_enabled && !live.read_only && live.emergency_stop_active===false && live.journal_holds===0),unresolvedJournalHolds:live?.journal_holds ?? null,emergencyStopActive:live?.emergency_stop_active ?? null,
-      endToEndAcceptanceVerified:false},
+      workerExecutionPermitted:!!(live?.execution_enabled && !live.read_only && live.emergency_stop_active===false && live.journal_holds===0),endToEndAcceptanceVerified:false},
     mappings,recentExecutions:recent.map(row=>({...row,errorCode:row.status==="failed"?"EXECUTION_FAILED_REVIEW_REQUIRED":null})),
     limitations:["Mappings are retained allocations, not a live position count","No retries, reconciliation holds or execution flags are changed by status reads","Worker permission is not end-to-end trading acceptance"] };
 }

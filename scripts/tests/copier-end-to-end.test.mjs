@@ -121,6 +121,16 @@ test('mentor database routing to five isolated HTTP workers: mapping, replay, di
   await f.call('/test/fault/1/crash',{});({signal}=await enqueue(1,.2,'BUY','200'));tally=await execute(signal);assert.equal(tally.failedTerminal,1);assert.equal(tally.succeeded,4);
   const uncertainCount=await count();await f.call('/test/fault/1/healthy',{});tally=await api.runSignal(signal,log,transport);assert.equal(tally.failedTerminal,1);assert.equal(await count(),uncertainCount);
   ({signal}=await enqueue(2,0,'BUY','200'));tally=await execute(signal);assert.equal(tally.failedTerminal,1);assert.equal(tally.succeeded,4);
+  {
+  // Mapping identity is durable; a stale or switched account must not reach any worker.
+  const receiver=(await db.select().from(s.appAccessTable)).find(row=>row.id===1);
+  const settings=(await db.select().from(s.clientSettingsTable)).find(row=>row.clientId===1);
+  const mapping=(await db.select().from(s.observerAllocationsTable)).find(row=>row.clientId===1&&row.sourceKey===api.sourceKey(1,'700','SyntheticMentor','200'));
+  await db.update(s.observerAllocationsTable).set({accountLogin:'9999'}).where(eq(s.observerAllocationsTable.id,mapping.id));
+  const blocked=await api.executeObserver(signal,receiver,settings,'synthetic-password',mapping.symbol,()=>.01,()=>assert.fail('Foreign account mapping reached dispatch'));
+  assert.equal(blocked.ok,false);assert.match(blocked.message,/Allocation account binding/);
+  await db.update(s.observerAllocationsTable).set({accountLogin:'1'}).where(eq(s.observerAllocationsTable.id,mapping.id));
+  }
   const sorted=samples.toSorted((a,b)=>a-b);
   const report={observed_at:new Date().toISOString(),simulation:true,broker_orders:0,brokers,source_routing:'actual routeSnapshot + Drizzle/'+f.databaseKind,queue:'actual claim SQL',queue_scheduler:'Claim invoked immediately by fixture; production polling/backoff excluded',copier:'actual runSignal + executeObserver guards, mapping and sizing',transport:'explicit test-only synthetic receipt adapter over real authenticated loopback HTTP',workers:'five real isolated subprocesses, durable SQLite fills/receipts',measured_warm_events:samples.length,p95_ms:sorted[Math.floor(.95*(sorted.length-1))],maximum_ms:Math.max(coldMs,...samples),cold_event_ms:coldMs,cold_start_included:true,simulation_target_met:Math.max(coldMs,...samples)<15000,actual_broker_target_verified:false,disconnect_recovery:true,gateway_restart_replay:true,lost_ack_duplicate_prevention:true,uncertain_fill_blocked:true,baseline_accounts_flat:true,concurrent_backend_retry_verified:true,sl_tp_modification_verified:true,custom_lots_caps_and_symbol_pinning_verified:true,subminimum_receiver_target_rejected_without_roundup:true,excluded:['public mentor HTTP authentication',...(f.databaseKind==='PGlite'?['real PostgreSQL server']:[]),'Windows SDK/broker execution','production deployment']};
   if(process.env.EA_COPIER_REPORT)await writeFile(process.env.EA_COPIER_REPORT,JSON.stringify(report,null,2)+'\n');

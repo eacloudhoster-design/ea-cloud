@@ -1,0 +1,35 @@
+{
+  "observed_at": "2026-11-11T00:50:36.106640+00:00",
+  "files": {
+    "dedicated-worker-driver.py": "f0dec548df0de84f9dbe2b2dbfb3f5f417b7b8eab1ae29e97002f1438ca1ceef",
+    "worker-driver.config.example.json": "e0c07bb90ed97c3983bb50766e83f0e1b3d000b4c0a3c5a7c4246aaab26d2ab5",
+    "ea-selfservice-display@.service.example": "c05d63a6983272569323cff846de6c170eb9fdc62c0135a84b689cb3aa55188b",
+    "ea-selfservice-readonly@.service.example": "f49c7e60b8cb318a3a449a33fc3eeef9118fdca4d293803792367be310a6347f",
+    "test_worker_creation.py": "16940bb8e5e1ed3d473bf2dc5b5f59a31af892415acbdfe395ae6838158bb407",
+    "run_driver_checks.py": "fa42e3545e08bc89a89d32b7eb77c5e6287ba0f26979da60f13b270cf604e9a0",
+    "WORKER_DRIVER_REVIEW.md": "f95322f9b8e3c1c9599b9ca07c1345f1e6be22688f7904994df57c188cb30343"
+  },
+  "tests": {
+    "tests": 12,
+    "passed": true,
+    "failures": 0,
+    "errors": 0,
+    "seconds": 0.196,
+    "network_process_sdk_guard": true,
+    "production_operations": 0
+  },
+  "preservation": {
+    "runtime_unchanged": true,
+    "stops_unchanged": true
+  },
+  "host_actions_exercised": false,
+  "real_broker_authentication": false,
+  "production_complete": false,
+  "missing": [
+    "approved clean slot images/users and deployment",
+    "static relay registry admission/reload integration",
+    "real encrypted-credential/systemd/Wine read-only acceptance",
+    "parent-watchdog kill recovery of systemd-owned units"
+  ],
+  "execution_enabled": false
+}

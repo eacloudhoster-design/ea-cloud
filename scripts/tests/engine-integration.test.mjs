@@ -82,9 +82,11 @@ test('real browser sessions, owned engine status, strict broker proof and accoun
   result=await request('/app/engine/status',{headers:{cookie:clientCookie}});state=await result.json();assert.equal(state.connection.code,'VERIFIED_DEMO_READ_ONLY');assert.equal(state.copier.state,'read_only');assert.equal(state.copier.executionPermitted,false);assert.equal(state.copier.unresolvedJournalHolds,null);
   for(const bad of [{execution_enabled:true},{journal_bound:true},{journal_holds:0},{financial_routes:true},{protocol:'other'}]){const before=response;response={...response,...bad};await assert.rejects(api.readBoundAccount('91','FixtureDemo','fixture-broker-password'));response=before;}
   response={...ack,role:'mentor'};
-  const mentorConnect=await request('/admin/mt5/connect',{method:'POST',headers:{cookie:mentorCookie,'Content-Type':'application/json'},body:JSON.stringify({login:91,server:'FixtureDemo',password:'fixture-broker-password',broker:'justmarkets'})});assert.equal(mentorConnect.status,200);
+  const crossRole=await request('/admin/mt5/connect',{method:'POST',headers:{cookie:mentorCookie,'Content-Type':'application/json'},body:JSON.stringify({login:91,server:'FixtureDemo',password:'fixture-broker-password',broker:'justmarkets'})});assert.equal(crossRole.status,409,'A follower binding cannot become a mentor source');
+  response={...ack,role:'mentor',login:93};
+  const mentorConnect=await request('/admin/mt5/connect',{method:'POST',headers:{cookie:mentorCookie,'Content-Type':'application/json'},body:JSON.stringify({login:93,server:'FixtureDemo',password:'fixture-broker-password',broker:'justmarkets'})});assert.equal(mentorConnect.status,200);
   const secondMentorCookie=await login('/auth/login',{email:'superadmin2@example.invalid',password:'Test-only-pass-123!'});
-  const duplicateSource=await request('/admin/mt5/connect',{method:'POST',headers:{cookie:secondMentorCookie,'Content-Type':'application/json'},body:JSON.stringify({login:91,server:'FixtureDemo',password:'fixture-broker-password',broker:'justmarkets'})});assert.equal(duplicateSource.status,409);
+  const duplicateSource=await request('/admin/mt5/connect',{method:'POST',headers:{cookie:secondMentorCookie,'Content-Type':'application/json'},body:JSON.stringify({login:93,server:'FixtureDemo',password:'fixture-broker-password',broker:'justmarkets'})});assert.equal(duplicateSource.status,409);
   let mentorStatus=await request('/admin/mt5/status',{headers:{cookie:mentorCookie}});assert.equal(mentorStatus.status,200);assert.equal((await mentorStatus.json()).verified,true);
   const mentorRow=(await f.engine.query('SELECT * FROM mt5_connections')).rows[0];assert.ok(mentorRow.encrypted_mt5_password);assert.ok(!JSON.stringify(await mentorConnect.json()).includes('fixture-broker-password'));
   const disconnected=await request('/admin/mt5/disconnect',{method:'POST',headers:{cookie:mentorCookie,'Content-Type':'application/json'},body:JSON.stringify({id:mentorRow.id})});assert.equal(disconnected.status,200);
@@ -94,6 +96,8 @@ test('real browser sessions, owned engine status, strict broker proof and accoun
   process.env.EA_MT5_MANAGEMENT_ONLY='1';const management=api.createMt5ManagementApp();
   const manage=(path,init={})=>appRequest(management,'https://fixture.invalid/api'+path,init);
   assert.equal((await manage('/app/trading-controls')).status,401);
+  assert.equal((await manage('/app/mt5-accounts')).status,401);
+  assert.equal((await manage('/app/mt5-accounts',{headers:{cookie:clientCookie}})).status,503,'Inventory remains off until schema and deployment approval');
   assert.equal((await manage('/app/trading-controls',{headers:{cookie:mentorCookie}})).status,401);
   await f.engine.exec('CREATE TEMP TABLE capital_saved_fixture AS SELECT * FROM client_settings WHERE client_id=10; DELETE FROM client_settings WHERE client_id=10');
   const freshControls=await manage('/app/trading-controls',{headers:{cookie:clientCookie}});assert.equal(freshControls.status,200);assert.equal((await freshControls.json()).copyingEnabled,false,'management defaults must not request copying');
@@ -102,7 +106,7 @@ test('real browser sessions, owned engine status, strict broker proof and accoun
   const capitalPatch=(body,origin)=>manage('/app/trading-controls',{method:'PATCH',headers:{cookie:clientCookie,'Content-Type':'application/json',...(origin?{Origin:origin}:{})},body:JSON.stringify(body)});
   assert.equal((await capitalPatch({maxOpenTrades:-1})).status,422);
   assert.equal((await capitalPatch({maxOpenTrades:2},'https://attacker.invalid')).status,403);
-  const oldPushCalls=globalThis.__capitalPushCalls;const cap=await capitalPatch({fixedLotSize:.01,maxLotSize:.01,maxOpenTrades:2,copyingEnabled:true});assert.equal(cap.status,200);const savedCap=await cap.json();assert.equal(savedCap.clientId,10);assert.equal(savedCap.maxOpenTrades,2);assert.ok(!('encryptedMt5Password' in savedCap));assert.equal(globalThis.__capitalPushCalls,oldPushCalls,'management preferences cannot announce trading started');
+  const oldPushCalls=globalThis.__capitalPushCalls;assert.equal((await capitalPatch({copyingEnabled:true})).status,409,'Management runtime must reject copying activation');const cap=await capitalPatch({fixedLotSize:.01,maxLotSize:.01,maxOpenTrades:2,copyingEnabled:false});assert.equal(cap.status,200);const savedCap=await cap.json();assert.equal(savedCap.clientId,10);assert.equal(savedCap.maxOpenTrades,2);assert.ok(!('encryptedMt5Password' in savedCap));assert.equal(globalThis.__capitalPushCalls,oldPushCalls,'management preferences cannot announce trading started');
   const managementCalls=calls;assert.equal((await manage('/observer/sync-position',{method:'POST',body:'{}'})).status,404);assert.equal(calls,managementCalls);
   assert.equal((await manage('/admin/engine/clients/10/policy',{method:'PATCH',headers:{cookie:mentorCookie,Origin:'https://attacker.invalid','Content-Type':'application/json'},body:JSON.stringify(policy)})).status,403);
   assert.equal((await manage('/admin/engine/clients/10/policy',{method:'PATCH',headers:{cookie:mentorCookie,'Content-Type':'application/json'},body:JSON.stringify(policy)})).status,200);

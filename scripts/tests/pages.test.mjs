@@ -152,3 +152,17 @@ test('invalid management origin fails closed only for managed routes without lea
  assert.equal((await onRequest({request:new Request('https://website.example/api/app/mt5-connect'),env})).status,503);assert.equal(calls,0);
  assert.equal((await onRequest({request:new Request('https://website.example/api/auth/login'),env})).status,200);assert.equal(calls,1);
 });
+
+test('management origin includes owned-account routes without widening financial or auth routing',async()=>{
+ const env={BACKEND_ORIGIN:'https://backend.example',MT5_MANAGEMENT_ORIGIN:'https://management.example'};
+ const id='11111111-1111-4111-8111-111111111111';
+ for(const prefix of ['/api/app/mt5-accounts','/api/admin/mt5-accounts'])for(const suffix of ['',`/${id}/status`,`/${id}/select`,`/${id}/disconnect`]){
+  globalThis.fetch=async req=>{assert.equal(new URL(req.url).hostname,'management.example');return Response.json({ok:true});};
+  assert.equal((await onRequest({request:new Request('https://website.example'+prefix+suffix),env})).status,200);
+ }
+ for(const route of ['/api/admin/mt5-account-capabilities','/api/auth/me','/api/app/mt5-accounts/execute-trade','/api/admin/mt5-accounts-extra']){
+  const expected=route.endsWith('capabilities')?'management.example':'backend.example';
+  globalThis.fetch=async req=>{assert.equal(new URL(req.url).hostname,expected);return Response.json({ok:true});};
+  await onRequest({request:new Request('https://website.example'+route),env});
+ }
+});

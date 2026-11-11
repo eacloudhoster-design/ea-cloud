@@ -1,0 +1,44 @@
+{
+  "observed_at": "2026-11-11T00:38:54.007669+00:00",
+  "files_changed_this_stage": [
+    "artifacts/api-server/src/lib/mt5-provisioning-port.ts",
+    "artifacts/api-server/src/lib/mt5-provisioning-runtime.ts",
+    "artifacts/api-server/src/index.ts",
+    "lib/mt5-ui/ProvisioningRequestForm.tsx",
+    "infra/provisioning/private-service.cjs",
+    "infra/provisioning/private-service.config.example.json",
+    "infra/provisioning/ea-private-provisioner.service.example",
+    "infra/provisioning/DEPLOYMENT_AND_ROLLBACK.md",
+    "test-private-provisioner.cjs",
+    "test-provisioner-port.cjs"
+  ],
+  "sha256": {
+    "artifacts/api-server/src/lib/mt5-provisioning-port.ts": "b5247d7e0b2664f61892597dcf02e614af0ee1c75cae563d292dac1980237336",
+    "artifacts/api-server/src/lib/mt5-provisioning-runtime.ts": "2c48027fc2a4351920fb3aec19dd4fac611808dd39d92cd5cc063c5d2d7c9ba9",
+    "artifacts/api-server/src/index.ts": "54fb6a86e9ea52a6777f815d3d4dc739684a1a7bd38c295981897d97dbc10654",
+    "lib/mt5-ui/ProvisioningRequestForm.tsx": "f0274e078eceabed31bb07dea84b7594bbcae23f784e8bd8032da8f262b6d32b",
+    "infra/provisioning/private-service.cjs": "2f72b9ef164aedae968da7c05baa7e3dcf18fcfb217429dd76983a19442b480d",
+    "infra/provisioning/private-service.config.example.json": "35560a912c2f2d44940778c54ba35bb086fb6135a19144b8726154535290df9e",
+    "infra/provisioning/ea-private-provisioner.service.example": "8d663edb529078bf114fdd56aa0987b782d7886d842e1c512da0cff496372186",
+    "infra/provisioning/DEPLOYMENT_AND_ROLLBACK.md": "8fde1e7825454527ade913ad2171d2145d0e21cfcf0df630366080100d507998",
+    "test-private-provisioner.cjs": "cd15338b10c3221412ea4ad86bddb04cfbe5da42ff9ab0fc6f645ea7f33721e4",
+    "test-provisioner-port.cjs": "47a73089a4b57597b2c5cb9be65f947797c32e4a5af56992d13e4c61d99f433a"
+  },
+  "migration_path": "migrations/20261111_mt5_provisioning_requests.sql",
+  "migration_sha256": "f9035e90ebc300837b489f845ecff9dac9a6cd7325c2987a44632f8d58bdba03",
+  "new_private_service_assertions": 12,
+  "new_private_port_assertions": 7,
+  "syntax_checks_passed": 4,
+  "git_diff_check": "PASS",
+  "preservation": {
+    "protected_runtime_unchanged": true,
+    "both_stops_active_unchanged": true
+  },
+  "migration_applied": false,
+  "services_started": false,
+  "credentials_used": false,
+  "provisioning_enabled": false,
+  "trading_enabled": false,
+  "real_broker_authentication_verified": false,
+  "missing": "Reviewed host worker materialization driver, private deployment transport, approved migration/release and real read-only SDK/browser acceptance"
+}

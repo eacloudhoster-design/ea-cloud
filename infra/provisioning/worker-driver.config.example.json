@@ -1,0 +1,12 @@
+{
+  "enabled": false,
+  "state_root": "/var/lib/ea-cloud/private-provisioner",
+  "accounts_root": "/var/lib/ea-cloud/selfservice-accounts",
+  "images_root": "/opt/ea-cloud/approved-clean-images",
+  "stops": [
+    "/etc/ea-cloud/acceptance/XAUUSD.STOP",
+    "/etc/ea-cloud/acceptance/XAUUSD.CLEANUP_STOP"
+  ],
+  "slots": [],
+  "allow_live_readonly": false
+}

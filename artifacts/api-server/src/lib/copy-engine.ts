@@ -311,6 +311,7 @@ export interface SignalRunResult {
 // One client failing must NOT stop the others, so each is wrapped in try/catch.
 // Returns a per-outcome tally so the worker can decide whether to retry the signal.
 export async function runSignal(signal: TradeSignal, log: Logger, observerDispatch: typeof syncObserverPosition = syncObserverPosition): Promise<SignalRunResult> {
+  if(process.env.EA_MT5_MANAGEMENT_ONLY==="1")return {clientCount:0,attempted:0,succeeded:0,failedRetryable:0,failedTerminal:0,skipped:0};
   const clients = await db.select().from(appAccessTable)
     .where(eq(appAccessTable.mentorId, signal.mentorId));
 

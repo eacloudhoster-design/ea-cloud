@@ -1,3 +1,4 @@
+import {ProvisioningRequestForm,AccountManager} from "@workspace/mt5-ui";
 import EngineStatus from "./EngineStatus";
 import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -130,6 +131,8 @@ export default function Mt5Connections() {
 
   return (
     <div className="p-6 md:p-8">
+      <AccountManager role="master" />
+      <ProvisioningRequestForm role="master" />
       <section className="mb-6 rounded-xl border border-white/10 p-4" aria-label="Verified mentor connection">
         <span className={sourceStatus?.verified?'text-green-400':'text-red-400'}>{sourceStatus?.verified?'● MT5 Account Connected':'● Connection unverified or disconnected'}</span>
         {sourceStatus?.verified&&<p>{sourceStatus.broker} · {sourceStatus.server} · Demo verified. Financial execution is not enabled by this page.</p>}
