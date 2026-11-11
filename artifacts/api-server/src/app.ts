@@ -1,3 +1,4 @@
+import {requireApiOrigin} from "./lib/api-origin-auth";
 import { browserSessionMiddleware } from "./lib/browser-session";
 import express, { type Express } from "express";
 import cors from "cors";
@@ -19,6 +20,7 @@ const app: Express = express();
 // Trust the reverse proxy that sits in front of this service (Replit's shared proxy).
 // Required so express-rate-limit reads the real client IP from X-Forwarded-For.
 app.set("trust proxy", 1);
+app.use(requireApiOrigin);
 
 // ── Security headers ──────────────────────────────────────────────
 app.use(

@@ -1,3 +1,5 @@
+// Production defaults to account management until a separately accepted execution rollout.
+process.env.EA_MT5_MANAGEMENT_ONLY??="1";
 import {startProvisioningConsumer} from "./lib/mt5-provisioning-runtime";
 import {startPushWorker, stopPushWorker} from "./lib/web-push";
 import http from "http";

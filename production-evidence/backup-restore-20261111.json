@@ -1,0 +1,19 @@
+{
+  "observed_at": "2026-11-11T20:14:44.078Z",
+  "backup_directory": "/var/backups/ea-cloud/production-premigration-2026-11-11T20-11-58-462Z",
+  "archive_sha256": "de3727155964eafdc5e8f3222f88d60d5ce53221c91213c72bc4d323efe83b4b",
+  "archive_sha256_matches": true,
+  "source_records_modified": 0,
+  "migration_applied": false,
+  "off_vps_copy_verified": false,
+  "provider_pitr_verified": false,
+  "archive_toc_readable": true,
+  "restore_exit_code": 0,
+  "restore_target_unix_socket_only": true,
+  "table_inventory_matches": true,
+  "tables_verified": 32,
+  "records_verified": 577,
+  "table_content_mismatches": 0,
+  "restored_encrypted_api_keys_verified": 24,
+  "restore_verified": true
+}

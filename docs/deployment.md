@@ -104,13 +104,15 @@ Start with:
 pnpm --filter @workspace/api-server start
 ```
 
-The start script first applies the existing browser-session migration and only
-starts the API if it succeeds. Before deploying this startup change, confirm a
-usable production backup/recovery point. For the exact Free-plan Render commands,
-backup prerequisite and verification steps, see [the session migration guide](render-session-migration.md).
-Directly running dist/index.mjs bypasses this migration step.
+The default start script now uses the authenticated management entry, without
+startup DDL, maintenance, signal reconciliation or execution-worker startup.
+Reviewed migrations are applied separately after verified backups. The production
+entry also defaults to management mode when invoked directly. Existing session
+and database credentials must be preserved; management mode does not claim broker
+connectivity or authorize trading. See `PRODUCTION_EXECUTION_20261111.md` for the
+current rollout evidence; earlier migration-start guides are historical.
 
-The start script runs `node --enable-source-maps ./dist/index.mjs` from
+The start script runs `node --enable-source-maps ./management-start.mjs` from
 `artifacts/api-server`. Keep workspace runtime dependencies and externalized
 packages available; the bundle is not a standalone executable. Persist the
 API working-directory `uploads/` on durable disk when using local uploads.
