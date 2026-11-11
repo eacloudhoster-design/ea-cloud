@@ -18,11 +18,14 @@ class Binding:
  password:str=field(repr=False)
  api_token:str=field(repr=False)
  account_mode:str="demo"
+ owner_kind:str|None=None
+ owner_id:int|None=None
 
 def create_app(bindings,token,forward=None,resolve_dynamic=None):
  if len(token)<32 or not 1<=len(bindings)<=8:raise ValueError('Bound service credentials and capacity required')
  routes={};urls=set();tokens=set()
  for b in bindings:
+  if (b.owner_kind is None)!=(b.owner_id is None) or (b.owner_kind is not None and (b.owner_kind not in ('mentor','client') or type(b.owner_id) is not int or b.owner_id<=0)):raise ValueError('Invalid tenant binding')
   if b.account_mode not in ('demo','live') or b.broker not in ('justmarkets','exness','xm','rcg','deriv') or b.role not in ('mentor','client') or type(b.login) is not int or b.login<=0 or not isinstance(b.server,str) or not b.server or b.server.strip()!=b.server or not b.password or len(b.api_token)<32:raise ValueError('Invalid bound demo identity')
   origin=worker_url(b.url);key=(b.login,b.server)
   if key in routes or origin in urls or b.api_token in tokens or b.api_token==token:raise ValueError('Account/endpoint/credential isolation required')
@@ -66,7 +69,7 @@ def create_app(bindings,token,forward=None,resolve_dynamic=None):
    if a.get('login')!=b.login or a.get('server')!=b.server or a.get('mode')!=b.account_mode:raise ValueError('Identity mismatch')
    if any(type(data.get(k)) is not int or data[k]<0 for k in ('open_positions','pending_orders')):raise ValueError('Incomplete exposure evidence')
    cash=lambda value:value if type(value) in (int,float) and math.isfinite(value) else None
-   return {'success':True,'connected':True,'simulation':False,'account_mode':b.account_mode,'read_only':True,'protocol':'EA_READ_ONLY_STATUS_V1','financial_routes':False,'broker':b.broker,'login':b.login,'server':b.server,'role':b.role,'currency':a.get('currency'),'balance':cash(a.get('balance')),'equity':cash(a.get('equity')),'open_positions':data['open_positions'],'pending_orders':data['pending_orders'],'execution_enabled':False,'emergency_stop_active':None,'journal_bound':False,'journal_holds':None}
+   return {**({'owner_kind':b.owner_kind,'owner_id':b.owner_id} if b.owner_kind is not None else {}),'success':True,'connected':True,'simulation':False,'account_mode':b.account_mode,'read_only':True,'protocol':'EA_READ_ONLY_STATUS_V1','financial_routes':False,'broker':b.broker,'login':b.login,'server':b.server,'role':b.role,'currency':a.get('currency'),'balance':cash(a.get('balance')),'equity':cash(a.get('equity')),'open_positions':data['open_positions'],'pending_orders':data['pending_orders'],'execution_enabled':False,'emergency_stop_active':None,'journal_bound':False,'journal_holds':None}
   except Exception:return JSONResponse({'success':False,'connected':False,'message':'Read-only account verification unavailable'},status_code=503)
  return app
 

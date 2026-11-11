@@ -16,7 +16,7 @@ export async function clientEngineStatus(clientId: number, probe = false, mentor
   let code = !settings?.mt5Login || !settings.mt5Server ? "ACCOUNT_NOT_CONFIGURED" : settings?.mt5Connected===false?"ACCOUNT_DISCONNECTED":"NOT_PROBED";
   if (probe && settings?.mt5Connected===true && settings.mt5Login && settings.mt5Server && settings.encryptedMt5Password) {
     try {
-      live=await readBoundAccount(settings.mt5Login,settings.mt5Server,decryptMT5Password(settings.encryptedMt5Password));
+      live=await readBoundAccount(settings.mt5Login,settings.mt5Server,decryptMT5Password(settings.encryptedMt5Password),{kind:"client",id:clientId});
       if(live.role!=="client" || (settings.mt5Broker && live.broker!==settings.mt5Broker))throw Error("Binding mismatch");
       code=live.read_only?`VERIFIED_${live.account_mode.toUpperCase()}_READ_ONLY`:"VERIFIED_DEMO";
     } catch { live=null;code="ACCOUNT_VERIFICATION_UNAVAILABLE"; }

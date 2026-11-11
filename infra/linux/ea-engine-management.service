@@ -15,6 +15,7 @@ LoadCredential=backend.json:/etc/ea-cloud/production-compatibility/original.json
 LoadCredential=relay-token:/etc/ea-cloud/readonly-relay/relay-token
 LoadCredential=origin-token:/etc/ea-cloud/management-api/origin-token
 Environment=NODE_ENV=production
+Environment=EA_RELEASE_COMMIT=REVIEW_REQUIRED_SHA
 Environment=PORT=8006
 Environment=API_LISTEN_HOST=127.0.0.1
 Environment=NODE_OPTIONS=--max-old-space-size=256

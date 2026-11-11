@@ -1,0 +1,22 @@
+# Credential-free fresh Wine initialization, accepted against pinned clean image.
+[Unit]
+Requires=ea-selfservice-display@%i.service
+After=ea-selfservice-display@%i.service
+PartOf=ea-selfservice-display@%i.service
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+User=ea-account-%i
+Group=ea-account-%i
+EnvironmentFile=/var/lib/ea-cloud/private-provisioner/%i-runtime.env
+ExecStart=/usr/bin/python3 /opt/ea-cloud/releases/REVIEW_REQUIRED/infra/linux/bootstrap-account-runtime.py
+TimeoutStartSec=180
+TimeoutStopSec=8
+KillMode=control-group
+UMask=0077
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+ReadWritePaths=/var/lib/ea-cloud/selfservice-accounts/%i /tmp
+MemoryMax=1152M
+TasksMax=160

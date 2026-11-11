@@ -8,5 +8,7 @@
     "/etc/ea-cloud/acceptance/XAUUSD.CLEANUP_STOP"
   ],
   "slots": [],
-  "allow_live_readonly": false
+  "allow_live_readonly": false,
+  "existing_registry": "/etc/ea-cloud/readonly-relay/registry.json",
+  "max_active_workers": 1
 }

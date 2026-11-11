@@ -1,0 +1,47 @@
+{
+  "anonymous_only": true,
+  "credentials_used": false,
+  "orders": 0,
+  "results": [
+    {
+      "viewport": "desktop",
+      "path": "/",
+      "http": 200,
+      "title": "EA Cloud",
+      "body_visible": true,
+      "body_text_length": 2654,
+      "password_inputs": 0,
+      "page_errors": []
+    },
+    {
+      "viewport": "desktop",
+      "path": "/ea-app/",
+      "http": 200,
+      "title": "EA Cloud App",
+      "body_visible": true,
+      "body_text_length": 130,
+      "password_inputs": 1,
+      "page_errors": []
+    },
+    {
+      "viewport": "mobile",
+      "path": "/",
+      "http": 200,
+      "title": "EA Cloud",
+      "body_visible": true,
+      "body_text_length": 2574,
+      "password_inputs": 0,
+      "page_errors": []
+    },
+    {
+      "viewport": "mobile",
+      "path": "/ea-app/",
+      "http": 200,
+      "title": "EA Cloud App",
+      "body_visible": true,
+      "body_text_length": 130,
+      "password_inputs": 1,
+      "page_errors": []
+    }
+  ]
+}

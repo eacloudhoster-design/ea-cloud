@@ -1,7 +1,10 @@
 # REVIEW ONLY. Pin release path and obtain installation approval.
 [Unit]
-Requires=ea-selfservice-display@%i.service
-After=ea-selfservice-display@%i.service
+StartLimitIntervalSec=120
+StartLimitBurst=3
+Requires=ea-selfservice-terminal@%i.service
+After=ea-selfservice-terminal@%i.service
+PartOf=ea-selfservice-terminal@%i.service
 [Service]
 User=ea-account-%i
 Group=ea-account-%i
@@ -13,7 +16,8 @@ ExecStart=/usr/bin/python3 /opt/ea-cloud/releases/REVIEW_REQUIRED/infra/linux/wi
 TimeoutStartSec=10
 TimeoutStopSec=5
 KillMode=control-group
-Restart=no
+Restart=on-failure
+RestartSec=5
 UMask=0077
 NoNewPrivileges=yes
 ProtectSystem=strict

@@ -7,6 +7,12 @@ let readiness: Promise<void> | undefined;
 
 const router: IRouter = Router();
 
+router.get("/release", (_req,res)=>{
+ const value=process.env.RENDER_GIT_COMMIT||process.env.EA_RELEASE_COMMIT;
+ res.setHeader("Cache-Control","no-store");
+ res.json({commit:typeof value==="string"&&/^[0-9a-f]{40}$/.test(value)?value:null,mode:process.env.EA_MT5_MANAGEMENT_ONLY==="1"?"management":"execution_gated",executionDisabled:process.env.EA_MT5_MANAGEMENT_ONLY==="1"});
+});
+
 router.get("/healthz", (_req, res) => {
   const data = HealthCheckResponse.parse({ status: "ok" });
   res.json(data);

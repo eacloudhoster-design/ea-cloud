@@ -25,7 +25,7 @@ async function legacyOwner(tx:any,owner:Owner,login:string,server:string){
 export async function linkOwnedAccount(owner:Owner,body:any){
  enabled();owned(owner);
  if(!body||typeof body!=="object"||Object.keys(body).some(k=>!["login","server","password","broker"].includes(k))||typeof body.login!=="string"||!(/^[1-9][0-9]*$/).test(body.login)||!Number.isSafeInteger(Number(body.login))||typeof body.server!=="string"||!body.server||body.server.length>256||body.server!==body.server.trim()||/[\x00-\x1f\x7f]/.test(body.server)||typeof body.password!=="string"||!body.password||body.password.length>1024)throw Error("INVALID_ACCOUNT_REQUEST");
- const proof=await readBoundAccount(body.login,body.server,body.password);
+ const proof=await readBoundAccount(body.login,body.server,body.password,owner);
  if(proof.role!==owner.kind||(body.broker!==undefined&&body.broker!==proof.broker))throw Error("ACCOUNT_ROLE_MISMATCH");
  const encrypted=encryptMT5Password(body.password),tx=await pool.connect();
  try{
@@ -40,7 +40,7 @@ export async function linkOwnedAccount(owner:Owner,body:any){
 }
 export async function listOwnedAccounts(owner:Owner){enabled();owned(owner);return (await pool.query("SELECT id,broker,login,server,account_role,account_mode,state,verified_at FROM mt5_account_inventory WHERE owner_kind=$1 AND owner_id=$2 ORDER BY created_at,id",[owner.kind,owner.id])).rows.map(view);}
 async function account(owner:Owner,id:string){enabled();owned(owner);identifier(id);const row=(await pool.query("SELECT * FROM mt5_account_inventory WHERE id=$1 AND owner_kind=$2 AND owner_id=$3",[id,owner.kind,owner.id])).rows[0];if(!row)throw Error("ACCOUNT_NOT_FOUND");return row;}
-async function verify(row:any){if(row.state!=="linked")throw Error("ACCOUNT_DISCONNECTED");const proof=await readBoundAccount(row.login,row.server,decryptMT5Password(row.encrypted_password));if(proof.role!==row.account_role||proof.broker!==row.broker||proof.account_mode!==row.account_mode)throw Error("ACCOUNT_MODE_CHANGED");return proof;}
+async function verify(row:any){if(row.state!=="linked")throw Error("ACCOUNT_DISCONNECTED");const proof=await readBoundAccount(row.login,row.server,decryptMT5Password(row.encrypted_password),{kind:row.owner_kind,id:row.owner_id});if(proof.role!==row.account_role||proof.broker!==row.broker||proof.account_mode!==row.account_mode)throw Error("ACCOUNT_MODE_CHANGED");return proof;}
 export async function ownedAccountStatus(owner:Owner,id:string){const row=await account(owner,id),proof=await verify(row);return {...view(row),connected:true,verified:true,readOnly:proof.read_only,balance:proof.balance,equity:proof.equity,currency:proof.currency,positions:proof.open_positions,pendingOrders:proof.pending_orders,observedAt:new Date().toISOString()};}
 /** Selection reuses the existing execution binding. Any retained mapping blocks a switch. */
 export async function selectOwnedAccount(owner:Owner,id:string){

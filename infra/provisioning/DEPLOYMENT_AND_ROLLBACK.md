@@ -1,3 +1,16 @@
+## 2026-11-11 owner-authorized continuation — supersedes historical gates below
+
+Production deployment, service configuration and reviewed migrations after backup are now owner-authorized. The two 20261111 migrations were applied once after a verified restore; do not repeat them. Current exact receipts are in `production-evidence/` and `PRODUCTION_EXECUTION_20261111.md`.
+
+Provisioning now acknowledges durable intent with HTTP202 and authenticated request-ID polling; it never retransmits credentials during polling or retries an uncertain allocation. Driver watchdog is360s plus45s stop/retain, inside consumer420s. Dedicated startup is display → credential-free bootstrap → supervised portable terminal with Experts disabled → read-only SDK API → exact account proof. Fresh Wine bootstrap uses the previously documented installer-suppression settings, bounded wineboot/wineserver cleanup and an SDK import check. A partial prefix holds for reconciliation. The clean image passed a real fresh-prefix dependency import check with no broker initialization; this does not prove new-account provisioning.
+
+Homes are0700 beneath a root-owned0711 traversal parent. Admission requires a pinned broker server, capacity, a unique OS identity and no existing static account controller. Dynamic relay proofs carry authoritative tenant ownership; backend readers must match the authenticated owner. Three bootstrap,17 driver and17 private-service assertions passed; async-port and changed tenant/security regressions passed. These focused tests inject host/HTTP operations and do not prove real provisioning.
+
+Generic worker creation, encrypted-credential host delivery, recovery and actual user-session/provisioning acceptance still require real deployment evidence. Private Render-to-VPS transport configuration remains unavailable without provider access. Both stops and all financial execution prohibitions remain in force.
+
+---
+Historical checkpoint (kept for provenance; not current deployment status):
+
 # Private provisioning release candidate — no deployment authorization
 
 ## Implemented and tested here

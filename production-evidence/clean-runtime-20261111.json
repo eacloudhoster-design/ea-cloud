@@ -1,0 +1,18 @@
+{
+  "observed_at": "2026-11-11T21:34:31Z",
+  "exit_code": 0,
+  "passed": true,
+  "proof": {
+    "python": "3.13.17",
+    "sdk": "5.0.6231",
+    "numpy": "2.5.4",
+    "fastapi": "0.115.6",
+    "pydantic": "2.10.4",
+    "uvicorn": "0.34.0",
+    "broker_initialize_called": false
+  },
+  "fresh_isolated_wine_prefix": true,
+  "account_credentials_used": false,
+  "broker_orders": 0,
+  "existing_services_changed": false
+}

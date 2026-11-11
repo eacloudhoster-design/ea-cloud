@@ -254,7 +254,7 @@ router.post(["/app/mt5-connect","/client/mt5/connect"], requireAppSession, async
       res.status(400).json({error:"Invalid account credentials"});return;
     }
     let account;
-    try { account=await readBoundAccount(loginNum,server,password); }
+    try { account=await readBoundAccount(loginNum,server,password,{kind:"client",id:req.clientId}); }
     catch {res.status(422).json({error:"A provisioned account could not be verified",code:"MT5_BINDING_UNVERIFIED"});return;}
     if(account.role!=="client"){res.status(403).json({error:"A receiving client account is required"});return;}
     const balance=account.balance===null?null:String(account.balance),equity=account.equity===null?null:String(account.equity);

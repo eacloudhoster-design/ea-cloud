@@ -6,6 +6,11 @@ const transport=load('artifacts/api-server/src/lib/mt5-account-status.ts',{'./mt
  await assert.rejects(()=>transport.readBoundAccount(123,'Fixture','SYNTHETIC'));
  env.MT5_LIVE_READONLY_ACCOUNTS='1';const live=await transport.readBoundAccount(123,'Fixture','SYNTHETIC');assert.equal(live.account_mode,'live');assert.equal(live.execution_enabled,false);assert.equal(live.password,undefined);
  for(const [key,value] of [['execution_enabled',true],['account_mode','unknown'],['simulation',true],['login',124],['financial_routes',true],['journal_bound',true]]){const old=data[key];data[key]=value;await assert.rejects(()=>transport.readBoundAccount(123,'Fixture','SYNTHETIC'));data[key]=old;}
+ data={...data,owner_kind:'client',owner_id:7};
+ await assert.rejects(()=>transport.readBoundAccount(123,'Fixture','SYNTHETIC'));
+ await assert.rejects(()=>transport.readBoundAccount(123,'Fixture','SYNTHETIC',{kind:'client',id:8}));
+ await assert.rejects(()=>transport.readBoundAccount(123,'Fixture','SYNTHETIC',{kind:'mentor',id:7}));
+ assert.equal((await transport.readBoundAccount(123,'Fixture','SYNTHETIC',{kind:'client',id:7})).owner.id,7);
  const worker=load('artifacts/api-server/src/lib/copy-engine.ts',{'./copy-policy':{},'./observer-execution':{},'./observer-vps':{},'./trading-activity':{},'@workspace/db':{db:{select(){throw Error('Must not touch DB or dispatch')}}},'drizzle-orm':{},'./mt5-crypto':{},'./mt5-vps':{},'../ws':{}},{process:{env:{EA_MT5_MANAGEMENT_ONLY:'1'}}});
  assert.equal((await worker.runSignal({},{})).attempted,0);
  let exported=false;
