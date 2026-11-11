@@ -1,3 +1,4 @@
+import {ProvisioningRequestForm,AccountManager} from "@workspace/mt5-ui";
 import EngineStatus from "./EngineStatus";
 import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -52,6 +53,10 @@ export default function Mt5Connections() {
 
   // Form state
   const [login, setLogin] = useState("");
+  const [selectedBroker,setSelectedBroker]=useState("");
+  const [sourceStatus,setSourceStatus]=useState<any>(null);
+  const [sourceRevision,setSourceRevision]=useState(0);
+  useEffect(()=>{const c=new AbortController();setSourceStatus(null);fetch("/api/admin/mt5/status",{credentials:"same-origin",cache:"no-store",signal:c.signal}).then(async r=>{if(!r.ok)throw Error();return r.json();}).then(d=>{if(!c.signal.aborted)setSourceStatus(d);}).catch(()=>{if(!c.signal.aborted)setSourceStatus({verified:false});});return()=>c.abort();},[sourceRevision]);
   const [password, setPassword] = useState("");
   const [server, setServer] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -86,7 +91,7 @@ export default function Mt5Connections() {
     setFormError("");
     setResult(null);
 
-    if (!login.trim() || !password.trim() || !server.trim()) {
+    if (!login.trim() || !password || !server.trim() || !selectedBroker) {
       setFormError("All fields are required.");
       return;
     }
@@ -95,6 +100,7 @@ export default function Mt5Connections() {
       return;
     }
 
+    const secret=password;setPassword("");setShowPassword(false);
     setSubmitting(true);
     try {
       const token = "cookie-portal";
@@ -104,13 +110,15 @@ export default function Mt5Connections() {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ login: Number(login), password, server: server.trim() }),
+        body: JSON.stringify({ login: Number(login), password:secret, server: server.trim(),broker:selectedBroker }),
       });
 
       const data: ConnectResult = await res.json();
+      if(!res.ok || data.status!=="connected" || data.mt5Login!==Number(login) || data.server!==server.trim() || (data as any).accountMode!=="demo")throw Error("The backend did not confirm this demo account.");
       setResult(data);
 
-      if (data.status === "connected") {
+      if (res.ok && data.status === "connected") {
+        setSourceRevision(v=>v+1);
         // Refresh history to show the new entry
         fetchHistory();
       }
@@ -123,6 +131,15 @@ export default function Mt5Connections() {
 
   return (
     <div className="p-6 md:p-8">
+      <AccountManager role="master" />
+      <ProvisioningRequestForm role="master" />
+      <section className="mb-6 rounded-xl border border-white/10 p-4" aria-label="Verified mentor connection">
+        <span className={sourceStatus?.verified?'text-green-400':'text-red-400'}>{sourceStatus?.verified?'● MT5 Account Connected':'● Connection unverified or disconnected'}</span>
+        {sourceStatus?.verified&&<p>{sourceStatus.broker} · {sourceStatus.server} · Demo verified. Financial execution is not enabled by this page.</p>}
+        <button type="button" onClick={()=>setSourceRevision(v=>v+1)}>Refresh connection</button>
+      </section>
+      <label className="mb-4 block">Broker <select aria-label="Mentor broker" className="bg-slate-900 rounded p-2" value={selectedBroker} onChange={e=>setSelectedBroker(e.target.value)}><option value="">Select broker</option>{[["justmarkets","JustMarkets"],["exness","Exness"],["deriv","Deriv"],["xm","XM Global"],["rcg","RCG Markets"]].map(([id,name])=><option key={id} value={id}>{name}</option>)}</select></label>
+      <div className="flex flex-wrap gap-2 mb-4">{history.filter((c:any)=>c.status==='connected').map((c:any)=><button key={c.id} type="button" className="border border-red-500/30 rounded p-2 text-xs" onClick={async()=>{try{const r=await fetch('/api/admin/mt5/disconnect',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:c.id})});if(!r.ok)throw Error();setResult(null);setSourceRevision(v=>v+1);fetchHistory();}catch{setFormError('Disconnect could not be confirmed.');}}}>Disconnect saved account {c.mt5Login}</button>)}</div>
       {/* Header */}
       <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
         <h1 className="text-2xl font-bold text-primary tracking-wide">MT5 Connections</h1>

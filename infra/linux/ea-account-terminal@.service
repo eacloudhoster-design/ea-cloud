@@ -1,17 +1,21 @@
+# Review template only: render readonly-account to the pinned approved release.
 [Unit]
-Description=EA Cloud isolated DEMO account terminal %i
+Description=EA Cloud isolated demo terminal %i
 Requires=ea-account-display@%i.service
 After=ea-account-display@%i.service network-online.target
 [Service]
+Type=notify
+NotifyAccess=main
+TimeoutStartSec=90
 User=ea-account-%i
 Group=ea-account-%i
-EnvironmentFile=/etc/ea-cloud/accounts/%i.env
+EnvironmentFile=/etc/ea-cloud/accounts/%i/runtime.env
 LoadCredential=terminal-login.ini:/etc/ea-cloud/accounts/%i/terminal-login.ini
 WorkingDirectory=/var/lib/ea-cloud/accounts/%i/terminal
-ExecStart=/opt/wine-stable/bin/wine /var/lib/ea-cloud/accounts/%i/terminal/terminal64.exe /portable /config:Z:\\run\\credentials\\%n\\terminal-login.ini
+ExecStart=/usr/bin/python3 /opt/ea-cloud/releases/readonly-account/infra/linux/supervise-portable-terminal.py
 Restart=always
-RestartSec=10
-TimeoutStopSec=8
+RestartSec=5
+TimeoutStopSec=20
 UMask=0077
 NoNewPrivileges=yes
 ProtectHome=yes

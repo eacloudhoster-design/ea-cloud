@@ -24,3 +24,4 @@ export * from "./web-push";
 export * from "./browser-sessions";
 export * from "./robot-builds";
 export * from "./observer-routing";
+export * from './mentor-copy-policies';

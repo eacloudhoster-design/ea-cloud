@@ -51,6 +51,7 @@ interface ModifyParams {
 
 // Single POST attempt — classifies the outcome but does not retry.
 async function postOnce(path: string, body: Record<string, unknown>): Promise<Omit<VpsResult, "attempts">> {
+  if(process.env.EA_MT5_MANAGEMENT_ONLY==="1")return {ok:false,httpStatus:409,ticket:null,retcode:null,message:"Execution disabled in account management runtime",data:{submission_started:false},retriable:false};
   let res: Response;
   try {
     res = await fetch(`${EXTERNAL_MT5_BASE}${path}`, {

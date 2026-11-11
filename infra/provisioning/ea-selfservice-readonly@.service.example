@@ -1,0 +1,23 @@
+# REVIEW ONLY. Pin release path and obtain installation approval.
+[Unit]
+Requires=ea-selfservice-display@%i.service
+After=ea-selfservice-display@%i.service
+[Service]
+User=ea-account-%i
+Group=ea-account-%i
+EnvironmentFile=/var/lib/ea-cloud/private-provisioner/%i-runtime.env
+LoadCredentialEncrypted=account.json:/var/lib/ea-cloud/private-provisioner/%i-credentials/account.json
+LoadCredentialEncrypted=broker-password:/var/lib/ea-cloud/private-provisioner/%i-credentials/broker-password
+LoadCredentialEncrypted=api-token:/var/lib/ea-cloud/private-provisioner/%i-credentials/api-token
+ExecStart=/usr/bin/python3 /opt/ea-cloud/releases/REVIEW_REQUIRED/infra/linux/wine-readonly-api.py
+TimeoutStartSec=10
+TimeoutStopSec=5
+KillMode=control-group
+Restart=no
+UMask=0077
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+ReadWritePaths=/var/lib/ea-cloud/selfservice-accounts/%i /tmp
+MemoryMax=900M
+TasksMax=160

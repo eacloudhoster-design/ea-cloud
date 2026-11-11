@@ -24,7 +24,7 @@ export const clientSettingsTable = pgTable("client_settings", {
   // Symbol filters (comma-separated)
   symbolFilters: text("symbol_filters").default(""),
   // Copy control
-  copyingEnabled: boolean("copying_enabled").notNull().default(true),
+  copyingEnabled: boolean("copying_enabled").notNull().default(false),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
 });
 

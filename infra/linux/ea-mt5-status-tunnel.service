@@ -1,0 +1,32 @@
+# Prepared template only. Requires authorized Access/ingress policy and a verified cloudflared binary.
+[Unit]
+Description=EA Cloud outbound authenticated status-only tunnel
+Wants=network-online.target
+After=network-online.target ea-readonly-account-relay.service
+ConditionPathExists=/etc/ea-cloud/tunnel/status.token
+ConditionPathExists=/usr/local/bin/cloudflared
+
+[Service]
+Type=simple
+DynamicUser=yes
+LoadCredential=tunnel-token:/etc/ea-cloud/tunnel/status.token
+ExecStart=/usr/local/bin/cloudflared tunnel --no-autoupdate --loglevel warn --metrics 127.0.0.1:20267 run --token-file %d/tunnel-token
+Restart=on-failure
+RestartSec=5
+TimeoutStopSec=40
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+UMask=0077
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

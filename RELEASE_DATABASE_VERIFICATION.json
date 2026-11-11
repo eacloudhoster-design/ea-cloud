@@ -1,0 +1,15 @@
+{
+  "pass": true,
+  "mode": "disposable-Unix-socket-only",
+  "tables": [
+    "mt5_provisioning_audit",
+    "mt5_provisioning_requests",
+    "release_sentinel"
+  ],
+  "migration_transaction_pass": true,
+  "concurrent_skip_locked_pass": true,
+  "role_constraint_pass": true,
+  "atomic_cancel_audit_and_ciphertext_erasure_pass": true,
+  "sentinel_preserved": true,
+  "production_database_used": false
+}

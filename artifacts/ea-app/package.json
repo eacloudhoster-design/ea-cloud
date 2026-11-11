@@ -78,6 +78,7 @@
     "zod": "catalog:"
   },
   "dependencies": {
-    "lightweight-charts": "^5.2.1"
+    "lightweight-charts": "^5.2.1",
+    "@workspace/mt5-ui": "workspace:*"
   }
 }

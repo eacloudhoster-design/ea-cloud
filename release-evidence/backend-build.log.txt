@@ -1,0 +1,21 @@
+
+> @workspace/api-server@0.0.0 build /root/ea-cloud-app-worktree-20261111/artifacts/api-server
+> node ./build.mjs
+
+
+  dist/index.mjs                       3.5mb ⚠️
+  dist/ea-builder-worker.mjs         353.4kb
+  dist/pino-worker.mjs               153.4kb
+  dist/pino-file.mjs                 142.1kb
+  dist/pino-pretty.mjs               114.6kb
+  dist/thread-stream-worker.mjs        7.3kb
+  dist/check-scanner.mjs               3.8kb
+  dist/index.mjs.map                   6.1mb
+  dist/ea-builder-worker.mjs.map     679.6kb
+  dist/pino-worker.mjs.map           256.9kb
+  dist/pino-file.mjs.map             229.1kb
+  dist/pino-pretty.mjs.map           203.9kb
+  dist/thread-stream-worker.mjs.map   12.0kb
+  dist/check-scanner.mjs.map           6.4kb
+
+⚡ Done in 1756ms

@@ -1,0 +1,36 @@
+{
+  "curl": [
+    {
+      "path": "/",
+      "observation": "200 text/html; charset=utf-8",
+      "curl_exit": 0
+    },
+    {
+      "path": "/ea-app/",
+      "observation": "200 text/html; charset=utf-8",
+      "curl_exit": 0
+    },
+    {
+      "path": "/api/healthz",
+      "observation": "429 text/plain; charset=utf-8",
+      "curl_exit": 0
+    },
+    {
+      "path": "/api/readyz",
+      "observation": "502 text/plain; charset=UTF-8",
+      "curl_exit": 0
+    },
+    {
+      "path": "/api/app/me",
+      "observation": "502 text/plain; charset=UTF-8",
+      "curl_exit": 0
+    },
+    {
+      "path": "/build-info.json",
+      "observation": "200 application/json",
+      "curl_exit": 0,
+      "commit": "e3076477fcdf4a687a019f96f9d9a70b23801815"
+    }
+  ],
+  "python_urllib": "403 for same paths; client-dependent result, not an outage conclusion"
+}

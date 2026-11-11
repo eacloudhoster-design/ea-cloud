@@ -1,0 +1,10 @@
+test_endpoint_collision_holds (__main__.Tests.test_endpoint_collision_holds) ... ok
+test_missing_service_authentication_denied (__main__.Tests.test_missing_service_authentication_denied) ... ok
+test_new_account_resolves_and_projects_status (__main__.Tests.test_new_account_resolves_and_projects_status) ... ok
+test_static_binding_preserved (__main__.Tests.test_static_binding_preserved) ... ok
+test_wrong_secret_denied_before_forward (__main__.Tests.test_wrong_secret_denied_before_forward) ... ok
+
+----------------------------------------------------------------------
+Ran 5 tests in 0.054s
+
+OK

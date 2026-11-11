@@ -1,0 +1,13 @@
+{
+  "base": "e3076477fcdf4a687a019f96f9d9a70b23801815",
+  "sha256": {
+    "infra/linux/READONLY_RELAY_RELEASE.md": "fddac6fae8a4419de6cd9a520d4126f885880c5521dc0eff37131dc49a611079",
+    "infra/linux/ea-readonly-account-relay.service": "8e57d5dd559271dd58adad3d0d8c33c881b4063404cd79ffbacd546b45a282e5",
+    "scripts/tests/helpers/readonly-relay-server.py": "ccd6fd61263dd78cdf016df01ce8946439fd670ec6d7d1cba336da9800005cd0",
+    "vps-mt5-service/readonly_account_relay.py": "2e5d6be947b401e46197162255c3d5f025ff93d4fa86dc2b754f33827ed373a4",
+    "vps-mt5-service/tests/test_readonly_account_relay.py": "056fc07a341e6ea05267628bed4436ece6a9fb6cdba9f7436f0bc05d7f90c0a5",
+    "artifacts/api-server/src/lib/engine-status.ts": "72578fa3fb7127a3564a0e678ef5f5e3cdc5b4cc8f294741a4e8332990f4169c",
+    "artifacts/api-server/src/lib/mt5-account-status.ts": "255912cbebd04dc9f9acdc54dc9ff0e48f3953ae8dc6c2ac2a674e1335470814",
+    "scripts/tests/engine-integration.test.mjs": "3044d7b0416fcf8ef130eae97e9c4386f6951118bdcc3b1b5a2e6d99ef3e7001"
+  }
+}

@@ -1,0 +1,11 @@
+.mt5-account-manager{margin-block:1.5rem;padding:1rem;border:1px solid #8886;border-radius:1rem;min-width:0;text-align:left}
+.mt5-account-manager h3{font-size:1.1rem;margin:0 0 .6rem}
+.mt5-account-manager p{font-size:.9rem;line-height:1.5;overflow-wrap:anywhere}
+.mt5-account-manager form{display:grid;gap:.8rem;margin-block:1rem}
+.mt5-account-manager label{display:grid;gap:.35rem;font-size:.9rem}
+.mt5-account-manager input{box-sizing:border-box;width:100%;min-width:0;border:1px solid #8888;border-radius:.5rem;padding:.7rem;color:inherit;background:transparent;font:inherit}
+.mt5-account-manager button{max-width:100%;margin:.2rem;padding:.6rem .8rem;border:1px solid #8888;border-radius:.5rem;color:inherit;background:transparent;font:inherit;white-space:normal;cursor:pointer}
+.mt5-account-manager button:disabled{opacity:.5;cursor:default}
+.mt5-account-manager :focus-visible{outline:2px solid currentColor;outline-offset:3px}
+.mt5-account-manager ul{list-style:none;margin:0;padding:0}
+.mt5-account-manager li{padding-block:.75rem;border-top:1px solid #8886;overflow-wrap:anywhere}

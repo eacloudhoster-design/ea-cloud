@@ -79,3 +79,12 @@
 @container ea-app (max-height:700px) { .mt5-topline { font-size: 8px; } .mt5-intro { padding: 21px 0; } .mt5-platform-logo { width: 48px; height: 48px; margin-bottom: 12px; } .mt5-form { gap: 15px; } .mt5-input-wrap { min-height: 54px; } .mt5-input-wrap input { height: 52px; } .mt5-availability-note { margin-top: 14px; } .mt5-saved-account { margin-top: 14px; } .mt5-broker-stage { width: 132px; margin-bottom: 26px; } }
 
 @container ea-app (max-height:640px) { .mt5-content { padding-top: max(18px,var(--ea-content-safe-top,env(safe-area-inset-top))); } .mt5-intro { padding: 18px 0; } .mt5-intro p { display: none; } .mt5-form { gap: 13px; } .mt5-floating-field > label { margin-bottom: 6px; } .mt5-connect-button { min-height: 54px; margin-top: 5px; } }
+
+.mt5-broker-select-label {display:grid;gap:8px;color:#fff0ee;font-size:11px;letter-spacing:.7px}
+.mt5-broker-select {min-height:54px;border:1px solid #ff45454a;border-radius:16px;padding:0 14px;color:#fff;background:#10121ee6;backdrop-filter:blur(14px)}
+.mt5-status-connected {border-color:#32db8b77!important;box-shadow:0 0 20px #20ce7020}
+.mt5-status-connected>span::before {content:'';display:inline-block;width:8px;height:8px;margin-right:8px;border-radius:50%;background:#4ade80;box-shadow:0 0 12px #4ade80}
+.mt5-status-disconnected>span::before {content:'';display:inline-block;width:8px;height:8px;margin-right:8px;border-radius:50%;background:#f87171;box-shadow:0 0 10px #ef444450}
+.mt5-screen[data-state="verified"] .mt5-broker-stage {filter:drop-shadow(0 0 20px #22c55e88)}
+@media(prefers-reduced-motion:reduce){.mt5-small-spinner{animation-duration:2s}.mt5-screen *{scroll-behavior:auto!important}}
+.mt5-live-indicator{display:inline-flex;align-items:center;gap:8px;margin:12px 0;font-size:12px;color:#fca5a5}.mt5-live-indicator::before{content:'';width:9px;height:9px;border-radius:50%;background:#ef4444;box-shadow:0 0 12px #ef4444aa}.mt5-live-indicator.is-connected{color:#86efac}.mt5-live-indicator.is-connected::before{background:#4ade80;box-shadow:0 0 16px #22c55ecc}

@@ -1,0 +1,6 @@
+const fs=require('fs'),vm=require('vm'),assert=require('assert/strict'),ts=require('typescript'),crypto=require('crypto');
+const env={},exportsValue={};
+vm.runInNewContext(ts.transpileModule(fs.readFileSync('artifacts/api-server/src/lib/api-origin-auth.ts','utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS}}).outputText,{exports:exportsValue,require:name=>{if(name!=='node:crypto')throw Error(name);return crypto},Buffer,process:{env}});
+function call({path='/api/readyz',method='GET',token}={}){let status=200,next=false,body;const req={path,method,get:()=>token},res={status(n){status=n;return this},json(value){body=value}};exportsValue.requireApiOrigin(req,res,()=>next=true);return {status,next,body};}
+assert.equal(call().next,true);env.EA_API_ORIGIN_TOKEN='a'.repeat(64);assert.equal(call().status,401);assert.equal(call({token:'wrong'}).status,401);assert.equal(call({path:'/api/healthz'}).next,true);assert.equal(call({path:'/api/healthz',method:'POST'}).status,401);assert.equal(call({token:'a'.repeat(64)}).next,true);assert(!JSON.stringify(call()).includes('a'.repeat(64)));env.EA_API_ORIGIN_TOKEN='bad';assert.equal(call({path:'/api/healthz'}).status,503);
+console.log('PASS private-origin auth: optional compatibility, independent liveness, exact constant-time token, wrong/missing denial and invalid-config closure');

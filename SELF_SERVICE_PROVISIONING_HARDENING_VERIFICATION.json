@@ -1,0 +1,16 @@
+{
+  "observed_at": "2026-11-11T00:31:21.687679+00:00",
+  "new_targeted_assertions_passed": 10,
+  "previous_suites_repeated": false,
+  "syntax_checks_passed": 4,
+  "preservation_checks": {
+    "protected_runtime_unchanged": true,
+    "both_stops_active_unchanged": true
+  },
+  "migration_applied": false,
+  "consumer_or_services_activated": false,
+  "real_broker_authentication_attempted": false,
+  "execution_enabled": false,
+  "migration_sha256": "f9035e90ebc300837b489f845ecff9dac9a6cd7325c2987a44632f8d58bdba03",
+  "blocker": "No implemented private dedicated-worker provisioning port; release/migration and real DB/browser acceptance required."
+}

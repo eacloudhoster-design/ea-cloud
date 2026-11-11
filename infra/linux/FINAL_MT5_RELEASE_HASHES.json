@@ -1,0 +1,13 @@
+{
+  "base_commit": "3b3c3df4611de619d25ef6a6593746c7b1700862",
+  "sha256": {
+    "infra/linux/ea-demo-status.target": "fbcefc034a9c03eaa222292e4f320b0ff03ba44b353dca9c211248e24ac235e4",
+    "infra/linux/ea-readonly-account-relay.service": "e4aeab2a5a22817cf5850e86b6e48e6691d3710057efb88a58ed09efb4d56523",
+    "infra/linux/BROKER_APP_SPRINT_READINESS.md": "f7807aad494ed7d2a99498079045c5ad9e3f1776711dcd01b6343da822a72a3e",
+    "infra/linux/FINAL_MT5_RELEASE_READINESS.md": "e1fa5e6744b630298a28853a4dbc4fd8b881ee5aadff4008405ecfb9e181ee41"
+  },
+  "private_value_scan_passed": true,
+  "app_code_changed": false,
+  "previous_app_tests_reused": true,
+  "broker_execution_enabled": false
+}

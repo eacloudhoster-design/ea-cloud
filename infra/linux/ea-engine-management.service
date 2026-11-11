@@ -1,0 +1,48 @@
+# Private authenticated account-management origin. No trading or startup migration.
+[Unit]
+Description=EA Cloud private authenticated account management
+After=network-online.target ea-readonly-account-relay.service
+Wants=network-online.target
+StartLimitIntervalSec=300
+StartLimitBurst=3
+[Service]
+Type=simple
+DynamicUser=yes
+StateDirectory=ea-cloud-management
+StateDirectoryMode=0700
+WorkingDirectory=/var/lib/ea-cloud-management
+LoadCredential=backend.json:/etc/ea-cloud/production-compatibility/original.json
+LoadCredential=relay-token:/etc/ea-cloud/readonly-relay/relay-token
+LoadCredential=origin-token:/etc/ea-cloud/management-api/origin-token
+Environment=NODE_ENV=production
+Environment=PORT=8006
+Environment=API_LISTEN_HOST=127.0.0.1
+Environment=NODE_OPTIONS=--max-old-space-size=256
+Environment=MT5_VPS_URL=http://127.0.0.1:8005
+Environment=MT5_SELF_SERVICE_PROVISIONING=0
+Environment=MT5_PROVISIONING_CONSUMER=0
+Environment=MT5_ACCOUNT_INVENTORY=1
+Environment=MT5_LIVE_READONLY_ACCOUNTS=0
+Environment=PUBLIC_WEBSITE_ORIGIN=https://eacloudhoster.online
+Environment=AUTH_ALLOWED_ORIGINS=https://eacloudhoster.online
+ExecStart=/usr/bin/node /opt/ea-cloud/releases/REVIEW_REQUIRED/infra/linux/management-api-launch.mjs
+Restart=on-failure
+RestartSec=10
+TimeoutStopSec=30
+KillSignal=SIGTERM
+UMask=0077
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+RestrictSUIDSGID=yes
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+MemoryHigh=256M
+MemoryMax=384M
+CPUQuota=50%
+TasksMax=128
+LimitNOFILE=4096
+StandardOutput=journal
+StandardError=journal
+[Install]
+WantedBy=multi-user.target

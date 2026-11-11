@@ -1,0 +1,9 @@
+{
+  "tests": 12,
+  "passed": true,
+  "failures": 0,
+  "errors": 0,
+  "seconds": 0.238,
+  "network_process_sdk_guard": true,
+  "production_operations": 0
+}

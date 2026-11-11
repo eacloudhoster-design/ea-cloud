@@ -1,40 +1,13 @@
+import { requireAppSession } from "../middlewares/app-session";
 import { Router } from "express";
-import { db, appAccessTable, clientMt5ConnectionsTable } from "@workspace/db";
+import { db, clientMt5ConnectionsTable } from "@workspace/db";
 import { eq, desc } from "drizzle-orm";
 
 const router = Router();
 
 
-// ─── Auth middleware ──────────────────────────────────────────────────────────
-const requireClientAuth = async (req: any, res: any, next: any) => {
-  const auth = req.headers.authorization as string | undefined;
-  if (!auth?.startsWith("Bearer ")) {
-    res.status(401).json({ error: "Unauthorized" });
-    return;
-  }
-  try {
-    const decoded = Buffer.from(auth.slice(7), "base64").toString();
-    const [idStr, role] = decoded.split(":");
-    if (role !== "client") {
-      res.status(401).json({ error: "Unauthorized" });
-      return;
-    }
-    const id = parseInt(idStr, 10);
-    const [client] = await db
-      .select({ id: appAccessTable.id, status: appAccessTable.status })
-      .from(appAccessTable)
-      .where(eq(appAccessTable.id, id))
-      .limit(1);
-    if (!client) {
-      res.status(401).json({ error: "Unauthorized" });
-      return;
-    }
-    req.clientId = id;
-    next();
-  } catch {
-    res.status(401).json({ error: "Unauthorized" });
-  }
-};
+// Reuse verified, account-owned browser sessions; bearer identity hints are not authentication.
+const requireClientAuth = requireAppSession;
 
 // Connect is handled by the shared credential-bound client-settings route.
 
@@ -55,6 +28,7 @@ router.get("/client/mt5/connections", requireClientAuth, async (req: any, res) =
       .orderBy(desc(clientMt5ConnectionsTable.connectedAt))
       .limit(50);
 
+    res.setHeader("Cache-Control", "no-store");
     res.json(rows);
   } catch (err) {
     req.log.error({ err }, "[ClientMT5] error fetching connections");

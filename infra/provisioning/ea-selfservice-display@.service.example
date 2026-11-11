@@ -1,0 +1,13 @@
+# REVIEW ONLY. Uses a separately allocated display and dedicated new account user.
+[Service]
+User=ea-account-%i
+Group=ea-account-%i
+EnvironmentFile=/var/lib/ea-cloud/private-provisioner/%i-runtime.env
+ExecStart=/usr/bin/Xvfb ${DISPLAY} -screen 0 1280x800x24 -nolisten tcp -noreset -auth /var/lib/ea-cloud/selfservice-accounts/%i/.Xauthority
+Restart=no
+KillMode=control-group
+TimeoutStopSec=5
+NoNewPrivileges=yes
+ProtectHome=yes
+ProtectSystem=strict
+ReadWritePaths=/tmp

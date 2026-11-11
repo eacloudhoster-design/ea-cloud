@@ -1,0 +1,29 @@
+{
+  "observed_at": "2026-11-11T20:16:01.796Z",
+  "authorized_by": "Owner production authorization in current conversation",
+  "source_checkpoint": "3b1b90b8f511123845d69d90acf1b6cce1846709",
+  "applied": true,
+  "financial_execution_enabled": false,
+  "migrations": [
+    {
+      "file": "20261111_mt5_provisioning_requests.sql",
+      "sha256": "f9035e90ebc300837b489f845ecff9dac9a6cd7325c2987a44632f8d58bdba03"
+    },
+    {
+      "file": "20261111_mt5_account_inventory.sql",
+      "sha256": "9f54532f61d0036cf5ef2f453c4f25842e69382a99fa5629da67cc0ea59aa6ca"
+    }
+  ],
+  "backup_restore_verified": true,
+  "backup_archive_sha256": "de3727155964eafdc5e8f3222f88d60d5ce53221c91213c72bc4d323efe83b4b",
+  "existing_tables_verified": 32,
+  "existing_records_verified": 577,
+  "existing_record_mismatches": 0,
+  "new_tables_verified": [
+    "mt5_provisioning_requests",
+    "mt5_provisioning_audit",
+    "mt5_account_inventory",
+    "mt5_account_inventory_audit"
+  ],
+  "unrelated_prior_migrations_repeated": false
+}

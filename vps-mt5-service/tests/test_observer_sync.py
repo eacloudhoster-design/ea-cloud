@@ -39,8 +39,14 @@ class ObserverTests(unittest.TestCase):
         self.tmp=tempfile.TemporaryDirectory();self.journal=SyncJournal(Path(self.tmp.name)/'journal.sqlite3');self.broker=Broker()
     def tearDown(self):self.tmp.cleanup()
     def sync(self,target,revision=1,**kw):
-        p=ObserverSync(login=123,password='test-only',server='demo',sourceKey='a'*64,revision=revision,symbol='EURUSD',target=target,sl=kw.get('sl',0),tp=0,maxVolume=1,maxOpenTrades=kw.get('maxOpenTrades',10))
+        p=ObserverSync(login=123,password='test-only',server='demo',sourceKey='a'*64,revision=revision,symbol='EURUSD',target=target,sl=kw.get('sl',0),tp=0,maxVolume=1,maxOpenTrades=kw.get('maxOpenTrades',10),maxExposureLots=kw.get('maxExposureLots'))
         return synchronize(self.broker,p,self.journal,lambda *a:None,self.broker.send)
+    def test_gross_exposure_blocks_opening_but_permits_position_specific_reduction(self):
+        self.assertFalse(self.sync(.1,maxExposureLots=.05)['success']);self.assertEqual(self.broker.sent,[])
+        self.assertTrue(self.sync(.1,2,maxExposureLots=.2)['success'])
+        self.assertTrue(self.sync(.05,3,maxExposureLots=.01)['success'])
+        self.assertAlmostEqual(self.broker.positions[0].volume,.05)
+
     def test_retry_after_success_or_journal_reopen_does_not_duplicate(self):
         self.assertTrue(self.sync(.1)['success']);count=len(self.broker.sent)
         self.journal=SyncJournal(self.journal.path)

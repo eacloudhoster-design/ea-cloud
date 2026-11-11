@@ -1,0 +1,14 @@
+{
+  "port": 10040,
+  "root": "/var/lib/ea-cloud/private-provisioner",
+  "tokenFile": "/etc/ea-cloud/private-provisioner/token",
+  "driver": {
+    "path": "/opt/ea-cloud/releases/REVIEW_REQUIRED/dedicated-worker-driver",
+    "sha256": "REPLACE_WITH_REVIEWED_DRIVER_SHA256"
+  },
+  "stops": [
+    "/etc/ea-cloud/acceptance/XAUUSD.STOP",
+    "/etc/ea-cloud/acceptance/XAUUSD.CLEANUP_STOP"
+  ],
+  "allowLiveReadonly": false
+}

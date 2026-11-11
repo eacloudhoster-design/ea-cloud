@@ -12,6 +12,8 @@ export interface Broker {
 }
 
 export const brokers: Broker[] = [
+  {id:"justmarkets",name:"JustMarkets",aliases:["justmarkets"],logo:"",source:"https://justmarkets.com"},
+  {id:"rcg",name:"RCG Markets",aliases:["rcgmarkets"],logo:"",source:"https://www.rcgmarkets.com"},
   { id: "oanda", name: "OANDA", aliases: ["oanda"], logo: new URL("../assets/brokers/oanda.png", import.meta.url).href, source: "https://www.oanda.com/" },
   { id: "avatrade", name: "AvaTrade", aliases: ["avatrade", "ava"], logo: new URL("../assets/brokers/avatrade.png", import.meta.url).href, source: "https://www.avatrade.com/" },
   { id: "exness", name: "Exness", aliases: ["exness"], logo: new URL("../assets/brokers/exness.png", import.meta.url).href, source: "https://www.exness.com/" },

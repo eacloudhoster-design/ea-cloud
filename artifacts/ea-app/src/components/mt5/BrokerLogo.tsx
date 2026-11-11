@@ -9,7 +9,7 @@ export default function BrokerLogo({ broker }: { broker: Broker | null }) {
   return (
     <div className={`mt5-broker-logo ${broker ? "mt5-broker-logo--image" : ""}`}
       style={broker ? { background: broker.logoBackground ?? "transparent" } : undefined}>
-      {!broker ? <Building2 aria-label="Unknown broker" size={54} strokeWidth={1.2} /> : failed ? (
+      {!broker ? <Building2 aria-label="Unknown broker" size={54} strokeWidth={1.2} /> : !broker.logo ? <span style={{fontSize:18,fontWeight:700,textAlign:"center",color:"#fff"}}>{broker.name}</span> : failed ? (
         <span role="alert" style={{ color: "#627b84", fontSize: 11, textAlign: "center" }}>
           {broker.name}<br />Logo unavailable<br />
           <button type="button" onClick={() => setFailed(false)}>Retry logo</button>

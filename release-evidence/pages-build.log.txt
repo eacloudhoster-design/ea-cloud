@@ -1,0 +1,79 @@
+
+> workspace@0.0.0 build:pages /root/ea-cloud-app-worktree-20261111
+> node scripts/build-pages.mjs
+
+
+> @workspace/ea-cloud@0.0.0 build:site /root/ea-cloud-app-worktree-20261111/artifacts/ea-cloud
+> vite build --config vite.config.ts
+
+vite v7.3.2 building client environment for production...
+transforming...
+src/components/ui/label.tsx (2:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.
+src/components/ui/dropdown-menu.tsx (2:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.
+✓ 3228 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                                                1.61 kB │ gzip:   0.55 kB
+dist/assets/space-grotesk-latin-700-normal-RjhwGPKo.woff2     12.84 kB
+dist/assets/inter-latin-500-normal-Cerq10X2.woff2             24.27 kB
+dist/assets/ea-cloud-mobile-cloud-CH-l-DXo.png             1,329.97 kB
+dist/assets/ea-cloud-auth-background-B2lJH4Ai.png          1,802.24 kB
+dist/assets/index-Bkmx7nt3.css                               237.97 kB │ gzip:  37.48 kB
+dist/assets/index-B31glFpH.js                              1,270.42 kB │ gzip: 364.97 kB
+
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+✓ built in 50.73s
+
+> @workspace/ea-app@0.0.0 build /root/ea-cloud-app-worktree-20261111/artifacts/ea-app
+> vite build --config vite.config.ts
+
+vite v7.3.2 building client environment for production...
+transforming...
+✓ 2205 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/assets/avatrade-CNmfWjJx.png                             4.99 kB
+dist/assets/ic-markets-DkRTyyx8.png                           5.05 kB
+dist/assets/pepperstone-CyTvxf3c.png                          5.47 kB
+dist/assets/oanda-lkhQcztT.png                                5.79 kB
+dist/assets/orbitron-latin-900-normal-DrIi7unX.woff2          6.40 kB
+dist/assets/orbitron-latin-600-normal-mazHmDYu.woff2          6.59 kB
+dist/index.html                                               7.70 kB │ gzip:   1.54 kB
+dist/assets/rajdhani-latin-ext-700-normal-S6aYESQK.woff2     12.96 kB
+dist/assets/rajdhani-latin-ext-600-normal-C9ZjJQAt.woff2     13.12 kB
+dist/assets/exo-2-latin-ext-900-normal-Cod0E_eN.woff2        13.29 kB
+dist/assets/exo-2-latin-ext-600-normal-70qtqWxx.woff2        13.96 kB
+dist/assets/roboto-latin-ext-900-normal-Bg1HnWxG.woff2       15.05 kB
+dist/assets/roboto-latin-ext-600-normal-BPkjI5Ax.woff2       15.19 kB
+dist/assets/rajdhani-latin-700-normal-BPDUZo87.woff2         15.69 kB
+dist/assets/rajdhani-latin-600-normal-CXCVEoA9.woff2         15.73 kB
+dist/assets/exo-2-latin-900-normal-Bxo6NnJ-.woff2            16.58 kB
+dist/assets/exo-2-latin-600-normal-DOMk466V.woff2            17.26 kB
+dist/assets/flipside-Kn8-ZY1W.ttf                            21.86 kB
+dist/assets/roboto-latin-900-normal-lk0O8k6m.woff2           21.92 kB
+dist/assets/roboto-latin-600-normal-CzqH9ZEY.woff2           22.24 kB
+dist/assets/inter-latin-900-normal-D4nM5aha.woff2            23.90 kB
+dist/assets/inter-latin-600-normal-LgqL8muc.woff2            24.45 kB
+dist/assets/inter-latin-ext-900-normal-ty8Tfvw5.woff2        35.33 kB
+dist/assets/inter-latin-ext-600-normal-D2bJ5OIk.woff2        36.26 kB
+dist/assets/ort.wasm.bundle.min-BHusxC6p.mjs                 46.53 kB
+dist/assets/metatrader5-BR8t1cJM.png                         68.40 kB
+dist/assets/ea-cloud-logo-DCHsFmQA.jpeg                      93.35 kB
+dist/assets/default-robot-Bl0uSiU9.jpg                      197.46 kB
+dist/assets/ea-cloud-mobile-cloud-CH-l-DXo.png            1,329.97 kB
+dist/assets/kokoro.worker-jeAmP_Cg.js                     1,370.43 kB
+dist/assets/ea-cloud-auth-background-B2lJH4Ai.png         1,802.24 kB
+dist/assets/LiveShot-BwHUd2sV.css                             4.64 kB │ gzip:   1.48 kB
+dist/assets/index-fZCp9e8w.css                              208.53 kB │ gzip:  36.14 kB
+dist/assets/LiveShot-BW2A5OwJ.js                            177.86 kB │ gzip:  58.14 kB
+dist/assets/index-BkVpyZ3Q.js                               602.39 kB │ gzip: 193.94 kB
+
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+✓ built in 29.44s
+Verified Pages output: website at / and EA Cloud trading app at /ea-app/

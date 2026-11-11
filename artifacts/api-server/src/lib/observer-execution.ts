@@ -1,7 +1,10 @@
+import {policyVolume} from "./copy-policy";
 import { randomUUID } from "node:crypto";
 import {
   db,
   usersTable,
+  clientSettingsTable,
+  appAccessTable,
   easTable,
   observerAllocationsTable,
   observerPositionsTable,
@@ -156,6 +159,7 @@ export async function executeObserver(
         mentorId: signal.mentorId,
         symbol,
         scale: String(volume / payload.sourceVolume),
+        accountLogin:settings.mt5Login,accountServer:settings.mt5Server,
       })
       .onConflictDoNothing()
       .returning();
@@ -171,6 +175,7 @@ export async function executeObserver(
         )
         .limit(1);
   }
+  if(allocation?.accountLogin!==settings.mt5Login || allocation?.accountServer!==settings.mt5Server)return rejected("Allocation account binding is missing or changed; reconcile before dispatch");
   const cap = Number(settings.maxLotSize || 1),
     scale = Number(allocation?.scale);
   if (
@@ -182,8 +187,12 @@ export async function executeObserver(
   )
     return rejected("Invalid position allocation or client volume cap");
   const target =
-    Math.min(cap, payload.sourceVolume * scale) *
+    (settings.mentorPolicy?policyVolume(Math.min(cap,payload.sourceVolume*scale),payload.sourceVolume,settings.mentorPolicy):Math.min(cap,payload.sourceVolume*scale)) *
     (payload.side === "BUY" ? 1 : -1);
+  const [currentOwner]=await db.select({mentorId:appAccessTable.mentorId,status:appAccessTable.status}).from(appAccessTable).where(eq(appAccessTable.id,client.id)).limit(1);
+  if(currentOwner?.mentorId!==signal.mentorId || currentOwner.status!=="approved" || allocation.mentorId!==signal.mentorId)return rejected("Client ownership changed before dispatch");
+  const [currentSettings]=await db.select().from(clientSettingsTable).where(eq(clientSettingsTable.clientId,client.id)).limit(1);
+  if(!currentSettings?.mt5Connected || !currentSettings.copyingEnabled || currentSettings.mt5Login!==settings.mt5Login || currentSettings.mt5Server!==settings.mt5Server || currentSettings.encryptedMt5Password!==settings.encryptedMt5Password)return rejected("Account connection or copying permission changed before dispatch");
   return dispatch({
     login: settings.mt5Login,
     password,
@@ -197,6 +206,7 @@ export async function executeObserver(
     tp: Number((event.payload as any).takeProfit || 0),
     maxVolume: cap,
     maxOpenTrades: Number(settings.maxOpenTrades ?? 10),
+    maxExposureLots: Number(settings.mentorPolicy?.maxExposureLots ?? settings.maxLotSize),
     maxDailyDrawdown: Number(settings.maxDailyDrawdown ?? 5),
   });
 }

@@ -1,0 +1,97 @@
+{
+  "observed_at": "2026-11-11T01:04:27.513499+00:00",
+  "status": "NO-GO_CUSTOMER_OPERATIONS",
+  "branch": "release/ea-cloud-integration-20261111",
+  "base": "72bd2de038819dca4d6e25ec34402d1d29e45921",
+  "checks": {
+    "protected_runtime_unchanged": true,
+    "account_credentials_configs_unchanged": true,
+    "both_stops_active_unchanged": true,
+    "person2_original_worktree_files_unchanged": true,
+    "no_private_key_or_database_password_patterns_in_release_changes": true,
+    "typecheck_pass": true,
+    "backend-build_pass": true,
+    "pages-build_pass": true,
+    "database_pass": true,
+    "relay-regression_pass": true,
+    "dynamic-registry_pass": true,
+    "dynamic-relay_pass": true,
+    "driver_pass": true
+  },
+  "secret_scan_findings_files_only": [],
+  "tests": {
+    "full_workspace_typecheck": "PASS",
+    "backend_build": "PASS",
+    "combined_frontend_pages_build": "PASS",
+    "real_disposable_postgresql_migration_and_queue": "PASS",
+    "affected_relay_regression_tests": 5,
+    "new_dynamic_registry_tests": 5,
+    "new_dynamic_relay_tests": 5,
+    "affected_driver_tests": 12,
+    "provisioning_assertions": 25,
+    "hardening_assertions": 10,
+    "private_service_assertions": 12,
+    "private_port_assertions": 7,
+    "driver_watchdog_cleanup_contract": "PASS",
+    "session_transport_and_frontend_helper_contracts": "PASS"
+  },
+  "production_migration_applied": false,
+  "deployed": false,
+  "real_broker_credentials_used": false,
+  "real_broker_connections_attempted": false,
+  "financial_orders_submitted": 0,
+  "live_account_support_accepted": false,
+  "multi_account_customer_execution_accepted": false,
+  "actual_copy_latency_measured": false,
+  "provisioning_enabled": false,
+  "execution_enabled": false,
+  "logs": {
+    "typecheck": {
+      "path": "release-evidence/typecheck.log.txt",
+      "sha256": "25770eb5a573836120705cbe16dda09df5e15db0861e2d4f086a2548ccadb97d"
+    },
+    "backend-build": {
+      "path": "release-evidence/backend-build.log.txt",
+      "sha256": "91c69ed15d68d68baae8c01720f4c4ebef0918ff718e3d1aaf720b8dff4d2ac5"
+    },
+    "pages-build": {
+      "path": "release-evidence/pages-build.log.txt",
+      "sha256": "19c42a2057334067bc4ccefbb2afc7e01475702629a1be0a9696c2f35599ee30"
+    },
+    "database": {
+      "path": "release-evidence/database.log.txt",
+      "sha256": "dddbab01ff51a4cde0ac33150a15781e3f5d6ebef0cb4fd611a6f743f8fe346c"
+    },
+    "relay-regression": {
+      "path": "release-evidence/relay-regression.log.txt",
+      "sha256": "eecd28a8a8bde862cae5be1dda108c09314203808eccfc2a8adc8bf97098623f"
+    },
+    "dynamic-registry": {
+      "path": "release-evidence/dynamic-registry.log.txt",
+      "sha256": "1956dbbcf3a6b4679047ba33ebacb0f80164eaaa843497eb93d8303c26b5c17f"
+    },
+    "dynamic-relay": {
+      "path": "release-evidence/dynamic-relay.log.txt",
+      "sha256": "620df435ac5a8f30d4fdd2632298dd2a532927969c2b152442f6c56d6934b5d1"
+    },
+    "driver": {
+      "path": "release-evidence/driver.log.txt",
+      "sha256": "091f66b3eb84d9993a08933ecfbdd52cc146bc6c98b889775eb5df9ec7674c44"
+    }
+  },
+  "migration_sha256": "f9035e90ebc300837b489f845ecff9dac9a6cd7325c2987a44632f8d58bdba03",
+  "warnings": [
+    "nonfatal frontend chunk/sourcemap warnings",
+    "existing React-email peer warnings",
+    "responsive browser acceptance not executed"
+  ],
+  "remaining_gates": [
+    "explicit new migration/deployment/engine install approvals",
+    "reviewed clean per-broker blank images and dedicated OS capacity",
+    "real encrypted-credential/systemd/Wine/SDK/controller and cleanup acceptance",
+    "private HTTPS endpoint/registry opt-in and tenant/browser login acceptance",
+    "live account and multi-account design remains DEMO/single-binding gated",
+    "actual trade-copy event execution/history/latency and fresh risk/fees approval",
+    "independent console/offsite restore and alert destination delivery"
+  ]
+}
