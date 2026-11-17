@@ -3,7 +3,7 @@ import {checkEngineConnectivity as probe} from '../../artifacts/api-server/check
 const env={EA_MT5_MANAGEMENT_ONLY:'0',EA_SIGNAL_WORKER_MODE:'external',MT5_PROVISIONING_CONSUMER:'0',COPY_ENGINE_MULTI_ACCOUNT:'1',MT5_ACCOUNT_INVENTORY:'1',MT5_SELF_SERVICE_PROVISIONING:'1',OBSERVER_MT5_ACCOUNT_ASSIGNMENTS_SOURCE:'gateway',MT5_ACCESS_REQUIRED:'1',MT5_VPS_URL:'https://status.example.invalid',OBSERVER_MT5_VPS_URL:'https://gateway.example.invalid',PUBLIC_WEBSITE_ORIGIN:'https://app.example.invalid',MT5_VPS_TOKEN:'fixture-status-secret-'.repeat(3),OBSERVER_MT5_VPS_TOKEN:'fixture-router-secret-'.repeat(3),MT5_ACCESS_CLIENT_ID:'status-id',MT5_ACCESS_CLIENT_SECRET:'status-secret',OBSERVER_MT5_ACCESS_CLIENT_ID:'gateway-id',OBSERVER_MT5_ACCESS_CLIENT_SECRET:'gateway-secret',DATABASE_URL:'postgres://fixture:private-password@db.example.invalid/db',SESSION_SECRET:'fixture-original-session-secret'};
 const account={login:123,server:'FixtureDemo',broker:'xm',role:'client'};
 function responder(change=()=>{}){return async(url,options)=>{
- assert.equal(options.method,'GET');assert.equal(options.body,undefined);assert.equal(options.redirect,'error');
+ assert.equal(options.headers['User-Agent'],'EACloudEngineDiagnostics/1.0');assert.equal(options.headers.Accept,'application/json');assert.equal(options.method,'GET');assert.equal(options.body,undefined);assert.equal(options.redirect,'error');
  assert.ok(['/healthz','/observer/assignments','/observer/receiving-sessions'].includes(url.pathname));
  const status=url.hostname==='status.example.invalid';assert.equal(options.headers['CF-Access-Client-Id'],status?'status-id':'gateway-id');assert.equal(options.headers['CF-Access-Client-Secret'],status?'status-secret':'gateway-secret');
  if(!options.headers.Authorization)return Response.json({}, {status:401});
@@ -18,4 +18,11 @@ test('probe rejects fake health, leaked assignment fields, duplicate accounts an
  for(const change of [(d,u)=>{if(u.pathname==='/healthz')d.simulation=true;},(d,u)=>{if(u.pathname==='/observer/assignments')d.assignments=[{...account,token:'fixture-secret'}];},(d,u)=>{if(u.pathname==='/observer/assignments')d.assignments=[account,account];}])assert.equal((await probe(env,responder(change))).ok,false);
  const noBearerAccepted=await probe(env,async(url,options)=>!options.headers.Authorization?Response.json({}):responder()(url,options));assert.equal(noBearerAccepted.ok,false);
  const r=await probe(env,async()=>{throw Error('fixture-secret transport error')});assert.equal(r.ok,false);assert.ok(!JSON.stringify(r).includes('fixture-secret'));
+});
+
+test('probe classifies1010/rate limits, reports safe Ray IDs and stops repeat calls to denied origins',async()=>{
+ for(const [status,body,code] of [[403,'error code: 1010\n','CLOUDFLARE_BROWSER_SIGNATURE_REJECTED'],[429,'Too Many Requests','RATE_LIMITED']]){
+  let requests=0;const r=await probe(env,async()=>{requests++;return new Response(body,{status,headers:{'cf-ray':'a5c015426d718c8b-JNB','retry-after':'60'}});});
+  assert.equal(r.ok,false);assert.equal(requests,2,'Only one request per configured origin after an edge denial');assert.equal(r.checks.statusHealth.code,code);assert.equal(r.checks.statusHealth.cfRay,'a5c015426d718c8b-JNB');assert.equal(r.checks.statusHealth.retryAfterSeconds,60);assert.equal(r.checks.gatewayAssignments.code,'SKIPPED_AFTER_EDGE_DENIAL');assert.ok(!JSON.stringify(r).includes(body));
+ }
 });

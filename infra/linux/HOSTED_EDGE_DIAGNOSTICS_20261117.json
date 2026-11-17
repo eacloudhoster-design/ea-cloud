@@ -1,0 +1,105 @@
+{
+  "observed_at": "2026-11-17T16:23:58.760316+00:00",
+  "dns_addresses": [
+    "188.114.96.6",
+    "188.114.97.6",
+    "2a06:98c1:3120::6",
+    "2a06:98c1:3121::6"
+  ],
+  "requests": [
+    {
+      "client": "python-default",
+      "status": 403,
+      "cf_ray": "a5c015426d718c8b-JNB",
+      "server": "cloudflare",
+      "content_type": "text/plain; charset=UTF-8",
+      "body_prefix": "error code: 1010\n"
+    },
+    {
+      "client": "ea-cloud-diagnostics",
+      "status": 429,
+      "cf_ray": "a5c015430f7a73d4-JNB",
+      "server": "cloudflare",
+      "content_type": "text/plain; charset=utf-8",
+      "body_prefix": "Too Many Requests\n"
+    }
+  ],
+  "tls": {
+    "hostname_verified": true,
+    "protocol": "TLSv1.3",
+    "issuer": [
+      [
+        [
+          "countryName",
+          "US"
+        ]
+      ],
+      [
+        [
+          "organizationName",
+          "Google Trust Services"
+        ]
+      ],
+      [
+        [
+          "commonName",
+          "WE1"
+        ]
+      ]
+    ],
+    "expires": "Jan 26 23:00:20 2027 GMT",
+    "subject_alt_names": [
+      [
+        "DNS",
+        "eacloudhoster.online"
+      ]
+    ]
+  },
+  "loopback_gateway_authentication": {
+    "status": {
+      "authenticated_status": 200,
+      "unauthenticated_status": 401,
+      "health": {
+        "status": "ok",
+        "read_only": true,
+        "execution_enabled": false,
+        "accounts": 6
+      }
+    },
+    "gateway": {
+      "authenticated_status": 200,
+      "unauthenticated_status": 401,
+      "health": {
+        "status": "ok",
+        "service": "isolated-account-router",
+        "accounts": 6,
+        "standbyAccounts": 6,
+        "ownedAccounts": 0,
+        "simulation": false,
+        "execution_readiness_claimed": false
+      }
+    }
+  },
+  "managed_tunnel_id": "e6a25dc1-d10a-4881-9e13-a34f519c3489",
+  "tunnel_metrics": {
+    "active_connections": 4,
+    "proxy_requests_total": 0,
+    "origin_proxy_errors_total": 0
+  },
+  "provider_access": {
+    "render_plugin_installed": true,
+    "render_tools_exposed": false,
+    "cloudflare_plugin_search_results": 0,
+    "provider_cli_credentials_found": false,
+    "tunnel_connector_token_present": true,
+    "management_token_equivalent": false
+  },
+  "render_runtime_environment_verified": false,
+  "hosted_to_vps_connectivity_verified": false,
+  "security_policies_changed": false,
+  "financial_orders_submitted": 0,
+  "focused_tests": {
+    "passed": 5,
+    "failed": 0
+  }
+}

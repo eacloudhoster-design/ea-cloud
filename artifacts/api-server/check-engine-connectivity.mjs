@@ -4,11 +4,22 @@ import {validateHostedEngineEnvironment} from './hosted-engine-start.mjs';
 export async function checkEngineConnectivity(env=process.env,transport=fetch){
   validateHostedEngineEnvironment(env);
   const report={protocol:'ea-hosted-engine-connectivity-v1',observedAt:new Date().toISOString(),financialRequestsSent:0,executionReadinessClaimed:false,checks:{}};
-  const headers=prefix=>({'Authorization':'Bearer '+env[prefix==='MT5'?'MT5_VPS_TOKEN':'OBSERVER_MT5_VPS_TOKEN'],'CF-Access-Client-Id':env[prefix+'_ACCESS_CLIENT_ID'],'CF-Access-Client-Secret':env[prefix+'_ACCESS_CLIENT_SECRET']});
+  const deniedOrigins=new Set();
+  const headers=prefix=>({'User-Agent':'EACloudEngineDiagnostics/1.0','Accept':'application/json','Authorization':'Bearer '+env[prefix==='MT5'?'MT5_VPS_TOKEN':'OBSERVER_MT5_VPS_TOKEN'],'CF-Access-Client-Id':env[prefix+'_ACCESS_CLIENT_ID'],'CF-Access-Client-Secret':env[prefix+'_ACCESS_CLIENT_SECRET']});
   async function call(name,origin,path,auth,validate,expected=200){
+    if(deniedOrigins.has(new URL(origin).origin)){report.checks[name]={ok:false,code:'SKIPPED_AFTER_EDGE_DENIAL'};return;}
     try{
       const r=await transport(new URL(path,origin),{method:'GET',headers:auth,redirect:'error',signal:AbortSignal.timeout(15000)});
-      if(r.status!==expected)throw Error();
+      if(r.status!==expected){
+        let code=r.status===429?'RATE_LIMITED':r.status===401?'AUTHENTICATION_REJECTED':r.status===403?'EDGE_OR_ORIGIN_FORBIDDEN':'UNEXPECTED_HTTP_STATUS';
+        if(r.status===403){const body=await r.text();if(body.length<=1048576&&/error\s*code\s*:\s*1010\b/i.test(body))code='CLOUDFLARE_BROWSER_SIGNATURE_REJECTED';}
+        const failure={ok:false,httpStatus:r.status,code};
+        const ray=r.headers.get('cf-ray');if(ray&&/^[0-9a-f]{16,32}-[A-Z]{3}$/.test(ray))failure.cfRay=ray;
+        const retry=r.headers.get('retry-after');if(retry&&/^\d{1,8}$/.test(retry))failure.retryAfterSeconds=Number(retry);
+        report.checks[name]=failure;
+        if(r.status===429||code==='CLOUDFLARE_BROWSER_SIGNATURE_REJECTED')deniedOrigins.add(new URL(origin).origin);
+        return;
+      }
       if(expected===200){
         if(!r.headers.get('content-type')?.includes('application/json'))throw Error();
         const text=await r.text();if(text.length>1048576)throw Error();
