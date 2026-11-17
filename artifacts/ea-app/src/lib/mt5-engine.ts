@@ -7,7 +7,7 @@ export async function connectMt5Account(input:{login:string;server:string;passwo
   if(data.connected!==false || data.executionEnabled!==false || !job || !/^[0-9a-f-]{36}$/i.test(job.id) || job.login!==String(Number(input.login)) || job.server!==input.server || job.broker!==input.broker || job.accountRole!=="follower" || job.accountMode!==input.accountMode || job.connected!==false || job.executionEnabled!==false)throw Error("Account assignment request was not confirmed");
   return data;
  }
- if(data?.broker!==input.broker && input.broker!==undefined)throw Error("Verified broker does not match the selected broker");
+ if(data?.broker!==input.broker && input.broker!==undefined && input.broker!=="custom")throw Error("Verified broker does not match the selected broker");
  if(data?.connected!==true || data?.status!=="connected" || String(data.login)!==String(Number(input.login)) || data.server!==input.server)throw Error("Account verification was not confirmed");
  return data;
 }

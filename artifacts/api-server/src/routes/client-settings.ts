@@ -1,4 +1,4 @@
-import {markProvisioningBound,queueProvisioning} from "../lib/mt5-provisioning";
+import {markProvisioningBound,queueProvisioning,provisioningBrokers} from "../lib/mt5-provisioning";
 import { randomUUID } from "node:crypto";
 import {queueBotPush, queueSymbolPush} from "../lib/web-push";
 import { Router } from "express";
@@ -257,7 +257,11 @@ router.post(["/app/mt5-connect","/client/mt5/connect"], requireAppSession, async
     try { account=await readBoundAccount(loginNum,server,password,{kind:"client",id:req.clientId}); }
     catch(error) {
       const failure=accountBindingFailure(error);
+      req.log.warn({code:failure.code,phase:"account_connection"},"Private MT5 verification failed");
       if(failure.code==="ACCOUNT_NOT_ASSIGNED" && body.requestAssignment===true){
+        if(typeof broker!=="string" || !provisioningBrokers.includes(broker)){
+          res.status(422).json({code:"UNSUPPORTED_ACCOUNT_CONFIGURATION",connected:false,error:"This broker needs an approved private terminal profile before assignment"});return;
+        }
         if(process.env.MT5_SELF_SERVICE_PROVISIONING!=="1" || process.env.MT5_PROVISIONING_CONSUMER!=="1"){
           res.status(503).json({code:"PROVISIONING_NOT_CONFIGURED",error:"Account provisioning is not available",connected:false});return;
         }
@@ -275,7 +279,7 @@ router.post(["/app/mt5-connect","/client/mt5/connect"], requireAppSession, async
     }
     if(account.role!=="client"){res.status(403).json({error:"A receiving client account is required"});return;}
     const balance=account.balance===null?null:String(account.balance),equity=account.equity===null?null:String(account.equity);
-    if(broker!==undefined && broker!==account.broker){res.status(422).json({error:"Selected broker does not match the verified account",code:"BROKER_BINDING_MISMATCH"});return;}
+    if(broker!==undefined && broker!=="custom" && broker!==account.broker){res.status(422).json({error:"Selected broker does not match the verified account",code:"BROKER_BINDING_MISMATCH"});return;}
     const resolvedBroker=account.broker,accountName=null,mt5LoginStr=String(loginNum),connectedAt=new Date().toISOString();
 
     // Encrypt the password for copy-trade execution — NEVER stored in plain text.

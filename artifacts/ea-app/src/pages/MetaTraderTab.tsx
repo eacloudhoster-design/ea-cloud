@@ -21,6 +21,7 @@ export default function MetaTraderTab({ backgroundHost, backgroundImage }: { bac
   const [password, setPassword] = useState("");
   const [server, setServer] = useState("");
   const [selectedBroker,setSelectedBroker]=useState("");
+  const [customBroker,setCustomBroker]=useState("");
   const [ownershipConfirmed,setOwnershipConfirmed]=useState(false);
   const [accountMode,setAccountMode]=useState<"demo"|"live">("demo");
   const [liveAvailable,setLiveAvailable]=useState(false);
@@ -98,7 +99,7 @@ export default function MetaTraderTab({ backgroundHost, backgroundImage }: { bac
       requestKey.current??=crypto.randomUUID();
       const data=await connectMt5Account({login:login.trim(),server:server.trim(),password:secret,broker:selectedBroker,requestAssignment:true,requestKey:requestKey.current,ownershipConfirmed,accountMode},clientToken,attempt.signal);
       if(!attempt.signal.aborted && data.status==="provisioning"){
-        setAssignment({id:data.provisioning.id,login:login.trim(),server:server.trim(),broker:selectedBroker});setState("provisioning");return;
+        setAssignment({id:data.provisioning.id,login:String(Number(login.trim())),server:server.trim(),broker:selectedBroker});setState("provisioning");return;
       }
       if(!attempt.signal.aborted){requestKey.current=null;setSaved({login:String(data.login),server:data.server});setState("verified");setRestoreAttempt(v=>v+1);}
     } catch (failure) {
@@ -132,6 +133,7 @@ export default function MetaTraderTab({ backgroundHost, backgroundImage }: { bac
   const connect = (event: React.FormEvent) => {
     event.preventDefault();
     if(!ownershipConfirmed){setError("Confirm that you own or are authorized to connect this account.");return;}
+    if(selectedBroker==="custom" && !customBroker.trim()){setError("Enter the broker name shown on your MT5 account.");return;}
     const message = validateMt5Preview(login, password, server);
     if (message || !clientToken) { setError(message || "Sign in to manage your MT5 connection."); return; }
     setError("");
@@ -159,10 +161,11 @@ export default function MetaTraderTab({ backgroundHost, backgroundImage }: { bac
         <form className="mt5-form" onSubmit={connect}>
           <label className="mt5-broker-select-label">Broker
             <select aria-label="Broker" value={selectedBroker} onChange={e=>{setSelectedBroker(e.target.value);requestKey.current=null;}} required className="mt5-broker-select">
-              <option value="">Select broker</option>{[["justmarkets","JustMarkets"],["exness","Exness"],["deriv","Deriv"],["xm","XM Global"],["rcg","RCG Markets"]].map(([id,name])=><option key={id} value={id}>{name}</option>)}
+              <option value="">Select broker</option>{brokers.map(b=><option key={b.id} value={b.id}>{b.name}</option>)}<option value="custom">Other broker / manual entry</option>
             </select>
           </label>
-          {liveAvailable&&<label className="mt5-broker-select-label">Account mode<select value={accountMode} onChange={e=>{setAccountMode(e.target.value as "demo"|"live");requestKey.current=null;}}><option value="demo">Demo</option><option value="live">Live — read-only</option></select></label>}
+          {selectedBroker==="custom"&&<label className="mt5-broker-select-label">Broker name<input required maxLength={128} autoComplete="off" value={customBroker} onChange={e=>setCustomBroker(e.target.value)} /></label>}
+          {<label className="mt5-broker-select-label">Account mode<select value={accountMode} onChange={e=>{setAccountMode(e.target.value as "demo"|"live");requestKey.current=null;}}><option value="demo">Demo</option><option value="live" disabled={!liveAvailable}>Real — read-only{liveAvailable?"":" (not authorized on this service)"}</option></select></label>}
           <FloatingField id="mt5-login" label="MT5 Account Number" icon={Fingerprint}>
             <input id="mt5-login" inputMode="numeric" type="text" autoComplete="off" maxLength={32}
               value={login} onChange={e => {setLogin(e.target.value);requestKey.current=null;}} placeholder="Enter account number" required />
@@ -175,12 +178,10 @@ export default function MetaTraderTab({ backgroundHost, backgroundImage }: { bac
             </button>
           </FloatingField>
           <FloatingField id="mt5-server" label="Server" icon={Server}>
-            <input id="mt5-server" type="text" autoCapitalize="none" autoCorrect="off" spellCheck={false} autoComplete="off" maxLength={128}
-              value={server} onChange={e => {setServer(e.target.value);requestKey.current=null;}} placeholder="Exact server shown by your broker" required list="mt5-broker-hints" />
+            <input id="mt5-server" type="text" autoCapitalize="none" autoCorrect="off" spellCheck={false} autoComplete="off" maxLength={256}
+              value={server} onChange={e => {setServer(e.target.value);requestKey.current=null;}} placeholder="Exact server shown by your broker" required />
           </FloatingField>
-          <datalist id="mt5-broker-hints">
-            {["Exness-MT5Real1", "Deriv-Demo", "ICMarketsSC-MT5", "Pepperstone-MT5-Live01", "XMGlobal-MT5", "HFMarketsSV-Live", "FBS-Real", "Tickmill-Live", "ForexTimeFXTM-Live"].map(value => <option key={value} value={value} />)}
-          </datalist>
+          <p className="mt5-availability-note">Enter the exact server from your MT5 account. Broker names are selection hints; the gateway must verify the actual account identity and terminal compatibility.</p>
           <label><input type="checkbox" required checked={ownershipConfirmed} onChange={e=>setOwnershipConfirmed(e.target.checked)} /> I own or am authorized to connect this account.</label>
           {error && <p className="mt5-form-error" role="alert">{error}</p>}
           <button ref={connectButton} type="submit" className="mt5-connect-button"><span>Connect MT5</span><ArrowRight size={18} /></button>

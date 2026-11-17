@@ -51,8 +51,10 @@ test('branded brokers retain pinned local assets; new profiles use explicit text
 });
 
 test('account validation preserves digit strings and rejects floats, signs and exponents', () => {
-  for (const login of ['12345', '000123', '12345678901234567890']) assert.equal(validateMt5Preview(login, 'demo', 'Broker-Real'), null);
-  for (const login of ['', '0', '000', '-1', '1.5', '1e9', 'Infinity', '1 23']) assert.ok(validateMt5Preview(login, 'demo', 'Broker-Real'));
+  for (const login of ['12345', '000123', '9007199254740991']) assert.equal(validateMt5Preview(login, 'demo', 'Broker-Real'), null);
+  for (const login of ['', '0', '000', '9007199254740992', '-1', '1.5', '1e9', 'Infinity', '1 23']) assert.ok(validateMt5Preview(login, 'demo', 'Broker-Real'));
+  assert.equal(validateMt5Preview('123','demo','S'.repeat(256)),null);
+  assert.ok(validateMt5Preview('123','demo','S'.repeat(257)));
   assert.ok(validateMt5Preview('123', '', 'Broker-Real'));
   assert.ok(validateMt5Preview('123', 'demo', ''));
 });
