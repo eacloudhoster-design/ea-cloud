@@ -83,3 +83,18 @@ curl --silent --output /dev/null --write-out '%{http_code}\n' \
 Both unauthenticated requests should return401; even gateway health requires its Bearer credential. Authenticated loopback gateway health and assignment discovery returned200 during inspection. After external settings are applied, verify authenticated GET `/observer/assignments` from the actual Render runtime using server-side secrets without printing them, unauthenticated denial at both origins, original-owner GET account list and successful Connect. Do not POST financial gateway routes as a connectivity test. No full test suite or financial execution is needed for these checks.
 
 Missing manual inputs are: (1) each actual owner's session/Connect action, (2) authorized Render API service access and accepted backend deployment, (3) authorized Cloudflare hostname/Access/ingress bindings and service identities. Existing GitHub access and the running connector do not supply Render or Cloudflare management authority. No repeated VPS installation is required.
+
+
+## Acceptance from the actual Render runtime
+
+After configuring the documented external-consumer environment, run in the existing Render service shell:
+
+```sh
+pnpm --filter @workspace/api-server run check:engine-connectivity
+```
+
+This command sends GET requests only to status/gateway health, assignments and receiving-session metadata. It uses each origin's own Access/Bearer credentials, rejects redirects and HTML, checks exact service contracts and verifies that Access-authenticated requests without Bearer return401. It prints counts/check outcomes only, never credentials or broker identities. Exit0 proves these transport contracts from that runtime; zero active sessions remains an enrollment/execution blocker and is not treated as execution readiness. It does not verify database identity, broker fills, user ownership or browser login.
+
+The existing Pages API proxy has four relevant server-side bindings: `BACKEND_ORIGIN` and optional `BACKEND_PROXY_TOKEN` for the normal API; `MT5_MANAGEMENT_ORIGIN` and `MT5_MANAGEMENT_PROXY_TOKEN` for its explicitly allowlisted MT5 management routes. These names are verified in `functions/api/[[path]].js` on main. The proxy strips caller origin tokens and injects the selected trusted token. Preserve a working management split: changing Render's observer variables does not update the Pages management origin. The management token must match the target private API's `EA_API_ORIGIN_TOKEN`. The current Pages proxy does not inject Cloudflare Access service-token headers; an Access-protected management-origin design needs an explicitly reviewed server-side transport change, not credentials in browser code. Concrete deployed Pages binding values remain unavailable.
+
+On this continuation, public GETs to `https://eacloudhoster.online/api/healthz`, `/api/readyz`, `/api/release`, `/api/app/mt5-accounts` and `/api/admin/mt5-account-capabilities` all received Cloudflare403/error1010 before backend acceptance could be measured. This is evidence of an edge denial from this VPS, not proof that the browser app or Render is down. An authorized Cloudflare operator must inspect the matching security event and approved service path; do not disable WAF/Access globally to obtain a green check.

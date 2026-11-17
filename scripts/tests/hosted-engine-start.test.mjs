@@ -10,6 +10,6 @@ test('hosted source entry requires external consumers, paired HTTPS transport an
   {OBSERVER_MT5_ACCOUNT_ASSIGNMENTS_FILE:'/run/vps-only.json'},
   {MT5_VPS_URL:'http://127.0.0.1:8005'},{OBSERVER_MT5_VPS_URL:'https://user:private-password@gateway.example.invalid'},
   {MT5_ACCESS_REQUIRED:'0'},{MT5_ACCESS_CLIENT_SECRET:undefined},{OBSERVER_MT5_ACCESS_CLIENT_ID:undefined},
-  {MT5_VPS_TOKEN:'short'},{SESSION_SECRET:undefined},{DATABASE_URL:'not-a-url-private-password'},{NODE_TLS_REJECT_UNAUTHORIZED:'0'},
+  {MT5_VPS_TOKEN:'short'},{MT5_ACCESS_CLIENT_SECRET:'x'.repeat(1025)},{SESSION_SECRET:undefined},{DATABASE_URL:'not-a-url-private-password'},{NODE_TLS_REJECT_UNAUTHORIZED:'0'},
  ])assert.throws(()=>validate({...env,...change}),e=>e.message.startsWith('HOSTED_ENGINE_CONFIGURATION_INVALID')&&!e.message.includes('private-password')&&!e.message.includes('fixture-'));
 });
