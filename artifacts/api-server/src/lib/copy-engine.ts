@@ -287,6 +287,7 @@ async function executeForClient(signal: TradeSignal, client: AppAccess, eaName: 
     const result=await executeObserver(signal,client,settings,password,symbol,async source=>{
       let lots=resolveVolume(source,settings,customLot,true);
       if(settings.lotMode==='risk_percent'&&customLot===null){
+        if(!signal.rawPayload)throw Error("SOURCE_RISK_EVIDENCE_UNAVAILABLE");
         const raw=JSON.parse(signal.rawPayload);
         lots=await sizeObserverPosition({login:settings.mt5Login!,server:settings.mt5Server!,password,symbol,side:raw.side==='SELL'?1:0,method:'risk_percent',risk_percent:Number(settings.riskPercent),stop_loss:Number(signal.stopLoss),max_lots:Number(settings.maxLotSize),...(raw.protocol==='EA_OBSERVER_PENDING_V1'?{entry_price:Number(raw.price)}:{})});
       }

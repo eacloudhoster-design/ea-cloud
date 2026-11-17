@@ -1,8 +1,9 @@
 import {db,clientSettingsTable,observerAllocationsTable,mt5ConnectionsTable,tradeExecutionsTable} from "@workspace/db";
 import {and,eq,ne,sql} from "drizzle-orm";
 /** All supported app connect routes share this transaction. Never silently reassign an allocation. */
-export async function bindClientAccount(clientId:number,account:{login:string;server:string;broker:string},encrypted:string){
+export async function bindClientAccount(clientId:number,account:{login:string;server:string;broker:string},encrypted:string,options:{pauseCopying?:boolean;signal?:AbortSignal}={}){
  return db.transaction(async tx=>{
+  if(options.signal?.aborted)throw Error("PROVISIONING_OUTCOME_UNCERTAIN");
   // Serialize same-account claims across backend processes; collisions only serialize extra requests.
   await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtext(${"ea-account:"+account.server+":"+account.login}))`);
   if(process.env.MT5_ACCOUNT_INVENTORY==="1"){
@@ -27,8 +28,9 @@ export async function bindClientAccount(clientId:number,account:{login:string;se
    const [legacy]=await tx.select({id:tradeExecutionsTable.id}).from(tradeExecutionsTable).where(and(eq(tradeExecutionsTable.clientId,clientId),eq(tradeExecutionsTable.signalKind,"OPEN"),eq(tradeExecutionsTable.status,"success"))).limit(1);
    if(legacy)throw Error("ACCOUNT_REBIND_REQUIRES_RECONCILIATION");
   }
-  const fields={mt5Login:account.login,mt5Server:account.server,mt5Broker:account.broker,encryptedMt5Password:encrypted,mt5Connected:true,copyingEnabled:old?.mt5Login===account.login && old?.mt5Server===account.server && old.copyingEnabled===true};
+  const fields={mt5Login:account.login,mt5Server:account.server,mt5Broker:account.broker,encryptedMt5Password:encrypted,mt5Connected:true,copyingEnabled:!options.pauseCopying && old?.mt5Login===account.login && old?.mt5Server===account.server && old.copyingEnabled===true};
   if(old)await tx.update(clientSettingsTable).set(fields).where(eq(clientSettingsTable.clientId,clientId));
   else await tx.insert(clientSettingsTable).values({clientId,...fields,copyingEnabled:false});
+  if(options.signal?.aborted)throw Error("PROVISIONING_OUTCOME_UNCERTAIN");
  });
 }
