@@ -1,3 +1,4 @@
+import {pendingInclude} from "./pending";
 /** Separate-chart, account-level reconciliation. Never submits or modifies orders. */
 export function reconciliationInclude(magic: string) {
   return (
@@ -22,7 +23,7 @@ bool EAC_SaveState(){
  FileFlush(f);FileClose(f);return FileMove(temp,0,EAC_state,FILE_REWRITE);
 }
 void EAC_ReconcileInit(){
- EAC_state=EAC_file+".state";EAC_counter="EACO_"+StringSubstr(EAC_ID,0,16)+"_"+(string)AccountInfoInteger(ACCOUNT_LOGIN);
+ EAC_state=EAC_file+".state";EAC_LoadPending();EAC_counter="EACO_"+StringSubstr(EAC_ID,0,16)+"_"+(string)AccountInfoInteger(ACCOUNT_LOGIN);
  if(!GlobalVariableCheck(EAC_counter))GlobalVariableSet(EAC_counter,(double)TimeLocal()*1000);
  GlobalVariablesFlush();
  int f=FileOpen(EAC_state,FILE_READ|FILE_CSV|FILE_ANSI,'|',CP_UTF8);
@@ -55,6 +56,7 @@ bool EAC_Remember(ulong id,string symbol,string side){
  i=ArraySize(EAC_known);ArrayResize(EAC_known,i+1);EAC_known[i].id=id;EAC_known[i].symbol=symbol;EAC_known[i].side=side;EAC_known[i].closed=false;
  return EAC_SaveState();
 }
+__EA_PENDING_INCLUDE__
 bool EAC_Snapshot(int i,bool mixed){
  bool exists=EAC_SelectPosition(EAC_known[i].id);
  double volume=exists?PositionGetDouble(POSITION_VOLUME):0;
@@ -63,11 +65,12 @@ bool EAC_Snapshot(int i,bool mixed){
  double price=exists?PositionGetDouble(POSITION_PRICE_OPEN):0,sl=exists?PositionGetDouble(POSITION_SL):0,tp=exists?PositionGetDouble(POSITION_TP):0;
  double previous=GlobalVariableGet(EAC_counter),next=previous+1;
  if(!GlobalVariableSetOnCondition(EAC_counter,next,previous))return false;GlobalVariablesFlush();
+ ulong pendingOrigin=EAC_OpeningOrder(EAC_known[i].id);
  string seq=DoubleToString(next,0),eventId=(string)AccountInfoInteger(ACCOUNT_LOGIN)+":S:"+(string)EAC_known[i].id+":"+seq;
  string mode=AccountInfoInteger(ACCOUNT_MARGIN_MODE)==ACCOUNT_MARGIN_MODE_RETAIL_HEDGING?"HEDGING":AccountInfoInteger(ACCOUNT_MARGIN_MODE)==ACCOUNT_MARGIN_MODE_EXCHANGE?"EXCHANGE":"NETTING";
  string body="{\"eventId\":"+EAC_Json(eventId)+",\"sourceAccount\":"+EAC_Json((string)AccountInfoInteger(ACCOUNT_LOGIN))+",\"sourceServer\":"+EAC_Json(AccountInfoString(ACCOUNT_SERVER))+
  ",\"accountMode\":"+EAC_Json(mode)+",\"kind\":\"SNAPSHOT\",\"entry\":\"SNAPSHOT\",\"sourceMagic\":"+EAC_Json((string)SourceMagic)+",\"sequence\":"+seq+",\"mixed\":"+(mixed?"true":"false")+
- ",\"dealId\":\"0\",\"orderId\":\"0\",\"positionId\":"+EAC_Json((string)EAC_known[i].id)+",\"symbol\":"+EAC_Json(symbol)+",\"side\":"+EAC_Json(side)+
+ ",\"dealId\":\"0\",\"orderId\":\"0\",\"positionId\":"+EAC_Json((string)EAC_known[i].id)+",\"pendingOrderId\":"+EAC_Json((string)pendingOrigin)+",\"symbol\":"+EAC_Json(symbol)+",\"side\":"+EAC_Json(side)+
  ",\"volume\":"+DoubleToString(volume,8)+",\"price\":"+DoubleToString(price,10)+",\"stopLoss\":"+DoubleToString(sl,10)+",\"takeProfit\":"+DoubleToString(tp,10)+",\"timestampMs\":"+(string)((long)TimeCurrent()*1000)+"}";
  if(!EAC_Enqueue(body))return false;
  EAC_known[i].side=side;EAC_known[i].closed=!exists;return EAC_SaveState();
@@ -96,6 +99,7 @@ void EAC_Reconcile(){
   }
   EAC_cursorMs=ms;EAC_cursorDeal=d;if(!EAC_SaveState())return;
  }
+ if(!EAC_ReconcilePending())return;
  // All positions are discovered account-wide, independently of Chart 1 events.
  ulong positions[];int count=PositionsTotal();ArrayResize(positions,count);
  for(int i=0;i<count;i++){ulong ticket=PositionGetTicket(i);positions[i]=(ulong)PositionGetInteger(POSITION_IDENTIFIER);}
@@ -111,6 +115,6 @@ void EAC_Reconcile(){
  }
  EAC_historyOK=true;
 }
-`
+`.replace("__EA_PENDING_INCLUDE__",pendingInclude())
   );
 }

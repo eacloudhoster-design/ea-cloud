@@ -7,7 +7,7 @@ import {
   mt5ConnectionsTable,
   tradeSignalsTable,
 } from "@workspace/db";
-import { and, eq, gt, inArray, ne } from "drizzle-orm";
+import { and, eq, gt, inArray, ne, sql } from "drizzle-orm";
 import type { z } from "zod";
 import { robotEvent } from "./contracts";
 export const sourceKey = (
@@ -26,9 +26,9 @@ export async function verifiedSource(
   server: string,
 ) {
   const login = Number(account);
-  if (!Number.isSafeInteger(login) || login < 1 || login > 2147483647)
+  if (!Number.isSafeInteger(login) || login < 1)
     return false;
-  const rows = await tx
+  const rows = login<=2147483647?await tx
     .select({ id: mt5ConnectionsTable.id })
     .from(mt5ConnectionsTable)
     .where(
@@ -40,8 +40,11 @@ export async function verifiedSource(
         gt(mt5ConnectionsTable.connectedAt, new Date(Date.now() - 86400000)),
       ),
     )
-    .limit(1);
-  return rows.length > 0;
+    .limit(1):[];
+  if(rows.length)return true;
+  if(typeof tx.execute!=='function')return false;
+  const result=await tx.execute(sql`SELECT id FROM mt5_account_inventory WHERE owner_kind='mentor' AND owner_id=${mentorId} AND account_role='mentor' AND login=${account} AND server=${server} AND state='linked' AND verified_at>now()-interval '24 hours' LIMIT 1`);
+  return result.rows.length>0;
 }
 /** Shared mentor-row lock serializes activation, legacy ingestion and observer dispatch. */
 export async function lockMentor(tx: any, id: number) {
@@ -152,13 +155,13 @@ export async function routeSnapshot(
   payload: z.infer<typeof robotEvent>,
   receiptId: string,
 ) {
-  if (payload.kind !== "SNAPSHOT")
+  if (!["SNAPSHOT","PENDING"].includes(payload.kind))
     return { state: "capture_only", signalId: null };
   const key = sourceKey(
       robot.mentorId,
       payload.sourceAccount,
       payload.sourceServer,
-      payload.positionId,
+      payload.kind==="PENDING"?"pending:"+payload.orderId:payload.positionId,
     ),
     sequence = payload.sequence!;
   const [prior] = await tx
@@ -174,7 +177,7 @@ export async function routeSnapshot(
   const value = {
     robotId: robot.id,
     mentorId: robot.mentorId,
-    positionId: payload.positionId,
+    positionId: payload.kind==="PENDING"?"pending:"+payload.orderId:payload.positionId,
     sequence: String(sequence),
     volume: String(payload.volume),
     side: payload.side,
@@ -220,7 +223,8 @@ export async function routeSnapshot(
       ticket: key,
       comment: robot.displayName,
       rawPayload: JSON.stringify({
-        protocol: "EA_OBSERVER_SYNC_V2",
+        protocol: payload.kind==="PENDING"?"EA_OBSERVER_PENDING_V1":"EA_OBSERVER_SYNC_V2",
+        ...(payload.kind==="PENDING"?{orderType:payload.pendingType,state:payload.pendingState==='active'?'active':'cancel',price:payload.price,stoplimit:payload.stopLimit??0,typeTime:payload.typeTime,expiration:payload.expiration}:{}),
         robotId: robot.id,
         sourceKey: key,
         sequence,

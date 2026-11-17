@@ -33,7 +33,6 @@ export async function linkOwnedAccount(owner:Owner,body:any){
   const existing=(await tx.query("SELECT * FROM mt5_account_inventory WHERE login=$1 AND server=$2 FOR UPDATE",[body.login,body.server])).rows[0];
   if(existing&&(existing.owner_kind!==owner.kind||existing.owner_id!==owner.id))throw Error("ACCOUNT_ALREADY_BOUND");
   if(existing&&existing.account_mode!==proof.account_mode)throw Error("ACCOUNT_MODE_CHANGED");
-  if(!existing){const count=(await tx.query("SELECT count(*)::int AS count FROM mt5_account_inventory WHERE owner_kind=$1 AND owner_id=$2",[owner.kind,owner.id])).rows[0].count;if(count>=20)throw Error("ACCOUNT_CAPACITY_REACHED");}
   const row=existing?(await tx.query("UPDATE mt5_account_inventory SET encrypted_password=$1,state='linked',verified_at=now(),updated_at=now() WHERE id=$2 RETURNING *",[encrypted,existing.id])).rows[0]:(await tx.query("INSERT INTO mt5_account_inventory(id,owner_kind,owner_id,broker,login,server,account_role,account_mode,encrypted_password,verified_at) VALUES($1,$2,$3,$4,$5,$6,$2,$7,$8,now()) RETURNING *",[randomUUID(),owner.kind,owner.id,proof.broker,body.login,body.server,proof.account_mode,encrypted])).rows[0];
   await audit(tx,row.id,"linked");await tx.query("COMMIT");return {...view(row),connected:true,verified:true,selected:false,readOnly:proof.read_only};
  }catch(e){await tx.query("ROLLBACK");throw e;}finally{tx.release();}

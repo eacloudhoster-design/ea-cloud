@@ -17,6 +17,11 @@ async function buildAll() {
   await esbuild({
     entryPoints: [path.resolve(artifactDir, "src/index.ts"), path.resolve(artifactDir, "src/check-scanner.ts"), path.resolve(artifactDir, "src/ea-builder-worker.ts")],
     platform: "node",
+    // Bind workspace source to this checkout, including isolated integration worktrees.
+    alias: {
+      "@workspace/db": path.resolve(artifactDir, "../../lib/db/src/index.ts"),
+      "@workspace/api-zod": path.resolve(artifactDir, "../../lib/api-zod/src/index.ts"),
+    },
     loader:{".mq5":"text"},
     bundle: true,
     format: "esm",
