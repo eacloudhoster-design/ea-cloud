@@ -37,8 +37,8 @@ export const robotEvent = z
     sourceAccount: id,
     sourceServer: z.string().min(1).max(100),
     accountMode: z.enum(["NETTING", "HEDGING", "EXCHANGE"]),
-    kind: z.enum(["DEAL", "POSITION", "SNAPSHOT"]),
-    entry: z.enum(["IN", "OUT", "INOUT", "OUT_BY", "POSITION", "SNAPSHOT"]),
+    kind: z.enum(["DEAL", "POSITION", "SNAPSHOT","PENDING"]),
+    entry: z.enum(["IN", "OUT", "INOUT", "OUT_BY", "POSITION", "SNAPSHOT","PENDING"]),
     sourceMagic: z
       .string()
       .regex(/^(0|[1-9]\d{0,18})$/)
@@ -63,6 +63,12 @@ export const robotEvent = z
     price: z.number().finite().nonnegative(),
     stopLoss: z.number().finite().nonnegative(),
     takeProfit: z.number().finite().nonnegative(),
+    pendingState:z.enum(['active','cancel','triggered']).optional(),
+    pendingType:z.number().int().min(2).max(7).optional(),
+    stopLimit:z.number().finite().nonnegative().optional(),
+    typeTime:z.number().int().min(0).max(3).optional(),
+    expiration:z.number().int().nonnegative().optional(),
+    pendingOrderId:id.optional(),
     timestampMs: z.number().int().min(946684800000).max(4102444800000),
   })
   .strict()
@@ -70,7 +76,7 @@ export const robotEvent = z
     if (
       v.kind === "DEAL" &&
       (v.dealId === "0" ||
-        ["POSITION", "SNAPSHOT"].includes(v.entry) ||
+        ["POSITION", "SNAPSHOT","PENDING"].includes(v.entry) ||
         v.volume <= 0)
     )
       c.addIssue({
@@ -89,6 +95,10 @@ export const robotEvent = z
         message:
           "A reconciled position requires its source magic, identifier and sequence.",
       });
+    if(v.kind==='PENDING'&&(!v.sequence||!v.sourceMagic||v.entry!=='PENDING'||v.orderId==='0'||v.pendingType===undefined||v.pendingState===undefined||v.typeTime===undefined||v.expiration===undefined||(v.pendingState==='active'&&(v.volume<=0||v.price<=0||(v.pendingType>=6)!==((v.stopLimit??0)>0)))))c.addIssue({code:'custom',message:'Invalid pending-order snapshot'});
+    if(v.kind==='PENDING'&&v.pendingType!==undefined&&v.side!==([2,4,6].includes(v.pendingType)?'BUY':'SELL'))c.addIssue({code:'custom',message:'Pending side/type mismatch'});
+    if(v.pendingOrderId!==undefined&&v.kind!=='SNAPSHOT')c.addIssue({code:'custom',message:'Pending predecessor on non-position event'});
+    if(v.kind!=='PENDING'&&[v.pendingState,v.pendingType,v.stopLimit,v.typeTime,v.expiration].some(x=>x!==undefined))c.addIssue({code:'custom',message:'Pending fields on non-pending event'});
     if (v.kind === "POSITION" && v.entry !== "POSITION")
       c.addIssue({ code: "custom", message: "Invalid position change." });
   });

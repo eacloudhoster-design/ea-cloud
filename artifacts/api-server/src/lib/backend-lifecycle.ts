@@ -1,3 +1,4 @@
+import {externalSignalConsumer} from './release-mode';
 import { monitorEventLoopDelay } from "node:perf_hooks";
 
 // Observability only: never restart the process or retry a trading mutation.
@@ -24,7 +25,7 @@ export function startBackendDiagnostics(
           idle: pool.idleCount,
           waiting: pool.waitingCount,
         },
-        signalWorkerHealthy: workerHealthy(),
+        signalWorkerHealthy: workerHealthy(),signalWorkerMode:externalSignalConsumer()?'external':'local',
       },
       "Backend resource sample",
     );

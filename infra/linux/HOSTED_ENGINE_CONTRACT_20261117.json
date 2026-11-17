@@ -1,0 +1,390 @@
+{
+  "version": 1,
+  "frontend_changes_required": false,
+  "remote_deployments_changed": false,
+  "hosted_backend_profile": {
+    "entry": "artifacts/api-server/dist/index.mjs",
+    "EA_MT5_MANAGEMENT_ONLY": "0",
+    "EA_SIGNAL_WORKER_MODE": "external",
+    "EA_RELEASE_MODE": "unset",
+    "OBSERVER_MT5_VPS_URL": "approved private HTTPS gateway origin",
+    "OBSERVER_MT5_VPS_TOKEN": "server-only router credential",
+    "OBSERVER_MT5_ACCOUNT_ASSIGNMENTS_SOURCE": "gateway",
+    "OBSERVER_MT5_ACCESS_CLIENT_ID": "optional observer-specific Access service identity",
+    "OBSERVER_MT5_ACCESS_CLIENT_SECRET": "optional observer-specific Access secret",
+    "COPY_ENGINE_MULTI_ACCOUNT": "1",
+    "MT5_ACCOUNT_INVENTORY": "1",
+    "MT5_SELF_SERVICE_PROVISIONING": "1",
+    "MT5_PROVISIONING_CONSUMER": "0",
+    "MT5_LIVE_READONLY_ACCOUNTS": "1",
+    "render_start_command": "pnpm --filter @workspace/api-server run start:engine-source",
+    "render_build_command": "pnpm --filter @workspace/api-server run build"
+  },
+  "hosted_assignment_notes": [
+    "Unset OBSERVER_MT5_ACCOUNT_ASSIGNMENTS and OBSERVER_MT5_ACCOUNT_ASSIGNMENTS_FILE when using gateway source",
+    "Source activation requires at least one ready originally owned receiving session for the authenticated mentor",
+    "Hosted API does not reconcile, claim, wake or execute the VPS signal queue",
+    "Existing DATABASE_URL and SESSION_SECRET must be preserved; do not rotate or replace user/session/encryption data",
+    "VPS consumes shared-database provisioning requests; hosted consumer stays disabled, so no remote provisioner credential or ingress is required"
+  ],
+  "vps_consumer_profile": {
+    "unit": "ea-copy-engine.service",
+    "mode": "local",
+    "activation": "explicit bounded user-controlled permit only",
+    "state": "inactive; no permit"
+  },
+  "authentication": {
+    "client_cookie": "ea_client_session",
+    "mentor_cookie": "ea_portal_session",
+    "trusted_origin": "https://eacloudhoster.online",
+    "private_origin_header": "x-ea-cloud-origin-token (trusted server/proxy only)",
+    "identity": "derived from verified original session; caller owner IDs are never accepted"
+  },
+  "account_routes": {
+    "client": "/api/app/mt5-accounts",
+    "mentor": "/api/admin/mt5-accounts",
+    "client_provisioning": "/api/app/mt5-provisioning/requests",
+    "mentor_provisioning": "/api/admin/mt5-provisioning/requests",
+    "connect_fields": [
+      "login (decimal string)",
+      "server",
+      "password",
+      "broker (optional)"
+    ],
+    "provision_fields": [
+      "requestKey (UUID)",
+      "broker",
+      "login",
+      "server",
+      "password",
+      "accountRole (master/follower)",
+      "accountMode (demo/live)",
+      "ownershipConfirmed (true)"
+    ]
+  },
+  "original_enrollment_sources": [
+    "linked approved mt5_account_inventory",
+    "approved connected client_settings with original encrypted password, unless explicit inventory exists",
+    "approved connected mt5_connections with original encrypted password, unless explicit inventory exists"
+  ],
+  "ownership_guards": [
+    "fresh real broker identity proof before new binding",
+    "no inference from alias, username similarity or VPS credential presence",
+    "conflicting original owners are quarantined",
+    "broker unavailability does not revoke original ownership",
+    "original revocation denies gateway routing and stops only that worker; uncertain stop is audited and retried"
+  ],
+  "protected_gateway_routes": [
+    "GET /observer/assignments",
+    "GET /observer/receiving-sessions",
+    "GET /observer/workers",
+    "POST /observer/account-status",
+    "POST /observer/account-capabilities",
+    "POST /observer/size-position",
+    "POST /observer/sync-position",
+    "POST /observer/sync-pending"
+  ],
+  "technical_schemas": {
+    "position": {
+      "properties": {
+        "login": {
+          "exclusiveMinimum": 0,
+          "title": "Login",
+          "type": "integer"
+        },
+        "password": {
+          "format": "password",
+          "title": "Password",
+          "type": "string",
+          "writeOnly": true
+        },
+        "server": {
+          "maxLength": 100,
+          "minLength": 1,
+          "title": "Server",
+          "type": "string"
+        },
+        "sourceKey": {
+          "pattern": "^[a-f0-9]{64}$",
+          "title": "Sourcekey",
+          "type": "string"
+        },
+        "routingKey": {
+          "anyOf": [
+            {
+              "pattern": "^[a-f0-9]{64}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Routingkey"
+        },
+        "predecessorKey": {
+          "anyOf": [
+            {
+              "pattern": "^[a-f0-9]{64}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Predecessorkey"
+        },
+        "revision": {
+          "exclusiveMinimum": 0,
+          "title": "Revision",
+          "type": "integer"
+        },
+        "symbol": {
+          "maxLength": 64,
+          "minLength": 1,
+          "title": "Symbol",
+          "type": "string"
+        },
+        "target": {
+          "title": "Target",
+          "type": "number"
+        },
+        "sl": {
+          "minimum": 0.0,
+          "title": "Sl",
+          "type": "number"
+        },
+        "tp": {
+          "minimum": 0.0,
+          "title": "Tp",
+          "type": "number"
+        },
+        "maxVolume": {
+          "exclusiveMinimum": 0.0,
+          "title": "Maxvolume",
+          "type": "number"
+        },
+        "maxOpenTrades": {
+          "default": 10,
+          "maximum": 10000,
+          "minimum": 1,
+          "title": "Maxopentrades",
+          "type": "integer"
+        },
+        "maxExposureLots": {
+          "anyOf": [
+            {
+              "exclusiveMinimum": 0.0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Maxexposurelots"
+        },
+        "maxDailyDrawdown": {
+          "default": 5,
+          "exclusiveMinimum": 0.0,
+          "maximum": 100.0,
+          "title": "Maxdailydrawdown",
+          "type": "number"
+        }
+      },
+      "required": [
+        "login",
+        "password",
+        "server",
+        "sourceKey",
+        "revision",
+        "symbol",
+        "target",
+        "sl",
+        "tp",
+        "maxVolume"
+      ],
+      "title": "ObserverSync",
+      "type": "object"
+    },
+    "pending": {
+      "properties": {
+        "login": {
+          "exclusiveMinimum": 0,
+          "title": "Login",
+          "type": "integer"
+        },
+        "password": {
+          "format": "password",
+          "title": "Password",
+          "type": "string",
+          "writeOnly": true
+        },
+        "server": {
+          "maxLength": 100,
+          "minLength": 1,
+          "title": "Server",
+          "type": "string"
+        },
+        "sourceKey": {
+          "pattern": "^[a-f0-9]{64}$",
+          "title": "Sourcekey",
+          "type": "string"
+        },
+        "routingKey": {
+          "anyOf": [
+            {
+              "pattern": "^[a-f0-9]{64}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Routingkey"
+        },
+        "predecessorKey": {
+          "anyOf": [
+            {
+              "pattern": "^[a-f0-9]{64}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Predecessorkey"
+        },
+        "revision": {
+          "exclusiveMinimum": 0,
+          "title": "Revision",
+          "type": "integer"
+        },
+        "symbol": {
+          "maxLength": 64,
+          "minLength": 1,
+          "title": "Symbol",
+          "type": "string"
+        },
+        "target": {
+          "title": "Target",
+          "type": "number"
+        },
+        "sl": {
+          "minimum": 0.0,
+          "title": "Sl",
+          "type": "number"
+        },
+        "tp": {
+          "minimum": 0.0,
+          "title": "Tp",
+          "type": "number"
+        },
+        "maxVolume": {
+          "exclusiveMinimum": 0.0,
+          "title": "Maxvolume",
+          "type": "number"
+        },
+        "maxOpenTrades": {
+          "default": 10,
+          "maximum": 10000,
+          "minimum": 1,
+          "title": "Maxopentrades",
+          "type": "integer"
+        },
+        "maxExposureLots": {
+          "anyOf": [
+            {
+              "exclusiveMinimum": 0.0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Maxexposurelots"
+        },
+        "maxDailyDrawdown": {
+          "default": 5,
+          "exclusiveMinimum": 0.0,
+          "maximum": 100.0,
+          "title": "Maxdailydrawdown",
+          "type": "number"
+        },
+        "orderType": {
+          "enum": [
+            2,
+            3,
+            4,
+            5,
+            6,
+            7
+          ],
+          "title": "Ordertype",
+          "type": "integer"
+        },
+        "state": {
+          "default": "active",
+          "enum": [
+            "active",
+            "cancel"
+          ],
+          "title": "State",
+          "type": "string"
+        },
+        "price": {
+          "exclusiveMinimum": 0.0,
+          "title": "Price",
+          "type": "number"
+        },
+        "stoplimit": {
+          "default": 0,
+          "minimum": 0.0,
+          "title": "Stoplimit",
+          "type": "number"
+        },
+        "typeTime": {
+          "default": 0,
+          "enum": [
+            0,
+            1,
+            2,
+            3
+          ],
+          "title": "Typetime",
+          "type": "integer"
+        },
+        "expiration": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Expiration",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "login",
+        "password",
+        "server",
+        "sourceKey",
+        "revision",
+        "symbol",
+        "target",
+        "sl",
+        "tp",
+        "maxVolume",
+        "orderType",
+        "price"
+      ],
+      "title": "PendingSync",
+      "type": "object"
+    }
+  },
+  "account_count_quota": null,
+  "physical_resource_admission": true,
+  "financial_execution_enabled": false,
+  "connection_runbook": "HOSTED_CONNECTION_RUNBOOK_20261117.md"
+}

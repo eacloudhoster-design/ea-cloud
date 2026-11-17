@@ -5,7 +5,7 @@ export function createDedicatedWorkerPort():DedicatedWorkerPort{
  if(!raw||!token||!/^[\x21-\x7e]{32,2048}$/.test(token))throw Error("PRIVATE_PROVISIONER_NOT_CONFIGURED");
  const url=new URL(raw);
  if(url.username||url.password||url.search||url.hash||url.pathname!=="/"||(url.protocol!=="https:"&&!(url.protocol==="http:"&&url.hostname==="127.0.0.1")))throw Error("PRIVATE_PROVISIONER_ORIGIN_INVALID");
- return {async provisionDedicatedWorker(input){
+ return {async stopRetain(id){if(!/^[0-9a-f-]{36}$/i.test(id))throw Error('INVALID_STOP_REQUEST');const r=await fetch(new URL('/v1/provision/'+id+'/stop',url),{method:'POST',redirect:'error',headers:{Authorization:`Bearer ${token}`},signal:AbortSignal.timeout(46000)});const d:any=await r.json().catch(()=>null);if(!r.ok||d?.requestId!==id||d.state!=='stopped_retained'||d.resourcesDeleted!==false||d.executionEnabled!==false)throw Error('STOP_OUTCOME_UNCERTAIN');},async provisionDedicatedWorker(input){
   const {signal,...body}=input;
   if(!/^[0-9a-f-]{36}$/i.test(input.requestId))throw Error("PROVISIONER_REQUEST_INVALID");
   let response=await fetch(new URL("/v1/provision",url),{method:"POST",redirect:"error",headers:{Authorization:`Bearer ${token}`,"Content-Type":"application/json"},body:JSON.stringify(body),signal});

@@ -1,21 +1,36 @@
 // Private transport configuration; no public plaintext credential transport.
-export const MT5_VPS_BASE = (process.env.MT5_VPS_URL || "http://127.0.0.1:8005").replace(/\/+$/, "");
-const endpoint = new URL(MT5_VPS_BASE);
+export const MT5_VPS_BASE = (process.env.MT5_VPS_URL || "http://127.0.0.1:8000").replace(/\/+$/, "");
+let endpoint:URL;
+try{endpoint=new URL(MT5_VPS_BASE);}catch{throw new Error("MT5_VPS_URL must be a valid origin");}
 if (endpoint.username || endpoint.password || endpoint.search || endpoint.hash || endpoint.pathname !== "/" ||
     (endpoint.protocol !== "https:" && !(endpoint.protocol === "http:" && ["127.0.0.1", "localhost", "[::1]"].includes(endpoint.hostname)))) {
   throw new Error("MT5_VPS_URL requires HTTPS or loopback HTTP and no embedded credentials");
 }
-export function mt5Headers(): Record<string, string> {
-  const token = process.env.MT5_VPS_TOKEN;
-  if (!token || !/^[\x21-\x7e]{32,2048}$/.test(token)) throw new Error("MT5 VPS service credential is not configured");
+function gatewayHeaders(token:string|undefined,origin:string): Record<string, string> {
+  if (!token || token.length < 32) throw new Error("MT5 VPS service credential is not configured");
   const id=process.env.MT5_ACCESS_CLIENT_ID,secret=process.env.MT5_ACCESS_CLIENT_SECRET;
   const required=process.env.MT5_ACCESS_REQUIRED;
   if(required!==undefined&&!['0','1'].includes(required))throw new Error("Invalid MT5 edge authentication configuration");
   if((id!==undefined)!==(secret!==undefined)||(required==='1'&&(id===undefined||secret===undefined)))throw new Error("Complete MT5 edge authentication required");
-  const headers:Record<string,string>={ "Content-Type": "application/json", Authorization: `Bearer ${token}` };
+  const headers:Record<string,string>={ "Content-Type": "application/json", "Accept":"application/json", "User-Agent":"EACloudMT5Gateway/1.0", Authorization: `Bearer ${token}` };
   if(id!==undefined&&secret!==undefined){
-    if(endpoint.protocol!=='https:'||! /^[\x21-\x7e]{1,1024}$/.test(id)||! /^[\x21-\x7e]{1,1024}$/.test(secret))throw new Error("Invalid MT5 edge authentication configuration");
+    // Edge secrets are approved for the configured account gateway only.
+    if(origin!==endpoint.origin || endpoint.protocol!=='https:'||! /^[\x21-\x7e]{1,1024}$/.test(id)||! /^[\x21-\x7e]{1,1024}$/.test(secret))throw new Error("Invalid MT5 edge authentication configuration");
     headers['CF-Access-Client-Id']=id;headers['CF-Access-Client-Secret']=secret;
   }
   return headers;
+}
+
+export function mt5Headers():Record<string,string>{
+  return gatewayHeaders(process.env.MT5_VPS_TOKEN,endpoint.origin);
+}
+/** Reuse the approved edge boundary without leaking its secret to another origin. */
+export function executionGatewayHeaders(origin:string,token:string):Record<string,string>{
+  const id=process.env.OBSERVER_MT5_ACCESS_CLIENT_ID,secret=process.env.OBSERVER_MT5_ACCESS_CLIENT_SECRET;
+  if(id!==undefined||secret!==undefined){
+    const assigned=new URL(process.env.OBSERVER_MT5_VPS_URL||'');
+    if(assigned.protocol!=='https:'||assigned.origin!==origin||!token||token.length<32||typeof id!=='string'||typeof secret!=='string'||! /^[\x21-\x7e]{1,1024}$/.test(id)||! /^[\x21-\x7e]{1,1024}$/.test(secret))throw Error('Invalid observer edge authentication configuration');
+    return {'Content-Type':'application/json','Accept':'application/json','User-Agent':'EACloudMT5Gateway/1.0',Authorization:'Bearer '+token,'CF-Access-Client-Id':id,'CF-Access-Client-Secret':secret};
+  }
+  return gatewayHeaders(token,origin);
 }

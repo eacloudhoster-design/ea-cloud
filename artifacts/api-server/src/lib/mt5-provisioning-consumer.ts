@@ -6,6 +6,7 @@ import {pool} from "@workspace/db";
 import {decryptMT5Password} from "./mt5-crypto";
 import {readBoundAccount} from "./mt5-account-status";
 export interface DedicatedWorkerPort {
+ stopRetain?(requestId:string):Promise<void>;
  provisionDedicatedWorker(input:{requestId:string;ownerKind:"client"|"mentor";ownerId:number;broker:string;login:string;server:string;password:string;role:"client"|"mentor";accountMode:"demo"|"live";executionEnabled:false;signal:AbortSignal}):Promise<void>;
 }
 export async function processNextProvisioning(port:DedicatedWorkerPort){
@@ -51,6 +52,7 @@ export async function processNextProvisioning(port:DedicatedWorkerPort){
   return {processed:true,state:"awaiting_verification",executionEnabled:false};
  }catch{
   controller.abort();
+  if(port.stopRetain)try{await port.stopRetain(row.id);}catch{/* State stays uncertain and never automatically requeued. */}
   await pool.query("WITH changed AS (UPDATE mt5_provisioning_requests SET state='review_required',error_code='PROVISIONING_OUTCOME_UNCERTAIN',encrypted_password=NULL,updated_at=now() WHERE id=$1 AND state='provisioning' RETURNING id) INSERT INTO mt5_provisioning_audit(request_id,event) SELECT id,'review_required' FROM changed",[row.id]);
   return {processed:true,state:"review_required",executionEnabled:false};
  }finally{clearTimeout(timer);}

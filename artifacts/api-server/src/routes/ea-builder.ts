@@ -333,7 +333,7 @@ router.post(
       return;
     }
     try {
-      const capabilities = await observerCapabilities();
+      const capabilities = await observerCapabilities(req.userId!);
       if (!capabilities) {
         res.status(503).json({
           error: "Verified observer execution bridge is unavailable.",
@@ -488,7 +488,7 @@ async function capture(req: any, res: any, event: boolean) {
           },
         };
       if (
-        payload.kind === "SNAPSHOT" &&
+        ["SNAPSHOT","PENDING"].includes(payload.kind) &&
         (!["existing-observer", "integrated-ea"].includes(robot.mode) ||
           payload.sourceMagic !== robot.sourceMagic)
       )
@@ -509,6 +509,7 @@ async function capture(req: any, res: any, event: boolean) {
         })
         .onConflictDoNothing()
         .returning({ id: robotEventsTable.id });
+      let priorRouting = { state: "capture_only", signalId: null as number | null };
       if (!inserted.length) {
         const [prior] = await tx
           .select()
@@ -535,6 +536,8 @@ async function capture(req: any, res: any, event: boolean) {
               error: "Event identifier already exists with different data.",
             },
           };
+        // A lost acknowledgement must report the stored outcome, without routing again.
+        priorRouting = { state: prior.copyState, signalId: prior.signalId };
       }
       await tx
         .update(robotBuildsTable)
@@ -545,7 +548,7 @@ async function capture(req: any, res: any, event: boolean) {
           sourceServer: payload.sourceServer,
         })
         .where(eq(robotBuildsTable.id, robot.id));
-      let routing = { state: "capture_only", signalId: null as number | null };
+      let routing = priorRouting;
       if (inserted.length) {
         routing = await routeSnapshot(tx, robot, payload, inserted[0].id);
         await tx
@@ -562,7 +565,7 @@ async function capture(req: any, res: any, event: boolean) {
           duplicate: !inserted.length,
           copyState: routing.state,
         },
-        wake: !!routing.signalId,
+        wake: inserted.length > 0 && !!routing.signalId,
       };
     });
     res.status(result.status).json(result.body);

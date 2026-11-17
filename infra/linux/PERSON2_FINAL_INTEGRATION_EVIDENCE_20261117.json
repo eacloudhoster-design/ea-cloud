@@ -1,0 +1,166 @@
+{
+  "observed_at": 1794931538.3434675,
+  "execution_requests": 0,
+  "hosted_app_modified": false,
+  "execution_gateway": {
+    "http_status": 200,
+    "status": "ok",
+    "service": "isolated-account-router",
+    "accounts": 6,
+    "standbyAccounts": 6,
+    "ownedAccounts": 0,
+    "simulation": false,
+    "execution_readiness_claimed": false
+  },
+  "gateway_unauthenticated_rejected": true,
+  "gateway_capabilities_closed": true,
+  "relay_health": {
+    "http_status": 200
+  },
+  "accounts": [
+    {
+      "alias": "jm-demo",
+      "broker": "justmarkets",
+      "role": "mentor",
+      "http_status": 200,
+      "connected": true,
+      "identity_verified": true,
+      "read_only": true,
+      "execution_enabled": false,
+      "open_positions": 0,
+      "pending_orders": 0,
+      "elapsed_ms": 454.45
+    },
+    {
+      "alias": "jm-client-demo",
+      "broker": "justmarkets",
+      "role": "client",
+      "http_status": 200,
+      "connected": true,
+      "identity_verified": true,
+      "read_only": true,
+      "execution_enabled": false,
+      "open_positions": 0,
+      "pending_orders": 0,
+      "elapsed_ms": 480.47
+    },
+    {
+      "alias": "deriv-demo",
+      "broker": "deriv",
+      "role": "client",
+      "http_status": 200,
+      "connected": true,
+      "identity_verified": true,
+      "read_only": true,
+      "execution_enabled": false,
+      "open_positions": 0,
+      "pending_orders": 0,
+      "elapsed_ms": 663.49
+    },
+    {
+      "alias": "xm-demo",
+      "broker": "xm",
+      "role": "client",
+      "http_status": 200,
+      "connected": true,
+      "identity_verified": true,
+      "read_only": true,
+      "execution_enabled": false,
+      "open_positions": 0,
+      "pending_orders": 0,
+      "elapsed_ms": 372.79
+    },
+    {
+      "alias": "exness-demo",
+      "broker": "exness",
+      "role": "client",
+      "http_status": 200,
+      "connected": true,
+      "identity_verified": true,
+      "read_only": true,
+      "execution_enabled": false,
+      "open_positions": 0,
+      "pending_orders": 0,
+      "elapsed_ms": 385.73
+    },
+    {
+      "alias": "rcg-demo",
+      "broker": "rcg",
+      "role": "client",
+      "http_status": 200,
+      "connected": true,
+      "identity_verified": true,
+      "read_only": true,
+      "execution_enabled": false,
+      "open_positions": 0,
+      "pending_orders": 0,
+      "elapsed_ms": 392.24
+    }
+  ],
+  "stops_unchanged": true,
+  "stop_publisher_fresh_and_stopped": true,
+  "services": {
+    "ea-engine-gateway": "active",
+    "ea-execution-gates": "active",
+    "ea-readonly-account-relay": "active",
+    "ea-engine-management": "active",
+    "ea-private-provisioner": "active",
+    "ea-mt5-status-tunnel": "active"
+  },
+  "failed_units": "",
+  "alerts": {
+    "configured": false,
+    "pending": 1,
+    "delivery_verified": false,
+    "confirmed_deliveries": 0,
+    "observed_at": 1794931515.4360662
+  },
+  "all_six_readonly_accounts_healthy": true,
+  "original_ownership": {
+    "approved": 0,
+    "verified": 0,
+    "unavailable": 0,
+    "conflicts": 0
+  },
+  "enrollment": [
+    {
+      "state": "awaiting_owner",
+      "accounts": 6,
+      "owners": 0
+    }
+  ],
+  "private_api": {
+    "healthz": {
+      "http_status": 200,
+      "data": {
+        "status": "ok"
+      }
+    },
+    "readyz": {
+      "http_status": 200,
+      "data": {
+        "status": "ok"
+      }
+    },
+    "release": {
+      "http_status": 200,
+      "data": {
+        "commit": "9aff0426c5e164d3de350690c64fee6fe76bad37",
+        "mode": "management",
+        "executionDisabled": true
+      }
+    }
+  },
+  "financial_copier_active": false,
+  "financial_permit_present": false,
+  "integration_base": "76c18478943fa40d903806f2906447c61d980f6e",
+  "new_contract_tests": {
+    "passed": 6,
+    "failed": 0,
+    "broker_execution_tested": false
+  },
+  "hosted_deployment_changed": false,
+  "backend_build_passed": true,
+  "frontend_files_changed": false,
+  "original_worktrees_modified": false
+}

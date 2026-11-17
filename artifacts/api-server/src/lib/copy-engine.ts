@@ -1,9 +1,10 @@
+import {receivingAccount} from './receiving-account';
 import {effectiveCopySettings,policyVolume} from "./copy-policy";
 import {executeObserver} from "./observer-execution";
-import {syncObserverPosition} from "./observer-vps";
+import {syncObserverPosition,sizeObserverPosition,receivingSessions} from "./observer-vps";
 import { recordExecutionActivity } from "./trading-activity";
 import {
-  db,
+  db,pool,
   appAccessTable,
   clientSettingsTable,
   mentorCopyPoliciesTable,
@@ -16,10 +17,10 @@ import {
   type ClientSettings,
   type SymbolPair,
 } from "@workspace/db";
-import { eq, and, desc } from "drizzle-orm";
+import { eq, and, desc, sql } from "drizzle-orm";
 import type { Logger } from "pino";
 import { decryptMT5Password } from "./mt5-crypto";
-import { executeTradeOnVps, closeTradeOnVps, modifyTradeOnVps, type VpsResult } from "./mt5-vps";
+import { type VpsResult } from "./mt5-vps";
 import { broadcastToClient } from "../ws";
 
 const num = (v: unknown): number | null => {
@@ -92,6 +93,12 @@ function vpsSummary(r: VpsResult): Record<string, unknown> {
   return {
     ok: r.ok,
     httpStatus: r.httpStatus,
+    // Preserve explicit safety facts from the worker receipt. Missing evidence is
+    // unknown, never inferred safe from HTTP status or a successful mock fill.
+    simulation: typeof raw?.simulation === "boolean" ? raw.simulation : null,
+    financialExecution: typeof raw?.financial_execution === "boolean" ? raw.financial_execution : null,
+    uncertain: typeof raw?.uncertain === "boolean" ? raw.uncertain : null,
+    code: typeof raw?.code === "string" && /^[A-Z_]{1,40}$/.test(raw.code) ? raw.code : null,
     message: r.message,
     ticket: r.ticket,
     retcode: r.retcode,
@@ -126,6 +133,7 @@ async function recordSkip(
   client: AppAccess,
   reason: string,
   log: Logger,
+  accountKey?:string,
 ): Promise<ClientOutcome> {
   const [row] = await db.insert(tradeExecutionsTable).values({
     signalId: signal.id,
@@ -135,6 +143,7 @@ async function recordSkip(
     symbol: signal.symbol,
     action: signal.signal === "OPEN" ? resolveAction(signal.orderType) : signal.signal,
     status: "skipped",
+    ...(accountKey?{vpsResponse:JSON.stringify({accountKey})}:{}),
     errorMessage: reason,
     mentorTicket: signal.ticket ?? null,
   }).returning();
@@ -152,10 +161,10 @@ async function recordSkip(
 //   pending                        -> in-flight elsewhere -> do not touch
 //   no row                         -> first attempt
 // Returns "already_done" when the client should be skipped this pass.
-async function priorOutcome(signalId: number, clientId: number, idempotent=false): Promise<ClientOutcome | null> {
+async function priorOutcome(signalId: number, clientId: number, idempotent=false,accountKey?:string): Promise<ClientOutcome | null> {
   const [prev] = await db.select({ status: tradeExecutionsTable.status, retryable: tradeExecutionsTable.retryable })
     .from(tradeExecutionsTable)
-    .where(and(eq(tradeExecutionsTable.signalId, signalId), eq(tradeExecutionsTable.clientId, clientId)))
+    .where(and(eq(tradeExecutionsTable.signalId, signalId), eq(tradeExecutionsTable.clientId, clientId),accountKey?sql`(${tradeExecutionsTable.vpsResponse}::jsonb->>'accountKey')=${accountKey}`:sql`(${tradeExecutionsTable.vpsResponse} IS NULL OR ${tradeExecutionsTable.vpsResponse}::jsonb->>'accountKey' IS NULL)`))
     .orderBy(desc(tradeExecutionsTable.createdAt),desc(tradeExecutionsTable.id))
     .limit(1);
   if (!prev) return null;
@@ -195,6 +204,7 @@ async function settleExecution(
   clientId: number,
   result: VpsResult,
   log: Logger,
+  accountKey?:string,
 ): Promise<ClientOutcome> {
   const retryable = !result.ok && result.retriable;
   const brokerSymbol=(result.data as any)?.data?.symbol;
@@ -206,7 +216,7 @@ async function settleExecution(
     retcode: result.retcode,
     attempts: result.attempts,
     retryable: retryable ? 1 : 0,
-    vpsResponse: JSON.stringify(vpsSummary(result)),
+    vpsResponse: JSON.stringify(accountKey?{accountKey,summary:vpsSummary(result)}:vpsSummary(result)),
     errorMessage: result.ok ? null : (result.message ?? "VPS execution failed"),
   }).where(eq(tradeExecutionsTable.id, executionId)).returning();
   pushUpdate(clientId, updated);
@@ -214,9 +224,11 @@ async function settleExecution(
   return retryable ? "failed_retryable" : "failed_terminal";
 }
 
-async function executeForClient(signal: TradeSignal, client: AppAccess, eaName: string, canonicalPair: string | null, log: Logger, observerDispatch: typeof syncObserverPosition): Promise<ClientOutcome> {
+async function executeForClient(signal: TradeSignal, client: AppAccess, eaName: string, canonicalPair: string | null, log: Logger, observerDispatch: typeof syncObserverPosition, receiving?:any): Promise<ClientOutcome> {
+  const accountKey=receiving?JSON.stringify([receiving.login,receiving.server]):undefined;
+  const skip=(reason:string)=>recordSkip(signal,client,reason,log,accountKey);
   // Idempotency: never repeat finished work or risk a duplicate fill on retry.
-  const prior = await priorOutcome(signal.id, client.id,!!signal.observerEventId);
+  const prior = await priorOutcome(signal.id, client.id,!!signal.observerEventId,accountKey);
   if (prior !== null) {
     log.info({ signalId: signal.id, clientId: client.id, prior }, "[CopyEngine] client already settled — skipping");
     if(signal.observerEventId&&prior==="failed_terminal")return prior;
@@ -228,15 +240,16 @@ async function executeForClient(signal: TradeSignal, client: AppAccess, eaName: 
 
   const [policy]=await db.select().from(mentorCopyPoliciesTable).where(and(eq(mentorCopyPoliciesTable.clientId,client.id),eq(mentorCopyPoliciesTable.mentorId,signal.mentorId))).limit(1);
   const settings=storedSettings?effectiveCopySettings(storedSettings,policy):null;
-  if(!settings)return recordSkip(signal,client,"Explicit mentor allocation policy and valid client limits required",log);
+  if(settings&&receiving){const selected=settings.mt5Login===receiving.login&&settings.mt5Server===receiving.server;Object.assign(settings,{mt5Login:receiving.login,mt5Server:receiving.server,mt5Broker:receiving.broker,encryptedMt5Password:receiving.encrypted_password,mt5Connected:true,accountScopedAllocation:!selected});}
+  if(!settings)return skip("Explicit mentor allocation policy and valid client limits required");
 
   // 1. Bot must be enabled.
   if (!settings || settings.copyingEnabled !== true) {
-    return recordSkip(signal, client, "Bot disabled (copying paused)", log);
+    return skip("Bot disabled (copying paused)");
   }
   // 2. MT5 must be reachable with a login + server.
   if (!settings.mt5Connected || !settings.mt5Login || !settings.mt5Server) {
-    return recordSkip(signal, client, "MT5 not connected", log);
+    return skip("MT5 not connected");
   }
   // 2b. Connected flag set but NO stored credentials. The connect flow always
   // persists the encrypted password alongside mt5Connected=true, so a missing
@@ -244,7 +257,7 @@ async function executeForClient(signal: TradeSignal, client: AppAccess, eaName: 
   // column existed). We cannot dispatch to the VPS without it — surface an
   // actionable reason instead of the generic "MT5 not connected".
   if (!settings.encryptedMt5Password) {
-    return recordSkip(signal, client, "MT5 credentials missing — please reconnect your account", log);
+    return skip("MT5 credentials missing — please reconnect your account");
   }
 
   // Decrypt the password in memory only — never logged or persisted in plaintext.
@@ -253,7 +266,7 @@ async function executeForClient(signal: TradeSignal, client: AppAccess, eaName: 
     password = decryptMT5Password(settings.encryptedMt5Password);
   } catch (err) {
     log.error({ clientId: client.id, err }, "[CopyEngine] password decrypt failed");
-    return recordSkip(signal, client, "Stored credentials could not be decrypted", log);
+    return skip("Stored credentials could not be decrypted");
   }
 
   const baseCtx = {
@@ -265,37 +278,29 @@ async function executeForClient(signal: TradeSignal, client: AppAccess, eaName: 
   };
 
   if(signal.signal==="SYNC") {
-    if(!signal.observerEventId)return recordSkip(signal,client,"Unregistered observer signal",log);
+    if(!signal.observerEventId)return skip("Unregistered observer signal");
     let symbol=signal.symbol,customLot:number|null=null;
     if(canonicalPair){const [cfg]=await db.select().from(clientSymbolConfigsTable).where(and(eq(clientSymbolConfigsTable.clientId,client.id),eq(clientSymbolConfigsTable.pairName,canonicalPair))).limit(1);if(cfg?.selectedSymbol)symbol=cfg.selectedSymbol;customLot=num(cfg?.customLotSize);}
-    const [pending]=await db.insert(tradeExecutionsTable).values({signalId:signal.id,mentorId:signal.mentorId,clientId:client.id,signalKind:"SYNC",symbol,action:"SYNC",status:"pending",mentorTicket:signal.ticket}).returning();
+    if(receiving&&settings.accountScopedAllocation)symbol=canonicalPair||signal.symbol;
+    const [pending]=await db.insert(tradeExecutionsTable).values({signalId:signal.id,mentorId:signal.mentorId,clientId:client.id,signalKind:"SYNC",symbol,action:"SYNC",status:"pending",mentorTicket:signal.ticket,...(accountKey?{vpsResponse:JSON.stringify({accountKey})}:{})}).returning();
     pushUpdate(client.id,pending);
-    const result=await executeObserver(signal,client,settings,password,symbol,source=>policyVolume(resolveVolume(source,settings,customLot,true),source,policy),observerDispatch);
-    return settleExecution(pending.id,client.id,result,log);
+    const result=await executeObserver(signal,client,settings,password,symbol,async source=>{
+      let lots=resolveVolume(source,settings,customLot,true);
+      if(settings.lotMode==='risk_percent'&&customLot===null){
+        const raw=JSON.parse(signal.rawPayload);
+        lots=await sizeObserverPosition({login:settings.mt5Login!,server:settings.mt5Server!,password,symbol,side:raw.side==='SELL'?1:0,method:'risk_percent',risk_percent:Number(settings.riskPercent),stop_loss:Number(signal.stopLoss),max_lots:Number(settings.maxLotSize),...(raw.protocol==='EA_OBSERVER_PENDING_V1'?{entry_price:Number(raw.price)}:{})});
+      }
+      return policyVolume(lots,source,policy);
+    },observerDispatch);
+    return settleExecution(pending.id,client.id,result,log,accountKey);
   }
 
   // ── OPEN ────────────────────────────────────────────────────────────────
-  if (signal.signal === "OPEN")return recordSkip(signal,client,"Legacy opening disabled; authenticated observer lifecycle required",log);
+  if (signal.signal === "OPEN")return skip("Legacy opening disabled; authenticated observer lifecycle required");
 
-  // ── CLOSE / MODIFY ──────────────────────────────────────────────────────
-  const clientTicket = await findClientTicket(client.id, signal.ticket ?? null);
-  if (!clientTicket) {
-    return recordSkip(signal, client, "No matching open position to " + signal.signal.toLowerCase(), log);
-  }
-
-  const action = signal.signal; // CLOSE | MODIFY
-  const [pending] = await db.insert(tradeExecutionsTable).values({
-    signalId: signal.id, mentorId: signal.mentorId, clientId: client.id,
-    signalKind: signal.signal, symbol: signal.symbol, action,
-    status: "pending", ticket: clientTicket, mentorTicket: signal.ticket ?? null,
-  }).returning();
-  pushUpdate(client.id, pending);
-
-  const result = signal.signal === "CLOSE"
-    ? await closeTradeOnVps({ login: settings.mt5Login, password, server: settings.mt5Server, ticket: clientTicket }, log)
-    : await modifyTradeOnVps({ login: settings.mt5Login, password, server: settings.mt5Server, ticket: clientTicket, sl: num(signal.stopLoss), tp: num(signal.takeProfit) }, log);
-  finalize(result, log, { ...baseCtx, action, clientTicket });
-  return settleExecution(pending.id, client.id, result, log);
+  // Legacy ticket mutations cannot establish an assigned absolute-target scope.
+  // Never fall back to a separate MT5 URL/controller for these old records.
+  return skip("Legacy ticket mutation requires manual reconciliation through the assigned gateway");
 }
 
 export interface SignalRunResult {
@@ -310,8 +315,7 @@ export interface SignalRunResult {
 // Fan a single mentor signal out to every subscribed client.
 // One client failing must NOT stop the others, so each is wrapped in try/catch.
 // Returns a per-outcome tally so the worker can decide whether to retry the signal.
-export async function runSignal(signal: TradeSignal, log: Logger, observerDispatch: typeof syncObserverPosition = syncObserverPosition): Promise<SignalRunResult> {
-  if(process.env.EA_MT5_MANAGEMENT_ONLY==="1")return {clientCount:0,attempted:0,succeeded:0,failedRetryable:0,failedTerminal:0,skipped:0};
+export async function runSignal(signal: TradeSignal, log: Logger, observerDispatch: typeof syncObserverPosition = syncObserverPosition, sessionRegistry: typeof receivingSessions = receivingSessions): Promise<SignalRunResult> {
   const clients = await db.select().from(appAccessTable)
     .where(eq(appAccessTable.mentorId, signal.mentorId));
 
@@ -358,16 +362,32 @@ export async function runSignal(signal: TradeSignal, log: Logger, observerDispat
     failedRetryable: 0, failedTerminal: 0, skipped: 0,
   };
 
-  const queue=[...clients];
+  // Additional accounts require BOTH original ownership and an explicit active
+  // private SDK session. Merely linking an account never enables copying.
+  const sessions=process.env.COPY_ENGINE_MULTI_ACCOUNT==='1'?await sessionRegistry():null;
+  const queue:Array<{client:AppAccess;receiving?:any}>=[];
+  for(const client of clients){
+    if(!sessions){queue.push({client});continue;}
+    if(client.status!=='approved')continue;
+    const [legacy]=await db.select().from(clientSettingsTable).where(eq(clientSettingsTable.clientId,client.id)).limit(1);
+    const owned=(await pool.query("SELECT login,server,broker,account_mode,encrypted_password,owner_kind,owner_id,state,account_role FROM mt5_account_inventory WHERE (owner_kind='client' AND owner_id=$1) OR (login=$2 AND server=$3)",[client.id,legacy?.mt5Login??'',legacy?.mt5Server??''])).rows;
+    for(const session of sessions.filter(v=>v.owner_id===client.id)){
+      const receiving=receivingAccount(session,client.id,owned,legacy);
+      if(!receiving){log.warn({clientId:client.id,signalId:signal.id},'Receiving account disconnected or original ownership changed; account excluded');continue;}
+      queue.push({client,receiving});
+    }
+  }
+  const jobCount=queue.length;
+
   const consume=async()=>{
   for (;;) {
-    const client=queue.shift();if(!client)return;
+    const job=queue.shift();if(!job)return;const {client,receiving}=job;
     if (client.status !== "approved") {
       log.info({ clientId: client.id, status: client.status }, "[CopyEngine] client not approved — skipping");
       continue;
     }
     try {
-      const outcome = await executeForClient(signal, client, eaName, canonicalPair, log,observerDispatch);
+      const outcome = await executeForClient(signal, client, eaName, canonicalPair, log,observerDispatch,receiving);
       switch (outcome) {
         case "success": tally.succeeded++; tally.attempted++; break;
         case "failed_retryable": tally.failedRetryable++; tally.attempted++; break;
@@ -384,7 +404,7 @@ export async function runSignal(signal: TradeSignal, log: Logger, observerDispat
   }
 
   };
-  await Promise.all(Array.from({length:Math.min(4,clients.length)},()=>consume()));
+  await Promise.all(Array.from({length:Math.min(4,jobCount)},()=>consume()));
 
   log.info({ mentorId: signal.mentorId, signalId: signal.id, ...tally }, "[CopyEngine] signal processing complete");
   return tally;

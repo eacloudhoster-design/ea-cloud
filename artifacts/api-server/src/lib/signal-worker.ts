@@ -1,3 +1,4 @@
+import {nonTradingRelease,externalSignalConsumer} from "./release-mode";
 import { db, tradeSignalsTable, tradeExecutionsTable, type TradeSignal } from "@workspace/db";
 import { eq, inArray, sql } from "drizzle-orm";
 import type { Logger } from "pino";
@@ -158,6 +159,7 @@ async function tick(log: Logger): Promise<void> {
 // 'pending' so the worker re-runs them — re-running will skip the now-terminal
 // clients and only attempt clients that never got a row.
 export async function reconcileOnStartup(log: Logger): Promise<void> {
+  if(externalSignalConsumer())return;
   const orphanExec = await db.update(tradeExecutionsTable).set({
     status: "failed",
     retryable: sql`CASE WHEN ${tradeExecutionsTable.signalKind}='SYNC' THEN 1 ELSE 0 END`,
@@ -177,11 +179,13 @@ export async function reconcileOnStartup(log: Logger): Promise<void> {
 
 // Nudge the worker to run immediately (called right after a signal is enqueued).
 export function wakeWorker(log: Logger): void {
+  if(nonTradingRelease()||externalSignalConsumer())return;
   void tick(log);
 }
 
 export function startWorker(log: Logger): void {
-  if(process.env.EA_MT5_MANAGEMENT_ONLY==="1")return;
+  if(externalSignalConsumer())return;
+  if(nonTradingRelease())throw Error("Signal worker disabled in non-trading release");
   stopped = false;
   if (pollTimer) return;
   pollTimer = setInterval(() => void tick(log), POLL_INTERVAL_MS);

@@ -10,7 +10,9 @@
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "build:engine-readonly": "node ./build-engine-readonly.mjs",
     "build:engine-management": "node ./build-engine-management.mjs",
-    "start:management": "node --enable-source-maps ./management-start.mjs"
+    "start:management": "node --enable-source-maps ./management-start.mjs",
+    "start:engine-source": "node --enable-source-maps ./hosted-engine-start.mjs",
+    "check:engine-connectivity": "node ./check-engine-connectivity.mjs"
   },
   "dependencies": {
     "@google-cloud/storage": "^7.19.0",

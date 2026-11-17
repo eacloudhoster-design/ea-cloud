@@ -1,9 +1,8 @@
 import {policyVolume} from "./copy-policy";
-import { randomUUID } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 import {
   db,
   usersTable,
-  clientSettingsTable,
   appAccessTable,
   easTable,
   observerAllocationsTable,
@@ -13,7 +12,7 @@ import {
 } from "@workspace/db";
 import { and, eq } from "drizzle-orm";
 import { resolveAppSessionAccess } from "./app-session-access";
-import { syncObserverPosition } from "./observer-vps";
+import { syncObserverPosition,syncObserverPending } from "./observer-vps";
 import { sourceKey, verifiedSource } from "./ea-builder/routing";
 import type { VpsResult } from "./mt5-vps";
 const rejected = (message: string): VpsResult => ({
@@ -33,7 +32,7 @@ export async function executeObserver(
   settings: any,
   password: string,
   symbol: string,
-  initialVolume: (source: number) => number,
+  initialVolume: (source: number) => number|Promise<number>,
   dispatch: typeof syncObserverPosition = syncObserverPosition,
 ): Promise<VpsResult> {
   let payload: any;
@@ -44,7 +43,7 @@ export async function executeObserver(
   }
   if (
     !signal.observerEventId ||
-    payload.protocol !== "EA_OBSERVER_SYNC_V2" ||
+    !["EA_OBSERVER_SYNC_V2","EA_OBSERVER_PENDING_V1"].includes(payload.protocol) ||
     !/^[a-f0-9]{64}$/.test(payload.sourceKey) ||
     !Number.isSafeInteger(payload.sequence) ||
     !Number.isFinite(payload.sourceVolume) ||
@@ -75,14 +74,17 @@ export async function executeObserver(
   if (!event || !robot || !robot.copyEnabled || robot.revokedAt)
     return rejected("Observer copying disabled or revoked");
   const receipt=event.payload as any;
-  if(event.robotId!==robot.id || !receipt || receipt.kind!=="SNAPSHOT" ||
+  const isPending=payload.protocol==='EA_OBSERVER_PENDING_V1';
+  if(event.robotId!==robot.id || !receipt || receipt.kind!==(isPending?"PENDING":"SNAPSHOT") ||
     receipt.sequence!==payload.sequence || receipt.volume!==payload.sourceVolume ||
     receipt.side!==payload.side || !["BUY","SELL"].includes(payload.side) ||
     receipt.symbol!==signal.symbol || receipt.sourceMagic!==robot.sourceMagic || receipt.mixed ||
     receipt.sourceAccount!==event.sourceAccount || receipt.sourceServer!==event.sourceServer ||
     receipt.sourceAccount!==robot.sourceAccount || receipt.sourceServer!==robot.sourceServer ||
-    sourceKey(signal.mentorId,receipt.sourceAccount,receipt.sourceServer,receipt.positionId)!==payload.sourceKey)
+    sourceKey(signal.mentorId,receipt.sourceAccount,receipt.sourceServer,isPending?"pending:"+receipt.orderId:receipt.positionId)!==payload.sourceKey)
     return rejected("Observer dispatch does not match its authenticated receipt");
+
+  if(isPending&&(payload.orderType!==receipt.pendingType||payload.price!==receipt.price||payload.stoplimit!==(receipt.stopLimit??0)||payload.typeTime!==receipt.typeTime||payload.expiration!==receipt.expiration||payload.state!==(receipt.pendingState==='active'?'active':'cancel')))return rejected('Pending target does not match authenticated receipt');
 
   const [mentor] = await db
     .select()
@@ -130,13 +132,14 @@ export async function executeObserver(
       ok: true,
       httpStatus: 200,
     };
+  const allocationKey=(key:string)=>settings.accountScopedAllocation===true?createHash('sha256').update(JSON.stringify(['account-allocation-v1',settings.mt5Login,settings.mt5Server,key])).digest('hex'):key;
   let [allocation] = await db
     .select()
     .from(observerAllocationsTable)
     .where(
       and(
         eq(observerAllocationsTable.clientId, client.id),
-        eq(observerAllocationsTable.sourceKey, payload.sourceKey),
+        eq(observerAllocationsTable.sourceKey, allocationKey(payload.sourceKey)),
       ),
     )
     .limit(1);
@@ -146,8 +149,15 @@ export async function executeObserver(
       ok: true,
       httpStatus: 200,
     };
+  let predecessorKey:string|undefined;
+  let predecessorAllocation:any;
+  if(!isPending&&receipt.pendingOrderId&&receipt.pendingOrderId!=='0'){
+    const key=sourceKey(signal.mentorId,receipt.sourceAccount,receipt.sourceServer,'pending:'+receipt.pendingOrderId);
+    [predecessorAllocation]=await db.select().from(observerAllocationsTable).where(and(eq(observerAllocationsTable.clientId,client.id),eq(observerAllocationsTable.sourceKey,allocationKey(key)))).limit(1);
+    if(predecessorAllocation){if(predecessorAllocation.mentorId!==signal.mentorId||predecessorAllocation.symbol!==symbol)return rejected('Pending predecessor ownership/symbol mismatch');predecessorKey=key;}
+  }
   if (!allocation) {
-    const volume = initialVolume(payload.sourceVolume);
+    const volume = predecessorAllocation?Number(predecessorAllocation.scale)*payload.sourceVolume:await initialVolume(payload.sourceVolume);
     if (!Number.isFinite(volume) || volume <= 0)
       return rejected("Configured client lot size resolves to zero");
     [allocation] = await db
@@ -155,11 +165,11 @@ export async function executeObserver(
       .values({
         id: randomUUID(),
         clientId: client.id,
-        sourceKey: payload.sourceKey,
+        sourceKey: allocationKey(payload.sourceKey),
         mentorId: signal.mentorId,
         symbol,
-        scale: String(volume / payload.sourceVolume),
         accountLogin:settings.mt5Login,accountServer:settings.mt5Server,
+        scale: String(volume / payload.sourceVolume),
       })
       .onConflictDoNothing()
       .returning();
@@ -170,12 +180,12 @@ export async function executeObserver(
         .where(
           and(
             eq(observerAllocationsTable.clientId, client.id),
-            eq(observerAllocationsTable.sourceKey, payload.sourceKey),
+            eq(observerAllocationsTable.sourceKey, allocationKey(payload.sourceKey)),
           ),
         )
         .limit(1);
   }
-  if(allocation?.accountLogin!==settings.mt5Login || allocation?.accountServer!==settings.mt5Server)return rejected("Allocation account binding is missing or changed; reconcile before dispatch");
+  if(allocation&&(allocation.accountLogin!==settings.mt5Login||allocation.accountServer!==settings.mt5Server))return rejected('Allocation belongs to a different or unverified legacy account binding');
   const cap = Number(settings.maxLotSize || 1),
     scale = Number(allocation?.scale);
   if (
@@ -191,13 +201,13 @@ export async function executeObserver(
     (payload.side === "BUY" ? 1 : -1);
   const [currentOwner]=await db.select({mentorId:appAccessTable.mentorId,status:appAccessTable.status}).from(appAccessTable).where(eq(appAccessTable.id,client.id)).limit(1);
   if(currentOwner?.mentorId!==signal.mentorId || currentOwner.status!=="approved" || allocation.mentorId!==signal.mentorId)return rejected("Client ownership changed before dispatch");
-  const [currentSettings]=await db.select().from(clientSettingsTable).where(eq(clientSettingsTable.clientId,client.id)).limit(1);
-  if(!currentSettings?.mt5Connected || !currentSettings.copyingEnabled || currentSettings.mt5Login!==settings.mt5Login || currentSettings.mt5Server!==settings.mt5Server || currentSettings.encryptedMt5Password!==settings.encryptedMt5Password)return rejected("Account connection or copying permission changed before dispatch");
-  return dispatch({
+  const input={
     login: settings.mt5Login,
     password,
     server: settings.mt5Server,
     sourceKey: payload.sourceKey,
+    routingKey:sourceKey(signal.mentorId,receipt.sourceAccount,receipt.sourceServer,'*'),
+    ...(predecessorKey?{predecessorKey}:{}),
     revision: signal.id,
     symbol: allocation.symbol,
     target,
@@ -208,5 +218,7 @@ export async function executeObserver(
     maxOpenTrades: Number(settings.maxOpenTrades ?? 10),
     maxExposureLots: Number(settings.mentorPolicy?.maxExposureLots ?? settings.maxLotSize),
     maxDailyDrawdown: Number(settings.maxDailyDrawdown ?? 5),
-  });
+  };
+  if(isPending)return syncObserverPending({...input,target:Math.abs(target),orderType:payload.orderType,state:payload.state,price:payload.price,stoplimit:payload.stoplimit,typeTime:payload.typeTime,expiration:payload.expiration});
+  return dispatch(input);
 }

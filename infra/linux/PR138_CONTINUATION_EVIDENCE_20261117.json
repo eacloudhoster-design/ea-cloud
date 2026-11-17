@@ -1,0 +1,205 @@
+{
+  "observed_at": "2026-11-17T16:17:04.573056+00:00",
+  "financial_requests_sent": 0,
+  "hosted_public_probe": {
+    "origin": "https://eacloudhoster.online",
+    "paths": [
+      "/api/healthz",
+      "/api/readyz",
+      "/api/release",
+      "/api/app/mt5-accounts",
+      "/api/admin/mt5-account-capabilities"
+    ],
+    "http_status": 403,
+    "cloudflare_error": 1010,
+    "backend_reached": false
+  },
+  "concurrent_account_proofs": [
+    {
+      "alias": "jm-demo",
+      "http_status": 200,
+      "identity_matches": true,
+      "read_only": true,
+      "open_positions": 0,
+      "pending_orders": 0,
+      "wrong_password_http": 403
+    },
+    {
+      "alias": "jm-client-demo",
+      "http_status": 200,
+      "identity_matches": true,
+      "read_only": true,
+      "open_positions": 0,
+      "pending_orders": 0,
+      "wrong_password_http": 403
+    },
+    {
+      "alias": "deriv-demo",
+      "http_status": 200,
+      "identity_matches": true,
+      "read_only": true,
+      "open_positions": 0,
+      "pending_orders": 0,
+      "wrong_password_http": 403
+    },
+    {
+      "alias": "xm-demo",
+      "http_status": 200,
+      "identity_matches": true,
+      "read_only": true,
+      "open_positions": 0,
+      "pending_orders": 0,
+      "wrong_password_http": 403
+    },
+    {
+      "alias": "exness-demo",
+      "http_status": 200,
+      "identity_matches": true,
+      "read_only": true,
+      "open_positions": 0,
+      "pending_orders": 0,
+      "wrong_password_http": 403
+    },
+    {
+      "alias": "rcg-demo",
+      "http_status": 200,
+      "identity_matches": true,
+      "read_only": true,
+      "open_positions": 0,
+      "pending_orders": 0,
+      "wrong_password_http": 403
+    }
+  ],
+  "workers": {
+    "accounts": [
+      {
+        "alias": "deriv-demo",
+        "broker": "deriv",
+        "role": "client",
+        "enrollment_state": "awaiting_owner",
+        "http_status": 200,
+        "process_alive": true,
+        "operational_mode": "standby",
+        "sdk_dispatch_permitted": false,
+        "execution_readiness_claimed": false
+      },
+      {
+        "alias": "exness-demo",
+        "broker": "exness",
+        "role": "client",
+        "enrollment_state": "awaiting_owner",
+        "http_status": 200,
+        "process_alive": true,
+        "operational_mode": "standby",
+        "sdk_dispatch_permitted": false,
+        "execution_readiness_claimed": false
+      },
+      {
+        "alias": "jm-client-demo",
+        "broker": "justmarkets",
+        "role": "client",
+        "enrollment_state": "awaiting_owner",
+        "http_status": 200,
+        "process_alive": true,
+        "operational_mode": "standby",
+        "sdk_dispatch_permitted": false,
+        "execution_readiness_claimed": false
+      },
+      {
+        "alias": "jm-demo",
+        "broker": "justmarkets",
+        "role": "mentor",
+        "enrollment_state": "awaiting_owner",
+        "http_status": 200,
+        "process_alive": true,
+        "operational_mode": "standby",
+        "sdk_dispatch_permitted": false,
+        "execution_readiness_claimed": false
+      },
+      {
+        "alias": "rcg-demo",
+        "broker": "rcg",
+        "role": "client",
+        "enrollment_state": "awaiting_owner",
+        "http_status": 200,
+        "process_alive": true,
+        "operational_mode": "standby",
+        "sdk_dispatch_permitted": false,
+        "execution_readiness_claimed": false
+      },
+      {
+        "alias": "xm-demo",
+        "broker": "xm",
+        "role": "client",
+        "enrollment_state": "awaiting_owner",
+        "http_status": 200,
+        "process_alive": true,
+        "operational_mode": "standby",
+        "sdk_dispatch_permitted": false,
+        "execution_readiness_claimed": false
+      }
+    ],
+    "execution_readiness_claimed": false
+  },
+  "routing": {
+    "registered_receivers": 5,
+    "matches_independent_accounts": true,
+    "credentials_absent": true
+  },
+  "enrollment_auth_checks": {
+    "/api/app/mt5-accounts": 401,
+    "/api/admin/mt5-accounts": 401,
+    "/api/app/mt5-provisioning/requests": 401,
+    "/api/admin/mt5-provisioning/requests": 401
+  },
+  "ownership_snapshot": {
+    "approved": 0,
+    "verified": 0,
+    "unavailable": 0
+  },
+  "standby_recovery": {
+    "alias": "jm-client-demo",
+    "process_recovered_automatically": true,
+    "elapsed_seconds": 17.52,
+    "restart_count_increased": true,
+    "sdk_dispatch_permitted": false,
+    "terminal_pid_unchanged": true,
+    "stops_unchanged": true,
+    "financial_orders_submitted": 0
+  },
+  "stops_unchanged": true,
+  "failed_units": "",
+  "host_alerts": [
+    "External alert destination not configured",
+    "Offsite backup not verified",
+    "Disk free below 15 percent"
+  ],
+  "copier_active": false,
+  "copier_permit_present": false,
+  "pr": {
+    "number": 138,
+    "draft": true,
+    "mergeable": true,
+    "merged": false,
+    "head": "3a78c751007f1c721992fabb67d6c0d8a2b14fb8",
+    "main": "76c18478943fa40d903806f2906447c61d980f6e"
+  },
+  "tests": {
+    "probe_and_startup_guard": {
+      "passed": 3,
+      "failed": 0
+    },
+    "pending_synchronization": {
+      "passed": 12,
+      "failed": 0,
+      "broker_transport": "synthetic",
+      "journal": "real temporary SQLite"
+    },
+    "broad_suites_repeated": false
+  },
+  "owner_session_file_present": false,
+  "hosting_env_names_present": [],
+  "disk_free_bytes": 3806740480,
+  "hosted_transport_verified": false,
+  "broker_execution_verified": false
+}
