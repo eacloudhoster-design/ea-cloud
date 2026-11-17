@@ -8,6 +8,27 @@ test('client sends credentials once, requires exact verification and cancels bou
   globalThis.fetch=async(url,init)=>{calls++;assert.equal(url,'/api/app/mt5-connect');assert.equal(init.credentials,'same-origin');assert.equal(JSON.parse(init.body).password,'fixture-secret');return new Response(JSON.stringify(body),{status:200});};
   assert.equal((await api.connectMt5Account(input,'fixture-cookie-hint',controller.signal)).connected,true);assert.equal(calls,1);
   for(const invalid of [{},{connected:false},{...body,login:'92'}]){body=invalid;await assert.rejects(api.connectMt5Account(input,'fixture-cookie-hint',controller.signal));}
+  for(const [code,status,phrase] of [["ACCOUNT_NOT_ASSIGNED",409,"assigned MT5 worker"],["ACCOUNT_PROOF_REJECTED",422,"account details"],["MT5_SESSION_UNAVAILABLE",503,"assigned MT5 terminal"],["MT5_GATEWAY_UNAVAILABLE",503,"gateway"]]){
+   globalThis.fetch=async()=>new Response(JSON.stringify({code,error:"PRIVATE_PASSWORD_MUST_NOT_RENDER"}),{status});
+   await assert.rejects(api.connectMt5Account(input,'fixture-cookie-hint',controller.signal),e=>e.code===code && e.message.includes(phrase) && !e.message.includes("PRIVATE_PASSWORD"));
+  }
   controller.abort();const before=calls;await assert.rejects(api.connectMt5Account(input,'fixture-cookie-hint',controller.signal),{name:'AbortError'});assert.equal(calls,before);
  }finally{globalThis.fetch=old;await rm(dir,{recursive:true,force:true});}
+});
+test('account gateway failures retain safe actionable codes without upstream secrets',async()=>{
+ const old=globalThis.fetch,oldToken=process.env.MT5_VPS_TOKEN;
+ const built=await build({entryPoints:['artifacts/api-server/src/lib/mt5-account-status.ts'],bundle:true,platform:'node',format:'esm',write:false,logLevel:'silent'});
+ const api=await import('data:text/javascript;base64,'+Buffer.from(built.outputFiles[0].text).toString('base64'));
+ try{
+  for(const [code,status,expected,expectedStatus] of [['ACCOUNT_NOT_ASSIGNED',403,'ACCOUNT_NOT_ASSIGNED',409],['ACCOUNT_PROOF_REJECTED',403,'ACCOUNT_PROOF_REJECTED',422],['MT5_SESSION_UNAVAILABLE',503,'MT5_SESSION_UNAVAILABLE',503],['unknown',502,'MT5_SESSION_UNAVAILABLE',503]]){
+   // No real endpoint or token: configuration construction is intercepted offline.
+   process.env.MT5_VPS_TOKEN='a'.repeat(64);
+   globalThis.fetch=async()=>Response.json({code,message:'PRIVATE_UPSTREAM_SECRET'}, {status});
+   await assert.rejects(api.readBoundAccount('91','Fixture','fixture-secret'),e=>{
+    assert.equal(api.accountBindingFailure(e).code,expected);assert.equal(api.accountBindingFailure(e).status,expectedStatus);assert(!e.message.includes('PRIVATE_UPSTREAM_SECRET'));return true;
+   });
+  }
+  globalThis.fetch=async()=>{throw Error('PRIVATE_TRANSPORT_SECRET')};
+  await assert.rejects(api.readBoundAccount('91','Fixture','fixture-secret'),e=>api.accountBindingFailure(e).code==='MT5_GATEWAY_UNAVAILABLE');
+ }finally{globalThis.fetch=old;if(oldToken===undefined)delete process.env.MT5_VPS_TOKEN;else process.env.MT5_VPS_TOKEN=oldToken;}
 });

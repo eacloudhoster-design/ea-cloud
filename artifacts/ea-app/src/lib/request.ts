@@ -35,6 +35,12 @@ export class ApiRequestError extends Error {
   }
 }
 const known: Record<string, [FailureCategory, string]> = {
+  ACCOUNT_NOT_ASSIGNED: ["configuration", "This account has no assigned MT5 worker. Request your own MT5 connection below, then connect after provisioning is verified."],
+  ACCOUNT_PROOF_REJECTED: ["authorization", "The account details do not match its assigned worker. Check the account number, password and exact broker server."],
+  MT5_SESSION_UNAVAILABLE: ["backend", "The assigned MT5 terminal could not verify this account. It may be offline or its session authorization may be unavailable."],
+  MT5_GATEWAY_UNAVAILABLE: ["backend", "The MT5 gateway could not be reached. Check connection status before trying again."],
+  MT5_BINDING_UNVERIFIED: ["backend", "The terminal did not provide valid account identity evidence. Connection remains unverified."],
+  BROKER_BINDING_MISMATCH: ["authorization", "The verified account belongs to a different broker. Check your broker selection."],
   DATABASE_NOT_READY: [
     "database",
     "The service is temporarily unavailable. EA Cloud will retry automatically.",

@@ -18,12 +18,13 @@ class RelayTests(unittest.TestCase):
    self.assertEqual(response.status_code,200);self.assertEqual(response.json()['broker'],b.broker);self.assertFalse(response.json()['execution_enabled'])
  def query(self,password='fixture-private'):return self.client.post('/observer/account-status',headers=self.headers,json=dict(login=1,server='FixtureDemo',password=password))
  def test_real_proof_shape_requires_credentials_and_does_not_invent_journal_or_stop(self):
-  self.assertEqual(self.query('wrong').status_code,403);self.assertEqual(self.calls,[])
+  self.assertEqual(self.query('wrong').status_code,403);self.assertEqual(self.query('wrong').json()['code'],'ACCOUNT_PROOF_REJECTED');self.assertEqual(self.calls,[])
+  missing=self.client.post('/observer/account-status',headers=self.headers,json=dict(login=2,server='FixtureDemo',password='fixture-private'));self.assertEqual(missing.status_code,403);self.assertEqual(missing.json()['code'],'ACCOUNT_NOT_ASSIGNED');self.assertEqual(self.calls,[])
   r=self.query();self.assertEqual(r.status_code,200);self.assertTrue(r.json()['connected']);self.assertFalse(r.json()['execution_enabled']);self.assertFalse(r.json()['journal_bound']);self.assertIsNone(r.json()['journal_holds']);self.assertIsNone(r.json()['emergency_stop_active']);self.assertNotIn('must-not-escape',r.text)
  def test_execution_and_simulated_or_incomplete_account_claims_rejected(self):
   for key,value in [('automated_trading_enabled',True),('execution_enabled',True),('identity_verified',False),('positions_read_verified',False),('financial_trades',1)]:
    old=self.snapshot[key];self.snapshot[key]=value;self.assertEqual(self.query().status_code,503);self.snapshot[key]=old
-  self.snapshot['account']['login']=2;self.assertEqual(self.query().status_code,503)
+  self.snapshot['account']['login']=2;self.assertEqual(self.query().status_code,503);self.assertEqual(self.query().json()['code'],'MT5_SESSION_UNAVAILABLE')
  def test_no_financial_route_or_capability_and_no_unauthorized_query(self):
   self.assertEqual(self.client.get('/observer/capabilities',headers=self.headers).status_code,503)
   for path in ['/observer/sync-position','/execute-trade','/close-trade','/modify-trade']:self.assertEqual(self.client.post(path,headers=self.headers,json={}).status_code,404)

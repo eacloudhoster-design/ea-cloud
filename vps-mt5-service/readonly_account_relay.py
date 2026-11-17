@@ -61,7 +61,8 @@ def create_app(bindings,token,forward=None,resolve_dynamic=None):
      if worker_url(candidate.url) in urls or candidate.api_token in tokens:raise ValueError('Endpoint collision')
      b=candidate
    except Exception:return JSONResponse({'success':False,'connected':False,'message':'Dynamic binding unavailable'},status_code=503)
-  if b is None or not hmac.compare_digest(payload.password.get_secret_value().encode(),b.password.encode()):return JSONResponse({'success':False,'message':'Bound account credentials not verified'},status_code=403)
+  if b is None:return JSONResponse({'success':False,'code':'ACCOUNT_NOT_ASSIGNED','message':'Account not provisioned'},status_code=403)
+  if not hmac.compare_digest(payload.password.get_secret_value().encode(),b.password.encode()):return JSONResponse({'success':False,'code':'ACCOUNT_PROOF_REJECTED','message':'Bound account credentials not verified'},status_code=403)
   try:
    data=forward(b);a=data.get('account',{})
    if not all(data.get(k) is True for k in ('success','read_only','initialized','identity_verified','portable_paths_verified','connected','positions_read_verified','orders_read_verified')):raise ValueError('Incomplete identity evidence')
@@ -70,7 +71,7 @@ def create_app(bindings,token,forward=None,resolve_dynamic=None):
    if any(type(data.get(k)) is not int or data[k]<0 for k in ('open_positions','pending_orders')):raise ValueError('Incomplete exposure evidence')
    cash=lambda value:value if type(value) in (int,float) and math.isfinite(value) else None
    return {**({'owner_kind':b.owner_kind,'owner_id':b.owner_id} if b.owner_kind is not None else {}),'success':True,'connected':True,'simulation':False,'account_mode':b.account_mode,'read_only':True,'protocol':'EA_READ_ONLY_STATUS_V1','financial_routes':False,'broker':b.broker,'login':b.login,'server':b.server,'role':b.role,'currency':a.get('currency'),'balance':cash(a.get('balance')),'equity':cash(a.get('equity')),'open_positions':data['open_positions'],'pending_orders':data['pending_orders'],'execution_enabled':False,'emergency_stop_active':None,'journal_bound':False,'journal_holds':None}
-  except Exception:return JSONResponse({'success':False,'connected':False,'message':'Read-only account verification unavailable'},status_code=503)
+  except Exception:return JSONResponse({'success':False,'connected':False,'code':'MT5_SESSION_UNAVAILABLE','message':'Read-only account verification unavailable'},status_code=503)
  return app
 
 def from_environment():

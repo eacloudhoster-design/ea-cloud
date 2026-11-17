@@ -7,15 +7,32 @@ export interface BoundAccountStatus {
   currency: string | null; balance: number | null; equity: number | null;
   open_positions: number; pending_orders: number; journal_holds:number | null;
 }
+const bindingErrors:Record<string,string>={
+  MT5_GATEWAY_UNAVAILABLE:"The MT5 gateway is unavailable; connection was not verified.",
+  ACCOUNT_NOT_ASSIGNED:"This account has no authoritative demo worker assignment. Request provisioning.",
+  ACCOUNT_PROOF_REJECTED:"Account credentials do not match the assigned terminal binding.",
+  MT5_SESSION_UNAVAILABLE:"The assigned demo terminal session is unavailable or lacks valid private authorization.",
+};
+class AccountBindingError extends Error {constructor(readonly code:string,readonly status=503){super(bindingErrors[code]);}}
+export function accountBindingFailure(error:unknown){
+  const code=error instanceof AccountBindingError?error.code:"MT5_BINDING_UNVERIFIED";
+  return {code,status:error instanceof AccountBindingError?error.status:422,error:bindingErrors[code]||"The provisioned demo account could not be verified. Check the assigned worker and authorization."};
+}
 /** Credential proof and exact binding, never a generic HTTP-200 connectivity claim. */
 export async function readBoundAccount(login: string | number, server: string, password: string, expectedOwner?:{kind:"client"|"mentor";id:number}): Promise<BoundAccountStatus> {
   if (!/^[1-9]\d*$/.test(String(login)) || !Number.isSafeInteger(Number(login)) || !server || typeof password !== "string" || !password)
     throw Error("Invalid account binding");
-  const response = await fetch(`${MT5_VPS_BASE}/observer/account-status`, {
+  let response:Response;
+  try { response = await fetch(`${MT5_VPS_BASE}/observer/account-status`, {
     method: "POST", redirect: "error", headers: mt5Headers(),
     body: JSON.stringify({ login: Number(login), server, password }), signal: AbortSignal.timeout(20000),
-  });
+  }); } catch { throw new AccountBindingError("MT5_GATEWAY_UNAVAILABLE",503); }
   const data: any = await response.json().catch(() => null);
+  if (!response.ok) {
+    if (data?.code === "ACCOUNT_NOT_ASSIGNED") throw new AccountBindingError("ACCOUNT_NOT_ASSIGNED",409);
+    if (data?.code === "ACCOUNT_PROOF_REJECTED") throw new AccountBindingError("ACCOUNT_PROOF_REJECTED",422);
+    throw new AccountBindingError("MT5_SESSION_UNAVAILABLE",503);
+  }
   const readonly=data?.read_only===true;
   let owner:BoundAccountStatus["owner"];
   if(data?.owner_kind!==undefined||data?.owner_id!==undefined){

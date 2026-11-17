@@ -6,7 +6,7 @@ import { ArrowRight, ChevronRight, Eye, EyeOff, Fingerprint, LockKeyhole, Rotate
 import { useApp } from "@/context/AppContext";
 import { brokers, detectBroker, validateMt5Preview } from "@/lib/brokers";
 import { connectMt5Account,readEngineStatus,disconnectMt5Account,readMt5Provisioning } from "@/lib/mt5-engine";
-import { requestJson } from "@/lib/request";
+import { requestJson, ApiRequestError } from "@/lib/request";
 import BrokerLogo from "@/components/mt5/BrokerLogo";
 import FloatingField from "@/components/mt5/FloatingField";
 import "./MetaTraderTab.css";
@@ -89,8 +89,8 @@ export default function MetaTraderTab({ backgroundHost, backgroundImage }: { bac
     try {
       const data=await connectMt5Account({login:login.trim(),server:server.trim(),password:secret,broker:selectedBroker},clientToken,attempt.signal);
       if(!attempt.signal.aborted){setSaved({login:String(data.login),server:data.server});setState("verified");setRestoreAttempt(v=>v+1);}
-    } catch {
-      if (!attempt.signal.aborted) { setState("unverified"); assistantEvent({type:"mt5-unverified"}); }
+    } catch (failure) {
+      if (!attempt.signal.aborted) { setError(failure instanceof ApiRequestError ? failure.message : "The terminal did not confirm the selected account identity. Connection remains unverified."); setState("unverified"); assistantEvent({type:"mt5-unverified"}); }
     }
   };
   const connect = (event: React.FormEvent) => {
@@ -175,7 +175,7 @@ export default function MetaTraderTab({ backgroundHost, backgroundImage }: { bac
             <h3 id="mt5-dialog-title">{state === "connecting" ? "Connecting to MT5..." : state === "verified" ? "Connected Successfully" : "Account verification unavailable"}</h3>
             {state === "verified" && <p id="mt5-dialog-description">MT5 Account Connected. The bound account terminal confirmed your identity. Copying permissions and emergency stops are unchanged.</p>}
             {state === "unverified" && <>
-              <p id="mt5-dialog-description">Your account could not be verified. Confirm that this account has been provisioned for EA Cloud. Order execution remains unchanged.</p>
+              <p id="mt5-dialog-description">{error || "Your account could not be verified. Confirm that this account has been provisioned for EA Cloud. Order execution remains unchanged."}</p>
               <div className="mt5-result-actions">
                 <button type="button" onClick={closeConnection}><RotateCcw size={15} /> Re-enter credentials</button>
                 <button type="button" onClick={closeConnection}>Back to login</button>

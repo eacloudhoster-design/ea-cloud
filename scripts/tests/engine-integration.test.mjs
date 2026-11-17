@@ -56,6 +56,10 @@ test('real browser sessions, owned engine status, strict broker proof and accoun
   response=ack;
   await f.engine.exec("INSERT INTO client_settings(client_id,copying_enabled) VALUES(10,true)");
   const connect=()=>request('/app/mt5-connect',{method:'POST',headers:{cookie:clientCookie,'Content-Type':'application/json'},body:JSON.stringify({login:'91',server:'FixtureDemo',password:'fixture-broker-password'})});
+  globalThis.fetch=async()=>Response.json({success:false,code:'ACCOUNT_NOT_ASSIGNED',message:'PRIVATE_VENDOR_SECRET'},{status:403});
+  let missing=await connect();assert.equal(missing.status,409);let missingBody=await missing.json();assert.equal(missingBody.code,'ACCOUNT_NOT_ASSIGNED');assert(!JSON.stringify(missingBody).includes('PRIVATE_VENDOR_SECRET'));
+  globalThis.fetch=async()=>{calls++;return Response.json(response)};
+
   result=await connect();assert.equal(result.status,200);assert.equal((await result.json()).connected,true);
   const stored=(await f.engine.query('SELECT * FROM client_settings WHERE client_id=10')).rows[0];assert.notEqual(stored.encrypted_mt5_password,'fixture-broker-password');assert.equal(stored.copying_enabled,false);
   result=await request('/app/engine/status',{headers:{cookie:clientCookie}});let state=await result.json();assert.equal(state.connection.verified,true);assert.equal(state.copier.executionPermitted,false);assert.equal(state.copier.emergencyStopActive,true);assert.ok(!JSON.stringify(state).includes('upstream-secret'));assert.ok(!JSON.stringify(state).includes(stored.encrypted_mt5_password));
