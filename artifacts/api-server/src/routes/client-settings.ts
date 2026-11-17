@@ -1,4 +1,4 @@
-import {markProvisioningBound} from "../lib/mt5-provisioning";
+import {markProvisioningBound,queueProvisioning} from "../lib/mt5-provisioning";
 import { randomUUID } from "node:crypto";
 import {queueBotPush, queueSymbolPush} from "../lib/web-push";
 import { Router } from "express";
@@ -255,7 +255,24 @@ router.post(["/app/mt5-connect","/client/mt5/connect"], requireAppSession, async
     }
     let account;
     try { account=await readBoundAccount(loginNum,server,password,{kind:"client",id:req.clientId}); }
-    catch(error) {const failure=accountBindingFailure(error);res.status(failure.status).json({error:"Account connection was not verified",code:failure.code});return;}
+    catch(error) {
+      const failure=accountBindingFailure(error);
+      if(failure.code==="ACCOUNT_NOT_ASSIGNED" && body.requestAssignment===true){
+        if(process.env.MT5_SELF_SERVICE_PROVISIONING!=="1" || process.env.MT5_PROVISIONING_CONSUMER!=="1"){
+          res.status(503).json({code:"PROVISIONING_NOT_CONFIGURED",error:"Account provisioning is not available",connected:false});return;
+        }
+        try{
+          const provisioning=await queueProvisioning({requestKey:body.requestKey,broker,login:String(loginNum),server,password,accountRole:"follower",accountMode:body.accountMode,ownershipConfirmed:body.ownershipConfirmed},{kind:"client",id:req.clientId});
+          res.status(202).json({connected:false,status:"provisioning",executionEnabled:false,provisioning});
+        }catch(queueError){
+          const code=queueError instanceof Error?queueError.message:"";
+          const allowed=["INVALID_PROVISIONING_REQUEST","OWNERSHIP_CONFIRMATION_REQUIRED","ACCOUNT_ROLE_NOT_AUTHORIZED","PROVISIONING_REQUEST_CONFLICT","PROVISIONING_ALREADY_PENDING"];
+          res.status(allowed.includes(code)?409:503).json({connected:false,code:allowed.includes(code)?code:"PROVISIONING_STORAGE_UNAVAILABLE"});
+        }
+        return;
+      }
+      res.status(failure.status).json({error:"Account connection was not verified",code:failure.code});return;
+    }
     if(account.role!=="client"){res.status(403).json({error:"A receiving client account is required"});return;}
     const balance=account.balance===null?null:String(account.balance),equity=account.equity===null?null:String(account.equity);
     if(broker!==undefined && broker!==account.broker){res.status(422).json({error:"Selected broker does not match the verified account",code:"BROKER_BINDING_MISMATCH"});return;}
@@ -307,7 +324,7 @@ router.get("/app/mt5-health", requireAppSession, async (req: any, res) => {
 router.get("/app/mt5-provisioning",requireAppSession,async(req:any,res)=>{
  res.setHeader("Cache-Control","no-store");
  res.json({brokers:["deriv","exness","justmarkets","xm","rcg"],accountMode:"demo",accountModes:process.env.MT5_LIVE_READONLY_ACCOUNTS==="1"?["demo","live"]:["demo"],multiAccountManagement:process.env.MT5_ACCOUNT_INVENTORY==="1",
-  connectionMode:"provisioned-account-only",selfServiceProvisioning:false,requestSubmissionAvailable:process.env.MT5_SELF_SERVICE_PROVISIONING==="1",executionEnabled:false,
+  connectionMode:"provisioned-account-only",selfServiceProvisioning:false,requestSubmissionAvailable:process.env.MT5_SELF_SERVICE_PROVISIONING==="1",accountAssignmentAvailable:process.env.MT5_SELF_SERVICE_PROVISIONING==="1"&&process.env.MT5_PROVISIONING_CONSUMER==="1",executionEnabled:false,
   requirements:["Dedicated operator-provisioned account worker","Verified account ownership and role","Private authenticated API-to-engine transport"],
   credentialsStored:"encrypted-after-broker-verification",passwordReturned:false});
 });

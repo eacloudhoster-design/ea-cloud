@@ -10,7 +10,7 @@ check(()=>assert.throws(()=>lib.validateProvisioning({...body,ownershipConfirmed
 let reads=0,calls=[],changesOwner=true;
 const job={id:crypto.randomUUID(),owner_kind:'client',owner_id:7,account_role:'follower',login:'123',server:'DemoFixture',broker:'justmarkets',encrypted_password:'ENCRYPTED_FIXTURE'};
 const pool={connect:async()=>({release(){},query:async(sql,args)=>{calls.push({sql,args});return {rows:sql.startsWith('SELECT * FROM mt5_provisioning_requests')?[job]:[]}}}),query:async(sql,args)=>{calls.push({sql,args});return {rows:sql.startsWith('SELECT * FROM app_access')?[{id:7,status:'active',mentor_id:++reads>1&&changesOwner?99:3}]:[]}}};
-const consumer=load('artifacts/api-server/src/lib/mt5-provisioning-consumer.ts',{'@workspace/db':{pool},'./app-session-access':{resolveAppSessionAccess:async()=>({mentorId:3})},'./mt5-crypto':{decryptMT5Password:()=> 'PASSWORD_FIXTURE_NOT_REAL'},'./mt5-account-status':{readBoundAccount:async()=>({account_mode:'demo',broker:'justmarkets',role:'client',execution_enabled:false,read_only:true})}});
+const consumer=load('artifacts/api-server/src/lib/mt5-provisioning-consumer.ts',{'@workspace/db':{pool},'./app-session-access':{resolveAppSessionAccess:async()=>({mentorId:3})},'./mt5-crypto':{decryptMT5Password:()=> 'PASSWORD_FIXTURE_NOT_REAL'},'./bind-client-account':{bindClientAccount:async()=>{calls.push({sql:'BOUND_PROFILE'})}},'./mt5-account-status':{readBoundAccount:async()=>({account_mode:'demo',broker:'justmarkets',role:'client',execution_enabled:false,read_only:true})}});
 (async()=>{
  const result=await consumer.processNextProvisioning({provisionDedicatedWorker:async()=>{}});
  check(()=>assert.equal(result.state,'review_required'));
@@ -19,8 +19,8 @@ const consumer=load('artifacts/api-server/src/lib/mt5-provisioning-consumer.ts',
  check(()=>assert(!JSON.stringify(calls).includes('PASSWORD_FIXTURE_NOT_REAL')));
  changesOwner=false;reads=0;calls=[];
  const success=await consumer.processNextProvisioning({provisionDedicatedWorker:async()=>{}});
- check(()=>assert.equal(success.state,'awaiting_verification'));
- check(()=>assert(calls.some(c=>c.sql.includes("'awaiting_verification' FROM changed"))));
+ check(()=>assert.equal(success.state,'connected'));
+ check(()=>assert(calls.some(c=>c.sql==='BOUND_PROFILE')));
  check(()=>assert(calls.filter(c=>c.sql.startsWith('SELECT * FROM app_access')).length===2));
  console.log('PASS',assertions,'new hardening assertions; no database, broker or external calls');
 })().catch(e=>{console.error(e);process.exitCode=1});

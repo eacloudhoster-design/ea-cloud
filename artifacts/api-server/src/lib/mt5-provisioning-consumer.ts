@@ -2,12 +2,15 @@ import {resolveAppSessionAccess} from "./app-session-access";
 /** Inactive queue consumer contract. No SDK imports, endpoints or automatic startup.
  * A separately approved private supervisor must supply the dedicated-worker port.
  */
+import {bindClientAccount} from "./bind-client-account";
 import {pool} from "@workspace/db";
 import {decryptMT5Password} from "./mt5-crypto";
 import {readBoundAccount} from "./mt5-account-status";
 export interface DedicatedWorkerPort {
  provisionDedicatedWorker(input:{requestId:string;ownerKind:"client"|"mentor";ownerId:number;broker:string;login:string;server:string;password:string;role:"client"|"mentor";accountMode:"demo"|"live";executionEnabled:false;signal:AbortSignal}):Promise<void>;
 }
+// Raw pg rows use snake_case; the shared licence resolver consumes app DTO names.
+const clientAccess=(row:any)=>({status:row.status,email:row.email,mentorId:row.mentor_id??row.mentorId??null,licenseKey:row.license_key??row.licenseKey??null});
 export async function processNextProvisioning(port:DedicatedWorkerPort){
  if(process.env.MT5_SELF_SERVICE_PROVISIONING!=="1")throw Error("PROVISIONING_NOT_CONFIGURED");
  const db=await pool.connect();let row:any;
@@ -27,7 +30,7 @@ export async function processNextProvisioning(port:DedicatedWorkerPort){
   const owner=ownerResult.rows[0];
   if(!owner)throw Error("OWNERSHIP_VERIFICATION_REQUIRED");
   if(row.owner_kind==="client"){
-   const access=await resolveAppSessionAccess(owner);
+   const access=await resolveAppSessionAccess(clientAccess(owner));
    if("code" in access)throw Error("OWNERSHIP_VERIFICATION_REQUIRED");
   }else if(owner.role!=="mentor" || !["active","approved"].includes(owner.status))throw Error("OWNERSHIP_VERIFICATION_REQUIRED");
   const authorizationSnapshot=JSON.stringify([owner.id,owner.status,owner.role??null,owner.mentorId??owner.mentor_id??null]);
@@ -41,14 +44,19 @@ export async function processNextProvisioning(port:DedicatedWorkerPort){
     const currentResult=await pool.query(row.owner_kind==="client"?"SELECT * FROM app_access WHERE id=$1":"SELECT * FROM users WHERE id=$1",[row.owner_id]);
     const current=currentResult.rows[0];
     if(!current || authorizationSnapshot!==JSON.stringify([current.id,current.status,current.role??null,current.mentorId??current.mentor_id??null]))throw Error("OWNERSHIP_VERIFICATION_REQUIRED");
-    if(row.owner_kind==="client" && "code" in await resolveAppSessionAccess(current))throw Error("OWNERSHIP_VERIFICATION_REQUIRED");
+    if(row.owner_kind==="client" && "code" in await resolveAppSessionAccess(clientAccess(current)))throw Error("OWNERSHIP_VERIFICATION_REQUIRED");
     if(controller.signal.aborted || proof.account_mode!==(row.account_mode??"demo") || proof.broker!==row.broker || proof.role!==(row.account_role==="master"?"mentor":"client") || proof.execution_enabled!==false || proof.read_only!==true)throw Error("PROVISIONING_OUTCOME_UNCERTAIN");
+    if(row.owner_kind==="client"){
+      await bindClientAccount(row.owner_id,{login:row.login,server:row.server,broker:row.broker},row.encrypted_password,{pauseCopying:true,signal:controller.signal});
+    }
+
    })(),
    new Promise<never>((_,reject)=>{timer=setTimeout(()=>{controller.abort();reject(Error("PROVISIONING_OUTCOME_UNCERTAIN"));},420000);})
   ]);
-  // User must still authenticate and bind through the existing connect route.
-  await pool.query("WITH changed AS (UPDATE mt5_provisioning_requests SET state='awaiting_verification',encrypted_password=NULL,updated_at=now() WHERE id=$1 AND state='provisioning' RETURNING id) INSERT INTO mt5_provisioning_audit(request_id,event) SELECT id,'awaiting_verification' FROM changed",[row.id]);
-  return {processed:true,state:"awaiting_verification",executionEnabled:false};
+  // Only fresh read-only proof + authorized profile binding can finish client onboarding.
+  const state=row.owner_kind==="client"?"connected":"awaiting_verification";
+  await pool.query("WITH changed AS (UPDATE mt5_provisioning_requests SET state=$2,encrypted_password=NULL,updated_at=now() WHERE id=$1 AND state='provisioning' RETURNING id) INSERT INTO mt5_provisioning_audit(request_id,event) SELECT id,$2 FROM changed",[row.id,state]);
+  return {processed:true,state,executionEnabled:false};
  }catch{
   controller.abort();
   await pool.query("WITH changed AS (UPDATE mt5_provisioning_requests SET state='review_required',error_code='PROVISIONING_OUTCOME_UNCERTAIN',encrypted_password=NULL,updated_at=now() WHERE id=$1 AND state='provisioning' RETURNING id) INSERT INTO mt5_provisioning_audit(request_id,event) SELECT id,'review_required' FROM changed",[row.id]);

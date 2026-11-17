@@ -35,6 +35,10 @@ export class ApiRequestError extends Error {
   }
 }
 const known: Record<string, [FailureCategory, string]> = {
+  PROVISIONING_NOT_CONFIGURED: ["configuration", "New account provisioning is not enabled on this service. Your existing account is unchanged."],
+  PROVISIONING_STORAGE_UNAVAILABLE: ["backend", "The assignment request could not be confirmed. Refresh provisioning status before submitting again."],
+  PROVISIONING_ALREADY_PENDING: ["configuration", "An account request is already pending. Check its status below."],
+  OWNERSHIP_CONFIRMATION_REQUIRED: ["authorization", "Confirm that you own or are authorized to connect this account."],
   ACCOUNT_NOT_ASSIGNED: ["configuration", "This account has no assigned MT5 worker. Request your own MT5 connection below, then connect after provisioning is verified."],
   ACCOUNT_PROOF_REJECTED: ["authorization", "The account details do not match its assigned worker. Check the account number, password and exact broker server."],
   MT5_SESSION_UNAVAILABLE: ["backend", "The assigned MT5 terminal could not verify this account. It may be offline or its session authorization may be unavailable."],

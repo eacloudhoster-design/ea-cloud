@@ -12,6 +12,10 @@ test('client sends credentials once, requires exact verification and cancels bou
    globalThis.fetch=async()=>new Response(JSON.stringify({code,error:"PRIVATE_PASSWORD_MUST_NOT_RENDER"}),{status});
    await assert.rejects(api.connectMt5Account(input,'fixture-cookie-hint',controller.signal),e=>e.code===code && e.message.includes(phrase) && !e.message.includes("PRIVATE_PASSWORD"));
   }
+  const pending={connected:false,status:'provisioning',executionEnabled:false,provisioning:{id:'12345678-1234-1234-1234-123456789abc',login:'91',server:'Fixture',broker:'justmarkets',accountRole:'follower',accountMode:'demo',connected:false,executionEnabled:false}};
+  globalThis.fetch=async()=>Response.json(pending,{status:202});
+  assert.equal((await api.connectMt5Account({...input,broker:'justmarkets',accountMode:'demo'},'fixture-cookie-hint',controller.signal)).connected,false);
+  pending.provisioning.login='92';await assert.rejects(api.connectMt5Account({...input,broker:'justmarkets',accountMode:'demo'},'fixture-cookie-hint',controller.signal));
   controller.abort();const before=calls;await assert.rejects(api.connectMt5Account(input,'fixture-cookie-hint',controller.signal),{name:'AbortError'});assert.equal(calls,before);
  }finally{globalThis.fetch=old;await rm(dir,{recursive:true,force:true});}
 });
