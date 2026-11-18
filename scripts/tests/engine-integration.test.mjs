@@ -64,6 +64,10 @@ test('real browser sessions, owned engine status, strict broker proof and accoun
   const assignmentBody={login:'92',server:'FixtureNewDemo',broker:'justmarkets',password:'fixture-broker-password',requestAssignment:true,requestKey:randomBytes(16).toString('hex').replace(/(.{8})(.{4})(.{4})(.{4})(.{12})/,'$1-$2-$3-$4-$5'),accountMode:'demo',ownershipConfirmed:true};
   const requestAssignment=()=>request('/app/mt5-connect',{method:'POST',headers:{cookie:clientCookie,'Content-Type':'application/json'},body:JSON.stringify(assignmentBody)});
   let unavailable=await requestAssignment();assert.equal(unavailable.status,503);assert.equal((await unavailable.json()).code,'PROVISIONING_NOT_CONFIGURED');
+  for(const broker of ['custom','oanda']){
+    const unsupported=await request('/app/mt5-connect',{method:'POST',headers:{cookie:clientCookie,'Content-Type':'application/json'},body:JSON.stringify({...assignmentBody,broker})});
+    assert.equal(unsupported.status,422);assert.equal((await unsupported.json()).code,'UNSUPPORTED_ACCOUNT_CONFIGURATION');
+  }
   process.env.MT5_SELF_SERVICE_PROVISIONING='1';process.env.MT5_PROVISIONING_CONSUMER='1';
   const accepted=await requestAssignment();assert.equal(accepted.status,202);const job=await accepted.json();assert.equal(job.connected,false);assert.equal(job.provisioning.login,'92');assert(!JSON.stringify(job).includes('fixture-broker-password'));
   assert.equal((await requestAssignment()).status,202);assert.equal((await f.engine.query('SELECT count(*)::int AS n FROM mt5_provisioning_requests')).rows[0].n,1);

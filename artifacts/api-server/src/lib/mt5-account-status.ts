@@ -8,6 +8,10 @@ export interface BoundAccountStatus {
   open_positions: number; pending_orders: number; journal_holds:number | null;
 }
 const bindingErrors:Record<string,string>={
+  MT5_GATEWAY_NOT_CONFIGURED:"The private MT5 gateway authentication or routing is not configured.",
+  MT5_GATEWAY_AUTH_REJECTED:"The private MT5 gateway rejected the application's service authentication.",
+  MT5_GATEWAY_TIMEOUT:"The MT5 gateway did not respond within the connection timeout.",
+  UNSUPPORTED_ACCOUNT_CONFIGURATION:"This broker or account mode has no approved terminal configuration.",
   MT5_GATEWAY_UNAVAILABLE:"The MT5 gateway is unavailable; connection was not verified.",
   ACCOUNT_NOT_ASSIGNED:"This account has no authoritative demo worker assignment. Request provisioning.",
   ACCOUNT_PROOF_REJECTED:"Account credentials do not match the assigned terminal binding.",
@@ -22,13 +26,24 @@ export function accountBindingFailure(error:unknown){
 export async function readBoundAccount(login: string | number, server: string, password: string, expectedOwner?:{kind:"client"|"mentor";id:number}): Promise<BoundAccountStatus> {
   if (!/^[1-9]\d*$/.test(String(login)) || !Number.isSafeInteger(Number(login)) || !server || typeof password !== "string" || !password)
     throw Error("Invalid account binding");
+  let headers:Record<string,string>;
+  try{
+    // A hosted API cannot use its own loopback as a substitute for the private VPS.
+    if(process.env.RENDER && !process.env.MT5_VPS_URL)throw Error();
+    headers=mt5Headers();
+  }catch{throw new AccountBindingError("MT5_GATEWAY_NOT_CONFIGURED",503);}
   let response:Response;
   try { response = await fetch(`${MT5_VPS_BASE}/observer/account-status`, {
-    method: "POST", redirect: "error", headers: mt5Headers(),
+    method: "POST", redirect: "error", headers,
     body: JSON.stringify({ login: Number(login), server, password }), signal: AbortSignal.timeout(20000),
-  }); } catch { throw new AccountBindingError("MT5_GATEWAY_UNAVAILABLE",503); }
+  }); } catch(error) {
+    const name=error instanceof Error?error.name:"";
+    throw new AccountBindingError(name==="TimeoutError"||name==="AbortError"?"MT5_GATEWAY_TIMEOUT":"MT5_GATEWAY_UNAVAILABLE",503);
+  }
   const data: any = await response.json().catch(() => null);
   if (!response.ok) {
+    if(response.status===401)throw new AccountBindingError("MT5_GATEWAY_AUTH_REJECTED",503);
+    if(data?.code==="UNSUPPORTED_ACCOUNT_CONFIGURATION")throw new AccountBindingError("UNSUPPORTED_ACCOUNT_CONFIGURATION",422);
     if (data?.code === "ACCOUNT_NOT_ASSIGNED") throw new AccountBindingError("ACCOUNT_NOT_ASSIGNED",409);
     if (data?.code === "ACCOUNT_PROOF_REJECTED") throw new AccountBindingError("ACCOUNT_PROOF_REJECTED",422);
     throw new AccountBindingError("MT5_SESSION_UNAVAILABLE",503);
@@ -41,6 +56,8 @@ export async function readBoundAccount(login: string | number, server: string, p
   }
   const validJournal=readonly ? data.protocol==="EA_READ_ONLY_STATUS_V1" && data.financial_routes===false && data.execution_enabled===false && data.journal_bound===false && data.journal_holds===null && (data.emergency_stop_active===null || typeof data.emergency_stop_active==="boolean") : typeof data?.emergency_stop_active==="boolean" && data.journal_bound===true && Number.isSafeInteger(data.journal_holds) && data.journal_holds>=0;
   const brokers = ["deriv", "exness", "justmarkets", "xm", "rcg"];
+  if(data?.success===true && (!brokers.includes(data.broker) || (data.account_mode==="live" && !(process.env.MT5_LIVE_READONLY_ACCOUNTS==="1" && readonly && data.execution_enabled===false))))
+    throw new AccountBindingError("UNSUPPORTED_ACCOUNT_CONFIGURATION",422);
   if (!response.ok || data?.success !== true || data.connected !== true || data.simulation !== false || (data.account_mode !== "demo" && !(data.account_mode === "live" && process.env.MT5_LIVE_READONLY_ACCOUNTS === "1" && readonly && data.execution_enabled === false)) ||
       data.login !== Number(login) || data.server !== server || !brokers.includes(data.broker) || !["mentor","client"].includes(data.role) ||
       typeof data.execution_enabled !== "boolean" || !validJournal || !Number.isSafeInteger(data.open_positions) || data.open_positions < 0 || !Number.isSafeInteger(data.pending_orders) || data.pending_orders < 0)
