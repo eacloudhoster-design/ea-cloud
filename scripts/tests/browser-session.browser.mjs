@@ -10,21 +10,46 @@ const { app, engine } = await sessionFixture();
 const server = app.listen(0, "127.0.0.1");
 await new Promise((r) => server.once("listening", r));
 const origin = `http://127.0.0.1:${server.address().port}`;
-const out = "docs/persistent-login";
+const out = process.env.EA_SESSION_EVIDENCE_DIR || "docs/persistent-login";
 await mkdir(out, { recursive: true });
 const profile = await mkdtemp(join(tmpdir(), "ea-cookie-profile-"));
 let context;
-const launch = () =>
-  chromium.launchPersistentContext(profile, {
+const pageErrors=[];
+const launch = async () => {
+  const browser=await chromium.launchPersistentContext(profile, {
     executablePath: "/usr/bin/chromium",
     headless: true,
     args: ["--no-sandbox"],
     viewport: { width: 1440, height: 1000 },
   });
+  browser.on("page",page=>page.on("pageerror",error=>pageErrors.push(error.message)));
+  return browser;
+};
 const password = "Test-only-pass-123!";
 try {
   context = await launch();
   let page = await context.newPage();
+  // Cold protected routes settle into recovery, without treating an outage as logout.
+  const sessionPath=/\/api\/(?:auth|app)\/me(?:\?.*)?$/;
+  await context.route(sessionPath,r=>r.fulfill({status:502,contentType:'text/html',body:'<html>offline session service</html>'}));
+  for(const path of ['/admin/dashboard','/superadmin/dashboard','/app/dashboard']){
+    if(path==='/app/dashboard')await page.setViewportSize({width:390,height:844});
+    await page.goto(origin+path);
+    await page.getByRole('heading',{name:'Session verification unavailable',exact:true}).waitFor();
+    assert.equal(await page.locator('.ea-portal-loading-card').count(),0);
+    assert.equal(new URL(page.url()).pathname,path,'Outage must not force login');
+    assert.equal(await page.locator('input[type=password]').count(),0);
+    if(path==='/app/dashboard')await page.screenshot({path:out+'/session-recovery-mobile.png'});
+  }
+  for(const path of ['/admin/login','/superadmin/login','/app']){
+    await page.goto(origin+path);await page.locator('input[type=password]').waitFor();
+    assert.equal(await page.locator('.ea-portal-loading-card').count(),0);
+  }
+  await page.setViewportSize({width:1440,height:1000});
+  await context.unroute(sessionPath);
+  await page.goto(origin+'/admin/dashboard');
+  await page.waitForURL('**/admin/login');
+
   page.setDefaultTimeout(15000);
   await page.goto(origin + "/admin/login");
   await page.locator("input[type=email]").fill("mentor1@example.invalid");
@@ -88,6 +113,7 @@ try {
     .getByRole("button", { name: "Retry", exact: true })
     .waitFor();
   assert.equal(await page.locator("input[type=password]").count(), 0);
+  assert.equal(await page.locator(".ea-portal-loading-card").count(),0);
   assert((await context.cookies()).some((c) => c.name === "ea_portal_session"));
   await context.unroute("**/api/auth/me");
   await page
@@ -140,10 +166,15 @@ try {
     401,
   );
   await page.screenshot({ path: out + "/signed-out-mobile.png" });
+  assert.deepEqual(pageErrors,[]);
   await writeFile(
     out + "/browser-results.json",
     JSON.stringify(
       {
+        coldSessionOutageRecovery: true,
+        publicLoginDuringOutage: true,
+        noPermanentSkeleton: true,
+        blockingPageErrors: pageErrors.length,
         portalLogin: true,
         refresh: true,
         browserProcessRestart: true,

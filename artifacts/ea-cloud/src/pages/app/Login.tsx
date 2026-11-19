@@ -8,7 +8,7 @@ import { loginErrorMessage } from "@/lib/login-error";
 import defaultRobot from "/default-robot.jpg";
 
 export default function AppLogin() {
-  const { login, client, loading: restoringSession } = useClientAuth();
+  const { login, client, loading: restoringSession, sessionError } = useClientAuth();
   const [, setLocation] = useLocation();
   const [form, setForm] = useState({ email: "", password: "" });
   const [showPw, setShowPw] = useState(false);
@@ -16,11 +16,11 @@ export default function AppLogin() {
   const [error, setError] = useState("");
 
   useLayoutEffect(() => {
-    if (restoringSession || !client) return;
+    if (restoringSession || sessionError || !client) return;
     if (client.status === "pending") setLocation("/app/pending", {replace:true});
     else if (client.status === "approved" && !client.licenseKey) setLocation("/app/activate", {replace:true});
     else if (client.status === "approved" && client.licenseKey) setLocation("/app/dashboard", {replace:true});
-  }, [restoringSession, client, setLocation]);
+  }, [restoringSession, sessionError, client, setLocation]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();

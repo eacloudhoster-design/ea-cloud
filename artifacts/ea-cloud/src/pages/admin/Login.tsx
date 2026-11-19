@@ -18,16 +18,16 @@ export default function AdminLogin() {
   const [, setLocation] = useLocation();
   const search = useSearch();
   const justApproved = new URLSearchParams(search).get("approved") === "1";
-  const { login, user, isLoading: restoringSession } = useAuth();
+  const { login, user, isLoading: restoringSession, sessionError } = useAuth();
   useLayoutEffect(() => {
-    if (!restoringSession && user?.status === "approved")
+    if (!restoringSession && !sessionError && user?.status === "approved")
       setLocation(
         user.role === "superadmin"
           ? "/superadmin/dashboard"
           : "/admin/dashboard",
         { replace: true },
       );
-  }, [user, restoringSession, setLocation]);
+  }, [user, restoringSession, sessionError, setLocation]);
   const loginMutation = usePortalLogin();
   const [form, setForm] = useState({ email: "", password: "" });
   const [error, setError] = useState("");
