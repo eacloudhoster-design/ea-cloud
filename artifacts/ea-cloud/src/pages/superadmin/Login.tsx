@@ -12,8 +12,8 @@ import { Loader2, ShieldCheck } from "lucide-react";
 
 export default function SuperAdminLogin() {
   const [, setLocation] = useLocation();
-  const { login, user, isLoading: restoringSession } = useAuth();
-  useLayoutEffect(() => { if(!restoringSession && user?.status === "approved") setLocation(user.role === "superadmin" ? "/superadmin/dashboard" : "/admin/dashboard", {replace:true}); },[user,restoringSession,setLocation]);
+  const { login, user, isLoading: restoringSession, sessionError } = useAuth();
+  useLayoutEffect(() => { if(!restoringSession && !sessionError && user?.status === "approved") setLocation(user.role === "superadmin" ? "/superadmin/dashboard" : "/admin/dashboard", {replace:true}); },[user,restoringSession,sessionError,setLocation]);
   const loginMutation = usePortalLogin();
   const [form, setForm] = useState({ email: "", password: "" });
   const [error, setError] = useState("");

@@ -9,7 +9,7 @@ export const useStartupReady = () => useContext(StartupReady);
 /** Route-only authorization gate. Public pages never wait for session restoration. */
 export default function ClientStartup({ children }: { children: ReactNode }) {
   const [path, navigate] = useLocation();
-  const { client, loading } = useClientAuth();
+  const { client, loading, sessionError, retrySession } = useClientAuth();
   const protectedRoute = /^\/app\/(dashboard|activate|pending)(?:\/|$)/.test(
     path,
   );
@@ -28,12 +28,12 @@ export default function ClientStartup({ children }: { children: ReactNode }) {
     client?.status !== "rejected" &&
     destination === path;
   useEffect(() => {
-    if (protectedRoute && !loading && !authorized)
+    if (protectedRoute && !loading && !sessionError && !authorized)
       navigate(destination, { replace: true });
-  }, [protectedRoute, loading, authorized, destination, navigate]);
+  }, [protectedRoute, loading, sessionError, authorized, destination, navigate]);
   return (
     <StartupReady.Provider value={ready}>
-      {protectedRoute && !authorized ? <PortalLoading /> : children}
+      {protectedRoute && sessionError ? <PortalLoading unavailable retry={retrySession} loginPath="/app"/> : protectedRoute && !authorized ? <PortalLoading /> : children}
     </StartupReady.Provider>
   );
 }

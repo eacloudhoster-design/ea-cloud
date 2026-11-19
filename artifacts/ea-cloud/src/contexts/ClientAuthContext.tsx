@@ -99,8 +99,10 @@ export function ClientAuthProvider({ children }: { children: ReactNode }) {
           setToken(null);
           setLoading(false);
           setUnavailable(false);
-        } else if (alive && current === generation.current)
+        } else if (alive && current === generation.current) {
           setUnavailable(true);
+          setLoading(false);
+        }
       } finally {
         if (verifying === current) verifying = null;
       }
@@ -190,10 +192,10 @@ export function useClientAuth() {
 }
 
 export function useClientRedirect() {
-  const { client, loading } = useClientAuth();
+  const { client, loading, sessionError } = useClientAuth();
   const [, setLocation] = useLocation();
   useEffect(() => {
-    if (loading) return;
+    if (loading || sessionError) return;
     if (!client) {
       setLocation("/app", { replace: true });
       return;
@@ -210,5 +212,5 @@ export function useClientRedirect() {
       setLocation("/app/activate", { replace: true });
       return;
     }
-  }, [client, loading, setLocation]);
+  }, [client, loading, sessionError, setLocation]);
 }

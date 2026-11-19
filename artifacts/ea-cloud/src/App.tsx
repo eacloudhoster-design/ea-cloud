@@ -49,10 +49,11 @@ const queryClient = new QueryClient({
 });
 
 function AdminLayout({ children }: { children: React.ReactNode }) {
-  const { token, user, isLoading } = useAuth();
+  const { token, user, isLoading, sessionError, retrySession } = useAuth();
   usePortalRedirect();
-  const { data: profile } = useGetProfile({ query: { queryKey: getGetProfileQueryKey(), enabled: !!token && !isLoading && !!user && ["approved", "active"].includes(user.status) && ["mentor", "admin"].includes(user.role) } });
+  const { data: profile } = useGetProfile({ query: { queryKey: getGetProfileQueryKey(), enabled: !!token && !isLoading && !sessionError && !!user && ["approved", "active"].includes(user.status) && ["mentor", "admin"].includes(user.role) } });
   const bgImage = profile?.backgroundImageUrl;
+  if(sessionError)return <PortalLoading unavailable retry={retrySession} loginPath="/admin/login"/>;
   if(isLoading || !user || !["approved","active"].includes(user.status) || !["mentor","admin"].includes(user.role)) return <PortalLoading/>;
   return (
     <div
@@ -72,8 +73,9 @@ function AdminLayout({ children }: { children: React.ReactNode }) {
 }
 
 function SuperAdminLayout({ children }: { children: React.ReactNode }) {
-  const {user,isLoading} = useAuth();
+  const {user,isLoading,sessionError,retrySession} = useAuth();
   usePortalRedirect();
+  if(sessionError)return <PortalLoading unavailable retry={retrySession} loginPath="/superadmin/login"/>;
   if(isLoading || !user || !["approved","active"].includes(user.status) || user.role !== "superadmin") return <PortalLoading/>;
   return (
     <div className="min-h-screen text-white" style={{ background: "#08080f" }}>

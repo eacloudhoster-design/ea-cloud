@@ -61,7 +61,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setLoading(false);
     } catch {
       if (current !== generation.current) return;
-      setUnavailable(true); /* Keep verified state during transient outages. */
+      setUnavailable(true); /* Keep verified state and cookies during transient outages. */
+      setLoading(false);
     } finally {
       if (verifying.current === current) verifying.current = null;
     }
@@ -169,10 +170,10 @@ export function useAuth() {
   return value;
 }
 export function usePortalRedirect() {
-  const { user, isLoading } = useAuth();
+  const { user, isLoading, sessionError } = useAuth();
   const [location, setLocation] = useLocation();
   useEffect(() => {
-    if (isLoading) return;
+    if (isLoading || sessionError) return;
     if (!user || !["approved", "active"].includes(user.status)) {
       if (location.startsWith("/admin") && location !== "/admin/login")
         setLocation("/admin/login", { replace: true });
@@ -188,5 +189,5 @@ export function usePortalRedirect() {
       setLocation("/admin/dashboard", { replace: true });
     else if (user.role === "superadmin" && location.startsWith("/admin"))
       setLocation("/superadmin/dashboard", { replace: true });
-  }, [user, isLoading, location, setLocation]);
+  }, [user, isLoading, sessionError, location, setLocation]);
 }
