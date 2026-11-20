@@ -91,6 +91,19 @@ test('real browser sessions, owned engine status, strict broker proof and accoun
   globalThis.fetch=async()=>{calls++;return Response.json(response)};
 
   result=await connect();assert.equal(result.status,200);assert.equal((await result.json()).connected,true);
+  const modeRequest=accountMode=>request('/app/mt5-connect',{method:'POST',headers:{cookie:clientCookie,'Content-Type':'application/json'},body:JSON.stringify({login:'91',server:'FixtureDemo',password:'fixture-broker-password',accountMode})});
+  let typed=await modeRequest('demo');assert.equal(typed.status,200);assert.equal((await typed.json()).accountMode,'demo');
+  const modeCalls=calls;typed=await modeRequest('live');assert.equal(typed.status,422);assert.equal((await typed.json()).code,'UNSUPPORTED_ACCOUNT_CONFIGURATION');assert.equal(calls,modeCalls,'Unapproved live connection never sends credentials');
+  process.env.MT5_LIVE_READONLY_ACCOUNTS='1';
+  typed=await modeRequest('live');assert.equal(typed.status,422);assert.equal((await typed.json()).code,'ACCOUNT_MODE_MISMATCH');
+  response={...ack,account_mode:'live',read_only:true,protocol:'EA_READ_ONLY_STATUS_V1',financial_routes:false,journal_bound:false,journal_holds:null,emergency_stop_active:null};
+  typed=await modeRequest('live');assert.equal(typed.status,200);const liveConnection=await typed.json();assert.equal(liveConnection.accountMode,'live');assert(!JSON.stringify(liveConnection).includes('fixture-broker-password'));
+  typed=await modeRequest('demo');assert.equal(typed.status,422);assert.equal((await typed.json()).code,'ACCOUNT_MODE_MISMATCH');
+  delete process.env.MT5_LIVE_READONLY_ACCOUNTS;response=ack;
+  await f.engine.exec("UPDATE client_settings SET copying_enabled=true WHERE client_id=10");
+  typed=await modeRequest('demo');assert.equal(typed.status,200);assert.equal((await typed.json()).copyingEnabled,false);
+  assert.equal((await f.engine.query('SELECT copying_enabled FROM client_settings WHERE client_id=10')).rows[0].copying_enabled,false,'Reconnecting never resumes a retained Start preference');
+
   const stored=(await f.engine.query('SELECT * FROM client_settings WHERE client_id=10')).rows[0];assert.notEqual(stored.encrypted_mt5_password,'fixture-broker-password');assert.equal(stored.copying_enabled,false);
   result=await request('/app/engine/status',{headers:{cookie:clientCookie}});let state=await result.json();assert.equal(state.connection.verified,true);assert.equal(state.copier.executionPermitted,false);assert.equal(state.copier.emergencyStopActive,true);assert.ok(!JSON.stringify(state).includes('upstream-secret'));assert.ok(!JSON.stringify(state).includes(stored.encrypted_mt5_password));
   await f.engine.exec("INSERT INTO app_access(id,email,first_name,last_name,status,mentor_id) VALUES(12,'other@example.invalid','Other','Client','approved',2)");

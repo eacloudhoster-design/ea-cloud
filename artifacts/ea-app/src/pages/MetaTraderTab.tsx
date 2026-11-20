@@ -1,12 +1,11 @@
-import {ProvisioningRequestForm,AccountManager} from "@workspace/mt5-ui";
 import {assistantEvent} from "@/lib/assistant-events";
 import { createPortal } from "react-dom";
 import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { ArrowRight, ChevronRight, Eye, EyeOff, Fingerprint, LockKeyhole, RotateCcw, Server, X } from "lucide-react";
 import { useApp } from "@/context/AppContext";
 import { brokers, detectBroker, validateMt5Preview } from "@/lib/brokers";
-import { connectMt5Account,readEngineStatus,disconnectMt5Account,readMt5Provisioning,readAccountAssignment } from "@/lib/mt5-engine";
-import { requestJson, ApiRequestError } from "@/lib/request";
+import { connectMt5Account,readEngineStatus,disconnectMt5Account,readMt5Provisioning,readAccountAssignment,readAccountRequests } from "@/lib/mt5-engine";
+import {mt5AccountMessage} from "@/lib/mt5-account-messages";
 import BrokerLogo from "@/components/mt5/BrokerLogo";
 import FloatingField from "@/components/mt5/FloatingField";
 import "./MetaTraderTab.css";
@@ -25,14 +24,12 @@ export default function MetaTraderTab({ backgroundHost, backgroundImage }: { bac
   const [ownershipConfirmed,setOwnershipConfirmed]=useState(false);
   const [accountMode,setAccountMode]=useState<"demo"|"live">("demo");
   const [liveAvailable,setLiveAvailable]=useState(false);
-  const [assignmentAvailable,setAssignmentAvailable]=useState(false);
-  const [assignment,setAssignment]=useState<{id:string;login:string;server:string;broker:string}|null>(null);
+  const [assignment,setAssignment]=useState<{id:string;login:string;server:string;broker:string;accountMode:"demo"|"live";state?:string}|null>(null);
   const requestKey=useRef<string|null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [state, setState] = useState<ConnectionState>("idle");
   const [error, setError] = useState("");
   const [saved, setSaved] = useState<SavedAccount | null>(null);
-  const [provisioningVerified,setProvisioningVerified]=useState(false);
   const [savedError, setSavedError] = useState(false);
   const [engine,setEngine]=useState<any>(null);
   const [restoreAttempt, setRestoreAttempt] = useState(0);
@@ -51,18 +48,22 @@ export default function MetaTraderTab({ backgroundHost, backgroundImage }: { bac
     setSaved(null);
     setEngine(null);
     setSavedError(false);
-    setProvisioningVerified(false);
-    setAssignmentAvailable(false);
+    setLiveAvailable(false);
+    setAssignment(null);
     const statusController=new AbortController();
     if(clientToken && activeTab==="metatrader") void readEngineStatus(clientToken,statusController.signal).then(data=>{if(!cancelled){setEngine(data);if(data.account?.login&&data.account?.server)setSaved({login:String(data.account.login),server:data.account.server});}}).catch(()=>{if(!cancelled)setSavedError(true);});
-    if(clientToken && activeTab==="metatrader") void readMt5Provisioning(clientToken,statusController.signal).then(data=>{if(!cancelled){setProvisioningVerified(true);setLiveAvailable(data.accountModes?.includes("live")===true);setAssignmentAvailable(data.accountAssignmentAvailable===true);}}).catch(()=>{if(!cancelled)setProvisioningVerified(false);});
+    if(clientToken && activeTab==="metatrader") void readMt5Provisioning(clientToken,statusController.signal).then(data=>{if(!cancelled){setLiveAvailable(data.accountModes?.includes("live")===true);}}).catch(()=>{if(!cancelled)setLiveAvailable(false);});
+    if(clientToken && activeTab==="metatrader") void readAccountRequests(clientToken,statusController.signal).then(jobs=>{
+      if(cancelled)return;
+      const pending=jobs.find((job:any)=>["queued","provisioning","awaiting_verification","review_required"].includes(job.state));
+      if(pending)setAssignment({id:pending.id,login:pending.login,server:pending.server,broker:pending.broker,accountMode:pending.accountMode,state:pending.state});
+    }).catch(()=>{});
     return () => { cancelled = true;statusController.abort(); };
   }, [clientToken, restoreAttempt,activeTab]);
 
   const closeConnection = () => {
     controller.current?.abort();
     setState("idle");
-    setAssignment(null);
     setPassword("");
     setShowPassword(false);
     restoreFocus.current = true;
@@ -99,11 +100,11 @@ export default function MetaTraderTab({ backgroundHost, backgroundImage }: { bac
       requestKey.current??=crypto.randomUUID();
       const data=await connectMt5Account({login:login.trim(),server:server.trim(),password:secret,broker:selectedBroker,requestAssignment:true,requestKey:requestKey.current,ownershipConfirmed,accountMode},clientToken,attempt.signal);
       if(!attempt.signal.aborted && data.status==="provisioning"){
-        setAssignment({id:data.provisioning.id,login:String(Number(login.trim())),server:server.trim(),broker:selectedBroker});setState("provisioning");return;
+        setAssignment({id:data.provisioning.id,login:String(Number(login.trim())),server:server.trim(),broker:selectedBroker,accountMode,state:data.provisioning.state});setState("provisioning");return;
       }
       if(!attempt.signal.aborted){requestKey.current=null;setSaved({login:String(data.login),server:data.server});setState("verified");setRestoreAttempt(v=>v+1);}
     } catch (failure) {
-      if (!attempt.signal.aborted) { setError(failure instanceof ApiRequestError ? failure.message : "The terminal did not confirm the selected account identity. Connection remains unverified."); setState("unverified"); assistantEvent({type:"mt5-unverified"}); }
+      if (!attempt.signal.aborted) { setError(mt5AccountMessage(failure)); setState("unverified"); assistantEvent({type:"mt5-unverified"}); }
     }
   };
   useEffect(()=>{
@@ -113,18 +114,21 @@ export default function MetaTraderTab({ backgroundHost, backgroundImage }: { bac
       try{
         const job=await readAccountAssignment(assignment!.id,clientToken!,abort.signal);
         if(abort.signal.aborted)return;
-        if(job.login!==assignment!.login || job.server!==assignment!.server || job.broker!==assignment!.broker)throw Error("Assignment identity mismatch");
+        if(job.login!==assignment!.login || job.server!==assignment!.server || job.broker!==assignment!.broker || job.accountMode!==assignment!.accountMode)throw Error("Assignment identity mismatch");
         if(job.state==="connected"){
           const status=await readEngineStatus(clientToken!,abort.signal);
           if(abort.signal.aborted)return;
-          if(status.connection?.verified!==true || String(status.account?.login)!==assignment!.login || status.account?.server!==assignment!.server || status.account?.broker!==assignment!.broker)throw Error("Fresh account status unavailable");
+          if(status.connection?.verified!==true || String(status.account?.login)!==assignment!.login || status.account?.server!==assignment!.server || status.account?.broker!==assignment!.broker || status.connection?.mode!==assignment!.accountMode)throw Error("Fresh account status unavailable");
           setEngine(status);setSaved({login:assignment!.login,server:assignment!.server});setState("verified");setAssignment(null);requestKey.current=null;return;
         }
         if(!["queued","provisioning"].includes(job.state)){
-          setError(job.state==="awaiting_verification"?"Your worker is prepared. Re-enter your account details to verify the connection.":"The account request requires review. Check provisioning status below; do not submit another request.");setState("unverified");return;
+          if(job.state==="awaiting_verification"){
+            setLogin(assignment!.login);setServer(assignment!.server);setSelectedBroker(assignment!.broker);setAccountMode(assignment!.accountMode);requestKey.current=null;
+          }
+          setError(job.state==="awaiting_verification"?"Your account is ready for confirmation. Re-enter your MT5 details to finish connecting.":mt5AccountMessage(job.errorCode));setAssignment(current=>current?{...current,state:job.state}:current);setState("unverified");return;
         }
       }catch{if(abort.signal.aborted)return;}
-      if(Date.now()>=deadline){setError("Assignment status is still pending or unavailable. Check provisioning status below before retrying.");setState("unverified");return;}
+      if(Date.now()>=deadline){setError("Your connection is still pending. Check its status before trying again.");setState("unverified");return;}
       timer=setTimeout(()=>void poll(),5000);
     }
     void poll();return()=>{abort.abort();clearTimeout(timer);};
@@ -165,7 +169,7 @@ export default function MetaTraderTab({ backgroundHost, backgroundImage }: { bac
             </select>
           </label>
           {selectedBroker==="custom"&&<label className="mt5-broker-select-label">Broker name<input required maxLength={128} autoComplete="off" value={customBroker} onChange={e=>setCustomBroker(e.target.value)} /></label>}
-          {<label className="mt5-broker-select-label">Account mode<select value={accountMode} onChange={e=>{setAccountMode(e.target.value as "demo"|"live");requestKey.current=null;}}><option value="demo">Demo</option><option value="live" disabled={!liveAvailable}>Real — read-only{liveAvailable?"":" (not authorized on this service)"}</option></select></label>}
+          {<label className="mt5-broker-select-label">Account type<select aria-label="Account type" value={accountMode} onChange={e=>{setAccountMode(e.target.value as "demo"|"live");requestKey.current=null;}}><option value="demo">Demo</option><option value="live" disabled={!liveAvailable}>Real{liveAvailable?"":" (currently unavailable)"}</option></select></label>}
           <FloatingField id="mt5-login" label="MT5 Account Number" icon={Fingerprint}>
             <input id="mt5-login" inputMode="numeric" type="text" autoComplete="off" maxLength={32}
               value={login} onChange={e => {setLogin(e.target.value);requestKey.current=null;}} placeholder="Enter account number" required />
@@ -181,16 +185,14 @@ export default function MetaTraderTab({ backgroundHost, backgroundImage }: { bac
             <input id="mt5-server" type="text" autoCapitalize="none" autoCorrect="off" spellCheck={false} autoComplete="off" maxLength={256}
               value={server} onChange={e => {setServer(e.target.value);requestKey.current=null;}} placeholder="Exact server shown by your broker" required />
           </FloatingField>
-          <p className="mt5-availability-note">Enter the exact server from your MT5 account. Broker names are selection hints; the gateway must verify the actual account identity and terminal compatibility.</p>
+          <p className="mt5-availability-note">Enter the exact server shown in MT5. Connecting your account does not start trading.</p>
           <label><input type="checkbox" required checked={ownershipConfirmed} onChange={e=>setOwnershipConfirmed(e.target.checked)} /> I own or am authorized to connect this account.</label>
           {error && <p className="mt5-form-error" role="alert">{error}</p>}
           <button ref={connectButton} type="submit" className="mt5-connect-button"><span>Connect MT5</span><ArrowRight size={18} /></button>
         </form>
-        <AccountManager role="follower" onSelected={()=>setRestoreAttempt(v=>v+1)} />
-        <ProvisioningRequestForm role="follower" />
-        <p className="mt5-availability-note">{assignmentAvailable?"Connect verifies an existing assignment or requests a private account worker. Trading remains disabled.":provisioningVerified?"New worker assignment is not available. An existing provisioned account can still be verified.":"Account provisioning availability has not been verified."}<br />Verification does not enable order execution.</p>
-        {(saved || savedError) && <aside className={`mt5-saved-account ${engine?.connection?.verified?"mt5-status-connected":"mt5-status-disconnected"}`}>
-          {saved ? <><span>{engine?.connection?.verified ? "Account connection verified" : "Saved account · status unverified"}</span><p>#{saved.login} <ChevronRight size={12} /> {saved.server}</p><small>Copier: {engine?.copier?.state || "unverified"}. Checked: {engine?.observedAt?new Date(engine.observedAt).toLocaleTimeString():"unverified"}. {engine?.copier?.emergencyStopActive === true ? "Emergency stop active." : ""}</small><button type="button" onClick={()=>setRestoreAttempt(v=>v+1)}>Refresh status</button><button type="button" onClick={()=>{setLogin(saved.login);setServer(saved.server);setSelectedBroker(engine?.account?.broker||"");setState("idle");}}>Reconnect</button><button type="button" onClick={async()=>{try{if(!clientToken)throw Error("Session required");await disconnectMt5Account(clientToken);setSaved(null);setEngine(null);setRestoreAttempt(v=>v+1);}catch{setError("Disconnect could not be confirmed.");}}}>Disconnect</button></> : <><p>Saved account details are unavailable.</p><button type="button" onClick={() => setRestoreAttempt(v => v + 1)}>Retry loading details</button></>}
+        {(saved || savedError || assignment) && <aside className={`mt5-saved-account ${engine?.connection?.verified?"mt5-status-connected":"mt5-status-disconnected"}`}>
+          {assignment&&<><span>{assignment.state==="awaiting_verification"?"Confirm your account":["queued","provisioning"].includes(assignment.state??"")?"Connection pending":"Connection needs attention"}</span><p>#{assignment.login} <ChevronRight size={12} /> {assignment.server}</p><button type="button" onClick={()=>{setError("");setState("provisioning");}}>Check connection</button></>}
+          {saved ? <><span>{engine?.connection?.verified ? "Account connected" : "Account not connected"}</span><p>#{saved.login} <ChevronRight size={12} /> {saved.server}</p><small>{engine?.connection?.verified ? "Your MT5 account confirmed this connection." : "Refresh to check your connection."}</small><button type="button" onClick={()=>setRestoreAttempt(v=>v+1)}>Refresh status</button><button type="button" onClick={()=>{setLogin(saved.login);setServer(saved.server);setSelectedBroker(engine?.account?.broker||"");if(["demo","live"].includes(engine?.connection?.mode))setAccountMode(engine.connection.mode);requestKey.current=null;setState("idle");}}>Reconnect</button><button type="button" onClick={async()=>{try{if(!clientToken)throw Error("Session required");await disconnectMt5Account(clientToken);setSaved(null);setEngine(null);setRestoreAttempt(v=>v+1);}catch{setError("Disconnect could not be confirmed.");}}}>Disconnect</button></> : !assignment ? <><p>Your account details are currently unavailable.</p><button type="button" onClick={() => setRestoreAttempt(v => v + 1)}>Retry loading details</button></> : null}
         </aside>}
       </div>
 
@@ -210,16 +212,16 @@ export default function MetaTraderTab({ backgroundHost, backgroundImage }: { bac
             <div className="mt5-broker-float"><div className="mt5-broker-reveal"><BrokerLogo key={broker?.id ?? "unknown"} broker={broker} /></div></div>
           </div>
           {(state === "connecting" || state === "provisioning") && <div className="mt5-small-spinner" role="status" aria-label="Connecting" />}
-          {state!=="connecting"&&state!=="provisioning"&&<span className={`mt5-live-indicator ${state==="verified"?"is-connected":"is-disconnected"}`}>{state==="verified"?"Verified account connection":"Connection not verified"}</span>}
+          {state!=="connecting"&&state!=="provisioning"&&<span className={`mt5-live-indicator ${state==="verified"?"is-connected":"is-disconnected"}`}>{state==="verified"?"Account connected":"Not connected"}</span>}
           <div aria-live="polite" aria-atomic="true">
-            <h3 id="mt5-dialog-title">{state === "connecting" ? "Connecting to MT5..." : state === "provisioning" ? "Preparing your account connection" : state === "verified" ? "Connected Successfully" : "Account verification unavailable"}</h3>
-            {state === "provisioning" && <p id="mt5-dialog-description">Your account assignment is pending. We will check its status automatically. You may close this screen and check provisioning status below. Trading remains disabled.</p>}
-            {state === "verified" && <p id="mt5-dialog-description">MT5 Account Connected. The bound account terminal confirmed your identity. Copying permissions and emergency stops are unchanged.</p>}
+            <h3 id="mt5-dialog-title">{state === "connecting" ? "Connecting to MT5..." : state === "provisioning" ? "Preparing your account connection" : state === "verified" ? "Connected Successfully" : "Unable to connect"}</h3>
+            {state === "provisioning" && <p id="mt5-dialog-description">We are connecting your account. You can close this screen and check its status here later. Trading will not start automatically.</p>}
+            {state === "verified" && <p id="mt5-dialog-description">Your MT5 account is connected. Copy trading remains paused.</p>}
             {state === "unverified" && <>
-              <p id="mt5-dialog-description">{error || "Your account could not be verified. Confirm that this account has been provisioned for EA Cloud. Order execution remains unchanged."}</p>
+              <p id="mt5-dialog-description">{error || "We could not confirm your account connection. Check your details or contact support."}</p>
               <div className="mt5-result-actions">
-                <button type="button" onClick={closeConnection}><RotateCcw size={15} /> Re-enter credentials</button>
-                <button type="button" onClick={closeConnection}>Back to login</button>
+                <button type="button" onClick={closeConnection}><RotateCcw size={15} /> Review account details</button>
+                <button type="button" onClick={closeConnection}>Close</button>
               </div>
             </>}
           </div>
