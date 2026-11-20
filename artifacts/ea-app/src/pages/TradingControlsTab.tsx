@@ -1,3 +1,4 @@
+import {botActivationMessage} from "@/lib/request";
 import { confirmSymbolSave } from "@/lib/symbol-save";
 import { useState, useEffect, useRef } from "react";
 import { useApp } from "@/context/AppContext";
@@ -27,7 +28,7 @@ interface SymbolConfig {
 const BASE = "/api";
 
 export default function TradingControlsTab() {
-  const { accentColor, clientToken } = useApp();
+  const { accentColor, clientToken, botRunning, botStatusConfirmed, refreshBotStatus } = useApp();
   const [controls, setControls] = useState<TradingControls>({
     lotMode: "fixed",
     fixedLotSize: "0.01",
@@ -64,7 +65,7 @@ export default function TradingControlsTab() {
             maxOpenTrades: data.maxOpenTrades ?? 10,
             maxLotSize: data.maxLotSize ?? "1.00",
             symbolFilters: data.symbolFilters ?? "",
-            copyingEnabled: data.copyingEnabled ?? true,
+            copyingEnabled: data.copyingEnabled === true,
           });
         }
         if (Array.isArray(configs)) setSymbolConfigs(configs as SymbolConfig[]);
@@ -109,8 +110,10 @@ export default function TradingControlsTab() {
       const failed = responses.find(r => !r.ok);
       if (failed) {
         const data = await failed.json().catch(() => null);
-        setError(data?.error ?? "Failed to save. Please try again.");
+        setError(botActivationMessage(data?.reason) ?? "The settings were not confirmed. Refresh status before trying again.");
+        refreshBotStatus?.();
       } else {
+        refreshBotStatus?.();
         setSaved(true);
         setTimeout(() => setSaved(false), 2500);
       }
@@ -151,7 +154,7 @@ export default function TradingControlsTab() {
         <div className="flex items-center justify-between p-4 rounded-2xl" style={{ background: "rgba(18,18,24,0.8)", border: "1px solid rgba(255,255,255,0.08)" }}>
           <div>
             <p className="text-white font-semibold text-sm">Copy Trading</p>
-            <p className="text-white/40 text-xs mt-0.5">{controls.copyingEnabled ? "Active — signals are being copied" : "Paused — no trades will be copied"}</p>
+            <p className="text-white/40 text-xs mt-0.5">{!botStatusConfirmed ? "Bot status unconfirmed — refresh status" : botRunning ? "Bot enabled — backend confirmed" : "Bot stopped or execution blocked"}</p>
           </div>
           <button onClick={() => setControls(c => ({ ...c, copyingEnabled: !c.copyingEnabled }))}>
             {controls.copyingEnabled

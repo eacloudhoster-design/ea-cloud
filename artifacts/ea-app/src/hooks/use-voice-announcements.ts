@@ -46,7 +46,7 @@ export function useVoiceAnnouncements(token: string | null, ready: boolean, botN
           voice.announce("Connecting to EA Cloud service.",key+'-connecting',3,"bot",true);
         }else voice.announce(detail.phase==='connected'?"Connected to trade server.":"Ready to trade.",key,3,"bot",true);
       }
-      if (detail.type === "bot-failed") voice.announce(`Bot ${detail.enabled ? "activation" : "deactivation"} failed.`, `bot-failed-${detail.enabled}-${Date.now()}`, 3, "bot");
+      if (detail.type === "bot-failed") voice.announce("Bot command was not acknowledged. Check the displayed status.", `bot-failed-${detail.enabled}-${Date.now()}`, 3, "bot");
       if (detail.type === "mt5-start") {
         mt5Attempt++;
         voice.announce(mt5AttemptAnnouncement(detail.broker, detail.server), `mt5-start-${mt5Attempt}`, 2, "mt5");

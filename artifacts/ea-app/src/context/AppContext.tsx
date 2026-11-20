@@ -13,6 +13,10 @@ export interface AppSettings {
   activeTab: Tab;
   botRunning: boolean;
   botStatusConfirmed: boolean;
+  botRequested?:boolean;
+  botPending?:boolean;
+  botError?:string|null;
+  refreshBotStatus?:()=>void;
   setBotRunning: (v: boolean) => void;
   controlPanel: ControlPanelStyle;
   setControlPanel: (value: ControlPanelStyle) => void;
@@ -40,7 +44,7 @@ export interface AppSettings {
 
 export const AppContext = createContext<AppSettings>({
   activeTab: "home",
-  botRunning: true,
+  botRunning: false,
   botStatusConfirmed: false,
   setBotRunning: () => {},
   controlPanel: "default",

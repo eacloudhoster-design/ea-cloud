@@ -7,6 +7,7 @@ export class ApiRequestError extends Error {
   retryAfterMs: number;
   requestId?: string;
   upstreamStatus?: number;
+  reason?: string;
   constructor(
     message: string,
     code: string,
@@ -16,6 +17,7 @@ export class ApiRequestError extends Error {
     retryAfterMs = 0,
     requestId?: string,
     upstreamStatus?: number,
+    reason?: string,
   ) {
     super(message);
     this.name = "ApiRequestError";
@@ -27,6 +29,7 @@ export class ApiRequestError extends Error {
       retryAfterMs,
       requestId,
       upstreamStatus,
+      reason,
     });
     this.code = code;
     this.category = category;
@@ -34,7 +37,26 @@ export class ApiRequestError extends Error {
     this.retryAfterMs = retryAfterMs;
   }
 }
+const botReasons:Record<string,string>={
+ DEPLOYMENT_EXECUTION_DISABLED:"Trading is disabled in this deployment. Account connection does not authorize execution; an approved execution deployment is required.",
+ ACCOUNT_NOT_CONNECTED:"No verified MT5 account is linked. Connect your own account first.",
+ WORKER_ASSIGNMENT_REQUIRED:"This account has no assigned authoritative worker. Request provisioning from the MT5 account screen.",
+ ACCOUNT_DISCONNECTED:"Your MT5 account is disconnected. Reconnect and verify it on the MT5 screen.",
+ PROVISIONING_PENDING:"Worker assignment is pending or requires review. Check provisioning status; do not submit a duplicate request.",
+ ACCOUNT_VERIFICATION_UNAVAILABLE:"Your MT5 account could not be verified. Refresh its connection status.",
+ GATEWAY_UNAVAILABLE:"The MT5 gateway is unavailable. Check service status before retrying; your broker password is not the diagnosed cause.",
+ GATEWAY_NOT_CONFIGURED:"The private gateway routing or service authentication is not configured. The application operator must correct it.",
+ GATEWAY_AUTHORIZATION_FAILED:"The gateway rejected EA Cloud's service credentials. The application operator must review gateway authentication.",
+ MENTOR_AUTHORIZATION_REQUIRED:"Your mentor has not approved an effective copy allocation. Ask your mentor to review your account policy.",
+ READ_ONLY_ACCOUNT:"Your account connection is read-only. Trading activation is not authorized.",
+ EMERGENCY_STOP_ACTIVE:"An emergency stop is active. Execution remains blocked pending authorized safety review.",
+ RECOVERY_HOLD:"The worker requires reconciliation review. Do not retry uncertain orders or clear safety holds.",
+ WORKER_EXECUTION_DISABLED:"The assigned worker has not authorized execution. Account connection alone cannot enable trading.",
+ STATUS_UNAVAILABLE:"Bot status could not be verified. Refresh status before submitting another command.",
+};
+export function botActivationMessage(reason:unknown){return typeof reason==="string"&&Object.hasOwn(botReasons,reason)?botReasons[reason]:null;}
 const known: Record<string, [FailureCategory, string]> = {
+  EXECUTION_NOT_APPROVED:["authorization","Bot activation was rejected. Check MT5 verification, worker assignment, mentor authorization and deployment restrictions; refresh status."],
   PROVISIONING_NOT_CONFIGURED: ["configuration", "New account provisioning is not enabled on this service. Your existing account is unchanged."],
   PROVISIONING_STORAGE_UNAVAILABLE: ["backend", "The assignment request could not be confirmed. Refresh provisioning status before submitting again."],
   PROVISIONING_ALREADY_PENDING: ["configuration", "An account request is already pending. Check its status below."],
@@ -137,8 +159,8 @@ export async function requestJson(
             /* Status remains authoritative. */
           }
           const state = response.status;
-          const definition =
-            typeof payload?.code === "string" ? known[payload.code] : undefined;
+          const reason=typeof payload?.reason==="string"&&botActivationMessage(payload.reason)?payload.reason:undefined;
+          const definition: [FailureCategory,string]|undefined = reason ? ["authorization",botActivationMessage(reason)!] : typeof payload?.code === "string" ? known[payload.code] : undefined;
           const requestId =
             response.headers?.get("cf-ray") ||
             response.headers?.get("x-request-id");
@@ -197,6 +219,7 @@ export async function requestJson(
               payload.upstreamStatus <= 599
               ? payload.upstreamStatus
               : undefined,
+            reason,
           );
         }
         try {

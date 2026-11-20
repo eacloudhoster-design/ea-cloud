@@ -12,7 +12,7 @@ import './TradingActivityMonitor.css';
 import {useFloatingRobot} from '@/hooks/useFloatingRobot';
 
 export default function TradingActivityMonitor(){
- const {clientToken,eaName,bgImageUrl,accentColor,botRunning,botStatusConfirmed}=useApp();const [open,setOpen]=useState(false),[events,setEvents]=useState<TradingActivity[]>([]),[snapshot,setSnapshot]=useState<ActivitySnapshot|null>(null),[error,setError]=useState(''),[refresh,setRefresh]=useState(0),[clock,setClock]=useState(Date.now());
+ const {clientToken,eaName,bgImageUrl,accentColor,botRunning,botStatusConfirmed,botError,refreshBotStatus}=useApp();const [open,setOpen]=useState(false),[events,setEvents]=useState<TradingActivity[]>([]),[snapshot,setSnapshot]=useState<ActivitySnapshot|null>(null),[error,setError]=useState(''),[refresh,setRefresh]=useState(0),[clock,setClock]=useState(Date.now());
  const container=useRef<HTMLDivElement>(null);
  const panel=useRef<HTMLDivElement>(null),terminal=useRef<HTMLDivElement>(null),trigger=useRef<HTMLButtonElement>(null),autoscroll=useRef(true);
  const progress=useRef(new BotStartProgress());const [connectionText,setConnectionText]=useState('');
@@ -54,13 +54,14 @@ export default function TradingActivityMonitor(){
  <div className="activity-panel-content" style={panelDrag.contentStyle}>
  <header {...panelDrag.header} className="trading-activity-header" style={{backgroundImage:`linear-gradient(0deg,var(--robot-panel-shade) 3%,color-mix(in srgb,var(--robot-panel-shade) 33%,transparent) 75%),url("${image.replace(/["\\\n\r]/g,'')}")`}}><button type="button" className="activity-panel-drag-handle" aria-label="Move robot panel" title="Drag to move; use arrow keys when focused" {...panelDrag.handle} /><button className="activity-close" type="button" aria-label="Close trading activity" onClick={close}><X size={23}/></button><div><h2>{eaName}</h2><div className="activity-badges"><span className={active?'on':'off'}><Activity size={12}/>{active?'TRADING ACTIVE':!fresh?'AWAITING STATUS':connected?(snapshot?.robotEnabled?'ENGINE UNCONFIRMED':'TRADING STOPPED'):'DISCONNECTED'}</span><span>{active?'ROBOT ACTIVATED':snapshot?.robotEnabled?'ROBOT WAITING':'ROBOT STOPPED'}</span></div></div></header>
  <div className="trading-account-grid">{[['BALANCE',snapshot?.account?.balance],['EQUITY',snapshot?.account?.equity],['P&L',snapshot?.account?.profit]].map(([label,value])=><section key={String(label)}><h3>{label}</h3><strong className={label==='P&L'&&typeof value==='number'?(value<0?'loss':'gain'):''}>{fresh?`${label==='P&L'&&typeof value==='number'&&value>0?'+':''}${amount(value as number|undefined)}`:'—'}</strong></section>)}</div>
+ {(botError||error)&&<p role="alert" className="trading-bot-notice">{botError||error}</p>}
  <div className="trading-activity-terminal" ref={terminal} role="log" aria-live="polite" aria-relevant="additions" onScroll={event=>{const el=event.currentTarget;autoscroll.current=el.scrollHeight-el.scrollTop-el.clientHeight<40;}}>
  {connectionText&&<p className="event-info">{connectionText==="Ready to trade."&&!active||connectionText==="Connected to trade server."&&!connected?"Connecting to EA Cloud service...":connectionText}</p>}
- {error&&<p className="event-error">{error}</p>}{snapshot?.unavailable&&<p className="event-warning">{snapshot.unavailable}</p>}
+ {snapshot?.unavailable&&<p className="event-warning">{snapshot.unavailable}</p>}
  {snapshot?.symbols.map(item=><p className={item.available?'event-success':'event-warning'} key={item.symbol}>{item.available?'Symbol verified':'Symbol not found'}: {item.symbol}{!item.available&&'. Check the broker’s exact symbol name.'}</p>)}
  {!events.length&&!error&&<p>No recorded trading events yet.</p>}
  {events.map(event=><article key={event.id} className={`event-${event.level}`}><small>{new Date(event.createdAt).toLocaleTimeString()} · {event.source.toUpperCase()}</small><p>&gt;&gt; {event.message}</p>{['mentor','symbol','direction','signalKind','entry','stopLoss','takeProfit','positions','lotSize','volume','ticket'].filter(key=>event.details[key]!=null).map(key=><span key={key}>{key}: {String(event.details[key])}</span>)}</article>)}
- </div><footer><button type="button" aria-label="Refresh activity" onClick={()=>setRefresh(v=>v+1)}><RefreshCw size={15}/></button><span>Powered by EA Cloud</span></footer>
+ </div><footer><button type="button" aria-label="Refresh activity" onClick={()=>{setRefresh(v=>v+1);refreshBotStatus?.();}}><RefreshCw size={15}/></button><span>Powered by EA Cloud</span></footer>
  </div>
  {panelDrag.edges.map(({edge,handle})=><button key={edge} type="button" className={`activity-panel-resize activity-panel-resize--${edge}`} aria-label={`Resize robot panel ${ {n:'top',s:'bottom',e:'right',w:'left',ne:'top right',nw:'top left',se:'bottom right',sw:'bottom left'}[edge]}`} title="Drag to resize; use arrow keys when focused" {...handle} />)}
  </div>}
