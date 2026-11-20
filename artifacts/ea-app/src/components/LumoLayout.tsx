@@ -33,12 +33,13 @@ export default function LumoLayout({
     accentColor,
     botRunning,
     botStatusConfirmed,
+    botPending,
     setBotRunning,
     visualModes,
   } = useApp();
   const [failedImage, setFailedImage] = useState<string | null>(null);
   const image = bgImageUrl && failedImage !== bgImageUrl ? bgImageUrl : robotBg;
-  const status = !botStatusConfirmed
+  const status = botPending ? "Updating status…" : !botStatusConfirmed
     ? "Status unconfirmed"
     : botRunning
       ? "Robot active"

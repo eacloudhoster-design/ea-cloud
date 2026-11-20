@@ -2,7 +2,7 @@ import {effectiveCopySettings} from "./copy-policy";
 import { db, appAccessTable,mentorCopyPoliciesTable,clientSettingsTable, tradeExecutionsTable, observerAllocationsTable } from "@workspace/db";
 import { and, eq, desc } from "drizzle-orm";
 import { decryptMT5Password } from "./mt5-crypto";
-import { readBoundAccount } from "./mt5-account-status";
+import { readBoundAccount, accountBindingFailure } from "./mt5-account-status";
 /** Read-only account-owned status. Stored connected=true is never live evidence. */
 export async function clientEngineStatus(clientId: number, probe = false, mentorId?:number) {
   const [settings] = await db.select().from(clientSettingsTable).where(eq(clientSettingsTable.clientId, clientId)).limit(1);
@@ -19,14 +19,14 @@ export async function clientEngineStatus(clientId: number, probe = false, mentor
       live=await readBoundAccount(settings.mt5Login,settings.mt5Server,decryptMT5Password(settings.encryptedMt5Password),{kind:"client",id:clientId});
       if(live.role!=="client" || (settings.mt5Broker && live.broker!==settings.mt5Broker))throw Error("Binding mismatch");
       code=live.read_only?`VERIFIED_${live.account_mode.toUpperCase()}_READ_ONLY`:"VERIFIED_DEMO";
-    } catch { live=null;code="ACCOUNT_VERIFICATION_UNAVAILABLE"; }
+    } catch(error) { live=null;code=accountBindingFailure(error).code; }
   }
   const [owner]=await db.select({mentorId:appAccessTable.mentorId}).from(appAccessTable).where(eq(appAccessTable.id,clientId)).limit(1);
   const [policy]=await db.select().from(mentorCopyPoliciesTable).where(and(eq(mentorCopyPoliciesTable.clientId,clientId),eq(mentorCopyPoliciesTable.mentorId,owner?.mentorId??0))).limit(1);
   const allocationApproved=!!(settings && policy?.enabled===true && effectiveCopySettings(settings,policy));
   const copyingRequested=settings?.copyingEnabled === true;
   return { clientId,observedAt:new Date().toISOString(),account:settings?.mt5Login ? {login:settings.mt5Login,server:settings.mt5Server,broker:settings.mt5Broker,storedConnected:settings.mt5Connected}:null,
-    connection:{code,verified:live!==null,...(live?{mode:live.account_mode,positions:live.open_positions,pendingOrders:live.pending_orders,currency:live.currency}: {})},
+    connection:{code,verified:live!==null,...(live?{mode:live.account_mode,readOnly:live.read_only,positions:live.open_positions,pendingOrders:live.pending_orders,currency:live.currency}: {})},
     copier:{requested:copyingRequested,state:!copyingRequested?"paused":!live?(code==="ACCOUNT_DISCONNECTED"?"disconnected":"unverified"):live.read_only?"read_only":live.journal_holds!==null && live.journal_holds>0?"review_required":!settings?.mt5Connected || live.emergency_stop_active || !live.execution_enabled?"blocked":!allocationApproved?"allocation_blocked":"worker_permitted",
       mentorAllocationApproved:allocationApproved,executionPermitted:!!(allocationApproved && copyingRequested && settings?.mt5Connected && live?.execution_enabled && !live.read_only && live.emergency_stop_active===false && live.journal_holds===0),unresolvedJournalHolds:live?.journal_holds ?? null,emergencyStopActive:live?.emergency_stop_active ?? null,
       workerExecutionPermitted:!!(live?.execution_enabled && !live.read_only && live.emergency_stop_active===false && live.journal_holds===0),endToEndAcceptanceVerified:false},

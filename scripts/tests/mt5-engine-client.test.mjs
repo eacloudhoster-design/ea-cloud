@@ -43,3 +43,16 @@ test('account gateway failures retain safe actionable codes without upstream sec
   await assert.rejects(api.readBoundAccount('91','Fixture','fixture-secret'),e=>api.accountBindingFailure(e).code==='MT5_GATEWAY_NOT_CONFIGURED');assert.equal(sent,false);
  }finally{globalThis.fetch=old;if(oldToken===undefined)delete process.env.MT5_VPS_TOKEN;else process.env.MT5_VPS_TOKEN=oldToken;}
 });
+
+test('bot rejection reasons are actionable and never expose arbitrary response text',async()=>{
+ const built=await build({entryPoints:['artifacts/ea-app/src/lib/request.ts'],bundle:true,platform:'node',format:'esm',write:false,logLevel:'silent'});
+ const api=await import('data:text/javascript;base64,'+Buffer.from(built.outputFiles[0].text).toString('base64')),old=globalThis.fetch;
+ try{
+  for(const reason of ['DEPLOYMENT_EXECUTION_DISABLED','ACCOUNT_DISCONNECTED','PROVISIONING_PENDING','GATEWAY_UNAVAILABLE','MENTOR_AUTHORIZATION_REQUIRED','EMERGENCY_STOP_ACTIVE','RECOVERY_HOLD']){
+   let calls=0;globalThis.fetch=async()=>{calls++;return Response.json({code:'EXECUTION_NOT_APPROVED',reason,error:'PRIVATE_UPSTREAM_SECRET'},{status:409})};
+   await assert.rejects(api.requestJson('/api/app/trading-controls',{method:'PATCH',body:'{"copyingEnabled":true}'}),error=>error.status===409&&error.reason===reason&&!error.retryable&&error.message===api.botActivationMessage(reason));
+   assert.equal(calls,1,'Rejected commands are never retried');
+  }
+  for(const reason of ['PRIVATE_UPSTREAM_SECRET','__proto__','constructor',null])assert.equal(api.botActivationMessage(reason),null);
+ }finally{globalThis.fetch=old;}
+});

@@ -63,3 +63,5 @@
 .trading-activity-trigger[data-panel-open]{visibility:hidden;pointer-events:none}
 .trading-activity-header{user-select:none;-webkit-user-select:none;cursor:grab}
 .trading-activity-header:active{cursor:grabbing}
+
+.trading-bot-notice{flex-shrink:0;margin:0;padding:8px 14px;font:12px/1.5 system-ui,sans-serif;color:#ffd2cb;background:#4c1724;overflow-wrap:anywhere}

@@ -159,6 +159,7 @@ export default function HomeTab({ onOpenSettings, onOpenChartScanner, swipeEnabl
 /* S2TONE — v2: glowing sphere • large name • pill buttons + list   */
 /* ══════════════════════════════════════════════════════════════════ */
 function S2ToneLayout({ portraitEnabled, shapeStyle, accentColor, botRunning, setBotRunning, eaName, eaTagline, bgImageUrl, showBg, setShowBg, setShowRemoveConfirm, setShowQuotes }: any) {
+  const {botRequested,botPending,botError,refreshBotStatus}=useApp();
   return (
     <div className="relative z-10 flex flex-col items-center px-5 pt-2 pb-6 gap-5">
 
@@ -225,14 +226,14 @@ function S2ToneLayout({ portraitEnabled, shapeStyle, accentColor, botRunning, se
           </button>
 
           <button
-            onClick={() => setBotRunning(!botRunning)}
+            disabled={botPending} onClick={() => setBotRunning(!(botRequested??botRunning))}
             type="button"
             className="s2tone-action-button flex items-center gap-3 px-5 rounded-2xl"
           >
-            {botRunning
+            {(botRequested??botRunning)
               ? <Pause size={18} className="text-white/75 flex-shrink-0" />
               : <Play size={18} className="text-white/75 flex-shrink-0" style={{ marginLeft: 1 }} />}
-            <span className="text-white font-semibold text-base">{botRunning ? "Stop" : "Start"}</span>
+            <span className="text-white font-semibold text-base">{botPending?"Updating…":(botRequested??botRunning) ? "Stop" : "Start"}</span>
           </button>
 
           <button
@@ -253,6 +254,8 @@ function S2ToneLayout({ portraitEnabled, shapeStyle, accentColor, botRunning, se
           </BotName>
         </div>
       </div>
+        {botError&&<p role="alert" className="text-sm text-red-200">{botError}</p>}
+        {refreshBotStatus&&<button type="button" disabled={botPending} onClick={refreshBotStatus}>Refresh bot status</button>}
     </div>
   );
 }

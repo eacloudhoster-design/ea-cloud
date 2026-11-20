@@ -88,7 +88,7 @@ function EACloudApp({ onReady, onConnectionProgress, startupComplete }: { onRead
   }, [settingsClosing]);
   const [showLiveShot, setShowLiveShot] = useState(false);
   const [showChartScanner, setShowChartScanner] = useState(false);
-  const { botRunning, botStatusConfirmed, setBotRunning: persistBotRunning } = useBotStatus(clientToken, authStage === "app");
+  const { botRunning, botRequested, botPending, botError, refreshBotStatus, botStatusConfirmed, setBotRunning: persistBotRunning } = useBotStatus(clientToken, authStage === "app");
   const { controlPanel, setControlPanel, interfaceStyle, setInterfaceStyle, showBg, setShowBg, backgroundAnimation, setBackgroundAnimation, accentColor, setAccentColor } = useHomePreferences(clientToken);
   const [mentorShape, setMentorShape] = useState<import("@/context/AppContext").ShapeStyle|undefined>();
   const [botFont, setBotFont] = useFontPreference(clientToken);
@@ -253,7 +253,7 @@ function EACloudApp({ onReady, onConnectionProgress, startupComplete }: { onRead
   const settings: AppSettings = {
     visualModes,
     activeTab,
-    botRunning, botStatusConfirmed, setBotRunning: persistBotRunning,
+    botRunning, botRequested, botPending, botError, refreshBotStatus, botStatusConfirmed, setBotRunning: persistBotRunning,
     controlPanel, setControlPanel,
     interfaceStyle, setInterfaceStyle,
     accentColor, setAccentColor,

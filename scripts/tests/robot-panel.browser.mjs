@@ -30,6 +30,7 @@ try {
     let enabled = false,
       failWrite = false,
       failRead = false,
+      held=false,loseAck=false,writes=0,
       delay = 0,
       reads = 0;
     await context.addInitScript(() =>
@@ -47,11 +48,13 @@ try {
       const p = new URL(r.request().url()).pathname;
       if (p === "/api/app/trading-controls") {
         if (r.request().method() === "PATCH") {
+          writes++;
+          if(loseAck){enabled=true;loseAck=false;return r.fulfill({status:503,json:{error:"fixture lost acknowledgement"}});}
           if (delay) await new Promise((resolve) => setTimeout(resolve, delay));
           if (failWrite)
             return r.fulfill({
-              status: 500,
-              json: { error: "fixture rejection" },
+              status: 409,
+              json: { code:"EXECUTION_NOT_APPROVED",reason:"DEPLOYMENT_EXECUTION_DISABLED", error: "RAW_PRIVATE_FIXTURE" },
             });
           enabled = r.request().postDataJSON().copyingEnabled;
         } else if (failRead)
@@ -59,7 +62,7 @@ try {
             status: 503,
             json: { error: "fixture unavailable" },
           });
-        return r.fulfill({ json: { copyingEnabled: enabled } });
+        return r.fulfill({ json: { copyingEnabled: enabled,botRunning:enabled&&!held,activation:held?{reason:"RECOVERY_HOLD"}:null } });
       }
       if (p === "/api/app/activity") reads++;
       const events = Array.from({ length: 25 }, (_, i) => ({
@@ -73,7 +76,7 @@ try {
       return r.fulfill({
         json:
           p === "/api/app/me"
-            ? { status: "approved", licenseKey: "fixture" }
+            ? { status: "approved", licenseKey: "fixture",token:btoa("7:client:fixture") }
             : p === "/api/app/dashboard"
               ? {
                   mentor: {
@@ -105,11 +108,62 @@ try {
     await page.goto(origin);
     await page.waitForSelector(".ea-startup", { state: "detached" });
     await page.evaluate(() => document.fonts.ready);
+
     const circle = page.getByRole("button", {
         name: "Open live trading activity",
         exact: true,
       }),
-      dot = circle.locator(".activity-dot");
+      dot = page.locator(".activity-dot");
+    if(stage==="activation"){
+      const action=()=>page.locator("button.lumo-toggle").first();
+      await page.waitForFunction(()=>document.querySelector('.activity-dot')?.getAttribute('aria-label')==='Bot paused');
+      failWrite=true;delay=250;
+      await action().click();
+      assert(await action().isDisabled(),"Pending commands cannot be submitted again");
+      assert.notEqual(await dot.getAttribute('aria-label'),'Bot active');
+      await page.waitForTimeout(550);
+      assert.equal(enabled,false);
+      assert.equal(await dot.getAttribute('aria-label'),'Bot paused','Rejected Start reads authoritative stopped state back');
+      const notice=page.getByRole('dialog').getByRole('alert');
+      assert(await notice.isVisible());
+      assert((await notice.innerText()).includes('disabled'));
+      const noticeBox=await notice.boundingBox(),panelBox=await page.getByRole('dialog').boundingBox();
+      assert(noticeBox.y>=panelBox.y&&noticeBox.y+noticeBox.height<=panelBox.y+panelBox.height,'Rejection notice stays inside the mobile panel');
+      assert(!(await page.locator('body').innerText()).includes('RAW_PRIVATE_FIXTURE'));
+      await page.screenshot({path:`work/robot-panel/blocked-${viewport.width}.png`});
+      await page.getByRole('button',{name:'Close trading activity',exact:true}).click();failWrite=false;
+      await action().click();
+      assert.notEqual(await dot.getAttribute('aria-label'),'Bot active');
+      await page.waitForTimeout(550);
+      assert.equal(await dot.getAttribute('aria-label'),'Bot active');
+      await page.getByRole('button',{name:'Close trading activity',exact:true}).click();
+      await action().click();await page.waitForTimeout(550);
+      assert.equal(enabled,false);assert.equal(await dot.getAttribute('aria-label'),'Bot paused');
+      failRead=true;
+      await page.getByRole('button',{name:'Refresh bot status',exact:true}).first().click();
+      await page.waitForTimeout(150);
+      assert.equal(await dot.getAttribute('aria-label'),'Bot status unconfirmed');
+      failRead=false;
+      await page.getByRole('button',{name:'Refresh bot status',exact:true}).first().click();
+      await page.waitForTimeout(150);
+      assert.equal(await dot.getAttribute('aria-label'),'Bot paused');
+      enabled=true;held=true;
+      await page.getByRole('button',{name:'Refresh bot status',exact:true}).first().click();await page.waitForTimeout(150);
+      assert.equal(await dot.getAttribute('aria-label'),'Bot paused');
+      assert.equal(await action().getAttribute('aria-label'),'Stop','A requested but held bot still offers Stop');
+      await action().click();await page.waitForTimeout(550);assert.equal(enabled,false);
+      held=false;delay=0;loseAck=true;const beforeWrites=writes;
+      await action().click();await page.waitForTimeout(200);
+      assert.equal(writes,beforeWrites+1,'Lost acknowledgement never resubmits Start');
+      assert.equal(await dot.getAttribute('aria-label'),'Bot active','Read-back confirms the backend state');
+      assert((await page.getByRole('alert').first().innerText()).includes('no command was retried'));
+      await page.getByRole('button',{name:'Close trading activity',exact:true}).click();
+      await action().click();await page.waitForTimeout(150);assert.equal(enabled,false);
+      assert.deepEqual(errors,[]);
+      results.push({viewport,managementRejectionExplained:true,noFalseRunning:true,startStopConfirmed:true,statusOutageRecovery:true,errors});
+      await page.screenshot({path:`work/robot-panel/activation-${viewport.width}.png`});
+      await context.close();continue;
+    }
     const circleBefore = await circle.boundingBox();
     const circleImage = await circle.locator("img").getAttribute("src");
     await circle.click();
@@ -320,6 +374,8 @@ try {
       await page.waitForTimeout(600);
       assert.notEqual(await dot.getAttribute("aria-label"), "Bot active");
       assert.equal(enabled, false);
+      assert((await page.getByRole("alert").first().innerText()).includes("disabled"));
+      assert(!(await page.locator("body").innerText()).includes("RAW_PRIVATE_FIXTURE"));
       failWrite = false;
       await action().click();
       await page.waitForTimeout(100);
@@ -336,12 +392,15 @@ try {
       assert.equal(enabled, false);
       delay = 200;
       await action().click();
-      await action().click();
-      await page.waitForTimeout(250);
+      assert(await action().isDisabled());
+      await page.waitForTimeout(50);
       assert.notEqual(await dot.getAttribute("aria-label"), "Bot active");
       await page.waitForTimeout(350);
-      assert.equal(enabled, false);
-      assert.equal(await dot.getAttribute("aria-label"), "Bot paused");
+      assert.equal(enabled, true);
+      assert.equal(await dot.getAttribute("aria-label"), "Bot active");
+      await action().click();
+      await page.waitForTimeout(350);
+      assert.equal(enabled,false);
       delay = 0;
       // Colour selection changes the ring, never the activation light.
       const tab = async (name) => {

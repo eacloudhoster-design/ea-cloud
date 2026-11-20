@@ -1,3 +1,4 @@
+import {botActivationBlock} from "../lib/bot-activation";
 import {markProvisioningBound,queueProvisioning,provisioningBrokers} from "../lib/mt5-provisioning";
 import { randomUUID } from "node:crypto";
 import {queueBotPush, queueSymbolPush} from "../lib/web-push";
@@ -27,7 +28,9 @@ router.get("/app/trading-controls", requireClientAuth, async (req: any, res) => 
     }
     // Never expose the encrypted password in API responses.
     const { encryptedMt5Password: _omit, ...safe } = settings;
-    res.json(safe);
+    const activation=await botActivationBlock(req.clientId,settings,settings.copyingEnabled===true);
+    res.setHeader("Cache-Control","no-store");
+    res.json({...safe,copyingRequested:settings.copyingEnabled,botRunning:settings.copyingEnabled===true&&activation===null,activation});
   } catch (err) {
     req.log.error({ err }, "GetTradingControls error");
     res.status(500).json({ error: "Internal server error" });
@@ -60,10 +63,11 @@ router.patch("/app/trading-controls", requireClientAuth, async (req: any, res) =
     if (copyingEnabled !== undefined) {
       if(typeof copyingEnabled!=="boolean"){res.status(400).json({error:"copyingEnabled must be boolean"});return;}
       if(copyingEnabled){
-        if(process.env.EA_MT5_MANAGEMENT_ONLY==="1"){res.status(409).json({code:"EXECUTION_NOT_APPROVED",error:"Order execution is unavailable in this deployment"});return;}
-        const engine=await clientEngineStatus(req.clientId,true);
-        if(!engine.connection.verified || !engine.copier.workerExecutionPermitted || !engine.copier.mentorAllocationApproved || engine.copier.emergencyStopActive!==false || engine.copier.unresolvedJournalHolds!==0 || engine.copier.state==="read_only"){
-          res.status(409).json({code:"EXECUTION_NOT_APPROVED",error:"Account verification, allocation and worker safety gates are required"});return;
+        const [current]=await db.select().from(clientSettingsTable).where(eq(clientSettingsTable.clientId,req.clientId)).limit(1);
+        const activation=await botActivationBlock(req.clientId,current,true);
+        if(activation){
+          req.log.warn({event:"bot_activation_rejected",reason:activation.reason},"Bot activation blocked by existing safety controls");
+          res.status(409).json({code:"EXECUTION_NOT_APPROVED",...activation});return;
         }
       }
       updates.copyingEnabled = copyingEnabled;
@@ -78,7 +82,9 @@ router.patch("/app/trading-controls", requireClientAuth, async (req: any, res) =
 
     // Never expose the encrypted password in API responses.
     const { encryptedMt5Password: _omit, ...safe } = settings;
-    res.json(safe);
+    const activation=copyingEnabled===true?null:await botActivationBlock(req.clientId,settings,settings.copyingEnabled===true);
+    res.setHeader("Cache-Control","no-store");
+    res.json({...safe,copyingRequested:settings.copyingEnabled,botRunning:settings.copyingEnabled===true&&activation===null,activation});
   } catch (err) {
     req.log.error({ err }, "UpdateTradingControls error");
     res.status(500).json({ error: "Internal server error" });
