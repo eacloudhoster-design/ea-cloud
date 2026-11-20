@@ -4,10 +4,12 @@ import {and,eq,ne,sql} from "drizzle-orm";
 export async function bindClientAccount(clientId:number,account:{login:string;server:string;broker:string},encrypted:string,options:{pauseCopying?:boolean;signal?:AbortSignal}={}){
  return db.transaction(async tx=>{
   if(options.signal?.aborted)throw Error("PROVISIONING_OUTCOME_UNCERTAIN");
+  const canonical=String(Number(account.login));
+  if(!/^\d+$/.test(account.login)||!Number.isSafeInteger(Number(account.login))||Number(account.login)<=0)throw Error("Invalid account identity");
   // Serialize same-account claims across backend processes; collisions only serialize extra requests.
-  await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtext(${"ea-account:"+account.server+":"+account.login}))`);
+  await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtext(${"ea-account:"+account.server+":"+canonical}))`);
   if(process.env.MT5_ACCOUNT_INVENTORY==="1"){
-   const claims=await tx.execute(sql`SELECT owner_kind,owner_id FROM mt5_account_inventory WHERE login=${account.login} AND server=${account.server}`);
+   const claims=await tx.execute(sql`SELECT owner_kind,owner_id FROM mt5_account_inventory WHERE ltrim(login,'0')=${canonical} AND server=${account.server}`);
    if(claims.rows.some((r:any)=>r.owner_kind!=="client"||r.owner_id!==clientId))throw Error("ACCOUNT_ALREADY_BOUND");
   }
   const numericLogin=Number(account.login);
@@ -17,10 +19,10 @@ export async function bindClientAccount(clientId:number,account:{login:string;se
   }
   // Serialize concurrent account changes for the same client as well.
   await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtext(${"ea-client:"+clientId}))`);
-  const [other]=await tx.select({id:clientSettingsTable.id}).from(clientSettingsTable).where(and(eq(clientSettingsTable.mt5Login,account.login),eq(clientSettingsTable.mt5Server,account.server),ne(clientSettingsTable.clientId,clientId))).limit(1);
+  const [other]=await tx.select({id:clientSettingsTable.id}).from(clientSettingsTable).where(and(sql`ltrim(${clientSettingsTable.mt5Login},'0')=${canonical}`,eq(clientSettingsTable.mt5Server,account.server),ne(clientSettingsTable.clientId,clientId))).limit(1);
   if(other)throw Error("ACCOUNT_ALREADY_BOUND");
   const [old]=await tx.select().from(clientSettingsTable).where(eq(clientSettingsTable.clientId,clientId)).limit(1).for("update");
-  if(old?.mt5Login && (old.mt5Login!==account.login || old.mt5Server!==account.server)){
+  if(old?.mt5Login && (Number(old.mt5Login)!==Number(account.login) || old.mt5Server!==account.server)){
    const [allocation]=await tx.select({id:observerAllocationsTable.id}).from(observerAllocationsTable).where(eq(observerAllocationsTable.clientId,clientId)).limit(1);
    if(allocation)throw Error("ACCOUNT_REBIND_REQUIRES_RECONCILIATION");
    const [pending]=await tx.select({id:tradeExecutionsTable.id}).from(tradeExecutionsTable).where(and(eq(tradeExecutionsTable.clientId,clientId),eq(tradeExecutionsTable.status,"pending"))).limit(1);

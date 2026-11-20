@@ -100,7 +100,7 @@ export default function MetaTraderTab({ backgroundHost, backgroundImage }: { bac
       requestKey.current??=crypto.randomUUID();
       const data=await connectMt5Account({login:login.trim(),server:server.trim(),password:secret,broker:selectedBroker,requestAssignment:true,requestKey:requestKey.current,ownershipConfirmed,accountMode},clientToken,attempt.signal);
       if(!attempt.signal.aborted && data.status==="provisioning"){
-        setAssignment({id:data.provisioning.id,login:String(Number(login.trim())),server:server.trim(),broker:selectedBroker,accountMode,state:data.provisioning.state});setState("provisioning");return;
+        setAssignment({id:data.provisioning.id,login:login.trim(),server:server.trim(),broker:selectedBroker,accountMode,state:data.provisioning.state});setState("provisioning");return;
       }
       if(!attempt.signal.aborted){requestKey.current=null;setSaved({login:String(data.login),server:data.server});setState("verified");setRestoreAttempt(v=>v+1);}
     } catch (failure) {

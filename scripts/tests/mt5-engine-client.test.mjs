@@ -75,3 +75,22 @@ test('customer connection copy and account-type proof stay separate from private
   job.executionEnabled=true;await assert.rejects(api.readAccountRequests('fixture'));
  }finally{globalThis.fetch=old;}
 });
+
+test('submitted login zeros survive application proof and private diagnostics expose setting names only',async()=>{
+ const old=globalThis.fetch;
+ const built=await build({entryPoints:['artifacts/ea-app/src/lib/mt5-engine.ts'],bundle:true,platform:'node',format:'esm',write:false,logLevel:'silent'});
+ const api=await import('data:text/javascript;base64,'+Buffer.from(built.outputFiles[0].text).toString('base64'));
+ try{
+  const input={login:'00091',server:'Fixture',password:'fixture-only',accountMode:'demo'};
+  globalThis.fetch=async(url,init)=>{assert.equal(JSON.parse(init.body).login,'00091');return Response.json({connected:true,status:'connected',login:'00091',server:'Fixture',accountMode:'demo'});};
+  assert.equal((await api.connectMt5Account(input,'fixture',new AbortController().signal)).login,'00091');
+  globalThis.fetch=async()=>Response.json({connected:true,status:'connected',login:'91',server:'Fixture',accountMode:'demo'});
+  await assert.rejects(api.connectMt5Account(input,'fixture',new AbortController().signal));
+ }finally{globalThis.fetch=old;}
+ const transport=await build({entryPoints:['artifacts/api-server/src/lib/mt5-endpoint.ts'],bundle:true,platform:'node',format:'esm',write:false,logLevel:'silent'});
+ const before={...process.env};try{
+  process.env.RENDER='true';delete process.env.MT5_VPS_URL;delete process.env.MT5_VPS_TOKEN;process.env.MT5_ACCESS_REQUIRED='1';delete process.env.MT5_ACCESS_CLIENT_ID;delete process.env.MT5_ACCESS_CLIENT_SECRET;
+  const endpoint=await import('data:text/javascript;base64,'+Buffer.from(transport.outputFiles[0].text+'\n//isolated-config-test').toString('base64'));
+  assert.deepEqual(endpoint.mt5ConfigurationIssues(),['MT5_VPS_URL_REMOTE_REQUIRED','MT5_VPS_TOKEN_MISSING_OR_INVALID','MT5_ACCESS_SERVICE_PAIR_REQUIRED']);assert.throws(()=>endpoint.mt5Headers());
+ }finally{for(const key of Object.keys(process.env))if(!(key in before))delete process.env[key];Object.assign(process.env,before);}
+});
