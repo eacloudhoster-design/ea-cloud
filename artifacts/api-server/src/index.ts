@@ -1,5 +1,6 @@
 // Production defaults to account management until a separately accepted execution rollout.
 process.env.EA_MT5_MANAGEMENT_ONLY??="1";
+import {reportMt5TransportReadiness} from "./lib/mt5-transport-readiness";
 import {startProvisioningConsumer} from "./lib/mt5-provisioning-runtime";
 import {startPushWorker, stopPushWorker} from "./lib/web-push";
 import http from "http";
@@ -89,6 +90,7 @@ process.on("uncaughtExceptionMonitor", (_error, origin) => {
 server.listen({port, ...(process.env.API_LISTEN_HOST ? {host:process.env.API_LISTEN_HOST} : {})}, () => {
   if (shuttingDown) return;
   logger.info({ port }, "Server listening");
+  void reportMt5TransportReadiness(logger).catch(()=>logger.warn({event:"mt5_transport_readiness",code:"MT5_GATEWAY_UNAVAILABLE"},"Private transport check unavailable"));
   if(process.env.EA_MT5_MANAGEMENT_ONLY!=="1")startPushWorker(logger,signalWorkerHealthy);
   try{stopProvisioningConsumer=startProvisioningConsumer(logger);}catch{logger.warn({code:"PRIVATE_PROVISIONER_NOT_CONFIGURED"},"Provisioning consumer not started");}
   if(process.env.EA_MT5_MANAGEMENT_ONLY!=="1")void runStartupTasks();

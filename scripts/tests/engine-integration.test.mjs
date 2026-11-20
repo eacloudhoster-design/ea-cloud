@@ -73,7 +73,7 @@ test('real browser sessions, owned engine status, strict broker proof and accoun
   const connect=()=>request('/app/mt5-connect',{method:'POST',headers:{cookie:clientCookie,'Content-Type':'application/json'},body:JSON.stringify({login:'91',server:'FixtureDemo',password:'fixture-broker-password'})});
   globalThis.fetch=async()=>Response.json({success:false,code:'ACCOUNT_NOT_ASSIGNED',message:'PRIVATE_VENDOR_SECRET'},{status:403});
   let missing=await connect();assert.equal(missing.status,409);let missingBody=await missing.json();assert.equal(missingBody.code,'ACCOUNT_NOT_ASSIGNED');assert(!JSON.stringify(missingBody).includes('PRIVATE_VENDOR_SECRET'));
-  const assignmentBody={login:'92',server:'FixtureNewDemo',broker:'justmarkets',password:'fixture-broker-password',requestAssignment:true,requestKey:randomBytes(16).toString('hex').replace(/(.{8})(.{4})(.{4})(.{4})(.{12})/,'$1-$2-$3-$4-$5'),accountMode:'demo',ownershipConfirmed:true};
+  const assignmentBody={login:'00092',server:'FixtureNewDemo',broker:'justmarkets',password:'fixture-broker-password',requestAssignment:true,requestKey:randomBytes(16).toString('hex').replace(/(.{8})(.{4})(.{4})(.{4})(.{12})/,'$1-$2-$3-$4-$5'),accountMode:'demo',ownershipConfirmed:true};
   const requestAssignment=()=>request('/app/mt5-connect',{method:'POST',headers:{cookie:clientCookie,'Content-Type':'application/json'},body:JSON.stringify(assignmentBody)});
   let unavailable=await requestAssignment();assert.equal(unavailable.status,503);assert.equal((await unavailable.json()).code,'PROVISIONING_NOT_CONFIGURED');
   for(const broker of ['custom','oanda']){
@@ -81,11 +81,13 @@ test('real browser sessions, owned engine status, strict broker proof and accoun
     assert.equal(unsupported.status,422);assert.equal((await unsupported.json()).code,'UNSUPPORTED_ACCOUNT_CONFIGURATION');
   }
   process.env.MT5_SELF_SERVICE_PROVISIONING='1';process.env.MT5_PROVISIONING_CONSUMER='1';
-  const accepted=await requestAssignment();assert.equal(accepted.status,202);const job=await accepted.json();assert.equal(job.connected,false);assert.equal(job.provisioning.login,'92');assert(!JSON.stringify(job).includes('fixture-broker-password'));
+  const unavailablePort=await requestAssignment();assert.equal(unavailablePort.status,503);assert.equal((await unavailablePort.json()).code,'PROVISIONING_NOT_CONFIGURED');assert.equal((await f.engine.query('SELECT count(*)::int AS n FROM mt5_provisioning_requests')).rows[0].n,0);
+  process.env.MT5_PROVISIONER_URL='https://provisioner.example.invalid';process.env.MT5_PROVISIONER_TOKEN='fixture-only-'.repeat(4);
+  const accepted=await requestAssignment();assert.equal(accepted.status,202);const job=await accepted.json();assert.equal(job.connected,false);assert.equal(job.provisioning.login,'00092');assert(!JSON.stringify(job).includes('fixture-broker-password'));
   assert.equal((await requestAssignment()).status,202);assert.equal((await f.engine.query('SELECT count(*)::int AS n FROM mt5_provisioning_requests')).rows[0].n,1);
   globalThis.fetch=async()=>Response.json({...ack,login:92,server:'FixtureNewDemo',read_only:true,protocol:'EA_READ_ONLY_STATUS_V1',financial_routes:false,journal_bound:false,journal_holds:null,emergency_stop_active:null});
   const provisioned=await api.processNextProvisioning({provisionDedicatedWorker:async input=>{assert.equal(input.ownerId,10);assert.equal(input.executionEnabled,false);assert.equal(input.server,'FixtureNewDemo');}});
-  assert.equal(provisioned.state,'connected');const onboarded=(await f.engine.query('SELECT mt5_login,copying_enabled FROM client_settings WHERE client_id=10')).rows[0];assert.equal(onboarded.mt5_login,'92');assert.equal(onboarded.copying_enabled,false);
+  assert.equal(provisioned.state,'connected');const onboarded=(await f.engine.query('SELECT mt5_login,copying_enabled FROM client_settings WHERE client_id=10')).rows[0];assert.equal(onboarded.mt5_login,'00092');assert.equal(onboarded.copying_enabled,false);
   const finalized=(await f.engine.query('SELECT state,encrypted_password FROM mt5_provisioning_requests')).rows[0];assert.equal(finalized.state,'connected');assert.equal(finalized.encrypted_password,null);
   delete process.env.MT5_SELF_SERVICE_PROVISIONING;delete process.env.MT5_PROVISIONING_CONSUMER;
   globalThis.fetch=async()=>{calls++;return Response.json(response)};
@@ -104,6 +106,11 @@ test('real browser sessions, owned engine status, strict broker proof and accoun
   typed=await modeRequest('demo');assert.equal(typed.status,200);assert.equal((await typed.json()).copyingEnabled,false);
   assert.equal((await f.engine.query('SELECT copying_enabled FROM client_settings WHERE client_id=10')).rows[0].copying_enabled,false,'Reconnecting never resumes a retained Start preference');
 
+  const exact=await request('/app/mt5-connect',{method:'POST',headers:{cookie:clientCookie,'Content-Type':'application/json'},body:JSON.stringify({login:'00091',server:'FixtureDemo',password:'fixture-broker-password',accountMode:'demo'})});assert.equal(exact.status,200);assert.equal((await exact.json()).login,'00091');
+  assert.equal((await f.engine.query('SELECT mt5_login FROM client_settings WHERE client_id=10')).rows[0].mt5_login,'00091');
+  await assert.rejects(api.bindClientAccount(11,{login:'0000091',server:'FixtureDemo',broker:'justmarkets'},'fixture-only'),/ACCOUNT_ALREADY_BOUND/);
+  assert.equal((await request('/app/engine/status',{headers:{cookie:clientCookie}})).status,200);
+  assert.equal((await connect()).status,200);
   const stored=(await f.engine.query('SELECT * FROM client_settings WHERE client_id=10')).rows[0];assert.notEqual(stored.encrypted_mt5_password,'fixture-broker-password');assert.equal(stored.copying_enabled,false);
   result=await request('/app/engine/status',{headers:{cookie:clientCookie}});let state=await result.json();assert.equal(state.connection.verified,true);assert.equal(state.copier.executionPermitted,false);assert.equal(state.copier.emergencyStopActive,true);assert.ok(!JSON.stringify(state).includes('upstream-secret'));assert.ok(!JSON.stringify(state).includes(stored.encrypted_mt5_password));
   await f.engine.exec("INSERT INTO app_access(id,email,first_name,last_name,status,mentor_id) VALUES(12,'other@example.invalid','Other','Client','approved',2)");

@@ -1,3 +1,4 @@
+import {createDedicatedWorkerPort} from "../lib/mt5-provisioning-port";
 import {botActivationBlock} from "../lib/bot-activation";
 import {markProvisioningBound,queueProvisioning,provisioningBrokers} from "../lib/mt5-provisioning";
 import { randomUUID } from "node:crypto";
@@ -251,8 +252,9 @@ router.post(["/app/mt5-connect","/client/mt5/connect"], requireAppSession, async
       res.status(400).json({ error: "login, password, and server are required" }); return;
     }
 
-    const loginNum = Number(login);
-    if (!Number.isInteger(loginNum) || loginNum <= 0) {
+    const submittedLogin=typeof login==="string"?login:typeof login==="number"?String(login):"";
+    const loginNum = Number(submittedLogin);
+    if (!/^\d+$/.test(submittedLogin) || submittedLogin.length>32 || !Number.isInteger(loginNum) || loginNum <= 0) {
       res.status(400).json({ error: "login must be a valid positive integer" }); return;
     }
 
@@ -266,7 +268,7 @@ router.post(["/app/mt5-connect","/client/mt5/connect"], requireAppSession, async
     try { account=await readBoundAccount(loginNum,server,password,{kind:"client",id:req.clientId}); }
     catch(error) {
       const failure=accountBindingFailure(error);
-      req.log.warn({code:failure.code,phase:"account_connection"},"Private MT5 verification failed");
+      req.log.warn({code:failure.code,configurationIssues:failure.configurationIssues,phase:"account_connection"},"Private MT5 verification failed");
       if(failure.code==="ACCOUNT_NOT_ASSIGNED" && body.requestAssignment===true){
         if(typeof broker!=="string" || !provisioningBrokers.includes(broker)){
           res.status(422).json({code:"UNSUPPORTED_ACCOUNT_CONFIGURATION",connected:false,error:"This broker needs an approved private terminal profile before assignment"});return;
@@ -274,8 +276,9 @@ router.post(["/app/mt5-connect","/client/mt5/connect"], requireAppSession, async
         if(process.env.MT5_SELF_SERVICE_PROVISIONING!=="1" || process.env.MT5_PROVISIONING_CONSUMER!=="1"){
           res.status(503).json({code:"PROVISIONING_NOT_CONFIGURED",error:"Account provisioning is not available",connected:false});return;
         }
+        try{createDedicatedWorkerPort();}catch{req.log.warn({code:"PRIVATE_PROVISIONER_NOT_CONFIGURED"},"Account assignment transport configuration missing");res.status(503).json({connected:false,code:"PROVISIONING_NOT_CONFIGURED"});return;}
         try{
-          const provisioning=await queueProvisioning({requestKey:body.requestKey,broker,login:String(loginNum),server,password,accountRole:"follower",accountMode:body.accountMode,ownershipConfirmed:body.ownershipConfirmed},{kind:"client",id:req.clientId});
+          const provisioning=await queueProvisioning({requestKey:body.requestKey,broker,login:submittedLogin,server,password,accountRole:"follower",accountMode:body.accountMode,ownershipConfirmed:body.ownershipConfirmed},{kind:"client",id:req.clientId});
           res.status(202).json({connected:false,status:"provisioning",executionEnabled:false,provisioning});
         }catch(queueError){
           const code=queueError instanceof Error?queueError.message:"";
@@ -290,7 +293,7 @@ router.post(["/app/mt5-connect","/client/mt5/connect"], requireAppSession, async
     if(account.role!=="client"){res.status(403).json({error:"A receiving client account is required"});return;}
     const balance=account.balance===null?null:String(account.balance),equity=account.equity===null?null:String(account.equity);
     if(broker!==undefined && broker!=="custom" && broker!==account.broker){res.status(422).json({error:"Selected broker does not match the verified account",code:"BROKER_BINDING_MISMATCH"});return;}
-    const resolvedBroker=account.broker,accountName=null,mt5LoginStr=String(loginNum),connectedAt=new Date().toISOString();
+    const resolvedBroker=account.broker,accountName=null,mt5LoginStr=submittedLogin,connectedAt=new Date().toISOString();
 
     // Encrypt the password for copy-trade execution — NEVER stored in plain text.
     const encryptedMt5Password = encryptMT5Password(password);
@@ -304,7 +307,7 @@ router.post(["/app/mt5-connect","/client/mt5/connect"], requireAppSession, async
 
     try{await markProvisioningBound({kind:"client",id:req.clientId},mt5LoginStr,server);}catch{req.log.warn({code:"PROVISIONING_STATUS_UPDATE_UNAVAILABLE"},"Connection verified; provisioning status update pending");}
     req.log.info(
-      { clientId: req.clientId, login: loginNum, server, balance },
+      { clientId: req.clientId },
       "[ClientMT5] connection saved to client profile",
     );
 

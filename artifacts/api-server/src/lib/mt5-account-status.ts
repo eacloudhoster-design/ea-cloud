@@ -1,4 +1,4 @@
-import { MT5_VPS_BASE, mt5Headers } from "./mt5-endpoint";
+import { MT5_VPS_BASE, mt5Headers, mt5ConfigurationIssues } from "./mt5-endpoint";
 export interface BoundAccountStatus {
   success: true; connected: true; simulation: false; account_mode: "demo" | "live";
   login: number; server: string; broker: string; role: "client" | "mentor";
@@ -20,11 +20,11 @@ const bindingErrors:Record<string,string>={
 class AccountBindingError extends Error {constructor(readonly code:string,readonly status=503){super(bindingErrors[code]);}}
 export function accountBindingFailure(error:unknown){
   const code=error instanceof AccountBindingError?error.code:"MT5_BINDING_UNVERIFIED";
-  return {code,status:error instanceof AccountBindingError?error.status:422,error:bindingErrors[code]||"The provisioned demo account could not be verified. Check the assigned worker and authorization."};
+  return {code,configurationIssues:code==="MT5_GATEWAY_NOT_CONFIGURED"?mt5ConfigurationIssues():undefined,status:error instanceof AccountBindingError?error.status:422,error:bindingErrors[code]||"The provisioned demo account could not be verified. Check the assigned worker and authorization."};
 }
 /** Credential proof and exact binding, never a generic HTTP-200 connectivity claim. */
 export async function readBoundAccount(login: string | number, server: string, password: string, expectedOwner?:{kind:"client"|"mentor";id:number}): Promise<BoundAccountStatus> {
-  if (!/^[1-9]\d*$/.test(String(login)) || !Number.isSafeInteger(Number(login)) || !server || typeof password !== "string" || !password)
+  if (!/^\d+$/.test(String(login)) || Number(login)<=0 || !Number.isSafeInteger(Number(login)) || !server || typeof password !== "string" || !password)
     throw Error("Invalid account binding");
   let headers:Record<string,string>;
   try{
