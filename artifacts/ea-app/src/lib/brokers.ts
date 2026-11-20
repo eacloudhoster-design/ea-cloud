@@ -39,7 +39,7 @@ export function detectBroker(server: string): Broker | null {
 export function validateMt5Preview(login: string, password: string, server: string): string | null {
   if (!login.trim() || !password || !server.trim()) return "Enter your account number, password and broker server.";
   if (!/^\d+$/.test(login.trim()) || !/[1-9]/.test(login)) return "Enter a valid MT5 account number using digits only.";
-  if (!Number.isSafeInteger(Number(login.trim()))) return "This account number exceeds the gateway's supported exact numeric range.";
+  if (!Number.isSafeInteger(Number(login.trim()))) return "This account number is not supported. Contact support for help.";
   if (server.trim().length > 256) return "Enter a broker server name of 256 characters or fewer.";
   return null;
 }

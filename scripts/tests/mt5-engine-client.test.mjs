@@ -56,3 +56,22 @@ test('bot rejection reasons are actionable and never expose arbitrary response t
   for(const reason of ['PRIVATE_UPSTREAM_SECRET','__proto__','constructor',null])assert.equal(api.botActivationMessage(reason),null);
  }finally{globalThis.fetch=old;}
 });
+
+test('customer connection copy and account-type proof stay separate from private diagnostics',async()=>{
+ const built=await build({stdin:{contents:"export * from './artifacts/ea-app/src/lib/mt5-account-messages';export * from './artifacts/ea-app/src/lib/request';export * from './artifacts/ea-app/src/lib/mt5-engine';",resolveDir:process.cwd()},bundle:true,platform:'node',format:'esm',write:false,logLevel:'silent'});
+ const api=await import('data:text/javascript;base64,'+Buffer.from(built.outputFiles[0].text).toString('base64')),old=globalThis.fetch;
+ try{
+  for(const code of ['MT5_GATEWAY_NOT_CONFIGURED','MT5_GATEWAY_AUTH_REJECTED','MT5_GATEWAY_UNAVAILABLE','PROVISIONING_NOT_CONFIGURED','ACCOUNT_NOT_ASSIGNED','ACCOUNT_PROOF_REJECTED','UNSUPPORTED_ACCOUNT_CONFIGURATION','ACCOUNT_MODE_MISMATCH']){
+   const message=api.mt5AccountMessage(new api.ApiRequestError('PRIVATE_SECRET',code,'backend',false));assert(!/gateway|worker|provision|deployment|testing|PRIVATE_SECRET/i.test(message));
+  }
+  assert(!api.mt5AccountMessage('PRIVATE_SECRET').includes('PRIVATE_SECRET'));
+  const input={login:'91',server:'Fixture',password:'fixture-only-secret',broker:'justmarkets',accountMode:'live'};
+  globalThis.fetch=async()=>Response.json({connected:true,status:'connected',login:'91',server:'Fixture',broker:'justmarkets',accountMode:'demo'});
+  await assert.rejects(api.connectMt5Account(input,'fixture',new AbortController().signal));
+  globalThis.fetch=async()=>Response.json({connected:true,status:'connected',login:'91',server:'Fixture',broker:'justmarkets',accountMode:'live'});
+  assert.equal((await api.connectMt5Account(input,'fixture',new AbortController().signal)).accountMode,'live');
+  const job={id:'12345678-1234-1234-1234-123456789abc',login:'91',server:'Fixture',broker:'justmarkets',accountMode:'live',accountRole:'follower',state:'connected',connected:false,executionEnabled:false};
+  globalThis.fetch=async()=>Response.json({requests:[job]});assert.equal((await api.readAccountRequests('fixture')).length,1,'Completed requests still require fresh terminal proof');
+  job.executionEnabled=true;await assert.rejects(api.readAccountRequests('fixture'));
+ }finally{globalThis.fetch=old;}
+});

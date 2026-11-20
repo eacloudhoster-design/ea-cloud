@@ -259,6 +259,9 @@ router.post(["/app/mt5-connect","/client/mt5/connect"], requireAppSession, async
     if (typeof password !== "string" || password.length > 1024 || typeof server !== "string" || server.length > 256 || !Number.isSafeInteger(loginNum)) {
       res.status(400).json({error:"Invalid account credentials"});return;
     }
+    if(body.accountMode!==undefined && (!["demo","live"].includes(String(body.accountMode)) || (body.accountMode==="live" && process.env.MT5_LIVE_READONLY_ACCOUNTS!=="1"))){
+      res.status(422).json({connected:false,code:"UNSUPPORTED_ACCOUNT_CONFIGURATION",error:"This account type is currently unavailable"});return;
+    }
     let account;
     try { account=await readBoundAccount(loginNum,server,password,{kind:"client",id:req.clientId}); }
     catch(error) {
@@ -283,6 +286,7 @@ router.post(["/app/mt5-connect","/client/mt5/connect"], requireAppSession, async
       }
       res.status(failure.status).json({error:"Account connection was not verified",code:failure.code});return;
     }
+    if(body.accountMode!==undefined && body.accountMode!==account.account_mode){res.status(422).json({connected:false,code:"ACCOUNT_MODE_MISMATCH",error:"Selected account type does not match verified account"});return;}
     if(account.role!=="client"){res.status(403).json({error:"A receiving client account is required"});return;}
     const balance=account.balance===null?null:String(account.balance),equity=account.equity===null?null:String(account.equity);
     if(broker!==undefined && broker!=="custom" && broker!==account.broker){res.status(422).json({error:"Selected broker does not match the verified account",code:"BROKER_BINDING_MISMATCH"});return;}
@@ -291,7 +295,7 @@ router.post(["/app/mt5-connect","/client/mt5/connect"], requireAppSession, async
     // Encrypt the password for copy-trade execution — NEVER stored in plain text.
     const encryptedMt5Password = encryptMT5Password(password);
 
-    try {await bindClientAccount(req.clientId,{login:mt5LoginStr,server,broker:resolvedBroker},encryptedMt5Password);}
+    try {await bindClientAccount(req.clientId,{login:mt5LoginStr,server,broker:resolvedBroker},encryptedMt5Password,{pauseCopying:true});}
     catch(error){
       const code=error instanceof Error?error.message:"";
       if(["ACCOUNT_ALREADY_BOUND","ACCOUNT_REBIND_REQUIRES_RECONCILIATION"].includes(code)){res.status(409).json({error:"Account binding requires operator review",code});return;}
@@ -310,6 +314,8 @@ router.post(["/app/mt5-connect","/client/mt5/connect"], requireAppSession, async
       login: mt5LoginStr,
       server,
       broker: resolvedBroker,
+      accountMode:account.account_mode,
+      copyingEnabled:false,
       accountName,
       balance,
       equity,
