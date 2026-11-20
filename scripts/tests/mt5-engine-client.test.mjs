@@ -94,3 +94,20 @@ test('submitted login zeros survive application proof and private diagnostics ex
   assert.deepEqual(endpoint.mt5ConfigurationIssues(),['MT5_VPS_URL_REMOTE_REQUIRED','MT5_VPS_TOKEN_MISSING_OR_INVALID','MT5_ACCESS_SERVICE_PAIR_REQUIRED']);assert.throws(()=>endpoint.mt5Headers());
  }finally{for(const key of Object.keys(process.env))if(!(key in before))delete process.env[key];Object.assign(process.env,before);}
 });
+
+test('runtime transport check logs only safe settings and probes relay health without account operations',async()=>{
+ const saved={...process.env},old=globalThis.fetch;
+ try{
+  delete process.env.RENDER;process.env.MT5_VPS_URL='https://relay.example.invalid';process.env.MT5_VPS_TOKEN='fixture-token-'.repeat(4);
+  delete process.env.MT5_ACCESS_REQUIRED;delete process.env.MT5_ACCESS_CLIENT_ID;delete process.env.MT5_ACCESS_CLIENT_SECRET;
+  const built=await build({entryPoints:['artifacts/api-server/src/lib/mt5-transport-readiness.ts'],bundle:true,platform:'node',format:'esm',write:false,logLevel:'silent'});
+  const api=await import('data:text/javascript;base64,'+Buffer.from(built.outputFiles[0].text+'\n//runtime-health-check').toString('base64'));
+  let records=[],calls=0;const log={info:(fields)=>records.push(fields),warn:(fields)=>records.push(fields)};
+  globalThis.fetch=async(url,init)=>{calls++;assert.equal(url,'https://relay.example.invalid/healthz');assert.equal(init.method,'GET');assert.equal(init.body,undefined);assert.equal(init.redirect,'error');assert.equal(init.headers.Authorization,'Bearer '+process.env.MT5_VPS_TOKEN);return Response.json({status:'ok',read_only:true,execution_enabled:false,accounts:42,password:'UPSTREAM_SECRET'});};
+  await api.reportMt5TransportReadiness(log);assert.equal(records.at(-1).code,'MT5_GATEWAY_REACHABLE');assert.equal(records.at(-1).brokerConnectivityChecked,false);assert(!JSON.stringify(records).includes('SECRET'));assert(!JSON.stringify(records).includes('fixture-token'));assert(!JSON.stringify(records).includes('accounts'));
+  delete process.env.MT5_VPS_TOKEN;const before=calls;await api.reportMt5TransportReadiness(log);assert.equal(calls,before);assert(records.at(-1).configurationIssues.includes('MT5_VPS_TOKEN_MISSING_OR_INVALID'));
+  process.env.MT5_VPS_TOKEN='fixture-token-'.repeat(4);globalThis.fetch=async()=>new Response('PRIVATE_EDGE_DETAIL',{status:403});await api.reportMt5TransportReadiness(log);assert.equal(records.at(-1).code,'MT5_GATEWAY_AUTH_REJECTED');
+  globalThis.fetch=async()=>Response.json({status:'ok',read_only:true,execution_enabled:true});await api.reportMt5TransportReadiness(log);assert.equal(records.at(-1).code,'MT5_GATEWAY_HEALTH_UNVERIFIED');
+  globalThis.fetch=async()=>{throw Error('PRIVATE_NETWORK_DETAIL')};await api.reportMt5TransportReadiness(log);assert.equal(records.at(-1).code,'MT5_GATEWAY_UNAVAILABLE');assert(!JSON.stringify(records).includes('PRIVATE'));
+ }finally{globalThis.fetch=old;for(const key of Object.keys(process.env))if(!(key in saved))delete process.env[key];Object.assign(process.env,saved);}
+});

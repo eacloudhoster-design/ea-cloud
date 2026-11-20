@@ -42,3 +42,15 @@ No Person 2 defect or configuration change is established by the observed failur
 - API/app TypeScript, production builds and whitespace checks passed. App built at /ea-app/ with unchanged public assets linked locally to avoid duplication; existing bundle-size warning remains.
 
 Raw local evidence: /workspace/work/mt5-contract-20261120/. Review branch only; automatic preview builds suppressed. No merge, deployment, production secret/configuration change, SDK call, broker connection or order was performed.
+
+## Render-origin verification follow-up
+
+Connected Render tooling was rechecked: it provides get_service and merge-style update_environment_variables but no read-only environment-variable listing. No Render CLI executable/login or RENDER_API_KEY is present in the execution workspace. Service metadata omits environment-variable names. An update must not be used as a secret-reading workaround.
+
+PR #144 now adds a once-per-startup, nonblocking private readiness report. It logs only fixed invalid-setting names and request/consumer/transport configuration booleans. When settings pass validation it sends exactly one authenticated GET /healthz to the existing relay, with a five-second timeout, redirects disabled and no broker account body. A positive result requires status=ok, read_only=true, execution_enabled=false. It records brokerConnectivityChecked=false: transport health is not account verification. Invalid configuration, Access/bearer rejection, malformed health evidence and network failures remain distinct private codes. It neither gates dashboard startup nor clears safety holds.
+
+The existing relay credential source is /etc/ea-cloud/readonly-relay/relay-token, loaded as the relay-token systemd credential by infra/linux/ea-readonly-account-relay.service. MT5_VPS_TOKEN must match that approved value. The Cloudflare client ID/secret must come from the already authorized service token on the existing EA Cloud Render Service Auth policy; no new or rotated token is authorized. These are documented sources, not claims that the assistant has accessed their values.
+
+Proposed non-secret correction, only after approval and only if the runtime evidence shows it is needed: MT5_VPS_URL=https://mt5-gateway.eacloudhoster.online and MT5_ACCESS_REQUIRED=1 for that Access-protected hostname. Preserve all other values and all secret values. No production settings have been changed. Merge/deployment approval is needed before the Render-origin probe can run; any later secret correction still requires the existing approved secret and authorization.
+
+Follow-up validation: six mt5-engine-client tests passed, including config rejection without network, healthy relay proof, 403 rejection, execution-enabled/malformed response rejection, unavailable transport, and secret/body suppression. API TypeScript, production build and whitespace checks passed. No broker operation or live probe was performed in validation. Evidence: /workspace/work/mt5-render-readiness-20261120/.
