@@ -16,7 +16,7 @@ type Props = {
 
 /** Visual variants share the original command callbacks and allocated layout slot. */
 export default function RobotControlPanel({image,accentColor,botRunning,onToggle,onOpenQuotes,onRemove}: Props) {
-  const { controlPanel = "default", setControlPanel, botRequested, botPending=false, botError, refreshBotStatus, setBotRunning } = useApp();
+  const { controlPanel = "default", setControlPanel, botRequested, botPending=false, setBotRunning } = useApp();
   const swipe = useControlPanelSwipe(controlPanel, setControlPanel);
   const matrix = controlPanel === "matrix";
   return (
@@ -66,10 +66,6 @@ export default function RobotControlPanel({image,accentColor,botRunning,onToggle
           </span>
           <span>{matrix ? "Symbols" : "Remove"}</span>
         </button>
-        <div style={{gridColumn:"1 / -1",display:"flex",justifyContent:"center",gap:16,fontSize:11}}>
-          {botError&&<button type="button" onClick={()=>window.dispatchEvent(new Event("ea:open-trading-activity"))}>Why is execution blocked?</button>}
-          {refreshBotStatus&&<button type="button" disabled={botPending} onClick={refreshBotStatus} aria-label="Refresh bot status">Refresh status</button>}
-        </div>
       </div>
 
   );

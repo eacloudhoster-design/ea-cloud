@@ -159,7 +159,7 @@ export default function HomeTab({ onOpenSettings, onOpenChartScanner, swipeEnabl
 /* S2TONE — v2: glowing sphere • large name • pill buttons + list   */
 /* ══════════════════════════════════════════════════════════════════ */
 function S2ToneLayout({ portraitEnabled, shapeStyle, accentColor, botRunning, setBotRunning, eaName, eaTagline, bgImageUrl, showBg, setShowBg, setShowRemoveConfirm, setShowQuotes }: any) {
-  const {botRequested,botPending,botError,refreshBotStatus}=useApp();
+  const {botRequested,botPending,botError}=useApp();
   return (
     <div className="relative z-10 flex flex-col items-center px-5 pt-2 pb-6 gap-5">
 
@@ -255,7 +255,6 @@ function S2ToneLayout({ portraitEnabled, shapeStyle, accentColor, botRunning, se
         </div>
       </div>
         {botError&&<p role="alert" className="text-sm text-red-200">{botError}</p>}
-        {refreshBotStatus&&<button type="button" disabled={botPending} onClick={refreshBotStatus}>Refresh bot status</button>}
     </div>
   );
 }
