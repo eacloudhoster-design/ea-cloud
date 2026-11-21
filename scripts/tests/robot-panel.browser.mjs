@@ -115,6 +115,9 @@ try {
       }),
       dot = page.locator(".activity-dot");
     if(stage==="activation"){
+      assert.equal(await page.getByRole('button',{name:'Why is execution blocked?',exact:true}).count(),0);
+      assert.equal(await page.getByRole('button',{name:'Refresh bot status',exact:true}).count(),0);
+      assert.equal(await page.locator('.ea-robot-controls button').count(),3,'Only the original three controls remain');
       const action=()=>page.locator("button.lumo-toggle").first();
       await page.waitForFunction(()=>document.querySelector('.activity-dot')?.getAttribute('aria-label')==='Bot paused');
       failWrite=true;delay=250;
@@ -140,15 +143,15 @@ try {
       await action().click();await page.waitForTimeout(550);
       assert.equal(enabled,false);assert.equal(await dot.getAttribute('aria-label'),'Bot paused');
       failRead=true;
-      await page.getByRole('button',{name:'Refresh bot status',exact:true}).first().click();
+      await page.evaluate(()=>window.dispatchEvent(new Event('focus')));
       await page.waitForTimeout(150);
       assert.equal(await dot.getAttribute('aria-label'),'Bot status unconfirmed');
       failRead=false;
-      await page.getByRole('button',{name:'Refresh bot status',exact:true}).first().click();
+      await page.evaluate(()=>window.dispatchEvent(new Event('focus')));
       await page.waitForTimeout(150);
       assert.equal(await dot.getAttribute('aria-label'),'Bot paused');
       enabled=true;held=true;
-      await page.getByRole('button',{name:'Refresh bot status',exact:true}).first().click();await page.waitForTimeout(150);
+      await page.evaluate(()=>window.dispatchEvent(new Event('focus')));await page.waitForTimeout(150);
       assert.equal(await dot.getAttribute('aria-label'),'Bot paused');
       assert.equal(await action().getAttribute('aria-label'),'Stop','A requested but held bot still offers Stop');
       await action().click();await page.waitForTimeout(550);assert.equal(enabled,false);
