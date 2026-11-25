@@ -1,0 +1,12 @@
+/* Reuse the untouched input surface, spacing, height and typography. */
+.mt5-broker-picker{position:relative;min-width:0}
+.mt5-broker-picker.is-open{z-index:5}
+.mt5-broker-trigger{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;min-width:0;flex:1;height:56px;padding:0;background:transparent;border:0;outline:none;color:#fff;font-family:"EA Bot Inter",Inter,sans-serif;font-size:16px;font-weight:600;letter-spacing:.1px;text-align:left;cursor:pointer;touch-action:manipulation}
+.mt5-broker-trigger>span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mt5-broker-trigger>svg{flex-shrink:0;color:var(--mt5-light)}
+.mt5-broker-trigger.is-placeholder{font-size:12px;color:#d5d9e4}
+.mt5-broker-menu{position:absolute;top:calc(100% + 8px);left:0;right:0;max-height:280px;max-height:min(280px,38vh);max-height:min(280px,38dvh);overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;scrollbar-width:thin;padding:6px;border:1px solid var(--mt5-accent);border-radius:19px;background:#0d0918f5;backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);box-shadow:0 16px 38px #0009,0 0 18px var(--mt5-glow);color:#fff;font-family:"EA Bot Inter",Inter,sans-serif;font-size:14px}
+.mt5-broker-menu [role="option"]{display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:44px;padding:10px 12px;border-radius:12px;cursor:pointer;touch-action:pan-y}
+.mt5-broker-menu [role="option"]:hover,.mt5-broker-menu [role="option"][data-active],.mt5-broker-menu [role="option"][aria-selected="true"]{background:color-mix(in srgb,var(--mt5-accent) 22%,#160d24);color:#fff}
+@media(max-height:700px){.mt5-broker-trigger{height:52px}}
+@container ea-app (max-height:700px){.mt5-broker-trigger{height:52px}}

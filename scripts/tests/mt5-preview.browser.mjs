@@ -178,7 +178,7 @@ try {
 async function customerAcceptance(browser,origin){
  const results=[];
  for(const viewport of [{width:390,height:844},{width:320,height:740},{width:1280,height:900}]){
-  const context=await browser.newContext({viewport}),page=await context.newPage(),errors=[],writes=[];
+  const context=await browser.newContext({viewport,hasTouch:viewport.width<500,isMobile:viewport.width<500}),page=await context.newPage(),errors=[],writes=[];
   page.on('pageerror',e=>errors.push(e.message));
   let outcome='error',verified=false,mode='demo',job=null;
   const jobId='12345678-1234-1234-1234-123456789abc';
@@ -192,14 +192,14 @@ async function customerAcceptance(browser,origin){
     writes.push({path:p,body:req.postDataJSON()});
     if(p==='/api/app/mt5-disconnect'){verified=false;return route.fulfill({json:{connected:false,copyingEnabled:false}});}
     assert.equal(p,'/api/app/mt5-connect');
-    const body=req.postDataJSON();assert.equal(body.password,'customer-fixture-secret');assert.equal(body.ownershipConfirmed,true);
+    const body=req.postDataJSON();assert.equal(body.password,'customer-fixture-secret');assert.equal(body.ownershipConfirmed,undefined);assert.equal(body.accountMode,undefined);
     if(outcome==='error')return route.fulfill({status:503,json:{code:'MT5_GATEWAY_NOT_CONFIGURED',error:'PRIVATE_GATEWAY_SECRET'}});
     if(outcome==='pending'){
      job={id:jobId,login:'00091',server:'FixtureDemo',broker:'justmarkets',accountRole:'follower',accountMode:'demo',state:'queued',connected:false,executionEnabled:false};
      return route.fulfill({status:202,json:{connected:false,status:'provisioning',executionEnabled:false,provisioning:job}});
     }
-    mode=outcome==='mismatch'?'demo':body.accountMode;verified=outcome!=='mismatch';
-    return route.fulfill({json:{connected:true,status:'connected',login:'00091',server:'FixtureDemo',broker:'justmarkets',accountMode:mode}});
+    mode=outcome==='live'?'live':'demo';verified=outcome!=='mismatch';
+    return route.fulfill({json:{connected:outcome!=='mismatch',status:outcome==='mismatch'?'unverified':'connected',login:'00091',server:'FixtureDemo',broker:'justmarkets',accountMode:mode}});
    }
    let data=[];
    if(p==='/api/app/me')data={status:'approved',licenseKey:'fixture',token:btoa('7:client:cookie')};
@@ -216,42 +216,44 @@ async function customerAcceptance(browser,origin){
   await open();
   const screen=page.getByRole('region',{name:'MT5 Connections'}),dialog=page.getByRole('dialog');
   assert.equal(await screen.locator('form').count(),1,'One existing connection form, no extra engineering panels');
-  assert.equal(await screen.locator('.mt5-floating-field').count(),3);
+  assert.equal(await screen.locator('.mt5-floating-field').count(),4);
+  assert.equal(await screen.getByRole('checkbox').count(),0);assert.equal(await screen.getByLabel('Account type',{exact:true}).count(),0);
   assert.doesNotMatch(await screen.innerText(),/provision|worker|gateway|deployment|testing mode|terminal compatibility/i);
-  await screen.getByLabel('Broker',{exact:true}).selectOption('justmarkets');
-  await screen.getByLabel('Account type',{exact:true}).selectOption('demo');
+  const selectBroker=async name=>{const picker=screen.getByRole('combobox',{name:'Broker',exact:true}),tap=viewport.width<500;if(tap)await picker.tap();else await picker.click();const option=screen.getByRole('option',{name,exact:true});if(tap)await option.tap();else await option.click();};
+  await selectBroker('JustMarkets');
+  await screen.getByRole('heading',{name:'Your Trading World',exact:true}).click();await page.waitForTimeout(350);
+  const brokerStyle=await screen.locator('.mt5-broker-picker .mt5-input-wrap').evaluate(e=>{const s=getComputedStyle(e);return [s.height,s.borderRadius,s.borderColor,s.backgroundImage,s.paddingLeft,s.paddingRight];});
+  const inputStyle=await screen.locator('#mt5-login').evaluate(e=>{const s=getComputedStyle(e.parentElement);return [s.height,s.borderRadius,s.borderColor,s.backgroundImage,s.paddingLeft,s.paddingRight];});assert.deepEqual(brokerStyle,inputStyle,'Broker selector matches existing input surfaces');
+  const picker=screen.getByRole('combobox',{name:'Broker',exact:true});await picker.click();assert.equal(await screen.getByRole('option').count(),14);await page.screenshot({path:`${screenshots}/brokers-${viewport.width}.png`});await page.keyboard.press('Escape');await picker.focus();await page.keyboard.press('ArrowDown');await page.keyboard.press('End');await page.keyboard.press('Enter');assert((await picker.innerText()).includes('Other broker'));
+  await selectBroker('JustMarkets');
   await screen.getByLabel('MT5 Account Number',{exact:true}).fill('00091');
   await screen.getByLabel('Server',{exact:true}).fill('FixtureDemo');
-  await screen.getByRole('checkbox').check();
   const submit=async()=>{await screen.getByLabel('Password',{exact:true}).fill('customer-fixture-secret');await screen.getByRole('button',{name:'Connect MT5',exact:true}).click();};
   const close=()=>dialog.getByRole('button',{name:'Close connection details',exact:true}).click();
   await submit();await dialog.getByRole('heading',{name:'Unable to connect',exact:true}).waitFor();
   assert((await dialog.innerText()).includes('temporarily unavailable'));
   assert.doesNotMatch(await dialog.innerText(),/gateway|worker|provision|deployment|PRIVATE_GATEWAY_SECRET/i);
   assert.equal(await screen.getByLabel('Password',{exact:true}).inputValue(),'');await close();
-  outcome='pending';await submit();await dialog.getByRole('heading',{name:'Preparing your account connection',exact:true}).waitFor();
-  assert.doesNotMatch(await dialog.innerText(),/gateway|worker|provision|deployment/i);await close();
+  job={id:jobId,login:'00091',server:'FixtureDemo',broker:'justmarkets',accountRole:'follower',accountMode:'demo',state:'queued',connected:false,executionEnabled:false};
   const writesBefore=writes.length;await open();await screen.getByRole('button',{name:'Check connection',exact:true}).waitFor();
   assert.equal(writes.length,writesBefore,'Reopening restores the pending request without resubmitting credentials');
   job.state='awaiting_verification';await screen.getByRole('button',{name:'Check connection',exact:true}).click();
   await dialog.getByRole('heading',{name:'Unable to connect',exact:true}).waitFor();await close();
   assert.equal(await screen.getByLabel('MT5 Account Number',{exact:true}).inputValue(),'00091');
   assert.equal(await screen.getByLabel('Server',{exact:true}).inputValue(),'FixtureDemo');
-  assert.equal(await screen.getByLabel('Account type',{exact:true}).inputValue(),'demo');
   job.state='connected';await screen.getByRole('button',{name:'Check connection',exact:true}).click();await page.waitForTimeout(200);
   assert.equal(await dialog.getByRole('heading',{name:'Connected Successfully',exact:true}).count(),0,'A completed request alone cannot claim connection');
   await close();verified=true;
   await screen.getByRole('button',{name:'Check connection',exact:true}).click();await dialog.getByRole('heading',{name:'Connected Successfully',exact:true}).waitFor();
   await close();job=null;
   await screen.getByRole('button',{name:'Disconnect',exact:true}).click();await page.waitForTimeout(200);assert.equal(verified,false);
-  await screen.getByLabel('Broker',{exact:true}).selectOption('justmarkets');await screen.getByLabel('Account type',{exact:true}).selectOption('live');
-  await screen.getByLabel('MT5 Account Number',{exact:true}).fill('00091');await screen.getByLabel('Server',{exact:true}).fill('FixtureDemo');await screen.getByRole('checkbox').check();
+  await selectBroker('JustMarkets');await screen.getByLabel('MT5 Account Number',{exact:true}).fill('00091');await screen.getByLabel('Server',{exact:true}).fill('FixtureDemo');
   outcome='mismatch';await submit();await dialog.getByRole('heading',{name:'Unable to connect',exact:true}).waitFor();await close();
-  outcome='connected';await submit();await dialog.getByRole('heading',{name:'Connected Successfully',exact:true}).waitFor();await close();
-  assert.equal(writes.at(-1).body.accountMode,'live');
+  outcome='live';await submit();await dialog.getByRole('heading',{name:'Connected Successfully',exact:true}).waitFor();await close();
+  assert.equal(writes.at(-1).body.accountMode,undefined);assert.equal(mode,'live');
   assert.doesNotMatch(await screen.innerText(),/provision|worker|gateway|deployment|testing mode/i);
   const visual=await screen.evaluate(el=>({classes:el.className,background:getComputedStyle(el).backgroundColor,fields:[...el.querySelectorAll('.mt5-floating-field')].map(f=>({borderRadius:getComputedStyle(f).borderRadius,font:getComputedStyle(f).fontFamily})),button:{radius:getComputedStyle(el.querySelector('.mt5-connect-button')).borderRadius,background:getComputedStyle(el.querySelector('.mt5-connect-button')).backgroundImage},navigation:document.querySelector('nav')?.className}));
-  await page.screenshot({path:`${screenshots}/customer-${viewport.width}.png`});
+  await page.waitForTimeout(400);await page.screenshot({path:`${screenshots}/customer-${viewport.width}.png`});
   assert.deepEqual(errors,[]);results.push({viewport,oneForm:true,customerCopy:true,resumedWithoutResubmission:true,freshProofRequired:true,demoAndRealContract:true,disconnect:true,visual,errors});await context.close();
  }
  writeFileSync(screenshots+'/customer-results.json',JSON.stringify(results,null,2)+'\n');

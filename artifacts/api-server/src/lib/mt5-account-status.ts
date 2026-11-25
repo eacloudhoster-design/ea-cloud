@@ -55,11 +55,11 @@ export async function readBoundAccount(login: string | number, server: string, p
     owner={kind:data.owner_kind,id:data.owner_id};
   }
   const validJournal=readonly ? data.protocol==="EA_READ_ONLY_STATUS_V1" && data.financial_routes===false && data.execution_enabled===false && data.journal_bound===false && data.journal_holds===null && (data.emergency_stop_active===null || typeof data.emergency_stop_active==="boolean") : typeof data?.emergency_stop_active==="boolean" && data.journal_bound===true && Number.isSafeInteger(data.journal_holds) && data.journal_holds>=0;
-  const brokers = ["deriv", "exness", "justmarkets", "xm", "rcg"];
-  if(data?.success===true && (!brokers.includes(data.broker) || (data.account_mode==="live" && !(process.env.MT5_LIVE_READONLY_ACCOUNTS==="1" && readonly && data.execution_enabled===false))))
+  const validBroker=typeof data?.broker==="string"&&/^[a-z0-9][a-z0-9-]{0,63}$/.test(data.broker);
+  if(data?.success===true && (!validBroker || (data.account_mode==="live" && !(readonly && data.execution_enabled===false))))
     throw new AccountBindingError("UNSUPPORTED_ACCOUNT_CONFIGURATION",422);
-  if (!response.ok || data?.success !== true || data.connected !== true || data.simulation !== false || (data.account_mode !== "demo" && !(data.account_mode === "live" && process.env.MT5_LIVE_READONLY_ACCOUNTS === "1" && readonly && data.execution_enabled === false)) ||
-      data.login !== Number(login) || data.server !== server || !brokers.includes(data.broker) || !["mentor","client"].includes(data.role) ||
+  if (!response.ok || data?.success !== true || data.connected !== true || data.simulation !== false || (data.account_mode !== "demo" && !(data.account_mode === "live" && readonly && data.execution_enabled === false)) ||
+      data.login !== Number(login) || data.server !== server || !validBroker || !["mentor","client"].includes(data.role) ||
       typeof data.execution_enabled !== "boolean" || !validJournal || !Number.isSafeInteger(data.open_positions) || data.open_positions < 0 || !Number.isSafeInteger(data.pending_orders) || data.pending_orders < 0)
     throw Error("Provisioned account verification unavailable");
   if(data.execution_enabled && (data.emergency_stop_active || (data.journal_holds!==null && data.journal_holds>0) || data.role!=="client"))

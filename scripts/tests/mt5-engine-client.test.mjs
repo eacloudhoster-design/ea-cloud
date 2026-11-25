@@ -4,7 +4,7 @@ test('client sends credentials once, requires exact verification and cancels bou
  try{
   await build({entryPoints:['artifacts/ea-app/src/lib/mt5-engine.ts'],bundle:true,platform:'node',format:'esm',outfile:join(dir,'client.mjs'),logLevel:'silent'});
   const api=await import(pathToFileURL(join(dir,'client.mjs'))),input={login:'91',server:'Fixture',password:'fixture-secret'},controller=new AbortController();
-  let body={connected:true,status:'connected',login:'91',server:'Fixture'};
+  let body={connected:true,status:'connected',login:'91',server:'Fixture',accountMode:'demo'};
   globalThis.fetch=async(url,init)=>{calls++;assert.equal(url,'/api/app/mt5-connect');assert.equal(init.credentials,'same-origin');assert.equal(JSON.parse(init.body).password,'fixture-secret');return new Response(JSON.stringify(body),{status:200});};
   assert.equal((await api.connectMt5Account(input,'fixture-cookie-hint',controller.signal)).connected,true);assert.equal(calls,1);
   for(const invalid of [{},{connected:false},{...body,login:'92'}]){body=invalid;await assert.rejects(api.connectMt5Account(input,'fixture-cookie-hint',controller.signal));}
@@ -16,7 +16,7 @@ test('client sends credentials once, requires exact verification and cancels bou
   globalThis.fetch=async()=>Response.json(pending,{status:202});
   assert.equal((await api.connectMt5Account({...input,broker:'justmarkets',accountMode:'demo'},'fixture-cookie-hint',controller.signal)).connected,false);
   pending.provisioning.login='92';await assert.rejects(api.connectMt5Account({...input,broker:'justmarkets',accountMode:'demo'},'fixture-cookie-hint',controller.signal));
-  globalThis.fetch=async()=>Response.json({connected:true,status:'connected',login:'91',server:'Fixture',broker:'justmarkets'});
+  globalThis.fetch=async()=>Response.json({connected:true,status:'connected',login:'91',server:'Fixture',accountMode:'demo',broker:'justmarkets'});
   assert.equal((await api.connectMt5Account({...input,broker:'custom'},'fixture-cookie-hint',controller.signal)).broker,'justmarkets');
   await assert.rejects(api.connectMt5Account({...input,broker:'exness'},'fixture-cookie-hint',controller.signal));
   controller.abort();const before=calls;await assert.rejects(api.connectMt5Account(input,'fixture-cookie-hint',controller.signal),{name:'AbortError'});assert.equal(calls,before);
@@ -84,7 +84,7 @@ test('submitted login zeros survive application proof and private diagnostics ex
   const input={login:'00091',server:'Fixture',password:'fixture-only',accountMode:'demo'};
   globalThis.fetch=async(url,init)=>{assert.equal(JSON.parse(init.body).login,'00091');return Response.json({connected:true,status:'connected',login:'00091',server:'Fixture',accountMode:'demo'});};
   assert.equal((await api.connectMt5Account(input,'fixture',new AbortController().signal)).login,'00091');
-  globalThis.fetch=async()=>Response.json({connected:true,status:'connected',login:'91',server:'Fixture',accountMode:'demo'});
+  globalThis.fetch=async()=>Response.json({connected:true,status:'connected',login:'91',server:'Fixture',accountMode:'demo',accountMode:'demo'});
   await assert.rejects(api.connectMt5Account(input,'fixture',new AbortController().signal));
  }finally{globalThis.fetch=old;}
  const transport=await build({entryPoints:['artifacts/api-server/src/lib/mt5-endpoint.ts'],bundle:true,platform:'node',format:'esm',write:false,logLevel:'silent'});

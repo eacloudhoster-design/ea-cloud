@@ -69,11 +69,12 @@ test('real browser sessions, owned engine status, strict broker proof and accoun
    await assert.rejects(api.readBoundAccount('91','FixtureDemo','fixture-broker-password'));
   }
   response=ack;
+  const beforeUntrusted=calls;const untrustedConnect=await request('/app/mt5-connect',{method:'POST',headers:{cookie:clientCookie,Origin:'https://attacker.invalid','Content-Type':'application/json'},body:JSON.stringify({login:'91',server:'FixtureDemo',password:'fixture-broker-password'})});assert.equal(untrustedConnect.status,403);assert.equal(calls,beforeUntrusted,'Connect authorization still requires the trusted session/origin');
   await f.engine.exec("INSERT INTO client_settings(client_id,copying_enabled) VALUES(10,true)");
   const connect=()=>request('/app/mt5-connect',{method:'POST',headers:{cookie:clientCookie,'Content-Type':'application/json'},body:JSON.stringify({login:'91',server:'FixtureDemo',password:'fixture-broker-password'})});
   globalThis.fetch=async()=>Response.json({success:false,code:'ACCOUNT_NOT_ASSIGNED',message:'PRIVATE_VENDOR_SECRET'},{status:403});
   let missing=await connect();assert.equal(missing.status,409);let missingBody=await missing.json();assert.equal(missingBody.code,'ACCOUNT_NOT_ASSIGNED');assert(!JSON.stringify(missingBody).includes('PRIVATE_VENDOR_SECRET'));
-  const assignmentBody={login:'00092',server:'FixtureNewDemo',broker:'justmarkets',password:'fixture-broker-password',requestAssignment:true,requestKey:randomBytes(16).toString('hex').replace(/(.{8})(.{4})(.{4})(.{4})(.{12})/,'$1-$2-$3-$4-$5'),accountMode:'demo',ownershipConfirmed:true};
+  const assignmentBody={login:'00092',server:'FixtureNewDemo',broker:'justmarkets',password:'fixture-broker-password',requestAssignment:true,requestKey:randomBytes(16).toString('hex').replace(/(.{8})(.{4})(.{4})(.{4})(.{12})/,'$1-$2-$3-$4-$5'),accountMode:'demo'};
   const requestAssignment=()=>request('/app/mt5-connect',{method:'POST',headers:{cookie:clientCookie,'Content-Type':'application/json'},body:JSON.stringify(assignmentBody)});
   let unavailable=await requestAssignment();assert.equal(unavailable.status,503);assert.equal((await unavailable.json()).code,'PROVISIONING_NOT_CONFIGURED');
   for(const broker of ['custom','oanda']){
@@ -83,6 +84,7 @@ test('real browser sessions, owned engine status, strict broker proof and accoun
   process.env.MT5_SELF_SERVICE_PROVISIONING='1';process.env.MT5_PROVISIONING_CONSUMER='1';
   const unavailablePort=await requestAssignment();assert.equal(unavailablePort.status,503);assert.equal((await unavailablePort.json()).code,'PROVISIONING_NOT_CONFIGURED');assert.equal((await f.engine.query('SELECT count(*)::int AS n FROM mt5_provisioning_requests')).rows[0].n,0);
   process.env.MT5_PROVISIONER_URL='https://provisioner.example.invalid';process.env.MT5_PROVISIONER_TOKEN='fixture-only-'.repeat(4);
+  const autoUnassigned=await request('/app/mt5-connect',{method:'POST',headers:{cookie:clientCookie,'Content-Type':'application/json'},body:JSON.stringify({...assignmentBody,accountMode:undefined})});assert.equal(autoUnassigned.status,503);assert.equal((await autoUnassigned.json()).connected,false,'Unknown type is never guessed or fabricated');
   const accepted=await requestAssignment();assert.equal(accepted.status,202);const job=await accepted.json();assert.equal(job.connected,false);assert.equal(job.provisioning.login,'00092');assert(!JSON.stringify(job).includes('fixture-broker-password'));
   assert.equal((await requestAssignment()).status,202);assert.equal((await f.engine.query('SELECT count(*)::int AS n FROM mt5_provisioning_requests')).rows[0].n,1);
   globalThis.fetch=async()=>Response.json({...ack,login:92,server:'FixtureNewDemo',read_only:true,protocol:'EA_READ_ONLY_STATUS_V1',financial_routes:false,journal_bound:false,journal_holds:null,emergency_stop_active:null});
@@ -95,12 +97,13 @@ test('real browser sessions, owned engine status, strict broker proof and accoun
   result=await connect();assert.equal(result.status,200);assert.equal((await result.json()).connected,true);
   const modeRequest=accountMode=>request('/app/mt5-connect',{method:'POST',headers:{cookie:clientCookie,'Content-Type':'application/json'},body:JSON.stringify({login:'91',server:'FixtureDemo',password:'fixture-broker-password',accountMode})});
   let typed=await modeRequest('demo');assert.equal(typed.status,200);assert.equal((await typed.json()).accountMode,'demo');
-  const modeCalls=calls;typed=await modeRequest('live');assert.equal(typed.status,422);assert.equal((await typed.json()).code,'UNSUPPORTED_ACCOUNT_CONFIGURATION');assert.equal(calls,modeCalls,'Unapproved live connection never sends credentials');
-  process.env.MT5_LIVE_READONLY_ACCOUNTS='1';
+  typed=await modeRequest('live');assert.equal(typed.status,422);assert.equal((await typed.json()).code,'ACCOUNT_MODE_MISMATCH');
   typed=await modeRequest('live');assert.equal(typed.status,422);assert.equal((await typed.json()).code,'ACCOUNT_MODE_MISMATCH');
   response={...ack,account_mode:'live',read_only:true,protocol:'EA_READ_ONLY_STATUS_V1',financial_routes:false,journal_bound:false,journal_holds:null,emergency_stop_active:null};
-  typed=await modeRequest('live');assert.equal(typed.status,200);const liveConnection=await typed.json();assert.equal(liveConnection.accountMode,'live');assert(!JSON.stringify(liveConnection).includes('fixture-broker-password'));
+  typed=await modeRequest(undefined);assert.equal(typed.status,200);const liveConnection=await typed.json();assert.equal(liveConnection.accountMode,'live');assert(!JSON.stringify(liveConnection).includes('fixture-broker-password'));
   typed=await modeRequest('demo');assert.equal(typed.status,422);assert.equal((await typed.json()).code,'ACCOUNT_MODE_MISMATCH');
+  response={...response,broker:'oanda'};typed=await modeRequest(undefined);assert.equal(typed.status,200);assert.equal((await typed.json()).broker,'oanda');
+  response={...response,execution_enabled:true};typed=await modeRequest(undefined);assert.equal(typed.status,422,'Read-only live verification cannot grant execution');
   delete process.env.MT5_LIVE_READONLY_ACCOUNTS;response=ack;
   await f.engine.exec("UPDATE client_settings SET copying_enabled=true WHERE client_id=10");
   typed=await modeRequest('demo');assert.equal(typed.status,200);assert.equal((await typed.json()).copyingEnabled,false);
