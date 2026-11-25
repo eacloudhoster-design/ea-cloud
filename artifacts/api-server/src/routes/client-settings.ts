@@ -261,7 +261,7 @@ router.post(["/app/mt5-connect","/client/mt5/connect"], requireAppSession, async
     if (typeof password !== "string" || password.length > 1024 || typeof server !== "string" || server.length > 256 || !Number.isSafeInteger(loginNum)) {
       res.status(400).json({error:"Invalid account credentials"});return;
     }
-    if(body.accountMode!==undefined && (!["demo","live"].includes(String(body.accountMode)) || (body.accountMode==="live" && process.env.MT5_LIVE_READONLY_ACCOUNTS!=="1"))){
+    if(body.accountMode!==undefined && !["demo","live"].includes(String(body.accountMode))){
       res.status(422).json({connected:false,code:"UNSUPPORTED_ACCOUNT_CONFIGURATION",error:"This account type is currently unavailable"});return;
     }
     let account;
@@ -276,9 +276,12 @@ router.post(["/app/mt5-connect","/client/mt5/connect"], requireAppSession, async
         if(process.env.MT5_SELF_SERVICE_PROVISIONING!=="1" || process.env.MT5_PROVISIONING_CONSUMER!=="1"){
           res.status(503).json({code:"PROVISIONING_NOT_CONFIGURED",error:"Account provisioning is not available",connected:false});return;
         }
+        // The legacy host contract requires a known mode before creating a terminal.
+        // Never guess demo/live from broker/server labels or present acceptance as authentication.
+        if(body.accountMode===undefined){req.log.warn({code:"ACCOUNT_MODE_DISCOVERY_REQUIRES_TERMINAL"},"Automatic connection requires an assigned terminal");res.status(503).json({connected:false,code:"PROVISIONING_NOT_CONFIGURED"});return;}
         try{createDedicatedWorkerPort();}catch{req.log.warn({code:"PRIVATE_PROVISIONER_NOT_CONFIGURED"},"Account assignment transport configuration missing");res.status(503).json({connected:false,code:"PROVISIONING_NOT_CONFIGURED"});return;}
         try{
-          const provisioning=await queueProvisioning({requestKey:body.requestKey,broker,login:submittedLogin,server,password,accountRole:"follower",accountMode:body.accountMode,ownershipConfirmed:body.ownershipConfirmed},{kind:"client",id:req.clientId});
+          const provisioning=await queueProvisioning({requestKey:body.requestKey,broker,login:submittedLogin,server,password,accountRole:"follower",accountMode:body.accountMode,ownershipConfirmed:true},{kind:"client",id:req.clientId});
           res.status(202).json({connected:false,status:"provisioning",executionEnabled:false,provisioning});
         }catch(queueError){
           const code=queueError instanceof Error?queueError.message:"";
