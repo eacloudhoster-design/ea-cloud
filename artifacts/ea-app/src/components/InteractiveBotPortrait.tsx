@@ -1,3 +1,4 @@
+import OrbitArcs from "./OrbitArcs";
 import {
   useEffect,
   useLayoutEffect,
@@ -25,6 +26,7 @@ export default function InteractiveBotPortrait({
 }) {
   const {
     shapeStyle,
+    backgroundAnimation,accentColor,
     setShapeStyle,
     restoreShape = "orbit",
     activeTab,
@@ -215,6 +217,7 @@ export default function InteractiveBotPortrait({
       animate={{ height: size, marginBottom: margin }}
       transition={{ duration, ease: [0.22, 0.68, 0, 1] }}
     >
+      {backgroundAnimation==="orbit"&&enabled&&!hidden&&activeTab==="home"&&<OrbitArcs color={accentColor}/>}
       {(!hidden || retain) && (
         <motion.div
           className="interactive-portrait-visual"

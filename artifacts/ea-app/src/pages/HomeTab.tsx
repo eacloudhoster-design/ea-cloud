@@ -1,3 +1,4 @@
+import "@/components/CrimsonTheme.css";
 import RobotControlPanel from "@/components/RobotControlPanel";
 import LumoLayout from "@/components/LumoLayout";
 import { confirmSymbolSave } from "@/lib/symbol-save";
@@ -133,7 +134,7 @@ export default function HomeTab({ onOpenSettings, onOpenChartScanner, swipeEnabl
         )}
 
         {/* ── REGULAR — large glowing circle ── */}
-        {interfaceStyle === "regular" && <RegularLayout {...sharedLayoutProps} />}
+        {(interfaceStyle === "regular" || interfaceStyle === "crimson") && <RegularLayout {...sharedLayoutProps} />}
 
         {interfaceStyle === "lumo" && <LumoLayout onOpenSettings={onOpenSettings} onOpenQuotes={() => setShowQuotes(true)} onRemove={() => setShowRemoveConfirm(true)} onOpenActivity={() => window.dispatchEvent(new Event("ea:open-trading-activity"))} />}
 

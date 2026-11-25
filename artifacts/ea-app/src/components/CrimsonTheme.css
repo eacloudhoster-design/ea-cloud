@@ -1,0 +1,7 @@
+/* Optional theme, scoped so existing interface themes keep their appearance. */
+[data-home-interface="crimson"]::before{content:"";position:absolute;inset:0;background:linear-gradient(180deg,#06060945,#03030515 45%,#030305d9),radial-gradient(ellipse at 50% 34%,#a009151c,transparent 70%);pointer-events:none}
+[data-home-interface="crimson"] .robot-image-frame{box-shadow:0 0 0 1px #ff4d5d26,0 18px 45px #0009,0 0 24px #d113241c!important;background:#10090e!important}
+[data-home-interface="crimson"] .portrait-bloom{opacity:.18!important}
+[data-home-interface="crimson"] .ea-robot-controls{background:linear-gradient(135deg,#1a1118e8,#08080dea);border-color:color-mix(in srgb,var(--lumo-accent) 48%,transparent);box-shadow:0 15px 35px #0007,inset 0 1px #ffffff10}
+[data-interface-theme="crimson"] [data-home-background]{filter:grayscale(1) brightness(.42) contrast(1.15)}
+[data-home-interface="crimson"] .robot-image-frame img{filter:grayscale(1) contrast(1.12)}

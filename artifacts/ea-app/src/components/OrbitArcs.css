@@ -1,0 +1,6 @@
+.ea-orbit-arcs{position:absolute;inset:calc(-1 * var(--orbit-pad,18px));width:calc(100% + 2 * var(--orbit-pad,18px));height:calc(100% + 2 * var(--orbit-pad,18px));overflow:visible;pointer-events:none;z-index:4;filter:drop-shadow(0 0 3px currentColor)}
+.ea-orbit-arcs path{fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round}
+.ea-orbit-spin{transform-origin:150px 150px;animation:ea-orbit-clockwise 9s linear infinite}
+@keyframes ea-orbit-clockwise{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+.lumo-orbit-animation{position:absolute;left:5px;top:5px;width:30px;height:30px;--orbit-pad:6px;pointer-events:none}
+@media(prefers-reduced-motion:reduce){.ea-orbit-spin{animation:none}}

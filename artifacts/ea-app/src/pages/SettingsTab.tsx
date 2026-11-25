@@ -29,6 +29,7 @@ const INTERFACE_OPTIONS: { id: InterfaceStyle; label: string; desc: string }[] =
   { id: "matrix", label: "The Matrix Interface", desc: "3 buttons in row layout" },
   { id: "s2tone", label: "S2tone_", desc: "Double outline with circle controls" },
   { id: "lumo", label: "Lumo", desc: "Portrait glass with capsule trading controls" },
+  { id: "crimson", label: "Crimson", desc: "Black and red robotic interface" },
 ];
 
 const SHAPE_OPTIONS: { id: ShapeStyle; label: string; desc: string }[] = [
@@ -213,10 +214,11 @@ export default function SettingsTab({ onOpenChartScanner, onOpenLiveShot, backgr
           accentColor={accentColor}
         >
           <div className="mt-2 space-y-2">
-            {backgroundAnimations.map(anim => (
+            <button type="button" role="switch" aria-checked={backgroundAnimation==="orbit"} aria-label="Orbit Animation" onClick={()=>setBackgroundAnimation(backgroundAnimation==="orbit"?"none":"orbit")} className="w-full px-4 py-3 rounded-2xl flex items-center justify-between" style={{background:"rgba(15,15,15,.8)",border:`1px solid ${backgroundAnimation==="orbit"?accentColor:"#ffffff1a"}`}}><span className="text-white font-semibold text-sm">Orbit Animation</span><span style={{color:accentColor}}>{backgroundAnimation==="orbit"?"ON":"OFF"}</span></button>
+            {backgroundAnimations.filter(anim=>anim!=="orbit").map(anim => (
               <button key={anim} aria-pressed={backgroundAnimation === anim} onClick={() => setBackgroundAnimation(anim)} className="w-full px-4 py-3 rounded-2xl text-left active:scale-[0.98] transition-transform"
                 style={{ background: backgroundAnimation === anim ? `${accentColor}22` : "rgba(15,15,15,0.8)", border: `1px solid ${backgroundAnimation === anim ? accentColor : "rgba(255,255,255,0.1)"}` }}>
-                <p className="text-white font-semibold text-sm">{{none:"None",pulse:"Pulse",glow:"Glow",matrix:"Matrix Rain",particles:"Particles"}[anim]}{backgroundAnimation === anim && <Check size={16} className="inline ml-2" style={{color:accentColor}} />}</p>
+                <p className="text-white font-semibold text-sm">{{none:"None",pulse:"Pulse",glow:"Glow",matrix:"Matrix Rain",particles:"Particles",orbit:"Orbit Animation"}[anim]}{backgroundAnimation === anim && <Check size={16} className="inline ml-2" style={{color:accentColor}} />}</p>
               </button>
             ))}
           </div>
