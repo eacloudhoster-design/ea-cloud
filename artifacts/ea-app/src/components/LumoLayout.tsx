@@ -1,3 +1,4 @@
+import OrbitArcs from "./OrbitArcs";
 import { useState, type CSSProperties } from "react";
 import {
   ArrowUpRight,
@@ -32,6 +33,7 @@ export default function LumoLayout({
     bgImageUrl,
     accentColor,
     botRunning,
+    backgroundAnimation,activeTab,
     botStatusConfirmed,
     botPending,
     setBotRunning,
@@ -70,6 +72,7 @@ export default function LumoLayout({
           <Menu aria-hidden="true" />
         </button>
         <div className="lumo-identity">
+          {backgroundAnimation==="orbit"&&activeTab==="home"&&<span className="lumo-orbit-animation"><OrbitArcs color={accentColor}/></span>}
           <ModeImage src={image} alt="" draggable={false} />
           <div className="lumo-identity-text">
             <BotName as="p">{eaName}</BotName>

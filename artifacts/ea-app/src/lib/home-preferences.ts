@@ -5,6 +5,7 @@ export const interfaceOrder: readonly InterfaceStyle[] = [
   "matrix",
   "s2tone",
   "lumo",
+  "crimson",
 ];
 export const backgroundAnimations = [
   "none",
@@ -12,6 +13,7 @@ export const backgroundAnimations = [
   "glow",
   "matrix",
   "particles",
+  "orbit",
 ] as const;
 export type BackgroundAnimation = (typeof backgroundAnimations)[number];
 export const isBackgroundAnimation = (

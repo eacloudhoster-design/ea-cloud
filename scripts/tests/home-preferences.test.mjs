@@ -20,12 +20,13 @@ const {
     Buffer.from(bundle.outputFiles[0].text).toString("base64")
 );
 
-test("both swipe directions cycle Regular, Matrix, S2tone and Lumo using the same interface identifiers", () => {
+test("both swipe directions cycle Regular, Matrix, S2tone, Lumo and Crimson using the same interface identifiers", () => {
   for (const [from, next, previous] of [
-    ["regular", "matrix", "lumo"],
+    ["regular", "matrix", "crimson"],
     ["matrix", "s2tone", "regular"],
     ["s2tone", "lumo", "matrix"],
-    ["lumo", "regular", "s2tone"],
+    ["lumo", "crimson", "s2tone"],
+    ["crimson", "regular", "lumo"],
   ]) {
     assert.equal(adjacentInterface(from, "next"), next);
     assert.equal(adjacentInterface(from, "previous"), previous);
@@ -68,7 +69,7 @@ test("interface and background preferences survive storage, default safely and s
     backgroundAnimation: "none",
     accentColor: "#ef4444",
   });
-  for (const interfaceStyle of ["regular", "matrix", "lumo"])
+  for (const interfaceStyle of ["regular", "matrix", "s2tone", "lumo", "crimson"])
     for (const showBg of [true, false])
       for (const backgroundAnimation of [
         "none",
@@ -76,6 +77,7 @@ test("interface and background preferences survive storage, default safely and s
         "glow",
         "matrix",
         "particles",
+        "orbit",
       ]) {
         assert.equal(
           saveHomePreferences(storage, key, {

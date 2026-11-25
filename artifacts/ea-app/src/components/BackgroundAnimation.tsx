@@ -29,7 +29,7 @@ export default function BackgroundAnimation({
     };
   }, []);
   // Off-screen tabs, hidden documents and reduced-motion users do no animation work.
-  if (effect === "none" || !active || !visible || reduced) return null;
+  if (effect === "none" || effect === "orbit" || !active || !visible || reduced) return null;
   return (
     <div
       key={effect}

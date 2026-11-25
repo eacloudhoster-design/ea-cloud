@@ -4,7 +4,7 @@ import type {BotFont} from "@/lib/font-preference";
 import { createContext, useContext } from "react";
 
 export type Tab = "home" | "metatrader" | "settings";
-export type InterfaceStyle = "regular" | "matrix" | "s2tone" | "lumo";
+export type InterfaceStyle = "regular" | "matrix" | "s2tone" | "lumo" | "crimson";
 export type ShapeStyle = "orbit" | "neural" | "none";
 
 export interface AppSettings {
