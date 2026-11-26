@@ -1,3 +1,9 @@
+## Current recovery/status boundary
+
+The nonroot status relay can opt into `self_service_status_proxy` and receive only a separate status-only systemd credential. It calls the loopback private provisioner's `/v1/account-status`; that route cannot provision and the provisioning token cannot authenticate it. A fixed root-owned SHA-pinned `read-account-status.py` resolves only verified ledger allocations, checks the supplied broker password, performs a read-only snapshot, and returns the existing allowlisted proof projection plus authoritative tenant metadata. Passwords/tokens/paths are never returned. Root privilege remains in the already-authorized private provisioning process; the HTTP relay stays nonroot.
+
+`--verify-retained <UUID>` is explicit root reconciliation for a previously verified descriptor in stopped_retained state. It requires unchanged owner/account/broker/mode and no competing static registry identity, respects capacity/stops, and verifies an already-running terminal. It never starts/rebuilds/reallocates or replays a job. Wrong proof stops its allowlisted units and holds the allocation. Request/application ownership authorization remains separately enforced by the backend.
+
 ## 2026-11-11 owner-authorized continuation — supersedes historical gates below
 
 Production deployment, service configuration and reviewed migrations after backup are now owner-authorized. The two 20261111 migrations were applied once after a verified restore; do not repeat them. Current exact receipts are in `production-evidence/` and `PRODUCTION_EXECUTION_20261111.md`.

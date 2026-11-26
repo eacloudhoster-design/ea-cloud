@@ -2,7 +2,7 @@ import sys,unittest
 from pathlib import Path
 sys.path.insert(0,str(Path(__file__).resolve().parents[2]/'vps-mt5-service'))
 from fastapi.testclient import TestClient
-from readonly_account_relay import Binding,create_app
+from readonly_account_relay import Binding,create_app,project_snapshot
 class Tests(unittest.TestCase):
  def setUp(self):
   self.base=Binding('justmarkets',111,'Fixture','client','http://127.0.0.1:10081','base-fixture','a'*40)
@@ -22,4 +22,16 @@ class Tests(unittest.TestCase):
  def test_endpoint_collision_holds(self):
   self.new=Binding('justmarkets',222,'Fixture','client',self.base.url,'new-fixture','b'*40)
   self.assertEqual(self.query(222,'new-fixture').status_code,503);self.assertFalse(self.forwarded)
+ def test_nonroot_private_proxy_preserves_owner_and_drops_extra_fields(self):
+  import dataclasses
+  binding=dataclasses.replace(self.new,owner_kind='client',owner_id=7)
+  def proxy(payload):
+   self.assertEqual(payload,{'login':222,'server':'Fixture','password':'new-fixture'})
+   snapshot=dict.fromkeys(('success','read_only','initialized','identity_verified','portable_paths_verified','connected','positions_read_verified','orders_read_verified'),True)|{'automated_trading_enabled':False,'execution_enabled':False,'financial_trades':0,'account':{'login':222,'server':'Fixture','mode':'demo'},'open_positions':0,'pending_orders':0}
+   return project_snapshot(binding,snapshot)|{'password':'DO_NOT_PROJECT','debug':'DO_NOT_PROJECT'}
+  self.client=TestClient(create_app([self.base],'c'*40,forward_dynamic=proxy))
+  response=self.query(222,'new-fixture');self.assertEqual(response.status_code,200);self.assertEqual(response.json()['owner_id'],7);self.assertNotIn('DO_NOT_PROJECT',response.text)
+ def test_private_proxy_missing_owner_denied(self):
+  self.client=TestClient(create_app([self.base],'c'*40,forward_dynamic=lambda payload:{'success':True,'read_only':True}))
+  self.assertEqual(self.query(222,'new-fixture').status_code,503)
 if __name__=='__main__':unittest.main(verbosity=2)

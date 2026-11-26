@@ -1,0 +1,52 @@
+{
+  "diagnostic_only": true,
+  "account_changes": false,
+  "broker_orders": 0,
+  "samples": [
+    {
+      "http": 503,
+      "elapsed": 0.23,
+      "proof": {
+        "read_only": true,
+        "financial_trades": 0,
+        "initialized": true,
+        "identity_verified": true,
+        "market_data_verified": false,
+        "execution_enabled": false,
+        "initialize_ms": 7.29,
+        "portable_paths_verified": true,
+        "connected": true,
+        "automated_trading_enabled": false,
+        "positions_read_verified": true,
+        "orders_read_verified": true,
+        "open_positions": 0,
+        "pending_orders": 0,
+        "sdk_shutdown_returned": true,
+        "success": false
+      }
+    },
+    {
+      "http": 200,
+      "elapsed": 0.05,
+      "proof": {
+        "read_only": true,
+        "financial_trades": 0,
+        "initialized": true,
+        "identity_verified": true,
+        "market_data_verified": true,
+        "execution_enabled": false,
+        "initialize_ms": 6.71,
+        "portable_paths_verified": true,
+        "connected": true,
+        "automated_trading_enabled": false,
+        "positions_read_verified": true,
+        "orders_read_verified": true,
+        "open_positions": 0,
+        "pending_orders": 0,
+        "sdk_shutdown_returned": true,
+        "success": true
+      }
+    }
+  ],
+  "existing_controller_restored": true
+}

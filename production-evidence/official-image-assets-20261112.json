@@ -1,0 +1,17 @@
+{
+  "observed_at": "2026-11-11T23:19:09Z",
+  "broker": "justmarkets",
+  "image": "/opt/ea-cloud/approved-clean-images/mt5-justmarkets-official-f7e4ad40b74b",
+  "terminal_assets": [
+    "terminal64.exe",
+    "Config/servers.dat",
+    "Config/settings.ini",
+    "Config/terminal.lic"
+  ],
+  "source": "Isolated credential-free installation of previously pinned official JustMarkets installer",
+  "installer_sha256": "6fcce3566d4f680013cffb7d13652eda34a0a0fe7f91f8dc4ad4cfab6309e345",
+  "accounts_or_prefixes_copied": false,
+  "broker_credentials_used_in_image": false,
+  "new_broker_authentication_verified": false,
+  "retained_slot_backup": "/var/backups/ea-cloud/retained-slot-before-official-assets-20261112"
+}

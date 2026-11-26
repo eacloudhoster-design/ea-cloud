@@ -1,0 +1,20 @@
+{
+  "observed_at": "2026-11-11T21:40:22Z",
+  "commit": "7d68249aa149513fa71dbda31bd0eb40ee911aa2",
+  "release": "/opt/ea-cloud/releases/worker-7d68249aa149",
+  "private_service_installed": true,
+  "new_worker_started": false,
+  "customer_submission_enabled": false,
+  "maximum_new_workers": 1,
+  "slot": "ss-jm001",
+  "encrypted_credential_host_key_initialized": true,
+  "unit_hashes": {
+    "ea-selfservice-display@": "3107af49b2ddd23f3ff8807323fc8477dcd4fa4754607e66cf6e70277372a80e",
+    "ea-selfservice-bootstrap@": "bafa5f6f88c44c66d6e190b15e05055e979b12698b1793ccf5af74b982c4ad22",
+    "ea-selfservice-terminal@": "f19eb02ba3d55cc3f8580fb31849723e8ae8c15c25a38901380295d6b872a79f",
+    "ea-selfservice-readonly@": "21f74386db43016ed4ce53f80410b01d82786539e6454bf7d3cd64f4ce097a07",
+    "ea-private-provisioner": "c4beed50c8f7a76e6822179c1c19eb8d5b8e8b114f628736111ed6ccb92855a8"
+  },
+  "broker_orders": 0,
+  "stops_present": true
+}

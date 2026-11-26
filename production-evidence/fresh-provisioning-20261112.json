@@ -1,0 +1,21 @@
+{
+  "request_id": "f2aeefc9-7728-42e7-8114-b3b5a5b4a978",
+  "observed_at": "2026-11-12T07:31:24Z",
+  "broker": "justmarkets",
+  "mode": "demo",
+  "owner_kind": "mentor",
+  "owner_id": 1,
+  "operator_only_acceptance": true,
+  "customer_queue_tested": false,
+  "existing_account_preserved": true,
+  "broker_orders": 0,
+  "stops_present": true,
+  "new_worker_verified": true,
+  "existing_controller_restored": true,
+  "backup": "/var/backups/ea-cloud/provisioning-acceptance-f2aeefc9-7728-42e7-8114-b3b5a5b4a978",
+  "http202_accepted": true,
+  "read_only_identity_and_portable_path_verified": true,
+  "new_readonly_api_restart_recovery_verified": true,
+  "new_worker_stopped_retained": true,
+  "completed_at": "2026-11-12T07:32:57Z"
+}

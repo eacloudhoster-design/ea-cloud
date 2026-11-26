@@ -5,17 +5,32 @@ const http=require('node:http'),fs=require('node:fs'),path=require('node:path'),
 const hash=x=>crypto.createHash('sha256').update(x).digest('hex');
 const uuid=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 function validate(v){
- if(!v||Object.keys(v).sort().join(',')!==['requestId','ownerKind','ownerId','broker','login','server','password','role','accountMode','executionEnabled'].sort().join(',')||!uuid.test(v.requestId)||!['client','mentor'].includes(v.ownerKind)||!Number.isSafeInteger(v.ownerId)||v.ownerId<=0||v.role!==(v.ownerKind==='client'?'client':'mentor')||!['deriv','exness','justmarkets','xm','rcg'].includes(v.broker)||typeof v.login!=='string'||!/^[1-9]\d*$/.test(v.login)||!Number.isSafeInteger(Number(v.login))||typeof v.server!=='string'||!v.server.trim()||v.server.length>256||/[\x00-\x1f\x7f]/.test(v.server)||typeof v.password!=='string'||!v.password||v.password.length>1024||!['demo','live'].includes(v.accountMode)||v.executionEnabled!==false)throw Error('INVALID_REQUEST');
+ if(!v||Object.keys(v).sort().join(',')!==['requestId','ownerKind','ownerId','broker','login','server','password','role','accountMode','executionEnabled'].sort().join(',')||!uuid.test(v.requestId)||!['client','mentor'].includes(v.ownerKind)||!Number.isSafeInteger(v.ownerId)||v.ownerId<=0||v.role!==(v.ownerKind==='client'?'client':'mentor')||!['deriv','exness','justmarkets','xm','rcg'].includes(v.broker)||typeof v.login!=='string'||!/^[1-9]\d*$/.test(v.login)||!Number.isSafeInteger(Number(v.login))||typeof v.server!=='string'||!v.server.trim()||v.server.length>256||/[\x00-\x1f\x7f]/.test(v.server)||typeof v.password!=='string'||!v.password||v.password.length>1024||/[\x00-\x1f\x7f]/.test(v.password)||!['demo','live'].includes(v.accountMode)||v.executionEnabled!==false)throw Error('INVALID_REQUEST');
 }
 function privateDir(root){const s=fs.lstatSync(root);if(!s.isDirectory()||s.isSymbolicLink()||s.uid!==0||(s.mode&0o077))throw Error('PRIVATE_STATE_REQUIRED');}
 function write(root,id,value){const target=path.join(root,id+'.json');const fd=fs.openSync(target,fs.constants.O_WRONLY|fs.constants.O_CREAT|fs.constants.O_EXCL|fs.constants.O_NOFOLLOW,0o600);try{fs.writeFileSync(fd,JSON.stringify(value));fs.fsyncSync(fd);}finally{fs.closeSync(fd);}const d=fs.openSync(root,'r');try{fs.fsyncSync(d);}finally{fs.closeSync(d);}}
-function createService({token,root,enabled=false,driver,stops,dispatch,allowLiveReadonly=false}){
+function createService({token,root,enabled=false,driver,stops,dispatch,allowLiveReadonly=false,statusToken,statusDriver,dispatchStatus}){
  if(typeof token!=='string'||!/^[\x21-\x7e]{32,2048}$/.test(token))throw Error('STRONG_TOKEN_REQUIRED');privateDir(root);
- let busy=false;const active=new Set();
+ if(statusToken!==undefined&&(typeof statusToken!=='string'||! /^[\x21-\x7e]{32,2048}$/.test(statusToken)||statusToken===token||typeof dispatchStatus!=='function'))throw Error('SEPARATE_STATUS_CREDENTIAL_REQUIRED');
+ let busy=false,statusBusy=false;const active=new Set();
  return async function handle(req,res){
   const reply=(code,value)=>{res.writeHead(code,{'Content-Type':'application/json','Cache-Control':'no-store'});res.end(JSON.stringify(value));};
-  const auth=Buffer.from(req.headers.authorization||''),expected=Buffer.from('Bearer '+token);
+  const statusRoute=req.method==='POST'&&req.url==='/v1/account-status';
+  if(statusRoute&&statusToken===undefined)return reply(404,{code:'UNKNOWN_ROUTE'});
+  const auth=Buffer.from(req.headers.authorization||''),expected=Buffer.from('Bearer '+(statusRoute?statusToken:token));
   if(auth.length!==expected.length||!crypto.timingSafeEqual(auth,expected))return reply(401,{code:'AUTH_REQUIRED'});
+  if(statusRoute){
+   if(statusBusy)return reply(503,{code:'STATUS_BUSY'});
+   statusBusy=true;
+   try{
+    if(req.headers['content-type']!=='application/json')throw Error('INVALID_REQUEST');
+    let count=0,chunks=[];for await(const chunk of req){count+=chunk.length;if(count>8192)throw Error('INVALID_REQUEST');chunks.push(chunk);}
+    const input=JSON.parse(Buffer.concat(chunks).toString('utf8'));
+    if(!input||Object.keys(input).sort().join(',')!=='login,password,server'||!Number.isSafeInteger(input.login)||input.login<=0||typeof input.server!=='string'||!input.server||input.server.length>256||typeof input.password!=='string'||!input.password||input.password.length>1024)throw Error('INVALID_REQUEST');
+    return reply(200,await dispatchStatus(statusDriver,input));
+   }catch{return reply(503,{success:false,code:'READONLY_STATUS_UNAVAILABLE'});}
+   finally{statusBusy=false;}
+  }
   const lookup=req.method==='GET'&&/^\/v1\/provision\/([0-9a-f-]{36})$/i.exec(req.url||'');
   if(lookup){
    const id=lookup[1],intent=path.join(root,id+'.json'),done=path.join(root,id+'.done.json'),held=path.join(root,id+'.held.json');
@@ -81,13 +96,31 @@ function dispatchDriver(config,input){
   }catch{reject(Error('DRIVER_UNAVAILABLE'));}
  });
 }
+function dispatchStatusDriver(config,input){
+ return new Promise((resolve,reject)=>{
+  try{
+   if(!config||!path.isAbsolute(config.path)||!config.path.startsWith('/opt/ea-cloud/releases/'))throw Error('UNREVIEWED_STATUS_DRIVER');
+   const meta=fs.lstatSync(config.path);if(!meta.isFile()||meta.isSymbolicLink()||meta.uid!==0||(meta.mode&0o022)||hash(fs.readFileSync(config.path))!==config.sha256)throw Error('UNREVIEWED_STATUS_DRIVER');
+   const child=cp.spawn('/opt/ea-cloud/infra/linux/.venv/bin/python',[config.path],{stdio:['pipe','pipe','ignore'],shell:false,detached:true,env:{PATH:'/usr/bin:/bin',PYTHONDONTWRITEBYTECODE:'1'}});
+   let chunks=[],bytes=0,settled=false;
+   const finish=(error,value)=>{if(settled)return;settled=true;clearTimeout(timer);if(error){try{process.kill(-child.pid,'SIGKILL');}catch{}reject(Error('READONLY_STATUS_UNAVAILABLE'));}else resolve(value);};
+   const timer=setTimeout(()=>finish(true),18500);
+   child.on('error',()=>finish(true));child.stdin.on('error',()=>{});
+   child.stdout.on('data',chunk=>{bytes+=chunk.length;if(bytes>32768)return finish(true);chunks.push(chunk);});
+   child.on('close',code=>{if(code!==0)return finish(true);try{const value=JSON.parse(Buffer.concat(chunks));if(value.success!==true||value.read_only!==true||value.execution_enabled!==false)throw Error();finish(false,value);}catch{finish(true);}});
+   child.stdin.end(JSON.stringify(input));
+  }catch{reject(Error('READONLY_STATUS_UNAVAILABLE'));}
+ });
+}
+
 function main(){
  if(process.env.MT5_PRIVATE_PROVISIONER_ENABLED!=='1')throw Error('DISABLED_BY_DEFAULT');
  const config=JSON.parse(fs.readFileSync(process.env.MT5_PRIVATE_PROVISIONER_CONFIG,'utf8'));
  const tokenFile=fs.lstatSync(config.tokenFile);if(tokenFile.isSymbolicLink()||tokenFile.uid!==0||(tokenFile.mode&0o077))throw Error('PRIVATE_TOKEN_REQUIRED');
- const server=http.createServer(createService({...config,enabled:true,token:fs.readFileSync(config.tokenFile,'utf8').trim(),dispatch:dispatchDriver}));
+ if(config.statusTokenFile!==undefined){const meta=fs.lstatSync(config.statusTokenFile);if(!meta.isFile()||meta.isSymbolicLink()||meta.uid!==0||(meta.mode&0o077))throw Error('PRIVATE_STATUS_CREDENTIAL_REQUIRED');config.statusToken=fs.readFileSync(config.statusTokenFile,'utf8').trim();}
+ const server=http.createServer(createService({...config,enabled:true,token:fs.readFileSync(config.tokenFile,'utf8').trim(),dispatch:dispatchDriver,dispatchStatus:dispatchStatusDriver}));
  server.requestTimeout=5000;server.headersTimeout=5000;server.maxRequestsPerSocket=1;
  if(!Number.isInteger(config.port)||config.port<10000||config.port>11000)throw Error('PRIVATE_PORT_REQUIRED');
  server.listen(config.port,'127.0.0.1');
 }
-module.exports={createService,validate,dispatchDriver};if(require.main===module)main();
+module.exports={createService,validate,dispatchDriver,dispatchStatusDriver};if(require.main===module)main();

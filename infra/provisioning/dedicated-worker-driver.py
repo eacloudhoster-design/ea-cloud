@@ -24,7 +24,7 @@ def validate(v):
  require(v['broker'] in ('justmarkets','deriv','exness','xm','rcg') and v['accountMode'] in ('demo','live') and v['executionEnabled'] is False)
  require(type(v['login']) is str and re.fullmatch('[1-9][0-9]*',v['login']) and int(v['login'])<=9007199254740991)
  require(type(v['server']) is str and 0<len(v['server'])<=256 and v['server']==v['server'].strip() and not any(ord(c)<32 or ord(c)==127 for c in v['server']))
- require(type(v['password']) is str and 0<len(v['password'])<=1024)
+ require(type(v['password']) is str and 0<len(v['password'])<=1024 and not any(ord(c)<32 or ord(c)==127 for c in v['password']))
 
 def inspect_image(root,manifest):
  root=Path(root);require(root.is_dir() and not root.is_symlink())
@@ -34,6 +34,11 @@ def inspect_image(root,manifest):
   p=Path(name);require(not p.is_absolute() and '..' not in p.parts and sha(root/p)==h)
  require({'python/python.exe','terminal/terminal64.exe'}.issubset(manifest))
  # Hash allowlist must be an independently reviewed sanitized image, not a known account home.
+
+def verify_proof(proof,login,server,mode):
+ require(all(proof.get(k) is True for k in ('success','read_only','initialized','identity_verified','portable_paths_verified','connected','positions_read_verified','orders_read_verified')))
+ require(proof.get('automated_trading_enabled') is False and proof.get('execution_enabled') is False and type(proof.get('financial_trades')) is int and proof['financial_trades']==0)
+ require(proof.get('account',{}).get('login')==login and proof['account'].get('server')==server and proof['account'].get('mode')==mode)
 
 class Driver:
  def __init__(self,config,host):
@@ -86,14 +91,12 @@ class Driver:
     cfg={'broker':v['broker'],'login':int(v['login']),'server':v['server'],'role':v['role'],'account_mode':v['accountMode'],'allow_live_readonly':v['accountMode']=='live','enabled':False,'execution_approved':False,'terminal_path':'Z:'+str(home/'terminal/terminal64.exe').replace('/','\\'),'journal_path':'Z:'+str(home/'readonly-unused.sqlite3').replace('/','\\')}
     token=secrets.token_urlsafe(48)
     # systemd encrypted credentials at rest. Only transient private stdin carries plaintext.
-    for name,value in [('account.json',canonical(cfg)),('broker-password',v['password']),('api-token',token),('terminal-login.ini','[Experts]\nEnabled=0\nAllowLiveTrading=0\nAllowDllImport=0\n')]:
+    for name,value in [('account.json',canonical(cfg)),('broker-password',v['password']),('api-token',token),('terminal-login.ini','[Common]\nLogin='+v['login']+'\nServer='+v['server']+'\nPassword='+v['password']+'\nKeepPrivate=0\n[Experts]\nEnabled=0\nAllowLiveTrading=0\nAllowDllImport=0\n')]:
      self.host.encrypt(name,value,secrets_dir/name)
     self.host.prepare(slot)
     self.gate();self.host.start(slot,secrets_dir)
     proof=self.host.snapshot(slot,token)
-    require(all(proof.get(k) is True for k in ('success','read_only','initialized','identity_verified','portable_paths_verified','connected','positions_read_verified','orders_read_verified')))
-    require(proof.get('automated_trading_enabled') is False and proof.get('execution_enabled') is False and proof.get('financial_trades')==0)
-    require(proof.get('account',{}).get('login')==int(v['login']) and proof['account'].get('server')==v['server'] and proof['account'].get('mode')==v['accountMode'])
+    verify_proof(proof,int(v['login']),v['server'],v['accountMode'])
     # Private descriptor, not a claim that the existing static relay hot-reloaded.
     save(self.root/(slot['id']+'-enrollment.json'),{'requestId':v['requestId'],'owner':owner,'slot':slot['id'],'broker':v['broker'],'login':int(v['login']),'server':v['server'],'role':v['role'],'url':'http://127.0.0.1:'+str(slot['port']),'credentials':str(secrets_dir),'executionEnabled':False,'accountMode':v['accountMode']})
     with self.db() as db:
@@ -107,6 +110,43 @@ class Driver:
     with self.db() as db:
      db.execute("UPDATE allocations SET state='held' WHERE request=?",(v['requestId'],));db.execute('INSERT INTO audit(request,event,observed) VALUES(?,?,?)',(v['requestId'],'held_stopped' if stopped else 'held_shutdown_uncertain',time.time()))
     raise RuntimeError('WORKER_CREATION_HELD') from None
+  finally:os.close(lock)
+ def verify_retained(self,request_id):
+  # Explicit root reconciliation of a previously verified descriptor. This never
+  # starts/rebuilds/reallocates a worker or retries a claimed provisioning job.
+  self.gate();lock=os.open(self.root/'allocator.lock',os.O_CREAT|os.O_RDWR|os.O_NOFOLLOW,0o600)
+  try:
+   fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)
+   with self.db() as db:
+    row=db.execute('SELECT account,owner,slot,state FROM allocations WHERE request=?',(request_id,)).fetchone()
+    require(row and row[3]=='stopped_retained')
+    maximum=self.config.get('max_active_workers',len(self.config['slots']))
+    count=db.execute("SELECT count(*) FROM allocations WHERE state IN ('reserved','held','verified_readonly')").fetchone()[0];require(count<maximum)
+   slot=next(s for s in self.config['slots'] if s['id']==row[2]);path=self.root/(slot['id']+'-enrollment.json');meta=path.lstat()
+   require(stat.S_ISREG(meta.st_mode) and meta.st_uid==os.geteuid() and meta.st_mode&0o077==0)
+   descriptor=json.loads(path.read_text());owner=json.loads(row[1]);require(descriptor['requestId']==request_id and descriptor['slot']==slot['id'] and descriptor['owner']==owner and descriptor['executionEnabled'] is False)
+   credentials=self.root/(slot['id']+'-credentials');require(descriptor['credentials']==str(credentials))
+   cfg=json.loads(self.host.decrypt('account.json',credentials/'account.json'));token=self.host.decrypt('api-token',credentials/'api-token')
+   require(cfg['enabled'] is False and cfg['execution_approved'] is False and cfg['role']==owner[0] and cfg['broker']==slot['broker'] and cfg['login']==descriptor['login'] and cfg['server']==descriptor['server'] and cfg['server'] in slot['servers'])
+   require(cfg['account_mode']==descriptor['accountMode'] and (cfg['account_mode']=='demo' or self.config.get('allow_live_readonly') is True))
+   require(hashlib.sha256(canonical([str(cfg['login']),cfg['server']]).encode()).hexdigest()==row[0])
+   registry=self.config.get('existing_registry')
+   if registry is not None:
+    registry_path=Path(registry);meta=registry_path.lstat();require(str(registry_path)=='/etc/ea-cloud/readonly-relay/registry.json' and stat.S_ISREG(meta.st_mode) and meta.st_uid==0 and meta.st_mode&0o077==0)
+    require(not any(str(item.get('login'))==str(cfg['login']) and item.get('server')==cfg['server'] for item in json.loads(registry_path.read_text())['accounts']))
+   with self.db() as db:
+    db.execute("UPDATE allocations SET state='reserved' WHERE request=?",(request_id,));db.execute('INSERT INTO audit(request,event,observed) VALUES(?,?,?)',(request_id,'operator_reverification_started',time.time()))
+   try:
+    self.gate();verify_proof(self.host.snapshot(slot,token),cfg['login'],cfg['server'],cfg['account_mode'])
+    with self.db() as db:
+     db.execute("UPDATE allocations SET state='verified_readonly' WHERE request=?",(request_id,));db.execute('INSERT INTO audit(request,event,observed) VALUES(?,?,?)',(request_id,'operator_reverified_readonly',time.time()))
+   except BaseException:
+    try:self.host.stop(slot)
+    finally:
+     with self.db() as db:
+      db.execute("UPDATE allocations SET state='held' WHERE request=?",(request_id,));db.execute('INSERT INTO audit(request,event,observed) VALUES(?,?,?)',(request_id,'operator_reverification_held',time.time()))
+    raise RuntimeError('WORKER_REVERIFICATION_HELD') from None
+   return {'state':'verified_readonly','executionEnabled':False}
   finally:os.close(lock)
  def cleanup(self,request_id):
   # Explicit maintenance only; no automatic cleanup of uncertain allocation or registry.
@@ -136,6 +176,9 @@ class SystemdHost:
   result=self.run(['/usr/bin/systemd-creds','encrypt','--name='+name,'-','-'],value.encode())
   fd=os.open(path,os.O_WRONLY|os.O_CREAT|os.O_EXCL|os.O_NOFOLLOW,0o600)
   with os.fdopen(fd,'wb') as f:f.write(result);f.flush();os.fsync(f.fileno())
+ def decrypt(self,name,path):
+  meta=Path(path).lstat();require(stat.S_ISREG(meta.st_mode) and meta.st_uid==0 and meta.st_mode&0o077==0)
+  return self.run(['/usr/bin/systemd-creds','decrypt','--name='+name,str(path),'-']).decode().rstrip('\r\n')
  def prepare(self,s):
   runtime=Path(self.config['state_root'])/(s['id']+'-runtime.env')
   home=str(Path(s['home']));require(not any(c in home for c in '\r\n\" '))
@@ -168,7 +211,7 @@ class SystemdHost:
   result=subprocess.run(['/usr/bin/pgrep','-u',str(s['uid'])],stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL,timeout=2)
   return result.returncode==1
  def snapshot(self,s,token):
-  import urllib.request
+  import urllib.request,urllib.error
   class NoRedirect(urllib.request.HTTPRedirectHandler):
    def redirect_request(self,*a,**kw):return None
   opener=urllib.request.build_opener(urllib.request.ProxyHandler({}),NoRedirect)
@@ -180,7 +223,22 @@ class SystemdHost:
    try:
     with opener.open(request,timeout=min(17,remaining)) as response:
      raw=response.read(32769);require(len(raw)<=32768 and response.status==200);return json.loads(raw)
-   except (OSError,TimeoutError):
+   except (OSError,TimeoutError) as error:
+    if isinstance(error,urllib.error.HTTPError):
+     # Allowlisted scalar evidence only. Never retain arbitrary worker messages,
+     # account fields, HTTP headers or credentials from a failed response.
+     diagnostic={'observed':time.time(),'http_status':error.code}
+     try:
+      raw=error.read(4097);body=json.loads(raw) if len(raw)<=4096 else {}
+      for key in ('initialized','identity_verified','portable_paths_verified','connected'):
+       if type(body.get(key)) is bool:diagnostic[key]=body[key]
+      if type(body.get('sdk_error_code')) is int and -2147483648<=body['sdk_error_code']<=2147483647:diagnostic['sdk_error_code']=body['sdk_error_code']
+     except (ValueError,OSError):pass
+     path=Path(self.config['state_root'])/(s['id']+'-startup.ndjson')
+     fd=os.open(path,os.O_WRONLY|os.O_CREAT|os.O_APPEND|os.O_NOFOLLOW,0o600)
+     with os.fdopen(fd,'w') as stream:
+      meta=os.fstat(stream.fileno());require(stat.S_ISREG(meta.st_mode) and meta.st_uid==os.geteuid() and meta.st_mode&0o077==0)
+      if meta.st_size<32768:stream.write(canonical(diagnostic)+'\n');stream.flush();os.fsync(stream.fileno())
     if time.monotonic()>=deadline:raise RuntimeError('WORKER_STARTUP_UNAVAILABLE') from None
     time.sleep(min(1,max(0,deadline-time.monotonic())))
 
@@ -191,6 +249,8 @@ def main():
  require(stat.S_ISREG(meta.st_mode) and meta.st_uid==0 and meta.st_mode&0o077==0)
  config=json.loads(config_path.read_text());raw=sys.stdin.buffer.read(8193);require(len(raw)<=8192)
  driver=Driver(config,SystemdHost(config))
+ if len(sys.argv)==3 and sys.argv[1]=='--verify-retained':
+  require(re.fullmatch('[0-9a-fA-F-]{36}',sys.argv[2]));driver.verify_retained(sys.argv[2]);return
  if len(sys.argv)==3 and sys.argv[1]=='--stop-retain':
   require(re.fullmatch('[0-9a-fA-F-]{36}',sys.argv[2]));driver.cleanup(sys.argv[2]);return
  require(len(sys.argv)==1);driver.create(json.loads(raw))

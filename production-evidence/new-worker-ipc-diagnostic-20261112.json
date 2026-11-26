@@ -1,0 +1,56 @@
+{
+  "diagnostic_only": true,
+  "account_changes": false,
+  "broker_orders": 0,
+  "samples": [
+    {
+      "http": 503,
+      "elapsed": 15.48,
+      "proof": {
+        "read_only": true,
+        "financial_trades": 0,
+        "initialized": false,
+        "identity_verified": false,
+        "market_data_verified": false,
+        "execution_enabled": false,
+        "initialize_ms": 15273.12,
+        "sdk_error_code": -10005,
+        "sdk_shutdown_returned": true,
+        "success": false
+      }
+    },
+    {
+      "http": 503,
+      "elapsed": 15.28,
+      "proof": {
+        "read_only": true,
+        "financial_trades": 0,
+        "initialized": false,
+        "identity_verified": false,
+        "market_data_verified": false,
+        "execution_enabled": false,
+        "initialize_ms": 15264.14,
+        "sdk_error_code": -10005,
+        "sdk_shutdown_returned": true,
+        "success": false
+      }
+    },
+    {
+      "http": 503,
+      "elapsed": 15.2,
+      "proof": {
+        "read_only": true,
+        "financial_trades": 0,
+        "initialized": false,
+        "identity_verified": false,
+        "market_data_verified": false,
+        "execution_enabled": false,
+        "initialize_ms": 15182.79,
+        "sdk_error_code": -10005,
+        "sdk_shutdown_returned": true,
+        "success": false
+      }
+    }
+  ],
+  "existing_controller_restored": true
+}

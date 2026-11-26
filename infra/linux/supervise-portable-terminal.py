@@ -26,7 +26,11 @@ def main():
  assistant=home/'terminal/Config/assistant.ini';assistant.parent.mkdir(exist_ok=True)
  if assistant.is_symlink():raise RuntimeError('Unsafe terminal configuration')
  assistant.write_text('[MCP.MetaEditor]\nEnable=0\n[MCP.MetaTrader]\nEnable=0\n',encoding='utf-16');assistant.chmod(0o600)
- bootstrap=home/'terminal-bootstrap.ini'
+ # Global /run tmpfs is visible across Wine process namespaces; its dedicated
+ # RuntimeDirectory is removed on stop. Never write broker credentials to home.
+ runtime=Path(os.environ['RUNTIME_DIRECTORY'])
+ if runtime.parent!=Path('/run') or runtime.is_symlink() or runtime.stat().st_uid!=os.getuid() or runtime.stat().st_mode&0o077:raise RuntimeError('Private runtime directory required')
+ bootstrap=runtime/'terminal-login.ini'
  # Linux reads its own credential mount; Wine's shared namespace need not see it.
  content=(Path(os.environ['CREDENTIALS_DIRECTORY'])/'terminal-login.ini').read_bytes()
  fd=os.open(bootstrap,os.O_WRONLY|os.O_CREAT|os.O_TRUNC|os.O_NOFOLLOW,0o600)

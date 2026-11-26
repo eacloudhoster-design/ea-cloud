@@ -1,0 +1,15 @@
+{
+  "observed_at": "2026-11-11T21:48:19Z",
+  "commit": "7d68249aa149513fa71dbda31bd0eb40ee911aa2",
+  "private_origin": "http://127.0.0.1:8006",
+  "checks": {
+    "release_commit_matches": true,
+    "database_ready": true,
+    "origin_missing_denied": true,
+    "origin_wrong_denied": true,
+    "anonymous_account_access_denied": true
+  },
+  "rollback": "/var/backups/ea-cloud/management-before-7d68249aa149",
+  "execution_disabled": true,
+  "customer_submission_enabled": false
+}

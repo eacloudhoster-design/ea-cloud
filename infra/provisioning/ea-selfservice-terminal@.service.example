@@ -1,4 +1,4 @@
-# Dedicated portable terminal; bootstrap contains only disabled Experts settings.
+# Dedicated portable terminal; encrypted login decrypts only into private /run tmpfs.
 [Unit]
 Requires=ea-selfservice-display@%i.service ea-selfservice-bootstrap@%i.service
 After=ea-selfservice-display@%i.service ea-selfservice-bootstrap@%i.service network-online.target
@@ -12,8 +12,11 @@ User=ea-account-%i
 Group=ea-account-%i
 EnvironmentFile=/var/lib/ea-cloud/private-provisioner/%i-runtime.env
 LoadCredentialEncrypted=terminal-login.ini:/var/lib/ea-cloud/private-provisioner/%i-credentials/terminal-login.ini
+RuntimeDirectory=ea-selfservice-terminal-%i
+RuntimeDirectoryMode=0700
 WorkingDirectory=/var/lib/ea-cloud/selfservice-accounts/%i/terminal
 ExecStart=/usr/bin/python3 /opt/ea-cloud/releases/REVIEW_REQUIRED/infra/linux/supervise-portable-terminal.py
+ExecStop=/opt/wine-stable/bin/wineserver -k
 TimeoutStartSec=60
 TimeoutStopSec=8
 KillMode=control-group

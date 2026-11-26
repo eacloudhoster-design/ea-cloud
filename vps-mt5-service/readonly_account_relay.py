@@ -21,7 +21,24 @@ class Binding:
  owner_kind:str|None=None
  owner_id:int|None=None
 
-def create_app(bindings,token,forward=None,resolve_dynamic=None):
+def project_snapshot(b,data):
+ a=data.get('account',{})
+ if not all(data.get(k) is True for k in ('success','read_only','initialized','identity_verified','portable_paths_verified','connected','positions_read_verified','orders_read_verified')):raise ValueError('Incomplete identity evidence')
+ if data.get('automated_trading_enabled') is not False or data.get('execution_enabled') is not False or type(data.get('financial_trades')) is not int or data['financial_trades']!=0:raise ValueError('Unsafe upstream mode')
+ if a.get('login')!=b.login or a.get('server')!=b.server or a.get('mode')!=b.account_mode:raise ValueError('Identity mismatch')
+ if any(type(data.get(k)) is not int or data[k]<0 for k in ('open_positions','pending_orders')):raise ValueError('Incomplete exposure evidence')
+ cash=lambda value:value if type(value) in (int,float) and math.isfinite(value) else None
+ return {**({'owner_kind':b.owner_kind,'owner_id':b.owner_id} if b.owner_kind is not None else {}),'success':True,'connected':True,'simulation':False,'account_mode':b.account_mode,'read_only':True,'protocol':'EA_READ_ONLY_STATUS_V1','financial_routes':False,'broker':b.broker,'login':b.login,'server':b.server,'role':b.role,'currency':a.get('currency'),'balance':cash(a.get('balance')),'equity':cash(a.get('equity')),'open_positions':data['open_positions'],'pending_orders':data['pending_orders'],'execution_enabled':False,'emergency_stop_active':None,'journal_bound':False,'journal_holds':None}
+
+def fetch_snapshot(binding):
+ opener=urllib.request.build_opener(urllib.request.ProxyHandler({}),NoRedirect)
+ request=urllib.request.Request(worker_url(binding.url)+'/v1/read-only-snapshot',headers={'Authorization':'Bearer '+binding.api_token})
+ with opener.open(request,timeout=17) as response:
+  body=response.read(32769)
+  if response.status!=200 or len(body)>32768:raise ValueError('Snapshot unavailable')
+  return json.loads(body)
+
+def create_app(bindings,token,forward=None,resolve_dynamic=None,forward_dynamic=None):
  if len(token)<32 or not 1<=len(bindings)<=8:raise ValueError('Bound service credentials and capacity required')
  routes={};urls=set();tokens=set()
  for b in bindings:
@@ -30,14 +47,7 @@ def create_app(bindings,token,forward=None,resolve_dynamic=None):
   origin=worker_url(b.url);key=(b.login,b.server)
   if key in routes or origin in urls or b.api_token in tokens or b.api_token==token:raise ValueError('Account/endpoint/credential isolation required')
   routes[key]=b;urls.add(origin);tokens.add(b.api_token)
- if forward is None:
-  opener=urllib.request.build_opener(NoRedirect)
-  def forward(binding):
-   request=urllib.request.Request(worker_url(binding.url)+'/v1/read-only-snapshot',headers={'Authorization':'Bearer '+binding.api_token})
-   with opener.open(request,timeout=17) as response:
-    body=response.read(32769)
-    if response.status!=200 or len(body)>32768:raise ValueError('Snapshot unavailable')
-    return json.loads(body)
+ if forward is None:forward=fetch_snapshot
  app=FastAPI(docs_url=None,redoc_url=None,openapi_url=None)
  @app.middleware('http')
  async def auth(request:Request,call_next):
@@ -61,15 +71,16 @@ def create_app(bindings,token,forward=None,resolve_dynamic=None):
      if worker_url(candidate.url) in urls or candidate.api_token in tokens:raise ValueError('Endpoint collision')
      b=candidate
    except Exception:return JSONResponse({'success':False,'connected':False,'message':'Dynamic binding unavailable'},status_code=503)
+  if b is None and forward_dynamic is not None:
+   try:
+    data=forward_dynamic({'login':payload.login,'server':payload.server,'password':payload.password.get_secret_value()})
+    if not isinstance(data,dict) or data.get('success') is not True or data.get('connected') is not True or data.get('read_only') is not True or data.get('simulation') is not False or data.get('execution_enabled') is not False or data.get('protocol')!='EA_READ_ONLY_STATUS_V1' or data.get('financial_routes') is not False or data.get('login')!=payload.login or data.get('server')!=payload.server or data.get('owner_kind') not in ('mentor','client') or data.get('role')!=data['owner_kind'] or type(data.get('owner_id')) is not int or data['owner_id']<=0:raise ValueError('Invalid private status projection')
+    fields=('owner_kind','owner_id','success','connected','simulation','account_mode','read_only','protocol','financial_routes','broker','login','server','role','currency','balance','equity','open_positions','pending_orders','execution_enabled','emergency_stop_active','journal_bound','journal_holds')
+    return {key:data[key] for key in fields}
+   except Exception:return JSONResponse({'success':False,'connected':False,'message':'Dynamic binding unavailable'},status_code=503)
   if b is None or not hmac.compare_digest(payload.password.get_secret_value().encode(),b.password.encode()):return JSONResponse({'success':False,'message':'Bound account credentials not verified'},status_code=403)
   try:
-   data=forward(b);a=data.get('account',{})
-   if not all(data.get(k) is True for k in ('success','read_only','initialized','identity_verified','portable_paths_verified','connected','positions_read_verified','orders_read_verified')):raise ValueError('Incomplete identity evidence')
-   if data.get('automated_trading_enabled') is not False or data.get('execution_enabled') is not False or type(data.get('financial_trades')) is not int or data['financial_trades']!=0:raise ValueError('Unsafe upstream mode')
-   if a.get('login')!=b.login or a.get('server')!=b.server or a.get('mode')!=b.account_mode:raise ValueError('Identity mismatch')
-   if any(type(data.get(k)) is not int or data[k]<0 for k in ('open_positions','pending_orders')):raise ValueError('Incomplete exposure evidence')
-   cash=lambda value:value if type(value) in (int,float) and math.isfinite(value) else None
-   return {**({'owner_kind':b.owner_kind,'owner_id':b.owner_id} if b.owner_kind is not None else {}),'success':True,'connected':True,'simulation':False,'account_mode':b.account_mode,'read_only':True,'protocol':'EA_READ_ONLY_STATUS_V1','financial_routes':False,'broker':b.broker,'login':b.login,'server':b.server,'role':b.role,'currency':a.get('currency'),'balance':cash(a.get('balance')),'equity':cash(a.get('equity')),'open_positions':data['open_positions'],'pending_orders':data['pending_orders'],'execution_enabled':False,'emergency_stop_active':None,'journal_bound':False,'journal_holds':None}
+   return project_snapshot(b,forward(b))
   except Exception:return JSONResponse({'success':False,'connected':False,'message':'Read-only account verification unavailable'},status_code=503)
  return app
 
@@ -79,6 +90,18 @@ def from_environment():
   for key in ['password_credential','api_credential']:
    if not re.fullmatch(r'[A-Za-z0-9_-]+',row[key]):raise ValueError('Invalid credential selector')
   bindings.append(Binding(account_mode=row.get('account_mode','demo'),**{k:row[k] for k in ['broker','login','server','role','url']},password=_credential_path(row['password_credential']).read_text().rstrip('\r\n'),api_token=_credential_path(row['api_credential']).read_text().strip()))
+ if config.get('self_service_status_proxy') is True:
+  # Separate status-only credential; nonroot relay cannot provision or decrypt.
+  status_token=_credential_path('provisioner-status-token').read_text().strip()
+  if not re.fullmatch(r'[\x21-\x7e]{32,2048}',status_token):raise ValueError('Private status credential required')
+  def proxy(payload):
+   request=urllib.request.Request('http://127.0.0.1:10040/v1/account-status',data=json.dumps(payload).encode(),headers={'Authorization':'Bearer '+status_token,'Content-Type':'application/json'})
+   opener=urllib.request.build_opener(urllib.request.ProxyHandler({}),NoRedirect)
+   with opener.open(request,timeout=19) as response:
+    raw=response.read(32769)
+    if response.status!=200 or len(raw)>32768:raise ValueError('Private status unavailable')
+    return json.loads(raw)
+  return create_app(bindings,_credential_path('relay-token').read_text().strip(),forward_dynamic=proxy)
  if config.get('self_service_registry') is True:
   from dynamic_readonly_registry import load
   return create_app(bindings,_credential_path('relay-token').read_text().strip(),resolve_dynamic=load)

@@ -1,0 +1,14 @@
+{
+  "observed_at": "2026-11-11T23:32:29.143Z",
+  "actual_backend_source_module": true,
+  "backend_to_private_relay_to_sdk_verified": true,
+  "broker": "justmarkets",
+  "role": "mentor",
+  "account_mode": "demo",
+  "connected": true,
+  "read_only": true,
+  "execution_enabled": false,
+  "orders_submitted": 0,
+  "customer_browser_session_tested": false,
+  "public_render_transport_tested": false
+}

@@ -2,9 +2,10 @@ import importlib.util,json,tempfile,unittest,uuid,hashlib
 from pathlib import Path
 spec=importlib.util.spec_from_file_location('driver',Path(__file__).with_name('dedicated-worker-driver.py'));m=importlib.util.module_from_spec(spec);spec.loader.exec_module(m)
 class Host:
- def __init__(self):self.calls=[];self.fail=False;self.live=False;self.bad=False
+ def __init__(self):self.calls=[];self.fail=False;self.live=False;self.bad=False;self.encrypted={}
  def verify_slot(self,s):self.calls.append('verify')
- def encrypt(self,n,v,p):p.write_bytes(b'ENCRYPTED_FIXTURE');p.chmod(0o600);self.calls.append('encrypt')
+ def decrypt(self,n,p):return self.encrypted[n]
+ def encrypt(self,n,v,p):self.encrypted[n]=v;p.write_bytes(b'ENCRYPTED_FIXTURE');p.chmod(0o600);self.calls.append('encrypt')
  def prepare(self,s):self.calls.append('prepare')
  def start(self,s,c):self.calls.append('start');self.live=True
  def snapshot(self,s,t):
@@ -36,6 +37,10 @@ class Tests(unittest.TestCase):
   self.driver.create(self.request);self.request.update(requestId=str(uuid.uuid4()),ownerId=99)
   with self.assertRaises(RuntimeError):self.driver.create(self.request)
   self.assertEqual(self.host.calls.count('start'),1)
+ def test_ini_injection_password_refused_before_reservation(self):
+  self.request['password']='password\n[Experts]\nEnabled=1'
+  with self.assertRaises(RuntimeError):self.driver.create(self.request)
+  self.assertNotIn('start',self.host.calls)
  def test_unknown_broker_role_live_and_command_refused(self):
   for k,v in [('broker','unknown'),('role','mentor'),('accountMode','live'),('executionEnabled',True),('command','shell')]:
    with self.subTest(k=k),self.assertRaises(RuntimeError):self.driver.create(self.request|{k:v})
@@ -101,6 +106,29 @@ class Tests(unittest.TestCase):
   self.host.snapshot=live
   self.assertEqual(self.driver.create(self.request)['state'],'verified_readonly')
   descriptor=json.loads((self.state/'ss-fixture-enrollment.json').read_text());self.assertEqual(descriptor['accountMode'],'live');self.assertFalse(descriptor['executionEnabled'])
+ def test_explicit_reverification_never_reallocates_or_restarts(self):
+  self.driver.create(self.request);self.driver.cleanup(self.request['requestId']);self.host.live=True
+  before=self.host.calls.count('start');self.assertEqual(self.driver.verify_retained(self.request['requestId'])['state'],'verified_readonly');self.assertEqual(self.host.calls.count('start'),before)
+  with self.driver.db() as db:self.assertEqual(db.execute('SELECT state FROM allocations').fetchone()[0],'verified_readonly')
+ def test_reverification_wrong_identity_stops_and_holds(self):
+  self.driver.create(self.request);self.driver.cleanup(self.request['requestId']);self.host.live=True;self.host.bad=True
+  with self.assertRaises(RuntimeError):self.driver.verify_retained(self.request['requestId'])
+  self.assertFalse(self.host.live)
+  with self.driver.db() as db:self.assertEqual(db.execute('SELECT state FROM allocations').fetchone()[0],'held')
+ def test_reverification_does_not_accept_active_or_unknown_allocations(self):
+  self.driver.create(self.request);before=self.host.calls.count('start')
+  with self.assertRaises(RuntimeError):self.driver.verify_retained(self.request['requestId'])
+  with self.assertRaises(RuntimeError):self.driver.verify_retained(str(uuid.uuid4()))
+  self.assertEqual(self.host.calls.count('start'),before)
+ def test_sdk_failure_retains_allowlisted_diagnostic_without_sensitive_body(self):
+  import urllib.request,urllib.error,io
+  from unittest.mock import patch,MagicMock
+  error=urllib.error.HTTPError('http://fixture',503,'unavailable',{},io.BytesIO(b'{"sdk_error_code":-10005,"initialized":false,"password":"SENSITIVE_FIXTURE","error":"SENSITIVE_FIXTURE"}'))
+  response=MagicMock();response.status=200;response.read.return_value=b'{"success":true}';response.__enter__.return_value=response
+  opener=MagicMock();opener.open.side_effect=[error,response]
+  with patch.object(urllib.request,'build_opener',return_value=opener),patch.object(m.time,'sleep'):
+   m.SystemdHost(self.config).snapshot(self.config['slots'][0],'FIXTURE')
+  text=(self.state/'ss-fixture-startup.ndjson').read_text();self.assertNotIn('SENSITIVE_FIXTURE',text);self.assertEqual(json.loads(text)['sdk_error_code'],-10005)
  def test_readonly_startup_waits_for_api_without_restarting_worker(self):
   import urllib.request
   from unittest.mock import patch,MagicMock
