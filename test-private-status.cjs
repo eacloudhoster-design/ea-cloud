@@ -11,6 +11,7 @@ function invoke(handler,url,auth,body){return new Promise((resolve,reject)=>{con
  assert.equal((await invoke(handler,'/v1/provision',statusToken,body)).code,401);
  assert.equal((await invoke(handler,'/v1/account-status',statusToken,{...body,command:'shell'})).code,503);
  assert.equal(reads,1);assert.equal(provisions,0);assert.deepEqual(fs.readdirSync(root),[]);
+ for(const code of ['ACCOUNT_NOT_ASSIGNED','ACCOUNT_PROOF_REJECTED','SENSITIVE_VENDOR_DETAIL']){const failed=createService({root,token,statusToken,dispatchStatus:async()=>{throw Error(code);}});const response=await invoke(failed,'/v1/account-status',statusToken,body);assert.equal(response.code,code==='SENSITIVE_VENDOR_DETAIL'?503:403);assert.equal(response.body.code,code==='SENSITIVE_VENDOR_DETAIL'?'READONLY_STATUS_UNAVAILABLE':code);}
  assert.throws(()=>createService({root,token,statusToken:token,dispatchStatus:async()=>{}}));
  console.log('PASS status-only token cannot provision, provisioning token cannot read-status, request schema/defaults and no credential persistence; injected helpers only');
 }finally{fs.rmSync(root,{recursive:true,force:true});}})().catch(error=>{console.error(error);process.exitCode=1;});

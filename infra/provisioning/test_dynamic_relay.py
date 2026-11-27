@@ -2,7 +2,7 @@ import sys,unittest
 from pathlib import Path
 sys.path.insert(0,str(Path(__file__).resolve().parents[2]/'vps-mt5-service'))
 from fastapi.testclient import TestClient
-from readonly_account_relay import Binding,create_app,project_snapshot
+from readonly_account_relay import Binding,create_app,project_snapshot,PrivateStatusError
 class Tests(unittest.TestCase):
  def setUp(self):
   self.base=Binding('justmarkets',111,'Fixture','client','http://127.0.0.1:10081','base-fixture','a'*40)
@@ -34,4 +34,33 @@ class Tests(unittest.TestCase):
  def test_private_proxy_missing_owner_denied(self):
   self.client=TestClient(create_app([self.base],'c'*40,forward_dynamic=lambda payload:{'success':True,'read_only':True}))
   self.assertEqual(self.query(222,'new-fixture').status_code,503)
+ def test_tunnel_provisioning_has_distinct_auth_and_no_financial_route(self):
+  import hashlib
+  from provisioning_proxy import ProvisioningProxy
+  token='p'*48;calls=[]
+  def send(*args):calls.append(args);return 202,{'state':'provisioning','executionEnabled':False}
+  proxy=ProvisioningProxy(hashlib.sha256(token.encode()).hexdigest(),send)
+  self.client=TestClient(create_app([self.base],'c'*40,provisioning_proxy=proxy))
+  response=self.client.post('/v1/provision',json={},headers={'Authorization':'Bearer '+token});self.assertEqual(response.status_code,202);self.assertEqual(len(calls),1)
+  response=self.client.post('/v1/provision',json={},headers={'Authorization':'Bearer '+'c'*40});self.assertEqual(response.status_code,401);self.assertEqual(len(calls),1)
+  self.assertEqual(self.query(111,'base-fixture',token).status_code,401)
+  response=self.client.post('/observer/sync-position',json={},headers={'Authorization':'Bearer '+'c'*40});self.assertEqual(response.status_code,404)
+ def test_private_proxy_preserves_assignment_and_credential_error_codes(self):
+  for code in ('ACCOUNT_NOT_ASSIGNED','ACCOUNT_PROOF_REJECTED'):
+   def proxy(payload):raise PrivateStatusError(code)
+   self.client=TestClient(create_app([self.base],'c'*40,forward_dynamic=proxy))
+   response=self.query(222,'new-fixture');self.assertEqual(response.status_code,403);self.assertEqual(response.json()['code'],code)
+ def test_static_missing_assignment_is_distinct_from_wrong_password(self):
+  self.client=TestClient(create_app([self.base],'c'*40))
+  self.assertEqual(self.query(999,'new-fixture').json()['code'],'ACCOUNT_NOT_ASSIGNED')
+  self.assertEqual(self.query(111,'wrong').json()['code'],'ACCOUNT_PROOF_REJECTED')
+ def test_active_engine_status_precedes_static_readonly_binding(self):
+  def proxy(payload):
+   return {'success':True,'connected':True,'simulation':False,'financial_routes':False,'owner_kind':'client','owner_id':7,'login':111,'server':'Fixture','broker':'justmarkets','role':'client','account_mode':'demo','read_only':False,'execution_enabled':False,'protocol':'EA_BOUND_ACCOUNT_STATUS_V1','journal_bound':True,'journal_holds':0,'emergency_stop_active':True,'currency':None,'balance':None,'equity':None,'open_positions':0,'pending_orders':0}
+  self.client=TestClient(create_app([self.base],'c'*40,forward_dynamic=proxy));response=self.query(111,'base-fixture');self.assertEqual(response.status_code,200);self.assertFalse(response.json()['read_only']);self.assertTrue(response.json()['emergency_stop_active']);self.assertEqual(response.json()['owner_id'],7)
+ def test_failed_engine_authority_blocks_static_fallback(self):
+  def proxy(payload):raise ValueError('UNAVAILABLE')
+  self.client=TestClient(create_app([self.base],'c'*40,forward_dynamic=proxy));self.assertEqual(self.query(111,'base-fixture').status_code,503)
+ def test_only_explicit_no_dynamic_binding_allows_static_fallback(self):
+  self.client=TestClient(create_app([self.base],'c'*40,forward_dynamic=lambda p:{'success':False,'code':'NO_DYNAMIC_BINDING'}));self.assertEqual(self.query(111,'wrong').status_code,403)
 if __name__=='__main__':unittest.main(verbosity=2)
