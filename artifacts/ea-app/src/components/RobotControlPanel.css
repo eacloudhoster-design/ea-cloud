@@ -96,7 +96,7 @@
 .ea-robot-controls[data-control-panel="regular"] .lumo-action-icon { background: none; border: 0; box-shadow: none; color: inherit; height: 32px; }
 .ea-robot-controls[data-control-panel="regular"] .lumo-toggle {
   justify-self: center; width: 68px; height: 68px; justify-content: center;
-  border: 2px solid var(--lumo-accent); border-radius: 19px; color: #fff;
+  border: 2px solid var(--lumo-accent); border-radius: 19px; color: var(--on-accent, #fff);
   background: linear-gradient(145deg, color-mix(in srgb, var(--lumo-accent) 90%, #fff), color-mix(in srgb, var(--lumo-accent) 65%, #140714));
   box-shadow: 0 0 22px var(--lumo-glow), inset 0 1px 2px #fff3;
 }

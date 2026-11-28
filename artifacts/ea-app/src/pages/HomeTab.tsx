@@ -103,7 +103,7 @@ export default function HomeTab({ onOpenSettings, onOpenChartScanner, swipeEnabl
               {hasLiveTrades && (
                 <span
                   className="absolute -top-0.5 -right-0.5 min-w-[16px] h-4 px-1 rounded-full flex items-center justify-center text-[9px] font-bold text-white"
-                  style={{ background: accentColor }}
+                  style={{ background: accentColor, color: "var(--on-accent, #fff)" }}
                 >
                   {executions.length > 9 ? "9+" : executions.length}
                 </span>
@@ -387,7 +387,7 @@ function MatrixLayout({ portraitEnabled, shapeStyle, accentColor, botRunning, se
           {tradeCount > 0 && (
             <span
               className="absolute -top-0.5 -right-0.5 min-w-[16px] h-4 px-1 rounded-full flex items-center justify-center text-[9px] font-bold text-white"
-              style={{ background: theme }}
+              style={{ background: theme, color: "var(--on-accent, #fff)" }}
             >
               {tradeCount > 9 ? "9+" : tradeCount}
             </span>
@@ -585,7 +585,7 @@ function QuotesSheet({ accentColor, clientToken, onClose }: { accentColor: strin
               onClick={() => setTab(t)}
               className="flex-1 py-2.5 rounded-full text-[11px] font-bold tracking-wider active:scale-95 transition-transform"
               style={active
-                ? { background: accentColor, color: "#fff", boxShadow: `0 4px 16px ${accentColor}55` }
+                ? { background: accentColor, color: "var(--on-accent, #fff)", boxShadow: `0 4px 16px ${accentColor}55` }
                 : { background: "rgba(0,0,0,0.4)", color: "rgba(255,255,255,0.6)", border: `1px solid ${accentColor}40` }}
             >
               {t === "selected" ? "SELECTED SYMBOLS" : "ALLOWED SYMBOLS"}
@@ -759,7 +759,11 @@ function QuotesSheet({ accentColor, clientToken, onClose }: { accentColor: strin
                 onClick={save}
                 disabled={saving}
                 className="w-full py-3 rounded-xl font-bold text-white text-sm flex items-center justify-center gap-1.5 active:scale-95 transition-transform disabled:opacity-60"
-                style={{ background: saved ? "#16a34a" : `linear-gradient(135deg, ${accentColor} 0%, ${accentColor}cc 100%)` }}
+                style={{
+                  backgroundImage: saved ? undefined : `linear-gradient(135deg, ${accentColor} 0%, ${accentColor}cc 100%)`,
+                  color: saved ? undefined : "var(--on-accent, #fff)",
+                  backgroundColor: saved ? "#16a34a" : "var(--accent-fill-base, transparent)",
+                }}
               >
                 {saving ? <><Loader2 size={14} className="animate-spin" /> Saving…</> : saved ? <><Check size={14} /> Saved!</> : <>Save</>}
               </button>

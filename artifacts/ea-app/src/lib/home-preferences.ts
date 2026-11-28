@@ -21,6 +21,8 @@ export const isBackgroundAnimation = (
 ): value is BackgroundAnimation =>
   backgroundAnimations.includes(value as BackgroundAnimation);
 
+export const monochromeAccent = "#c0c0c0";
+
 export const isAccentColor = (value: unknown): value is string =>
   typeof value === "string" && /^#[0-9a-f]{6}$/i.test(value);
 

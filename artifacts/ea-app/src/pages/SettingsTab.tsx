@@ -4,7 +4,7 @@ import {useEffect, useId, type CSSProperties} from "react";
 import "./SettingsTab.css";
 import ControlPanelChoices from "@/components/ControlPanelChoices";
 import EaModeCards from "@/components/EaModeCards";
-import { backgroundAnimations } from "@/lib/home-preferences";
+import { backgroundAnimations, monochromeAccent } from "@/lib/home-preferences";
 import {botFonts,botFontStyle,type BotFont} from "@/lib/font-preference";
 import "../assets/bot-fonts/fonts.css";
 import { useState } from "react";
@@ -38,7 +38,7 @@ const SHAPE_OPTIONS: { id: ShapeStyle; label: string; desc: string }[] = [
   { id: "neural", label: "The Neural Interface", desc: "Neural Network Style" },
 ];
 
-const COLOUR_OPTIONS = [
+const COLOUR_OPTIONS: { id: string; label: string; color: string; swatch?: string }[] = [
   { id: "blue", label: "Electric Blue", color: "#3b82f6" },
   { id: "purple", label: "Royal Purple", color: "#a855f7" },
   { id: "green", label: "Emerald Green", color: "#22c55e" },
@@ -46,6 +46,15 @@ const COLOUR_OPTIONS = [
   { id: "red", label: "Pure Red", color: "#ef4444" },
   { id: "pink", label: "Hot Pink", color: "#ec4899" },
   { id: "cyan", label: "Cyan", color: "#06b6d4" },
+  { id: "solar-gold", label: "Solar Gold", color: "#FFD600" },
+  { id: "arctic-white", label: "Arctic White", color: "#FFFFFF" },
+  { id: "titanium-grey", label: "Titanium Grey", color: "#808080" },
+  {
+    id: "monochrome",
+    label: "B&W Monochrome",
+    color: monochromeAccent,
+    swatch: "linear-gradient(135deg, #000 50%, #fff 50%)",
+  },
 ];
 
 const SHAPE_ICONS: Record<ShapeStyle, React.ReactNode> = {
@@ -117,7 +126,7 @@ export default function SettingsTab({ onOpenChartScanner, onOpenLiveShot, backgr
                   </div>
                   {selected && (
                     <div className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: accentColor }}>
-                      <Check size={12} className="text-white" />
+                      <Check size={12} style={{ color: "var(--on-accent, #fff)" }} />
                     </div>
                   )}
                 </button>
@@ -163,7 +172,7 @@ export default function SettingsTab({ onOpenChartScanner, onOpenLiveShot, backgr
                     border: `1px solid ${selected ? opt.color : `${accentColor}66`}`,
                   }}
                 >
-                  <div className="w-9 h-9 rounded-full flex-shrink-0" style={{ background: opt.color }} />
+                  <div className="w-9 h-9 rounded-full flex-shrink-0" style={{ background: opt.swatch ?? opt.color }} />
                   <span className="text-white font-semibold text-sm flex-1 text-left">{opt.label}</span>
                   {selected && <Check size={16} style={{ color: opt.color }} />}
                 </button>

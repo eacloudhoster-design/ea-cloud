@@ -330,7 +330,7 @@ function EACloudApp({ onReady, onConnectionProgress, startupComplete }: { onRead
   return (
     <AppContext.Provider value={settings}>
       <div
-        data-interface-theme={interfaceStyle} className="ea-app-viewport relative overflow-clip bg-black"
+        data-interface-theme={interfaceStyle} data-accent={accentColor} className="ea-app-viewport relative overflow-clip bg-black"
       >
         {/* Fade only the full-screen image; profile images remain independent. */}
         <ModeImage

@@ -142,3 +142,12 @@ html[data-ea-ios-standalone-layout] #root {
   overflow: hidden;
   overflow: clip;
 }
+
+/* Dark ink keeps labels legible on the new solid accent fills. */
+.ea-app-viewport:is([data-accent="#FFD600"], [data-accent="#FFFFFF"], [data-accent="#808080"], [data-accent="#c0c0c0"]) {
+  --on-accent: #080808;
+}
+
+.ea-app-viewport[data-accent="#808080"] {
+  --accent-fill-base: #808080;
+}

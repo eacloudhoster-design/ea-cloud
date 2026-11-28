@@ -279,7 +279,12 @@ export default function TradingControlsTab() {
           onClick={handleSave}
           disabled={saving}
           className="w-full py-4 rounded-full font-bold text-white text-base tracking-wide flex items-center justify-center gap-2 active:scale-95 transition-transform disabled:opacity-60"
-          style={{ background: `linear-gradient(135deg, ${accentColor} 0%, ${accentColor}bb 100%)`, boxShadow: `0 4px 20px ${accentColor}55` }}
+          style={{
+            backgroundImage: `linear-gradient(135deg, ${accentColor} 0%, ${accentColor}bb 100%)`,
+            backgroundColor: "var(--accent-fill-base, transparent)",
+            color: "var(--on-accent, #fff)",
+            boxShadow: `0 4px 20px ${accentColor}55`,
+          }}
         >
           {saving ? <Loader2 className="w-5 h-5 animate-spin" /> : saved ? <CheckCircle className="w-5 h-5 text-green-300" /> : <Save className="w-5 h-5" />}
           {saving ? "Saving…" : saved ? "Saved!" : "Save Settings"}
