@@ -87,9 +87,11 @@ export function SuperAdminSidebar() {
       <aside className="hidden md:flex flex-col w-56 h-screen fixed left-0 top-0 z-40 border-r border-purple-500/10" style={{ background: "#08080f" }}>
         <SidebarContent />
       </aside>
-      <button onClick={() => setMobileOpen(true)} className="md:hidden fixed top-4 left-4 z-50 p-2 rounded-lg bg-purple-500/10 border border-purple-500/20 text-purple-300">
-        <Menu className="w-5 h-5" />
-      </button>
+      <div className="md:hidden px-4 pt-4">
+        <button onClick={() => setMobileOpen(true)} className="block p-2 rounded-lg bg-purple-500/10 border border-purple-500/20 text-purple-300">
+          <Menu className="w-5 h-5" />
+        </button>
+      </div>
       <AnimatePresence>
         {mobileOpen && (
           <>

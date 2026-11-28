@@ -83,9 +83,11 @@ export function AdminSidebar() {
       </aside>
 
       {/* Mobile hamburger */}
-      <button onClick={() => setMobileOpen(true)} className="md:hidden fixed top-4 left-4 z-50 p-2 rounded-lg bg-white/5 border border-white/10 text-white">
-        <Menu className="w-5 h-5" />
-      </button>
+      <div className="md:hidden px-4 pt-4">
+        <button onClick={() => setMobileOpen(true)} className="block p-2 rounded-lg bg-white/5 border border-white/10 text-white">
+          <Menu className="w-5 h-5" />
+        </button>
+      </div>
 
       {/* Mobile sidebar */}
       <AnimatePresence>
