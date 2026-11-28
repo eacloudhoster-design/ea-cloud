@@ -23,7 +23,6 @@ export interface AppSettings {
   interfaceStyle: InterfaceStyle;
   setInterfaceStyle: (v: InterfaceStyle) => void;
   accentColor: string;
-  selectedAccentColor: string;
   monochromeTheme: boolean;
   setMonochromeTheme: (value: boolean) => void;
   setAccentColor: (v: string) => void;
@@ -55,7 +54,6 @@ export const AppContext = createContext<AppSettings>({
   interfaceStyle: "matrix",
   setInterfaceStyle: () => {},
   accentColor: "#ef4444",
-  selectedAccentColor: "#ef4444",
   monochromeTheme: false,
   setMonochromeTheme: () => {},
   setAccentColor: () => {},

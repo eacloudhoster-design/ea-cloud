@@ -71,15 +71,13 @@ export function readHomePreferences(
   if (key) {
     try {
       const value = JSON.parse(storage.getItem(key) || "null");
-      const legacyMonochrome = typeof value?.accentColor === "string" &&
-        value.accentColor.toLowerCase() === monochromeAccent;
+      const accentColor = isAccentColor(value?.accentColor)
+        ? value.accentColor
+        : defaultHomePreferences.accentColor;
       return {
         controlPanel: isControlPanelStyle(value?.controlPanel) ? value.controlPanel : "default",
-        accentColor: !legacyMonochrome && isAccentColor(value?.accentColor)
-          ? value.accentColor
-          : defaultHomePreferences.accentColor,
-        monochromeTheme: value?.interfaceStyle === "crimson" ||
-          (typeof value?.monochromeTheme === "boolean" ? value.monochromeTheme : legacyMonochrome),
+        accentColor: accentColor.toLowerCase() === monochromeAccent ? monochromeAccent : accentColor,
+        monochromeTheme: value?.interfaceStyle === "crimson" || value?.monochromeTheme === true,
         interfaceStyle: isInterfaceStyle(value?.interfaceStyle)
           ? value.interfaceStyle
           : defaultHomePreferences.interfaceStyle,
