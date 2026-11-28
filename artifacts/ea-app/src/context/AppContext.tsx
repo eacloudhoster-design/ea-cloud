@@ -4,7 +4,7 @@ import type {BotFont} from "@/lib/font-preference";
 import { createContext, useContext } from "react";
 
 export type Tab = "home" | "metatrader" | "settings";
-export type InterfaceStyle = "regular" | "matrix" | "s2tone" | "lumo" | "crimson";
+export type InterfaceStyle = "regular" | "matrix" | "s2tone" | "lumo";
 export type ShapeStyle = "orbit" | "neural" | "none";
 
 export interface AppSettings {
@@ -23,6 +23,9 @@ export interface AppSettings {
   interfaceStyle: InterfaceStyle;
   setInterfaceStyle: (v: InterfaceStyle) => void;
   accentColor: string;
+  selectedAccentColor: string;
+  monochromeTheme: boolean;
+  setMonochromeTheme: (value: boolean) => void;
   setAccentColor: (v: string) => void;
   botFont: BotFont;
   setBotFont: (font: BotFont) => void;
@@ -52,6 +55,9 @@ export const AppContext = createContext<AppSettings>({
   interfaceStyle: "matrix",
   setInterfaceStyle: () => {},
   accentColor: "#ef4444",
+  selectedAccentColor: "#ef4444",
+  monochromeTheme: false,
+  setMonochromeTheme: () => {},
   setAccentColor: () => {},
   botFont: "Inter",
   setBotFont: () => {},

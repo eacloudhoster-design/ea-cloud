@@ -4,7 +4,7 @@ import {useEffect, useId, type CSSProperties} from "react";
 import "./SettingsTab.css";
 import ControlPanelChoices from "@/components/ControlPanelChoices";
 import EaModeCards from "@/components/EaModeCards";
-import { backgroundAnimations, monochromeAccent } from "@/lib/home-preferences";
+import { backgroundAnimations } from "@/lib/home-preferences";
 import {botFonts,botFontStyle,type BotFont} from "@/lib/font-preference";
 import "../assets/bot-fonts/fonts.css";
 import { useState } from "react";
@@ -15,6 +15,23 @@ import {
 import { useApp, InterfaceStyle, ShapeStyle } from "@/context/AppContext";
 import { eaLogo } from "@/lib/branding";
 import ClientSizingDiagnostics from "@/components/ClientSizingDiagnostics";
+
+function SettingsSwitch({ label, checked, onToggle, accentColor }: {
+  label: string;
+  checked: boolean;
+  onToggle: () => void;
+  accentColor: string;
+}) {
+  return (
+    <button type="button" role="switch" aria-checked={checked} aria-label={label} onClick={onToggle}
+      className="w-full px-4 py-3 rounded-2xl flex items-center justify-between"
+      style={{ background: "rgba(15,15,15,.8)", border: `1px solid ${checked ? accentColor : "#ffffff1a"}` }}
+    >
+      <span className="text-white font-semibold text-sm">{label}</span>
+      <span style={{ color: accentColor }}>{checked ? "ON" : "OFF"}</span>
+    </button>
+  );
+}
 
 interface SettingsTabProps {
   backgroundHost?: HTMLElement | null;
@@ -29,7 +46,6 @@ const INTERFACE_OPTIONS: { id: InterfaceStyle; label: string; desc: string }[] =
   { id: "matrix", label: "The Matrix Interface", desc: "3 buttons in row layout" },
   { id: "s2tone", label: "S2tone_", desc: "Double outline with circle controls" },
   { id: "lumo", label: "Lumo", desc: "Portrait glass with capsule trading controls" },
-  { id: "crimson", label: "Crimson", desc: "Black and red robotic interface" },
 ];
 
 const SHAPE_OPTIONS: { id: ShapeStyle; label: string; desc: string }[] = [
@@ -38,7 +54,7 @@ const SHAPE_OPTIONS: { id: ShapeStyle; label: string; desc: string }[] = [
   { id: "neural", label: "The Neural Interface", desc: "Neural Network Style" },
 ];
 
-const COLOUR_OPTIONS: { id: string; label: string; color: string; swatch?: string }[] = [
+const COLOUR_OPTIONS = [
   { id: "blue", label: "Electric Blue", color: "#3b82f6" },
   { id: "purple", label: "Royal Purple", color: "#a855f7" },
   { id: "green", label: "Emerald Green", color: "#22c55e" },
@@ -49,12 +65,6 @@ const COLOUR_OPTIONS: { id: string; label: string; color: string; swatch?: strin
   { id: "solar-gold", label: "Solar Gold", color: "#FFD600" },
   { id: "arctic-white", label: "Arctic White", color: "#FFFFFF" },
   { id: "titanium-grey", label: "Titanium Grey", color: "#808080" },
-  {
-    id: "monochrome",
-    label: "B&W Monochrome",
-    color: monochromeAccent,
-    swatch: "linear-gradient(135deg, #000 50%, #fff 50%)",
-  },
 ];
 
 const SHAPE_ICONS: Record<ShapeStyle, React.ReactNode> = {
@@ -64,7 +74,7 @@ const SHAPE_ICONS: Record<ShapeStyle, React.ReactNode> = {
 };
 
 export default function SettingsTab({ onOpenChartScanner, onOpenLiveShot, backgroundHost }: SettingsTabProps) {
-  const { bgImageUrl, showBg, signOut, clientToken, backgroundAnimation, setBackgroundAnimation, accentColor, setAccentColor, interfaceStyle, setInterfaceStyle, shapeStyle, setShapeStyle, activeTab, botFont="Inter", setBotFont } = useApp();
+  const { bgImageUrl, showBg, signOut, clientToken, backgroundAnimation, setBackgroundAnimation, accentColor, selectedAccentColor = accentColor, setAccentColor, monochromeTheme, setMonochromeTheme, interfaceStyle, setInterfaceStyle, shapeStyle, setShapeStyle, activeTab, botFont="Inter", setBotFont } = useApp();
   useEffect(()=>{if(clientToken)void prepareWebPush()?.catch(()=>{});},[clientToken]);
   const [open, setOpen] = useState<OpenSection>(null);
 
@@ -73,7 +83,7 @@ export default function SettingsTab({ onOpenChartScanner, onOpenLiveShot, backgr
   return (
     <>
     {backgroundHost && createPortal(<div className="ea-settings-fullscreen-background" data-active={activeTab === "settings"} style={{ "--settings-accent": accentColor } as CSSProperties}>
-      {showBg && bgImageUrl && <img src={bgImageUrl} alt="" />}
+      {(showBg || monochromeTheme) && bgImageUrl && <img src={bgImageUrl} alt="" />}
       <div className="ea-settings-background-tint" />
     </div>, backgroundHost)}
     <div
@@ -161,7 +171,7 @@ export default function SettingsTab({ onOpenChartScanner, onOpenLiveShot, backgr
         >
           <div className="mt-2 space-y-2">
             {COLOUR_OPTIONS.map(opt => {
-              const selected = accentColor === opt.color;
+              const selected = selectedAccentColor === opt.color;
               return (
                 <button
                   key={opt.id}
@@ -172,12 +182,13 @@ export default function SettingsTab({ onOpenChartScanner, onOpenLiveShot, backgr
                     border: `1px solid ${selected ? opt.color : `${accentColor}66`}`,
                   }}
                 >
-                  <div className="w-9 h-9 rounded-full flex-shrink-0" style={{ background: opt.swatch ?? opt.color }} />
+                  <div className="w-9 h-9 rounded-full flex-shrink-0" style={{ background: opt.color }} />
                   <span className="text-white font-semibold text-sm flex-1 text-left">{opt.label}</span>
                   {selected && <Check size={16} style={{ color: opt.color }} />}
                 </button>
               );
             })}
+            <SettingsSwitch label="B&W Theme" checked={monochromeTheme} onToggle={() => setMonochromeTheme(!monochromeTheme)} accentColor={accentColor} />
           </div>
         </AccordionItem>
 
@@ -223,7 +234,7 @@ export default function SettingsTab({ onOpenChartScanner, onOpenLiveShot, backgr
           accentColor={accentColor}
         >
           <div className="mt-2 space-y-2">
-            <button type="button" role="switch" aria-checked={backgroundAnimation==="orbit"} aria-label="Orbit Animation" onClick={()=>setBackgroundAnimation(backgroundAnimation==="orbit"?"none":"orbit")} className="w-full px-4 py-3 rounded-2xl flex items-center justify-between" style={{background:"rgba(15,15,15,.8)",border:`1px solid ${backgroundAnimation==="orbit"?accentColor:"#ffffff1a"}`}}><span className="text-white font-semibold text-sm">Orbit Animation</span><span style={{color:accentColor}}>{backgroundAnimation==="orbit"?"ON":"OFF"}</span></button>
+            <SettingsSwitch label="Orbit Animation" checked={backgroundAnimation === "orbit"} onToggle={() => setBackgroundAnimation(backgroundAnimation === "orbit" ? "none" : "orbit")} accentColor={accentColor} />
             {backgroundAnimations.filter(anim=>anim!=="orbit").map(anim => (
               <button key={anim} aria-pressed={backgroundAnimation === anim} onClick={() => setBackgroundAnimation(anim)} className="w-full px-4 py-3 rounded-2xl text-left active:scale-[0.98] transition-transform"
                 style={{ background: backgroundAnimation === anim ? `${accentColor}22` : "rgba(15,15,15,0.8)", border: `1px solid ${backgroundAnimation === anim ? accentColor : "rgba(255,255,255,0.1)"}` }}>

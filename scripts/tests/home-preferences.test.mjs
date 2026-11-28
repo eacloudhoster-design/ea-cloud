@@ -20,13 +20,12 @@ const {
     Buffer.from(bundle.outputFiles[0].text).toString("base64")
 );
 
-test("both swipe directions cycle Regular, Matrix, S2tone, Lumo and Crimson using the same interface identifiers", () => {
+test("both swipe directions cycle Regular, Matrix, S2tone and Lumo using the same interface identifiers", () => {
   for (const [from, next, previous] of [
-    ["regular", "matrix", "crimson"],
+    ["regular", "matrix", "lumo"],
     ["matrix", "s2tone", "regular"],
     ["s2tone", "lumo", "matrix"],
-    ["lumo", "crimson", "s2tone"],
-    ["crimson", "regular", "lumo"],
+    ["lumo", "regular", "s2tone"],
   ]) {
     assert.equal(adjacentInterface(from, "next"), next);
     assert.equal(adjacentInterface(from, "previous"), previous);
@@ -68,8 +67,9 @@ test("interface and background preferences survive storage, default safely and s
     showBg: true,
     backgroundAnimation: "none",
     accentColor: "#ef4444",
+    monochromeTheme: false,
   });
-  for (const interfaceStyle of ["regular", "matrix", "s2tone", "lumo", "crimson"])
+  for (const interfaceStyle of ["regular", "matrix", "s2tone", "lumo"])
     for (const showBg of [true, false])
       for (const backgroundAnimation of [
         "none",
@@ -86,6 +86,7 @@ test("interface and background preferences survive storage, default safely and s
             showBg,
             backgroundAnimation,
             accentColor: "#ef4444",
+            monochromeTheme: false,
           }),
           true,
         );
@@ -95,6 +96,7 @@ test("interface and background preferences survive storage, default safely and s
           showBg,
           backgroundAnimation,
           accentColor: "#ef4444",
+          monochromeTheme: false,
         });
       }
   assert.deepEqual(readHomePreferences(storage, other), {
@@ -103,6 +105,7 @@ test("interface and background preferences survive storage, default safely and s
     showBg: true,
     backgroundAnimation: "none",
     accentColor: "#ef4444",
+    monochromeTheme: false,
   });
   data.set(key, "broken JSON");
   assert.deepEqual(readHomePreferences(storage, key), {
@@ -111,6 +114,7 @@ test("interface and background preferences survive storage, default safely and s
     showBg: true,
     backgroundAnimation: "none",
     accentColor: "#ef4444",
+    monochromeTheme: false,
   });
   data.set(key, JSON.stringify({ interfaceStyle: "bogus", showBg: "false" }));
   assert.deepEqual(readHomePreferences(storage, key), {
@@ -119,6 +123,7 @@ test("interface and background preferences survive storage, default safely and s
     showBg: true,
     backgroundAnimation: "none",
     accentColor: "#ef4444",
+    monochromeTheme: false,
   });
   assert.equal(
     saveHomePreferences(storage, key, {
@@ -141,6 +146,7 @@ test("interface and background preferences survive storage, default safely and s
     showBg: true,
     backgroundAnimation: "none",
     accentColor: "#ef4444",
+    monochromeTheme: false,
   });
   assert.equal(
     saveHomePreferences(blocked, key, {
@@ -166,6 +172,7 @@ test("legacy home settings retain their values and default to no extra animation
     showBg: false,
     backgroundAnimation: "none",
     accentColor: "#ef4444",
+    monochromeTheme: false,
   });
   assert.equal(
     saveHomePreferences(
@@ -207,6 +214,7 @@ test("theme colours persist in existing appearance settings without resetting ot
       showBg: false,
       backgroundAnimation: "particles",
       accentColor,
+      monochromeTheme: false,
     };
     assert(saveHomePreferences(storage, key, value));
     assert.deepEqual(readHomePreferences(storage, key), value);
@@ -225,6 +233,7 @@ test("theme colours persist in existing appearance settings without resetting ot
         showBg: false,
         backgroundAnimation: "glow",
         accentColor,
+        monochromeTheme: false,
       }),
     );
     assert.deepEqual(readHomePreferences(storage, key), {
@@ -233,6 +242,7 @@ test("theme colours persist in existing appearance settings without resetting ot
       showBg: false,
       backgroundAnimation: "glow",
       accentColor: "#ef4444",
+      monochromeTheme: false,
     });
     assert.equal(
       saveHomePreferences(storage, key, {
@@ -241,6 +251,7 @@ test("theme colours persist in existing appearance settings without resetting ot
         showBg: true,
         backgroundAnimation: "none",
         accentColor,
+        monochromeTheme: false,
       }),
       false,
     );
@@ -258,6 +269,7 @@ test("Lumo uses existing account-scoped persistence without changing legacy defa
     controlPanel: "default",
     interfaceStyle: "lumo",
     accentColor: "#a855f7",
+    monochromeTheme: false,
     showBg: true,
     backgroundAnimation: "none",
   };
@@ -280,6 +292,7 @@ test("control panels default safely, persist per account, preserve other prefere
   const original = {
     interfaceStyle: "lumo",
     accentColor: "#3b82f6",
+    monochromeTheme: false,
     showBg: false,
     backgroundAnimation: "glow",
   };
@@ -311,4 +324,35 @@ test("control panels default safely, persist per account, preserve other prefere
       .controlPanel,
     "default",
   );
+});
+
+test("legacy Crimson and silver preferences migrate separately from the saved colour", () => {
+  let raw;
+  const storage = { getItem: () => raw, setItem: (_, value) => { raw = value; } };
+  raw = JSON.stringify({
+    interfaceStyle: "crimson",
+    accentColor: "#06b6d4",
+    showBg: false,
+    backgroundAnimation: "orbit",
+    controlPanel: "regular",
+  });
+  const migrated = readHomePreferences(storage, "client");
+  assert.deepEqual(migrated, {
+    interfaceStyle: "matrix",
+    accentColor: "#06b6d4",
+    showBg: false,
+    backgroundAnimation: "orbit",
+    controlPanel: "regular",
+    monochromeTheme: true,
+  });
+  for (const monochromeTheme of [true, false]) {
+    const appearance = { ...migrated, monochromeTheme };
+    assert.ok(saveHomePreferences(storage, "client", appearance));
+    assert.deepEqual(readHomePreferences(storage, "client"), appearance);
+  }
+  raw = JSON.stringify({ interfaceStyle: "lumo", accentColor: "#C0C0C0" });
+  const silver = readHomePreferences(storage, "client");
+  assert.equal(silver.interfaceStyle, "lumo");
+  assert.equal(silver.monochromeTheme, true);
+  assert.equal(silver.accentColor, "#ef4444");
 });
