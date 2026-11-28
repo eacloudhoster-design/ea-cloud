@@ -91,7 +91,6 @@ function EACloudApp({ onReady, onConnectionProgress, startupComplete }: { onRead
   const [showChartScanner, setShowChartScanner] = useState(false);
   const { botRunning, botRequested, botPending, botError, refreshBotStatus, botStatusConfirmed, setBotRunning: persistBotRunning } = useBotStatus(clientToken, authStage === "app");
   const { controlPanel, setControlPanel, interfaceStyle, setInterfaceStyle, showBg, setShowBg, backgroundAnimation, setBackgroundAnimation, accentColor, setAccentColor, monochromeTheme, setMonochromeTheme } = useHomePreferences(clientToken);
-  const showBackground = monochromeTheme || showBg;
   const [mentorShape, setMentorShape] = useState<import("@/context/AppContext").ShapeStyle|undefined>();
   const [botFont, setBotFont] = useFontPreference(clientToken);
   const [mtConnected, setMtConnected] = useState(false);
@@ -270,7 +269,7 @@ function EACloudApp({ onReady, onConnectionProgress, startupComplete }: { onRead
   const backgroundSrc = bgImageUrl || robotBg;
   // The standalone canvas sits outside the splash's stacking context. Keep it
   // black until the existing handoff finishes, then use the decoded app artwork.
-  usePwaBackground(backgroundSrc, startupComplete && authStage === "app" && brandingReady && showBackground);
+  usePwaBackground(backgroundSrc, startupComplete && authStage === "app" && brandingReady && showBg);
   useIosStandaloneLayout(authStage === "app" && brandingReady);
 
   const initializing = authStage === "loading" || (authStage === "app" && !loadError && (!brandingReady || visualModes.loading));
@@ -340,7 +339,7 @@ function EACloudApp({ onReady, onConnectionProgress, startupComplete }: { onRead
           alt=""
           data-home-background
           className="ea-home-background pointer-events-none"
-          style={{ zIndex: 0, opacity: showBackground ? 1 : 0 }}
+          style={{ zIndex: 0, opacity: showBg ? 1 : 0 }}
         />
 
         <div ref={setMt5BackgroundHost} data-mt5-background-host
