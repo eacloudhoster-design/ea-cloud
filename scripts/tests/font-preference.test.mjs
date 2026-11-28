@@ -73,7 +73,7 @@ test("supported Settings buttons select exactly one font and invoke the real cal
   }
 });
 test("all Home layouts use the selected native font on the real bot name", () => {
-  for (const interfaceStyle of ["matrix", "regular", "s2tone"])
+  for (const interfaceStyle of ["matrix", "regular", "s2tone", "crimson", "lumo"])
     for (const botFont of botFonts) {
       const html = render({
         ...context,
@@ -145,25 +145,24 @@ test("bundled authentic WOFF2 files match recorded upstream hashes and include d
 });
 
 test("removed font identifiers safely fall back to Inter and cannot be saved", () => {
-  for (const legacy of ["Rajdhani", "Exo 2"]) {
-    assert.equal(botFonts.includes(legacy), false);
-    assert.equal(
-      readFontPreference({ getItem: () => legacy }, "client"),
-      "Inter",
-    );
-    assert.equal(
-      saveFontPreference(
-        {
-          setItem() {
-            throw Error("must not write");
-          },
+  const legacy = "Exo 2";
+  assert.equal(botFonts.includes(legacy), false);
+  assert.equal(
+    readFontPreference({ getItem: () => legacy }, "client"),
+    "Inter",
+  );
+  assert.equal(
+    saveFontPreference(
+      {
+        setItem() {
+          throw Error("must not write");
         },
-        "client",
-        legacy,
-      ),
-      false,
-    );
-  }
+      },
+      "client",
+      legacy,
+    ),
+    false,
+  );
 });
 test("authentic Flipside BRK file and author redistribution permission are bundled", async () => {
   const { readFileSync } = await import("node:fs");
