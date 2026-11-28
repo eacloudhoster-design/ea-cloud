@@ -5,7 +5,7 @@ import { randomUUID } from "node:crypto";
 import {queueBotPush, queueSymbolPush} from "../lib/web-push";
 import { Router } from "express";
 import { db, clientSettingsTable, appAccessTable, symbolPairsTable, clientSymbolConfigsTable } from "@workspace/db";
-import { eq, and } from "drizzle-orm";
+import { eq, and, sql } from "drizzle-orm";
 import { requireAppSession } from "../middlewares/app-session";
 import { clientEngineStatus } from "../lib/engine-status";
 import { bindClientAccount } from "../lib/bind-client-account";
@@ -25,7 +25,8 @@ router.get("/app/trading-controls", requireClientAuth, async (req: any, res) => 
 
     if (!settings) {
       [settings] = await db.insert(clientSettingsTable)
-        .values({ clientId: req.clientId, copyingEnabled:false }).returning();
+        .values({ clientId: req.clientId, copyingEnabled:false }).onConflictDoNothing().returning();
+      if(!settings)[settings]=await db.select().from(clientSettingsTable).where(eq(clientSettingsTable.clientId,req.clientId)).limit(1);
     }
     // Never expose the encrypted password in API responses.
     const { encryptedMt5Password: _omit, ...safe } = settings;
@@ -61,11 +62,15 @@ router.patch("/app/trading-controls", requireClientAuth, async (req: any, res) =
     if (maxOpenTrades !== undefined) updates.maxOpenTrades = Number(maxOpenTrades);
     if (maxLotSize !== undefined) updates.maxLotSize = String(maxLotSize);
     if (symbolFilters !== undefined) updates.symbolFilters = String(symbolFilters);
+    let approvedRevision:string|undefined;
     if (copyingEnabled !== undefined) {
       if(typeof copyingEnabled!=="boolean"){res.status(400).json({error:"copyingEnabled must be boolean"});return;}
       if(copyingEnabled){
-        const [current]=await db.select().from(clientSettingsTable).where(eq(clientSettingsTable.clientId,req.clientId)).limit(1);
-        const activation=await botActivationBlock(req.clientId,current,true);
+        // Read proof inputs and their PostgreSQL row version together. Never hold
+        // the settings lock during gateway I/O: Stop must remain available.
+        const [snapshot]=await db.select({settings:clientSettingsTable,revision:sql<string>`xmin::text`}).from(clientSettingsTable).where(eq(clientSettingsTable.clientId,req.clientId)).limit(1);
+        approvedRevision=snapshot?.revision;
+        const activation=await botActivationBlock(req.clientId,snapshot?.settings,true);
         if(activation){
           req.log.warn({event:"bot_activation_rejected",reason:activation.reason},"Bot activation blocked by existing safety controls");
           res.status(409).json({code:"EXECUTION_NOT_APPROVED",...activation});return;
@@ -75,18 +80,31 @@ router.patch("/app/trading-controls", requireClientAuth, async (req: any, res) =
     }
 
     const {settings,changed}=await db.transaction(async tx=>{
-      const [existing]=await tx.select().from(clientSettingsTable).where(eq(clientSettingsTable.clientId,req.clientId)).limit(1).for("update");
-      const [settings]=existing?await tx.update(clientSettingsTable).set(updates).where(eq(clientSettingsTable.clientId,req.clientId)).returning():await tx.insert(clientSettingsTable).values({clientId:req.clientId,copyingEnabled:false,...updates}).returning();
+      const [locked]=await tx.select({settings:clientSettingsTable,revision:sql<string>`xmin::text`}).from(clientSettingsTable).where(eq(clientSettingsTable.clientId,req.clientId)).limit(1).for("update");
+      // Any completed Stop/account/risk update invalidates an in-flight Start,
+      // including a repeated Stop when copying was already false.
+      if(copyingEnabled===true&&(!approvedRevision||locked?.revision!==approvedRevision))throw Error("BOT_CONTROL_CHANGED");
+      const existing=locked?.settings;
+      const [settings]=existing?await tx.update(clientSettingsTable).set(updates).where(eq(clientSettingsTable.clientId,req.clientId)).returning():await tx.insert(clientSettingsTable).values({clientId:req.clientId,copyingEnabled:false,...updates}).onConflictDoUpdate({target:clientSettingsTable.clientId,set:updates}).returning();
       return {settings,changed:typeof copyingEnabled==="boolean"&&existing?.copyingEnabled!==settings.copyingEnabled};
     });
-    if(changed&&process.env.EA_MT5_MANAGEMENT_ONLY!=="1")await queueBotPush(req.clientId,settings.copyingEnabled?'started':'stopped',req.log,settings.updatedAt?.toISOString());
+    // Notifications are ancillary: a delivery failure cannot undo an already
+    // committed Stop or turn its acknowledgement into an ambiguous500.
+    if(changed&&process.env.EA_MT5_MANAGEMENT_ONLY!=="1"){
+      try{await queueBotPush(req.clientId,settings.copyingEnabled?'started':'stopped',req.log,settings.updatedAt?.toISOString());}
+      catch{req.log.warn({event:"bot_notification_unavailable"},"Bot control saved; notification unavailable");}
+    }
+    if(typeof copyingEnabled==="boolean")req.log.info({event:"bot_control_acknowledged",command:copyingEnabled?"start":"stop",changed},"Bot control persisted");
 
     // Never expose the encrypted password in API responses.
     const { encryptedMt5Password: _omit, ...safe } = settings;
-    const activation=copyingEnabled===true?null:await botActivationBlock(req.clientId,settings,settings.copyingEnabled===true);
+    const activation=typeof copyingEnabled==="boolean"?null:await botActivationBlock(req.clientId,settings,settings.copyingEnabled===true);
     res.setHeader("Cache-Control","no-store");
     res.json({...safe,copyingRequested:settings.copyingEnabled,botRunning:settings.copyingEnabled===true&&activation===null,activation});
   } catch (err) {
+    if(err instanceof Error&&err.message==="BOT_CONTROL_CHANGED"){
+      res.status(409).json({code:"BOT_CONTROL_CHANGED",reason:"BOT_STATE_CHANGED",error:"Bot settings changed while Start was being verified.",action:"Refresh bot status before starting again."});return;
+    }
     req.log.error({ err }, "UpdateTradingControls error");
     res.status(500).json({ error: "Internal server error" });
   }
