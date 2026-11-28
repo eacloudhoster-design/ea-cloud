@@ -67,7 +67,7 @@ export default function HomeTab({ onOpenSettings, onOpenChartScanner, swipeEnabl
   };
 
   return (
-    <div data-home-interface={interfaceStyle} className="absolute inset-0" style={{ background: "transparent", zIndex: 2 }}>
+    <div data-home-interface={interfaceStyle} data-background-hidden={!showBg || undefined} className="absolute inset-0" style={{ background: "transparent", zIndex: 2 }}>
 
       {/* Accent glow — pinned, never scrolls */}
       <div

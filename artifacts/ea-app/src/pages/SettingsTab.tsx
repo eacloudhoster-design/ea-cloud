@@ -89,7 +89,7 @@ export default function SettingsTab({ onOpenChartScanner, onOpenLiveShot, backgr
   return (
     <>
     {backgroundHost && createPortal(<div className="ea-settings-fullscreen-background" data-active={activeTab === "settings"} style={{ "--settings-accent": accentColor } as CSSProperties}>
-      {(showBg || monochromeTheme) && bgImageUrl && <img src={bgImageUrl} alt="" />}
+      {showBg && bgImageUrl && <img src={bgImageUrl} alt="" />}
       <div className="ea-settings-background-tint" />
     </div>, backgroundHost)}
     <div
