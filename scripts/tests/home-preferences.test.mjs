@@ -326,7 +326,7 @@ test("control panels default safely, persist per account, preserve other prefere
   );
 });
 
-test("legacy Crimson and silver preferences migrate separately from the saved colour", () => {
+test("Crimson migrates to the background theme while the silver accent stays independent", () => {
   let raw;
   const storage = { getItem: () => raw, setItem: (_, value) => { raw = value; } };
   raw = JSON.stringify({
@@ -353,6 +353,13 @@ test("legacy Crimson and silver preferences migrate separately from the saved co
   raw = JSON.stringify({ interfaceStyle: "lumo", accentColor: "#C0C0C0" });
   const silver = readHomePreferences(storage, "client");
   assert.equal(silver.interfaceStyle, "lumo");
-  assert.equal(silver.monochromeTheme, true);
-  assert.equal(silver.accentColor, "#ef4444");
+  assert.equal(silver.monochromeTheme, false);
+  assert.equal(silver.accentColor, "#c0c0c0");
+  for (const accentColor of ["#3b82f6", "#FFD600", "#c0c0c0"]) {
+    for (const monochromeTheme of [false, true]) {
+      const appearance = { ...silver, accentColor, monochromeTheme };
+      assert.ok(saveHomePreferences(storage, "client", appearance));
+      assert.deepEqual(readHomePreferences(storage, "client"), appearance);
+    }
+  }
 });

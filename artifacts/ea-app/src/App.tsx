@@ -10,7 +10,6 @@ import BackgroundAnimation from "@/components/BackgroundAnimation";
 import {useHomePreferences} from "@/hooks/use-home-preferences";
 import "@/components/HomeInteractions.css";
 import "@/components/MonochromeTheme.css";
-import { monochromeAccent } from "@/lib/home-preferences";
 import {useFontPreference} from "@/hooks/use-font-preference";
 import {useShapePreference} from "@/hooks/use-shape-preference";
 import TradingActivityMonitor from "@/components/TradingActivityMonitor";
@@ -91,8 +90,7 @@ function EACloudApp({ onReady, onConnectionProgress, startupComplete }: { onRead
   const [showLiveShot, setShowLiveShot] = useState(false);
   const [showChartScanner, setShowChartScanner] = useState(false);
   const { botRunning, botRequested, botPending, botError, refreshBotStatus, botStatusConfirmed, setBotRunning: persistBotRunning } = useBotStatus(clientToken, authStage === "app");
-  const { controlPanel, setControlPanel, interfaceStyle, setInterfaceStyle, showBg, setShowBg, backgroundAnimation, setBackgroundAnimation, accentColor: selectedAccentColor, setAccentColor, monochromeTheme, setMonochromeTheme } = useHomePreferences(clientToken);
-  const accentColor = monochromeTheme ? monochromeAccent : selectedAccentColor;
+  const { controlPanel, setControlPanel, interfaceStyle, setInterfaceStyle, showBg, setShowBg, backgroundAnimation, setBackgroundAnimation, accentColor, setAccentColor, monochromeTheme, setMonochromeTheme } = useHomePreferences(clientToken);
   const showBackground = monochromeTheme || showBg;
   const [mentorShape, setMentorShape] = useState<import("@/context/AppContext").ShapeStyle|undefined>();
   const [botFont, setBotFont] = useFontPreference(clientToken);
@@ -260,7 +258,7 @@ function EACloudApp({ onReady, onConnectionProgress, startupComplete }: { onRead
     botRunning, botRequested, botPending, botError, refreshBotStatus, botStatusConfirmed, setBotRunning: persistBotRunning,
     controlPanel, setControlPanel,
     interfaceStyle, setInterfaceStyle,
-    accentColor, selectedAccentColor, setAccentColor, monochromeTheme, setMonochromeTheme,
+    accentColor, setAccentColor, monochromeTheme, setMonochromeTheme,
     shapeStyle, setShapeStyle, restoreShape,
     botFont, setBotFont,
     mtConnected, setMtConnected,

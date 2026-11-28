@@ -4,7 +4,7 @@ import {useEffect, useId, type CSSProperties} from "react";
 import "./SettingsTab.css";
 import ControlPanelChoices from "@/components/ControlPanelChoices";
 import EaModeCards from "@/components/EaModeCards";
-import { backgroundAnimations } from "@/lib/home-preferences";
+import { backgroundAnimations, monochromeAccent } from "@/lib/home-preferences";
 import {botFonts,botFontStyle,type BotFont} from "@/lib/font-preference";
 import "../assets/bot-fonts/fonts.css";
 import { useState } from "react";
@@ -54,7 +54,7 @@ const SHAPE_OPTIONS: { id: ShapeStyle; label: string; desc: string }[] = [
   { id: "neural", label: "The Neural Interface", desc: "Neural Network Style" },
 ];
 
-const COLOUR_OPTIONS = [
+const COLOUR_OPTIONS: { id: string; label: string; color: string; swatch?: string }[] = [
   { id: "blue", label: "Electric Blue", color: "#3b82f6" },
   { id: "purple", label: "Royal Purple", color: "#a855f7" },
   { id: "green", label: "Emerald Green", color: "#22c55e" },
@@ -65,6 +65,12 @@ const COLOUR_OPTIONS = [
   { id: "solar-gold", label: "Solar Gold", color: "#FFD600" },
   { id: "arctic-white", label: "Arctic White", color: "#FFFFFF" },
   { id: "titanium-grey", label: "Titanium Grey", color: "#808080" },
+  {
+    id: "monochrome",
+    label: "B&W Monochrome",
+    color: monochromeAccent,
+    swatch: "linear-gradient(135deg, #000 50%, #fff 50%)",
+  },
 ];
 
 const SHAPE_ICONS: Record<ShapeStyle, React.ReactNode> = {
@@ -74,7 +80,7 @@ const SHAPE_ICONS: Record<ShapeStyle, React.ReactNode> = {
 };
 
 export default function SettingsTab({ onOpenChartScanner, onOpenLiveShot, backgroundHost }: SettingsTabProps) {
-  const { bgImageUrl, showBg, signOut, clientToken, backgroundAnimation, setBackgroundAnimation, accentColor, selectedAccentColor = accentColor, setAccentColor, monochromeTheme, setMonochromeTheme, interfaceStyle, setInterfaceStyle, shapeStyle, setShapeStyle, activeTab, botFont="Inter", setBotFont } = useApp();
+  const { bgImageUrl, showBg, signOut, clientToken, backgroundAnimation, setBackgroundAnimation, accentColor, setAccentColor, monochromeTheme, setMonochromeTheme, interfaceStyle, setInterfaceStyle, shapeStyle, setShapeStyle, activeTab, botFont="Inter", setBotFont } = useApp();
   useEffect(()=>{if(clientToken)void prepareWebPush()?.catch(()=>{});},[clientToken]);
   const [open, setOpen] = useState<OpenSection>(null);
 
@@ -170,8 +176,9 @@ export default function SettingsTab({ onOpenChartScanner, onOpenLiveShot, backgr
           accentColor={accentColor}
         >
           <div className="mt-2 space-y-2">
+            <SettingsSwitch label="B&W Theme" checked={monochromeTheme} onToggle={() => setMonochromeTheme(!monochromeTheme)} accentColor={accentColor} />
             {COLOUR_OPTIONS.map(opt => {
-              const selected = selectedAccentColor === opt.color;
+              const selected = accentColor === opt.color;
               return (
                 <button
                   key={opt.id}
@@ -182,13 +189,12 @@ export default function SettingsTab({ onOpenChartScanner, onOpenLiveShot, backgr
                     border: `1px solid ${selected ? opt.color : `${accentColor}66`}`,
                   }}
                 >
-                  <div className="w-9 h-9 rounded-full flex-shrink-0" style={{ background: opt.color }} />
+                  <div className="w-9 h-9 rounded-full flex-shrink-0" style={{ background: opt.swatch ?? opt.color }} />
                   <span className="text-white font-semibold text-sm flex-1 text-left">{opt.label}</span>
                   {selected && <Check size={16} style={{ color: opt.color }} />}
                 </button>
               );
             })}
-            <SettingsSwitch label="B&W Theme" checked={monochromeTheme} onToggle={() => setMonochromeTheme(!monochromeTheme)} accentColor={accentColor} />
           </div>
         </AccordionItem>
 
