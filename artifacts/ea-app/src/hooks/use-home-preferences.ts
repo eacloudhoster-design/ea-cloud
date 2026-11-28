@@ -62,6 +62,7 @@ export function useHomePreferences(token: string | null) {
     setAccentColor: (value: string) => {
       if (isAccentColor(value)) update({ accentColor: value });
     },
+    setMonochromeTheme: (monochromeTheme: boolean) => update({ monochromeTheme }),
     setInterfaceStyle: (value: InterfaceStyle) => {
       if (isInterfaceStyle(value)) update({ interfaceStyle: value });
     },

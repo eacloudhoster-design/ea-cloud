@@ -1,0 +1,30 @@
+/* Reuse Crimson’s monochrome treatment with the selected interface. */
+[data-monochrome-theme] [data-home-background],
+[data-monochrome-theme] .ea-settings-fullscreen-background > img {
+  filter: grayscale(1) brightness(.42) contrast(1.15);
+}
+
+[data-monochrome-theme] [data-home-interface]::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(180deg, #06060645, #03030315 45%, #030303d9),
+    radial-gradient(ellipse at 50% 34%, #ffffff1c, transparent 70%);
+}
+
+[data-monochrome-theme] .robot-image-frame {
+  box-shadow: 0 0 0 1px #ffffff40, 0 18px 45px #0009, 0 0 24px #c0c0c04d !important;
+}
+
+[data-monochrome-theme] .robot-image-frame img,
+[data-monochrome-theme] .lumo-portrait-image,
+[data-monochrome-theme] .lumo-identity > img,
+[data-monochrome-theme] .lumo-control-reflection,
+[data-monochrome-theme] [data-matrix-status-image] {
+  filter: grayscale(1) contrast(1.12);
+}
+
+[data-monochrome-theme] .portrait-bloom {
+  opacity: .18 !important;
+}

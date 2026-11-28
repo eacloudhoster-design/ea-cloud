@@ -73,7 +73,7 @@ test("supported Settings buttons select exactly one font and invoke the real cal
   }
 });
 test("all Home layouts use the selected native font on the real bot name", () => {
-  for (const interfaceStyle of ["matrix", "regular", "s2tone", "crimson", "lumo"])
+  for (const interfaceStyle of ["matrix", "regular", "s2tone", "lumo"])
     for (const botFont of botFonts) {
       const html = render({
         ...context,

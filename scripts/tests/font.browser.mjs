@@ -59,7 +59,7 @@ try {
         if (!localStorage.getItem(key)) localStorage.setItem(key, legacy);
         const appearance = "ea-cloud:client:7:home-appearance";
         if (!localStorage.getItem(appearance))
-          localStorage.setItem(appearance, JSON.stringify({ accentColor: "#c0c0c0" }));
+          localStorage.setItem(appearance, JSON.stringify({ monochromeTheme: true }));
       },
       { legacy: "Exo 2" },
     );
@@ -123,7 +123,6 @@ try {
       ["matrix", "The Matrix Interface"],
       ["regular", "Regular Interface"],
       ["s2tone", "S2tone_"],
-      ["crimson", "Crimson"],
       ["lumo", "Lumo"],
     ]) {
       await settings();

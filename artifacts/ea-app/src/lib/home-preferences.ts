@@ -5,7 +5,6 @@ export const interfaceOrder: readonly InterfaceStyle[] = [
   "matrix",
   "s2tone",
   "lumo",
-  "crimson",
 ];
 export const backgroundAnimations = [
   "none",
@@ -37,6 +36,7 @@ export function adjacentControlPanel(current: ControlPanelStyle, direction: "nex
 export type HomePreferences = {
   controlPanel: ControlPanelStyle;
   accentColor: string;
+  monochromeTheme: boolean;
   backgroundAnimation: BackgroundAnimation;
   interfaceStyle: InterfaceStyle;
   showBg: boolean;
@@ -45,6 +45,7 @@ export const defaultHomePreferences: HomePreferences = {
   controlPanel: "default",
   interfaceStyle: "matrix",
   accentColor: "#ef4444",
+  monochromeTheme: false,
   showBg: true,
   backgroundAnimation: "none",
 };
@@ -70,14 +71,18 @@ export function readHomePreferences(
   if (key) {
     try {
       const value = JSON.parse(storage.getItem(key) || "null");
+      const legacyMonochrome = typeof value?.accentColor === "string" &&
+        value.accentColor.toLowerCase() === monochromeAccent;
       return {
         controlPanel: isControlPanelStyle(value?.controlPanel) ? value.controlPanel : "default",
-        accentColor: isAccentColor(value?.accentColor)
+        accentColor: !legacyMonochrome && isAccentColor(value?.accentColor)
           ? value.accentColor
-          : "#ef4444",
+          : defaultHomePreferences.accentColor,
+        monochromeTheme: value?.interfaceStyle === "crimson" ||
+          (typeof value?.monochromeTheme === "boolean" ? value.monochromeTheme : legacyMonochrome),
         interfaceStyle: isInterfaceStyle(value?.interfaceStyle)
           ? value.interfaceStyle
-          : "matrix",
+          : defaultHomePreferences.interfaceStyle,
         backgroundAnimation: isBackgroundAnimation(value?.backgroundAnimation)
           ? value.backgroundAnimation
           : "none",
@@ -100,6 +105,7 @@ export function saveHomePreferences(
     !isInterfaceStyle(value.interfaceStyle) ||
     !isControlPanelStyle(value.controlPanel) ||
     !isAccentColor(value.accentColor) ||
+    typeof value.monochromeTheme !== "boolean" ||
     typeof value.showBg !== "boolean" ||
     !isBackgroundAnimation(value.backgroundAnimation)
   )

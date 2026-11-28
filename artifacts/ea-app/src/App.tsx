@@ -9,6 +9,8 @@ import { useBotStatus } from "@/hooks/use-bot-status";
 import BackgroundAnimation from "@/components/BackgroundAnimation";
 import {useHomePreferences} from "@/hooks/use-home-preferences";
 import "@/components/HomeInteractions.css";
+import "@/components/MonochromeTheme.css";
+import { monochromeAccent } from "@/lib/home-preferences";
 import {useFontPreference} from "@/hooks/use-font-preference";
 import {useShapePreference} from "@/hooks/use-shape-preference";
 import TradingActivityMonitor from "@/components/TradingActivityMonitor";
@@ -89,7 +91,9 @@ function EACloudApp({ onReady, onConnectionProgress, startupComplete }: { onRead
   const [showLiveShot, setShowLiveShot] = useState(false);
   const [showChartScanner, setShowChartScanner] = useState(false);
   const { botRunning, botRequested, botPending, botError, refreshBotStatus, botStatusConfirmed, setBotRunning: persistBotRunning } = useBotStatus(clientToken, authStage === "app");
-  const { controlPanel, setControlPanel, interfaceStyle, setInterfaceStyle, showBg, setShowBg, backgroundAnimation, setBackgroundAnimation, accentColor, setAccentColor } = useHomePreferences(clientToken);
+  const { controlPanel, setControlPanel, interfaceStyle, setInterfaceStyle, showBg, setShowBg, backgroundAnimation, setBackgroundAnimation, accentColor: selectedAccentColor, setAccentColor, monochromeTheme, setMonochromeTheme } = useHomePreferences(clientToken);
+  const accentColor = monochromeTheme ? monochromeAccent : selectedAccentColor;
+  const showBackground = monochromeTheme || showBg;
   const [mentorShape, setMentorShape] = useState<import("@/context/AppContext").ShapeStyle|undefined>();
   const [botFont, setBotFont] = useFontPreference(clientToken);
   const [mtConnected, setMtConnected] = useState(false);
@@ -256,7 +260,7 @@ function EACloudApp({ onReady, onConnectionProgress, startupComplete }: { onRead
     botRunning, botRequested, botPending, botError, refreshBotStatus, botStatusConfirmed, setBotRunning: persistBotRunning,
     controlPanel, setControlPanel,
     interfaceStyle, setInterfaceStyle,
-    accentColor, setAccentColor,
+    accentColor, selectedAccentColor, setAccentColor, monochromeTheme, setMonochromeTheme,
     shapeStyle, setShapeStyle, restoreShape,
     botFont, setBotFont,
     mtConnected, setMtConnected,
@@ -268,7 +272,7 @@ function EACloudApp({ onReady, onConnectionProgress, startupComplete }: { onRead
   const backgroundSrc = bgImageUrl || robotBg;
   // The standalone canvas sits outside the splash's stacking context. Keep it
   // black until the existing handoff finishes, then use the decoded app artwork.
-  usePwaBackground(backgroundSrc, startupComplete && authStage === "app" && brandingReady && showBg);
+  usePwaBackground(backgroundSrc, startupComplete && authStage === "app" && brandingReady && showBackground);
   useIosStandaloneLayout(authStage === "app" && brandingReady);
 
   const initializing = authStage === "loading" || (authStage === "app" && !loadError && (!brandingReady || visualModes.loading));
@@ -330,7 +334,7 @@ function EACloudApp({ onReady, onConnectionProgress, startupComplete }: { onRead
   return (
     <AppContext.Provider value={settings}>
       <div
-        data-interface-theme={interfaceStyle} data-accent={accentColor} className="ea-app-viewport relative overflow-clip bg-black"
+        data-interface-theme={interfaceStyle} data-monochrome-theme={monochromeTheme || undefined} data-accent={accentColor} className="ea-app-viewport relative overflow-clip bg-black"
       >
         {/* Fade only the full-screen image; profile images remain independent. */}
         <ModeImage
@@ -338,7 +342,7 @@ function EACloudApp({ onReady, onConnectionProgress, startupComplete }: { onRead
           alt=""
           data-home-background
           className="ea-home-background pointer-events-none"
-          style={{ zIndex: 0, opacity: showBg ? 1 : 0 }}
+          style={{ zIndex: 0, opacity: showBackground ? 1 : 0 }}
         />
 
         <div ref={setMt5BackgroundHost} data-mt5-background-host
