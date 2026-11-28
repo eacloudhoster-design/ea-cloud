@@ -73,6 +73,7 @@
   color: #aaa5ad;
 }
 .ea-panel-preview[data-preview="regular"] .ea-preview-toggle {
+  justify-self: center;
   border-radius: 12px;
   padding: 5px;
   width: 46px;
