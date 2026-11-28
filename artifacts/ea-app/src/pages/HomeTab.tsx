@@ -215,13 +215,14 @@ function S2ToneLayout({ portraitEnabled, shapeStyle, accentColor, botRunning, se
       {/* Two-column row: pill buttons left | robots list right */}
       <div className="w-full flex gap-3 items-start">
 
-        {/* LEFT — 3 illuminated concave controls, themed by Select Colour */}
+        {/* LEFT — 3 glass controls, themed by Select Colour */}
         <div className="flex flex-col gap-3" style={{ flex: "0 0 52%", "--s2tone-accent-rgb": hexToRgb(accentColor) } as React.CSSProperties}>
           <button
             onClick={() => setShowRemoveConfirm(true)}
             type="button"
             className="s2tone-action-button flex items-center gap-3 px-5 rounded-2xl"
           >
+            <ModeImage src={bgImageUrl || robotBg} alt="" aria-hidden="true" className="lumo-control-reflection" draggable={false} />
             <X size={18} className="text-white/75 flex-shrink-0" />
             <span className="text-white font-semibold text-base">Remove</span>
           </button>
@@ -231,6 +232,7 @@ function S2ToneLayout({ portraitEnabled, shapeStyle, accentColor, botRunning, se
             type="button"
             className="s2tone-action-button flex items-center gap-3 px-5 rounded-2xl"
           >
+            <ModeImage src={bgImageUrl || robotBg} alt="" aria-hidden="true" className="lumo-control-reflection" draggable={false} />
             {(botRequested??botRunning)
               ? <Pause size={18} className="text-white/75 flex-shrink-0" />
               : <Play size={18} className="text-white/75 flex-shrink-0" style={{ marginLeft: 1 }} />}
@@ -242,6 +244,7 @@ function S2ToneLayout({ portraitEnabled, shapeStyle, accentColor, botRunning, se
             type="button"
             className="s2tone-action-button flex items-center gap-3 px-5 rounded-2xl"
           >
+            <ModeImage src={bgImageUrl || robotBg} alt="" aria-hidden="true" className="lumo-control-reflection" draggable={false} />
             <BarChart2 size={18} className="text-white/75 flex-shrink-0" />
             <span className="text-white font-semibold text-base">Symbols</span>
           </button>
