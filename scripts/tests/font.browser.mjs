@@ -16,13 +16,26 @@ const browser = await chromium.launch({
 });
 const results = [];
 let fontRequests = 0;
-const fonts = ["Inter", "Roboto", "Orbitron", "Flipside BRK"];
+const fontWeights = {
+  Inter: "900",
+  Roboto: "900",
+  Orbitron: "900",
+  "Flipside BRK": "400",
+  "Rubik Glitch": "400",
+  Oxanium: "700",
+  Audiowide: "400",
+  "Chakra Petch": "700",
+  Rajdhani: "700",
+  "Rubik Iso": "400",
+  Michroma: "400",
+};
+const fonts = Object.keys(fontWeights);
 try {
   for (const viewport of [
     { width: 390, height: 844 },
     { width: 320, height: 740 },
     { width: 1280, height: 900 },
-  ]) {
+  ].filter(({ width }) => !process.env.FONT_WIDTH || width === Number(process.env.FONT_WIDTH))) {
     const context = await browser.newContext({
       viewport,
       isMobile: viewport.width < 500,
@@ -44,8 +57,11 @@ try {
           );
         const key = "ea-cloud:client:7:bot-font";
         if (!localStorage.getItem(key)) localStorage.setItem(key, legacy);
+        const appearance = "ea-cloud:client:7:home-appearance";
+        if (!localStorage.getItem(appearance))
+          localStorage.setItem(appearance, JSON.stringify({ accentColor: "#c0c0c0" }));
       },
-      { legacy: viewport.width === 320 ? "Exo 2" : "Rajdhani" },
+      { legacy: "Exo 2" },
     );
     await context.route("**/*", async (route) => {
       const url = new URL(route.request().url());
@@ -61,7 +77,7 @@ try {
       if (!url.pathname.startsWith("/api/")) return route.continue();
       let data = {};
       if (url.pathname === "/api/app/me")
-        data = { status: "approved", licenseKey: "ISOLATED" };
+        data = { status: "approved", licenseKey: "ISOLATED", token: btoa("7:client:fixture") };
       if (url.pathname === "/api/app/dashboard")
         data = {
           mentor: {
@@ -70,6 +86,7 @@ try {
           },
           eas: [],
         };
+      if (url.pathname === "/api/app/ea-mode-images") data = { eas: [] };
       if (url.pathname === "/api/app/trading-controls")
         data = { mt5Connected: false, copyingEnabled: false };
       if (url.pathname === "/api/app/executions") data = [];
@@ -106,6 +123,8 @@ try {
       ["matrix", "The Matrix Interface"],
       ["regular", "Regular Interface"],
       ["s2tone", "S2tone_"],
+      ["crimson", "Crimson"],
+      ["lumo", "Lumo"],
     ]) {
       await settings();
       await page
@@ -121,11 +140,20 @@ try {
         .getByRole("button", { name: "Select Font", exact: true })
         .click();
       assert.equal(
-        await page.getByRole("button", { name: /^(Rajdhani|Exo 2)$/ }).count(),
+        await page.getByRole("button", { name: "Exo 2", exact: true }).count(),
         0,
       );
       for (const font of fonts) {
         const choice = page.getByRole("button", { name: font, exact: true });
+        const preview = await choice.locator("p").evaluate(async (element) => {
+          const style = getComputedStyle(element);
+          const faces = await document.fonts.load(
+            `${style.fontWeight} ${style.fontSize} ${style.fontFamily}`,
+            element.textContent,
+          );
+          return { family: style.fontFamily, loaded: faces.some((face) => face.status === "loaded") };
+        });
+        assert.ok(preview.family.includes("EA Bot " + font) && preview.loaded);
         await choice.click();
         assert.equal(await choice.getAttribute("aria-pressed"), "true");
         assert.equal(
@@ -133,7 +161,7 @@ try {
             .locator('button[aria-pressed="true"]')
             .filter({
               has: page.locator("p").filter({
-                hasText: new RegExp("^(Inter|Roboto|Orbitron|Flipside BRK)$"),
+                hasText: new RegExp("^(" + fonts.join("|") + ")$"),
               }),
             })
             .count(),
@@ -157,10 +185,10 @@ try {
             transform: style.textTransform,
           };
         });
-        assert.equal(metrics.transform, "uppercase");
+        assert.equal(metrics.transform, layout === "lumo" ? "none" : "uppercase");
         assert.equal(metrics.text.toUpperCase(), "SMC BLUEPRINT EA V3+");
         assert.ok(metrics.family.includes("EA Bot " + font));
-        assert.equal(metrics.weight, font === "Flipside BRK" ? "400" : "900");
+        assert.equal(metrics.weight, fontWeights[font]);
         assert.ok(metrics.scroll <= metrics.width + 1, "Bot name overflows");
         const appBounds = await page
           .locator('[data-bot-name="primary"]')
@@ -250,7 +278,7 @@ try {
         await page
           .locator('[data-bot-name="primary"]')
           .evaluate((el) => getComputedStyle(el).fontFamily)
-      ).includes("EA Bot Flipside BRK"),
+      ).includes("EA Bot Michroma"),
     );
     await settings();
     if (
@@ -263,7 +291,7 @@ try {
         .click();
     assert.equal(
       await page
-        .getByRole("button", { name: "Flipside BRK", exact: true })
+        .getByRole("button", { name: "Michroma", exact: true })
         .getAttribute("aria-pressed"),
       "true",
     );
@@ -275,7 +303,7 @@ try {
         await reopened
           .locator('[data-bot-name="primary"]')
           .evaluate((el) => getComputedStyle(el).fontFamily)
-      ).includes("EA Bot Flipside BRK"),
+      ).includes("EA Bot Michroma"),
     );
     await reopened.close();
     fixtureName =
@@ -292,7 +320,7 @@ try {
         transform: getComputedStyle(el).textTransform,
       }));
     assert(longTitle.scroll <= longTitle.width + 1);
-    assert.equal(longTitle.transform, "uppercase");
+    assert.equal(longTitle.transform, "none");
     assert(longTitle.rect.x >= 0 && longTitle.rect.right <= viewport.width + 1);
     assert.deepEqual(errors, []);
     await context.close();

@@ -3,13 +3,34 @@ export const botFonts = [
   "Roboto",
   "Orbitron",
   "Flipside BRK",
+  "Rubik Glitch",
+  "Oxanium",
+  "Audiowide",
+  "Chakra Petch",
+  "Rajdhani",
+  "Rubik Iso",
+  "Michroma",
 ] as const;
 export type BotFont = (typeof botFonts)[number];
 export const isBotFont = (value: unknown): value is BotFont =>
   botFonts.includes(value as BotFont);
-export const botFontStyle = (font: BotFont = "Inter") => ({
+const nativeFontWeights: Partial<Record<BotFont, number>> = {
+  "Flipside BRK": 400,
+  "Rubik Glitch": 400,
+  Oxanium: 700,
+  Audiowide: 400,
+  "Chakra Petch": 700,
+  Rajdhani: 700,
+  "Rubik Iso": 400,
+  Michroma: 400,
+};
+
+export const botFontStyle = (font: BotFont = "Inter", preview = false) => ({
   fontFamily: `"EA Bot ${font}", sans-serif`,
-  fontWeight: font === "Flipside BRK" ? 400 : 900,
+  fontWeight:
+    preview && font === "Rajdhani"
+      ? 600
+      : (nativeFontWeights[font] ?? (preview ? 600 : 900)),
   fontSynthesis: "none" as const,
 });
 export function fontPreferenceKey(token: string | null): string | null {
